@@ -162,6 +162,32 @@ describe("parser and frontmatter adapters", () => {
     );
   });
 
+  it("does not reuse mutable source positions across parse calls", () => {
+    const invalid = parse("---\na: *missing\n---\n# Body\n");
+    const diagnosticStart = invalid.diagnostics[0]?.sourceRange?.start;
+
+    if (diagnosticStart === undefined) {
+      throw new Error("Expected YAML diagnostic source range.");
+    }
+
+    diagnosticStart.line = 99;
+    diagnosticStart.column = 99;
+    diagnosticStart.offset = 99;
+
+    const later = parse("# Later\n");
+
+    expect(later.parsed.document.sourceRange?.start).toEqual({
+      line: 1,
+      column: 1,
+      offset: 0,
+    });
+    expect(later.parsed.document.children[0]?.sourceRange?.start).toEqual({
+      line: 1,
+      column: 1,
+      offset: 0,
+    });
+  });
+
   it("treats top-of-file thematic breaks without closing frontmatter as Markdown", () => {
     const markdown = "---\n# Heading\n";
     const result = parse(markdown);

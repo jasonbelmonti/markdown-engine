@@ -8,19 +8,13 @@ interface LineSlice {
   nextOffset: number;
 }
 
-const startPosition: SourcePosition = {
-  line: 1,
-  column: 1,
-  offset: 0,
-};
-
 export function extractFrontmatter(markdown: string): FrontmatterParseResult {
   const openingLine = readLine(markdown, 0);
 
   if (openingLine?.content !== "---") {
     return {
       body: markdown,
-      bodyStart: startPosition,
+      bodyStart: startPosition(),
       diagnostics: [],
     };
   }
@@ -43,7 +37,7 @@ export function extractFrontmatter(markdown: string): FrontmatterParseResult {
 
     if (line.content === "---") {
       const sourceRange: SourceRange = {
-        start: startPosition,
+        start: startPosition(),
         end: {
           line: currentLine,
           column: line.content.length + 1,
@@ -74,8 +68,16 @@ export function extractFrontmatter(markdown: string): FrontmatterParseResult {
 
   return {
     body: markdown,
-    bodyStart: startPosition,
+    bodyStart: startPosition(),
     diagnostics: [],
+  };
+}
+
+function startPosition(): SourcePosition {
+  return {
+    line: 1,
+    column: 1,
+    offset: 0,
   };
 }
 
