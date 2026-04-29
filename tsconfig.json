@@ -17,7 +17,9 @@
     "sourceMap": true,
     "strict": true,
     "target": "ES2022",
-    "types": [],
+    "types": [
+      "node"
+    ],
     "verbatimModuleSyntax": true
   },
   "include": [
