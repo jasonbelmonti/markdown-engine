@@ -100,6 +100,43 @@ describe("parser and frontmatter adapters", () => {
     });
   });
 
+  it("strips a leading BOM before frontmatter and body parsing", () => {
+    const withFrontmatter = parse("\uFEFF---\ntitle: BOM\n---\n# Body\n");
+    const plainMarkdown = parse("\uFEFF# Body\n");
+
+    expect(withFrontmatter.diagnostics).toEqual([]);
+    expect(withFrontmatter.parsed.frontmatter).toEqual({
+      title: "BOM",
+    });
+    expect(withFrontmatter.parsed.body).toBe("# Body\n");
+    expect(withFrontmatter.parsed.document.children[0]).toMatchObject({
+      type: "heading",
+      text: "Body",
+      sourceRange: {
+        start: {
+          line: 4,
+          column: 1,
+          offset: 20,
+        },
+      },
+    });
+
+    expect(plainMarkdown.diagnostics).toEqual([]);
+    expect(plainMarkdown.parsed.frontmatter).toBeUndefined();
+    expect(plainMarkdown.parsed.body).toBe("# Body\n");
+    expect(plainMarkdown.parsed.document.children[0]).toMatchObject({
+      type: "heading",
+      text: "Body",
+      sourceRange: {
+        start: {
+          line: 1,
+          column: 1,
+          offset: 1,
+        },
+      },
+    });
+  });
+
   it("keeps empty body source ranges at EOF when frontmatter closes the file", () => {
     const markdown = "---\ntitle: Bodyless\n---";
     const result = parse(markdown);

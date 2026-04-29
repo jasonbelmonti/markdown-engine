@@ -9,17 +9,19 @@ interface LineSlice {
 }
 
 export function extractFrontmatter(markdown: string): FrontmatterParseResult {
-  const openingLine = readLine(markdown, 0);
+  const contentOffset = initialContentOffset(markdown);
+  const contentStart = startPosition(contentOffset);
+  const openingLine = readLine(markdown, contentOffset);
 
   if (openingLine?.content !== "---") {
     return {
-      body: markdown,
-      bodyStart: startPosition(),
+      body: markdown.slice(contentOffset),
+      bodyStart: contentStart,
       diagnostics: [],
     };
   }
 
-  const contentStart: SourcePosition = {
+  const frontmatterContentStart: SourcePosition = {
     line: 2,
     column: 1,
     offset: openingLine.nextOffset,
@@ -37,7 +39,7 @@ export function extractFrontmatter(markdown: string): FrontmatterParseResult {
 
     if (line.content === "---") {
       const sourceRange: SourceRange = {
-        start: startPosition(),
+        start: contentStart,
         end: {
           line: currentLine,
           column: line.content.length + 1,
@@ -46,7 +48,7 @@ export function extractFrontmatter(markdown: string): FrontmatterParseResult {
       };
       const frontmatter: FrontmatterBlock = {
         raw: markdown.slice(openingLine.nextOffset, line.contentStart),
-        contentStart,
+        contentStart: frontmatterContentStart,
         sourceRange,
       };
 
@@ -63,17 +65,21 @@ export function extractFrontmatter(markdown: string): FrontmatterParseResult {
   }
 
   return {
-    body: markdown,
-    bodyStart: startPosition(),
+    body: markdown.slice(contentOffset),
+    bodyStart: contentStart,
     diagnostics: [],
   };
 }
 
-function startPosition(): SourcePosition {
+function initialContentOffset(markdown: string): number {
+  return markdown.startsWith("\uFEFF") ? 1 : 0;
+}
+
+function startPosition(offset: number): SourcePosition {
   return {
     line: 1,
     column: 1,
-    offset: 0,
+    offset,
   };
 }
 
