@@ -131,6 +131,37 @@ describe("parser and frontmatter adapters", () => {
     );
   });
 
+  it("returns structured diagnostics for YAML materialization failures", () => {
+    const result = parse("---\na: *missing\n---\n# Body\n");
+
+    expect(result.parsed.frontmatter).toBeUndefined();
+    expect(result.parsed.diagnostics).toEqual(result.diagnostics);
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "frontmatter.yaml.invalid",
+        severity: "error",
+        message: expect.stringContaining("Unresolved alias"),
+        sourceRange: {
+          start: {
+            line: 1,
+            column: 1,
+            offset: 0,
+          },
+          end: {
+            line: 3,
+            column: 4,
+            offset: expect.any(Number),
+          },
+        },
+      }),
+    ]);
+    expect(findNode(result.parsed.document, (node) => node.type === "heading")).toMatchObject(
+      {
+        text: "Body",
+      },
+    );
+  });
+
   it("treats top-of-file thematic breaks without closing frontmatter as Markdown", () => {
     const markdown = "---\n# Heading\n";
     const result = parse(markdown);

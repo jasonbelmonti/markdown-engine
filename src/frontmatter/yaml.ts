@@ -66,11 +66,21 @@ export function parseYamlFrontmatter(
     };
   }
 
-  return {
-    value: document.toJSON(),
-    valueParsed: true,
-    diagnostics,
-  };
+  try {
+    return {
+      value: document.toJSON(),
+      valueParsed: true,
+      diagnostics,
+    };
+  } catch (error) {
+    return {
+      valueParsed: false,
+      diagnostics: [
+        ...diagnostics,
+        yamlMaterializationDiagnostic(error, fallbackRange),
+      ],
+    };
+  }
 }
 
 function yamlIssueToDiagnostic(
@@ -95,6 +105,21 @@ function yamlIssueMessage(issue: YamlIssueLike): string {
   }
 
   return "YAML frontmatter could not be parsed.";
+}
+
+function yamlMaterializationDiagnostic(
+  error: unknown,
+  sourceRange: SourceRange,
+): MarkdownDiagnostic {
+  return {
+    code: "frontmatter.yaml.invalid",
+    message:
+      error instanceof Error
+        ? error.message
+        : "YAML frontmatter could not be parsed.",
+    severity: "error",
+    sourceRange,
+  };
 }
 
 function yamlIssueRange(
