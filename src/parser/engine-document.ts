@@ -164,7 +164,7 @@ function toSourcePosition(
 
   const sourcePosition: SourcePosition = {
     line: point.line + (options.lineOffset ?? 0),
-    column: point.column,
+    column: point.column + firstLineColumnOffset(point, options),
   };
 
   if (typeof point.offset === "number") {
@@ -175,4 +175,11 @@ function toSourcePosition(
   }
 
   return sourcePosition;
+}
+
+function firstLineColumnOffset(
+  point: MdastPointLike,
+  options: MarkdownBodyParseOptions,
+): number {
+  return point.line === 1 ? (options.columnOffset ?? 0) : 0;
 }

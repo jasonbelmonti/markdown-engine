@@ -32,6 +32,7 @@ export const parse: ParseFunction = (markdown, options = {}) => {
   const parserOptions = {
     ...(options.path !== undefined ? { path: options.path } : {}),
     lineOffset: frontmatterResult.bodyStart.line - 1,
+    columnOffset: frontmatterResult.bodyStart.column - 1,
     ...(frontmatterResult.bodyStart.offset !== undefined
       ? { offsetOffset: frontmatterResult.bodyStart.offset }
       : {}),

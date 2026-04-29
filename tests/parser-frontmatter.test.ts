@@ -100,6 +100,29 @@ describe("parser and frontmatter adapters", () => {
     });
   });
 
+  it("keeps empty body source ranges at EOF when frontmatter closes the file", () => {
+    const markdown = "---\ntitle: Bodyless\n---";
+    const result = parse(markdown);
+
+    expect(result.diagnostics).toEqual([]);
+    expect(result.parsed.body).toBe("");
+    expect(result.parsed.frontmatter).toEqual({
+      title: "Bodyless",
+    });
+    expect(result.parsed.document.sourceRange).toEqual({
+      start: {
+        line: 3,
+        column: 4,
+        offset: markdown.length,
+      },
+      end: {
+        line: 3,
+        column: 4,
+        offset: markdown.length,
+      },
+    });
+  });
+
   it("returns structured diagnostics for invalid YAML frontmatter", () => {
     const result = parse("---\ntitle: [unterminated\n---\n# Body\n");
 

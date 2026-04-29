@@ -52,11 +52,7 @@ export function extractFrontmatter(markdown: string): FrontmatterParseResult {
 
       return {
         body: markdown.slice(line.nextOffset),
-        bodyStart: {
-          line: currentLine + 1,
-          column: 1,
-          offset: line.nextOffset,
-        },
+        bodyStart: bodyStartAfterClosingDelimiter(line, currentLine),
         diagnostics: [],
         frontmatter,
       };
@@ -78,6 +74,25 @@ function startPosition(): SourcePosition {
     line: 1,
     column: 1,
     offset: 0,
+  };
+}
+
+function bodyStartAfterClosingDelimiter(
+  line: LineSlice,
+  lineNumber: number,
+): SourcePosition {
+  if (line.nextOffset === line.contentEnd) {
+    return {
+      line: lineNumber,
+      column: line.content.length + 1,
+      offset: line.contentEnd,
+    };
+  }
+
+  return {
+    line: lineNumber + 1,
+    column: 1,
+    offset: line.nextOffset,
   };
 }
 
