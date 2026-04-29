@@ -96,7 +96,7 @@ Section status: Complete
 
 | ID | Type | Statement | Owner | Blocking? | Validation or resolution plan |
 | --- | --- | --- | --- | --- | --- |
-| CON-1 | Constraint | Execution shall preserve the engine boundary: parse, normalize, validate deterministic rules, diagnose, and serialize. | Implementer | No | `VAL-8` boundary inspection and `REV-3` scope review. |
+| CON-1 | Constraint | Execution shall preserve the engine boundary: parse, normalize, validate deterministic rules, diagnose, and serialize. | Implementer | No | `VAL-8` boundary inspection and `REV-3A` / `REV-3B` scope review. |
 | CON-2 | Constraint | Validation shall operate on parsed frontmatter and normalized engine IR, not directly on public raw parser AST. | Implementer | No | `VAL-3`, `VAL-4`, and contract review in `MS-2`. |
 | CON-3 | Constraint | Raw HTML shall be represented as inert data, evaluated against the configured raw-HTML policy, and not executed. | Implementer | No | `VAL-6` raw-HTML policy tests. |
 | CON-4 | Constraint | Config and frontmatter authoring inputs shall remain YAML-friendly. | Implementer | No | `VAL-2` and `VAL-4` fixtures. |
@@ -141,14 +141,14 @@ Section status: Complete
 
 | ID | Surface | Change type | Owner | Read/write boundary | Review expectation |
 | --- | --- | --- | --- | --- | --- |
-| SURF-1 | `package.json`, lockfile, TypeScript/package config | Config / Contract | Implementer | Writable by `WP-1`; read-only for later work except dependency or script updates requiring coordination. | Build and dependency review in `REV-1`. |
+| SURF-1 | `package.json`, lockfile, TypeScript/package config | Config / Contract | Implementer | Writable by `WP-1`; read-only for later work except dependency or script updates requiring coordination. | Proving-slice dependency review in `REV-1A`; full build and dependency review in `REV-1B`. |
 | SURF-2 | `src/index.ts`, `src/api/**`, `src/types/**` | Code / Contract | Implementer | Writable by `WP-1` for the proving-slice API stub and by `WP-2` for contract stabilization; later changes require `MS-2` contract review. | Public API review in `REV-2`. |
 | SURF-3 | `src/parser/**`, `src/frontmatter/**` | Code | Implementer | Writable by `WP-1` and `WP-3`; interface changes require coordination with `PKG-1` and `PKG-3`. | Parser adapter review in `REV-2`. |
 | SURF-4 | `src/ir/**`, `src/diagnostics/**`, `src/serialize/**` | Code / Schema | Implementer | Writable by `WP-1`, `WP-2`, `WP-3`, and `WP-5` with serialized contract snapshots. | Contract and snapshot review in `REV-2`. |
-| SURF-5 | `src/config/**`, `src/rules/**` | Code / Config | Implementer | Writable by `WP-1` for minimal proving-slice config/rule proof and by `WP-4` for full rule-family coverage; must not import agent/runtime/profile packages. | Deterministic validation review in `REV-3`. |
-| SURF-6 | `tests/**`, `fixtures/**`, `snapshots/**` | Test | Implementer | Writable by all work packages when evidence belongs to their scope. | Test evidence review in `REV-1`. |
+| SURF-5 | `src/config/**`, `src/rules/**` | Code / Config | Implementer | Writable by `WP-1` for minimal proving-slice config/rule proof and by `WP-4` for full rule-family coverage; must not import agent/runtime/profile packages. | Proving-slice deterministic review in `REV-3A`; full deterministic validation review in `REV-3B`. |
+| SURF-6 | `tests/**`, `fixtures/**`, `snapshots/**` | Test | Implementer | Writable by all work packages when evidence belongs to their scope. | Proving-slice test evidence review in `REV-1A`; full test evidence review in `REV-1B`. |
 | SURF-7 | `docs/contracts/**`, `README.md`, package usage docs | Docs / Contract | Implementer | Writable by `WP-2` for contract docs and by `WP-6` for final release/handoff docs; contract changes require `MS-2`. | Documentation review in `REV-2`. |
-| SURF-8 | `.github/workflows/**` if CI is introduced | Infra | Implementer | Writable by `WP-6`; N/A if no CI workflow is added in the first implementation PR. | CI review in `REV-1`. |
+| SURF-8 | `.github/workflows/**` if CI is introduced | Infra | Implementer | Writable by `WP-6`; N/A if no CI workflow is added in the first implementation PR. | CI review in `REV-1B`. |
 
 Section status: Complete
 
@@ -542,8 +542,8 @@ Section status: Complete
 
 | ID | Gate objective | Covered work | Due point | Human verifier | Prerequisites | Review gate | Required evidence | Approval decision | Failure path |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| MS-1 | Approve critical-path proof before routine implementation expands. | OBJ-1 / OBJ-2 / SURF-1 / SURF-2 / SURF-3 / SURF-4 / SURF-5 / PKG-1 / PKG-2 / PKG-3 / PKG-4 / PKG-5 / WP-1 | Before WP-2, WP-3, or WP-4 starts | Project owner or implementation reviewer | VAL-1 / VAL-2 / VAL-3 / VAL-4 / EVD-1 / EVD-4 | REV-1 / REV-3 | EVD-1 / EVD-4 | Approve / Reject / Conditional approval | If rejected, stop execution and revise parser substrate, IR target, deterministic validation substrate, or execution plan. |
-| MS-2 | Approve implementation contract and validation completeness before merge. | OBJ-1 / OBJ-2 / OBJ-3 / OBJ-4 / SURF-2 through SURF-6 / PKG-1 through PKG-5 / WP-2 through WP-5 | Before merge | Project owner and implementation reviewer | VAL-1 through VAL-8 / EVD-2 through EVD-8 | REV-1 / REV-2 / REV-3 | EVD-2 / EVD-3 / EVD-4 / EVD-5 / EVD-6 / EVD-7 / EVD-8 | Approve / Reject / Conditional approval | If rejected, block merge and file required fixes or approved deviations. |
+| MS-1 | Approve critical-path proof before routine implementation expands. | OBJ-1 / OBJ-2 / SURF-1 / SURF-2 / SURF-3 / SURF-4 / SURF-5 / PKG-1 / PKG-2 / PKG-3 / PKG-4 / PKG-5 / WP-1 | Before WP-2, WP-3, or WP-4 starts | Project owner or implementation reviewer | VAL-1 / VAL-2 / VAL-3 / VAL-4 / EVD-1 / EVD-4 | REV-1A / REV-3A | EVD-1 / EVD-4 | Approve / Reject / Conditional approval | If rejected, stop execution and revise parser substrate, IR target, deterministic validation substrate, or execution plan. |
+| MS-2 | Approve implementation contract and validation completeness before merge. | OBJ-1 / OBJ-2 / OBJ-3 / OBJ-4 / SURF-2 through SURF-6 / PKG-1 through PKG-5 / WP-2 through WP-5 | Before merge | Project owner and implementation reviewer | VAL-1 through VAL-8 / EVD-2 through EVD-8 | REV-1B / REV-2 / REV-3B | EVD-2 / EVD-3 / EVD-4 / EVD-5 / EVD-6 / EVD-7 / EVD-8 | Approve / Reject / Conditional approval | If rejected, block merge and file required fixes or approved deviations. |
 | MS-3 | Approve completion, release containment, and handoff. | OBJ-3 / OBJ-4 / SURF-7 / SURF-8 / WP-6 | Before package tag, publication, or completion claim | Project owner | VAL-7 / VAL-8 / EVD-7 / EVD-9 / EVD-10 / EVD-11 | REV-2 / REV-4 | EVD-7 / EVD-9 / EVD-10 / EVD-11 | Approve / Reject / Conditional approval | If rejected, withhold release/tag and continue documentation, contract, or evidence fixes. |
 
 Manual verification guide:
@@ -626,12 +626,18 @@ Section status: Complete
 
 | ID | Reviewer | Review scope | Blocking? | Completion evidence |
 | --- | --- | --- | --- | --- |
-| REV-1 | Implementation reviewer | Scaffold, dependencies, test commands, build/typecheck output, parser/frontmatter fixtures, selected `cmark-gfm` comparisons, repeatability evidence, and `git diff --check`. | Yes | EVD-1 / EVD-2 / EVD-5 / EVD-7 |
+| REV-1A | Implementation reviewer | MS-1 proving-slice scaffold, dependency choice, proving-slice command, representative fixture, parser/frontmatter/IR/API proof, minimal deterministic config/rule proof, and `git diff --check`. | Yes | EVD-1 / EVD-4 |
+| REV-1B | Implementation reviewer | Full scaffold, dependencies, test commands, build/typecheck output, parser/frontmatter fixtures, selected `cmark-gfm` comparisons, repeatability evidence, and `git diff --check`. | Yes | EVD-1 / EVD-2 / EVD-5 / EVD-7 |
 | REV-2 | Project owner or designated contract reviewer | Public API, IR, config, diagnostics, serialization, docs, and semver classification. | Yes | EVD-6 / EVD-7 |
-| REV-3 | Boundary reviewer | Deterministic-only rule engine, unsupported-rule behavior, no profile/runtime/MCP/agent-adapter scope drift. | Yes | EVD-4 / EVD-8 |
+| REV-3A | Boundary reviewer | MS-1 deterministic-only proving-slice rule behavior and no profile/runtime/MCP/agent-adapter scope drift in the proving slice. | Yes | EVD-4 |
+| REV-3B | Boundary reviewer | Full deterministic-only rule engine, unsupported-rule behavior, no profile/runtime/MCP/agent-adapter scope drift. | Yes | EVD-4 / EVD-8 |
 | REV-4 | Downstream profile/runtime consumer | Whether the engine output can support future profile compilation and runtime lenses without parser forking. | No | EVD-7 / EVD-11 |
 
-Approval conditions: Merge requires passing `REV-1`, `REV-2`, and `REV-3`, approval of `MS-2`, no blocking `Q-*`, no open `Blocker` or `Major` review findings, and no unapproved deviations from this spec. Release or tag requires `REV-4` downstream-consumer confirmation.
+Approval conditions:
+
+- `MS-1` requires passing `REV-1A` and `REV-3A` using only `EVD-1` and `EVD-4`.
+- Merge requires passing `REV-1B`, `REV-2`, and `REV-3B`, approval of `MS-2`, no blocking `Q-*`, no open `Blocker` or `Major` review findings, and no unapproved deviations from this spec.
+- Release or tag requires `REV-4` downstream-consumer confirmation.
 
 Section status: Complete
 
@@ -697,17 +703,21 @@ Section status: Complete
 
 | Source, objective, or evidence-led claim | Change surfaces | Package boundaries | Work packages | Milestones | Controls | Validation | Review | Release or ops | Evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| SRC-1 / OBJ-1 / Critical path | SURF-1 / SURF-2 / SURF-3 / SURF-4 / SURF-5 / SURF-6 | PKG-1 / PKG-2 / PKG-3 / PKG-4 / PKG-5 | WP-1 / WP-3 / WP-4 | MS-1 / MS-2 | CTRL-2 / CTRL-5 | VAL-1 / VAL-2 / VAL-3 / VAL-4 | REV-1 / REV-2 / REV-3 | REL-1 / OBS-1 / OBS-2 | EVD-1 / EVD-2 / EVD-3 / EVD-4 |
-| SRC-1 / OBJ-2 | SURF-5 / SURF-6 | PKG-4 / PKG-5 | WP-4 / WP-5 | MS-2 | CTRL-2 / CTRL-6 | VAL-4 / VAL-5 / VAL-6 | REV-1 / REV-3 | REL-2 / OBS-1 / OBS-2 | EVD-4 / EVD-5 |
+| SRC-1 / OBJ-1 / MS-1 critical-path proof | SURF-1 / SURF-2 / SURF-3 / SURF-4 / SURF-5 / SURF-6 | PKG-1 / PKG-2 / PKG-3 / PKG-4 / PKG-5 | WP-1 | MS-1 | CTRL-2 / CTRL-5 | VAL-1 / VAL-2 / VAL-3 / VAL-4 | REV-1A / REV-3A | REL-1 / OBS-1 | EVD-1 / EVD-4 |
+| SRC-1 / OBJ-1 / MS-2 implementation completion | SURF-2 / SURF-3 / SURF-4 / SURF-5 / SURF-6 | PKG-1 / PKG-2 / PKG-3 / PKG-4 / PKG-5 | WP-2 / WP-3 / WP-4 / WP-5 | MS-2 | CTRL-2 / CTRL-5 | VAL-1 / VAL-2 / VAL-3 / VAL-4 / VAL-5 / VAL-7 | REV-1B / REV-2 / REV-3B | REL-1 / OBS-1 / OBS-2 | EVD-2 / EVD-3 / EVD-4 / EVD-5 / EVD-6 / EVD-7 |
+| SRC-1 / OBJ-2 | SURF-5 / SURF-6 | PKG-4 / PKG-5 | WP-4 / WP-5 | MS-2 | CTRL-2 / CTRL-6 | VAL-4 / VAL-5 / VAL-6 | REV-1B / REV-3B | REL-2 / OBS-1 / OBS-2 | EVD-4 / EVD-5 |
 | SRC-1 / OBJ-3 | SURF-2 / SURF-4 / SURF-7 | PKG-1 / PKG-3 | WP-2 / WP-6 | MS-2 / MS-3 | CTRL-1 / CTRL-6 | VAL-7 | REV-2 / REV-4 | REL-3 / OBS-5 | EVD-6 / EVD-7 / EVD-11 |
-| SRC-2 / OBJ-4 / Boundary claim | SURF-2 / SURF-5 / SURF-6 / SURF-7 | PKG-1 / PKG-4 / PKG-5 | WP-4 / WP-5 / WP-6 | MS-2 / MS-3 | CTRL-2 / CTRL-3 / CTRL-4 | VAL-8 | REV-3 | REL-2 / OBS-3 | EVD-8 |
-| SRC-3 / Review authority | all writable surfaces | PKG-1 through PKG-5 | WP-1 through WP-6 | MS-1 / MS-2 / MS-3 | CTRL-1 through CTRL-6 | VAL-1 through VAL-8 | REV-1 through REV-4 | REL-1 through REL-4 | EVD-1 through EVD-11 |
+| SRC-2 / OBJ-4 / Boundary claim | SURF-2 / SURF-5 / SURF-6 / SURF-7 | PKG-1 / PKG-4 / PKG-5 | WP-4 / WP-5 / WP-6 | MS-2 / MS-3 | CTRL-2 / CTRL-3 / CTRL-4 | VAL-8 | REV-3B | REL-2 / OBS-3 | EVD-8 |
+| SRC-3 / MS-1 review authority | SURF-1 through SURF-6 | PKG-1 through PKG-5 | WP-1 | MS-1 | CTRL-2 / CTRL-5 | VAL-1 / VAL-2 / VAL-3 / VAL-4 | REV-1A / REV-3A | REL-1 / OBS-1 | EVD-1 / EVD-4 |
+| SRC-3 / MS-2 review authority | SURF-2 through SURF-6 | PKG-1 through PKG-5 | WP-2 through WP-5 | MS-2 | CTRL-1 / CTRL-2 / CTRL-5 / CTRL-6 | VAL-1 through VAL-8 | REV-1B / REV-2 / REV-3B | REL-1 / REL-2 / OBS-1 through OBS-5 | EVD-2 through EVD-8 |
+| SRC-3 / MS-3 review authority | SURF-7 / SURF-8 | PKG-1 / PKG-5 | WP-6 | MS-3 | CTRL-3 / CTRL-4 / CTRL-6 | VAL-7 / VAL-8 | REV-2 / REV-4 | REL-3 / REL-4 | EVD-7 / EVD-9 / EVD-10 / EVD-11 |
 | SRC-4 / Execution planning request | docs/execution | N/A | WP-6 | MS-3 | CTRL-4 | VAL-7 / VAL-8 | REV-2 | REL-3 | EVD-9 / EVD-11 |
-| First proving slice | SURF-1 / SURF-2 / SURF-3 / SURF-4 / SURF-5 / SURF-6 | PKG-1 / PKG-2 / PKG-3 / PKG-4 / PKG-5 | WP-1 | MS-1 | CTRL-2 / CTRL-5 | VAL-1 / VAL-2 / VAL-3 / VAL-4 | REV-1 / REV-3 | REL-1 / OBS-1 | EVD-1 / EVD-4 |
-| RISK-1 | SURF-3 / SURF-4 / SURF-6 | PKG-2 / PKG-3 / PKG-5 | WP-1 / WP-3 | MS-1 / MS-2 | CTRL-5 | VAL-1 / VAL-3 | REV-1 / REV-2 | OBS-1 / OBS-2 | EVD-1 / EVD-3 |
-| RISK-2 | SURF-5 / SURF-6 | PKG-4 / PKG-5 | WP-4 / WP-5 | MS-2 | CTRL-2 / CTRL-6 | VAL-4 / VAL-8 | REV-3 | OBS-3 | EVD-4 / EVD-8 |
+| First proving slice | SURF-1 / SURF-2 / SURF-3 / SURF-4 / SURF-5 / SURF-6 | PKG-1 / PKG-2 / PKG-3 / PKG-4 / PKG-5 | WP-1 | MS-1 | CTRL-2 / CTRL-5 | VAL-1 / VAL-2 / VAL-3 / VAL-4 | REV-1A / REV-3A | REL-1 / OBS-1 | EVD-1 / EVD-4 |
+| RISK-1 / MS-1 source-location proof | SURF-3 / SURF-4 / SURF-6 | PKG-2 / PKG-3 / PKG-5 | WP-1 | MS-1 | CTRL-5 | VAL-1 / VAL-3 | REV-1A | OBS-1 | EVD-1 |
+| RISK-1 / MS-2 source-location coverage | SURF-3 / SURF-4 / SURF-6 | PKG-2 / PKG-3 / PKG-5 | WP-3 | MS-2 | CTRL-5 | VAL-1 / VAL-3 | REV-1B / REV-2 | OBS-1 / OBS-2 | EVD-2 / EVD-3 |
+| RISK-2 | SURF-5 / SURF-6 | PKG-4 / PKG-5 | WP-4 / WP-5 | MS-2 | CTRL-2 / CTRL-6 | VAL-4 / VAL-8 | REV-3B | OBS-3 | EVD-4 / EVD-8 |
 | RISK-3 | SURF-2 / SURF-4 / SURF-7 | PKG-1 / PKG-3 | WP-2 / WP-6 | MS-2 / MS-3 | CTRL-1 / CTRL-6 | VAL-7 | REV-2 / REV-4 | REL-3 / OBS-5 | EVD-6 / EVD-7 / EVD-11 |
-| RISK-4 | SURF-2 / SURF-5 / SURF-6 | PKG-1 / PKG-4 / PKG-5 | WP-4 / WP-5 / WP-6 | MS-2 / MS-3 | CTRL-2 / CTRL-3 / CTRL-4 | VAL-8 | REV-3 | REL-2 / OBS-3 | EVD-8 |
+| RISK-4 | SURF-2 / SURF-5 / SURF-6 | PKG-1 / PKG-4 / PKG-5 | WP-4 / WP-5 / WP-6 | MS-2 / MS-3 | CTRL-2 / CTRL-3 / CTRL-4 | VAL-8 | REV-3B | REL-2 / OBS-3 | EVD-8 |
 
 Section status: Complete
 
