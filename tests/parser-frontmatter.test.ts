@@ -185,6 +185,39 @@ describe("parser and frontmatter adapters", () => {
     );
   });
 
+  it("returns structured diagnostics for cyclic YAML aliases", () => {
+    const result = parse("---\na: &a\n  self: *a\n---\n# Body\n");
+
+    expect(result.parsed.frontmatter).toBeUndefined();
+    expect(result.parsed.diagnostics).toEqual(result.diagnostics);
+    expect(result.diagnostics).toEqual([
+      {
+        code: "frontmatter.yaml.invalid",
+        message:
+          "YAML frontmatter contains cyclic alias references, which are not supported.",
+        severity: "error",
+        sourceRange: {
+          start: {
+            line: 1,
+            column: 1,
+            offset: 0,
+          },
+          end: {
+            line: 4,
+            column: 4,
+            offset: 24,
+          },
+        },
+      },
+    ]);
+    expect(findNode(result.parsed.document, (node) => node.type === "heading")).toMatchObject(
+      {
+        text: "Body",
+      },
+    );
+    expect(() => JSON.stringify(result)).not.toThrow();
+  });
+
   it("does not reuse mutable source positions across parse calls", () => {
     const invalid = parse("---\na: *missing\n---\n# Body\n");
     const diagnosticStart = invalid.diagnostics[0]?.sourceRange?.start;

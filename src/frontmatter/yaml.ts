@@ -67,8 +67,20 @@ export function parseYamlFrontmatter(
   }
 
   try {
+    const value = document.toJSON();
+
+    if (containsCycle(value)) {
+      return {
+        valueParsed: false,
+        diagnostics: [
+          ...diagnostics,
+          cyclicYamlAliasDiagnostic(fallbackRange),
+        ],
+      };
+    }
+
     return {
-      value: document.toJSON(),
+      value,
       valueParsed: true,
       diagnostics,
     };
@@ -117,6 +129,16 @@ function yamlMaterializationDiagnostic(
       error instanceof Error
         ? error.message
         : "YAML frontmatter could not be parsed.",
+    severity: "error",
+    sourceRange,
+  };
+}
+
+function cyclicYamlAliasDiagnostic(sourceRange: SourceRange): MarkdownDiagnostic {
+  return {
+    code: "frontmatter.yaml.invalid",
+    message:
+      "YAML frontmatter contains cyclic alias references, which are not supported.",
     severity: "error",
     sourceRange,
   };
@@ -182,4 +204,33 @@ function positionFromOffset(
 
 function clampOffset(offset: number, text: string): number {
   return Math.max(0, Math.min(offset, text.length));
+}
+
+function containsCycle(value: unknown): boolean {
+  return containsCycleInPath(value, new WeakSet<object>());
+}
+
+function containsCycleInPath(
+  value: unknown,
+  ancestors: WeakSet<object>,
+): boolean {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  if (ancestors.has(value)) {
+    return true;
+  }
+
+  ancestors.add(value);
+
+  for (const child of Object.values(value)) {
+    if (containsCycleInPath(child, ancestors)) {
+      return true;
+    }
+  }
+
+  ancestors.delete(value);
+
+  return false;
 }
