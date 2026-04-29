@@ -1,7 +1,6 @@
 import type {
   MarkdownEngineApiName,
   NormalizeFunction,
-  ParseFunction,
   SerializeFunction,
   ValidateFunction,
 } from "./contracts.js";
@@ -16,8 +15,6 @@ class MarkdownEngineNotImplementedError extends Error {
 function notImplemented(apiName: MarkdownEngineApiName): never {
   throw new MarkdownEngineNotImplementedError(apiName);
 }
-
-export const parse: ParseFunction = (_markdown, _options) => notImplemented("parse");
 
 export const normalize: NormalizeFunction = (_parsed, _options) =>
   notImplemented("normalize");

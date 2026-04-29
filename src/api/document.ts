@@ -3,6 +3,7 @@ import type { SourceRange } from "./diagnostics.js";
 export interface EngineNode {
   type: string;
   text?: string;
+  attributes?: Record<string, unknown>;
   sourceRange?: SourceRange;
   children?: EngineNode[];
 }
