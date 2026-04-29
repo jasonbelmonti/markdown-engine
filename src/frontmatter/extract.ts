@@ -1,8 +1,4 @@
-import type {
-  MarkdownDiagnostic,
-  SourcePosition,
-  SourceRange,
-} from "../api/diagnostics.js";
+import type { SourcePosition, SourceRange } from "../api/diagnostics.js";
 import type { FrontmatterBlock, FrontmatterParseResult } from "./types.js";
 
 interface LineSlice {
@@ -79,7 +75,7 @@ export function extractFrontmatter(markdown: string): FrontmatterParseResult {
   return {
     body: markdown,
     bodyStart: startPosition,
-    diagnostics: [missingClosingDelimiterDiagnostic(openingLine)],
+    diagnostics: [],
   };
 }
 
@@ -108,24 +104,6 @@ function readLine(text: string, offset: number): LineSlice | undefined {
     contentStart,
     contentEnd,
     nextOffset,
-  };
-}
-
-function missingClosingDelimiterDiagnostic(
-  openingLine: LineSlice,
-): MarkdownDiagnostic {
-  return {
-    code: "frontmatter.missing_closing_delimiter",
-    message: "YAML frontmatter starts with --- but has no closing delimiter.",
-    severity: "error",
-    sourceRange: {
-      start: startPosition,
-      end: {
-        line: 1,
-        column: openingLine.content.length + 1,
-        offset: openingLine.contentEnd,
-      },
-    },
   };
 }
 

@@ -131,30 +131,20 @@ describe("parser and frontmatter adapters", () => {
     );
   });
 
-  it("returns structured diagnostics for missing frontmatter closing delimiter", () => {
-    const result = parse("---\ntitle: Missing close\n");
+  it("treats top-of-file thematic breaks without closing frontmatter as Markdown", () => {
+    const markdown = "---\n# Heading\n";
+    const result = parse(markdown);
 
     expect(result.parsed.frontmatter).toBeUndefined();
-    expect(result.parsed.diagnostics).toEqual(result.diagnostics);
-    expect(result.diagnostics).toEqual([
-      {
-        code: "frontmatter.missing_closing_delimiter",
-        message: "YAML frontmatter starts with --- but has no closing delimiter.",
-        severity: "error",
-        sourceRange: {
-          start: {
-            line: 1,
-            column: 1,
-            offset: 0,
-          },
-          end: {
-            line: 1,
-            column: 4,
-            offset: 3,
-          },
-        },
-      },
-    ]);
+    expect(result.parsed.body).toBe(markdown);
+    expect(result.diagnostics).toEqual([]);
+    expect(result.parsed.document.children[0]).toMatchObject({
+      type: "thematicBreak",
+    });
+    expect(result.parsed.document.children[1]).toMatchObject({
+      type: "heading",
+      text: "Heading",
+    });
   });
 });
 
