@@ -27,7 +27,7 @@ rg -n "MCP|agent-adapter|agent adapter|LLM|fetch\\(|network service|profile comp
 Final validation result:
 
 - `npm run typecheck`: pass
-- `npm test`: pass, 3 test files and 13 tests
+- `npm test`: pass, 3 test files and 15 tests
 - `git diff --check`: pass
 - Boundary grep over `src` and `tests`: no matches
 

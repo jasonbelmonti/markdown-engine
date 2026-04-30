@@ -1,5 +1,4 @@
 import type { MarkdownDiagnostic } from "../api/diagnostics.js";
-import type { ValidationConfig } from "../api/validate.js";
 import { makeDiagnostic } from "../diagnostics/index.js";
 import { isPlainRecord } from "../internal/plain-record.js";
 import {
@@ -14,8 +13,21 @@ export interface LoadedValidationConfig {
 }
 
 export function loadValidationConfig(
-  config: ValidationConfig = {},
+  config: unknown = {},
 ): LoadedValidationConfig {
+  if (!isPlainRecord(config)) {
+    return {
+      rules: [],
+      diagnostics: [
+        makeDiagnostic({
+          code: "config.invalid",
+          message: "Validation config must be an object.",
+          severity: "error",
+        }),
+      ],
+    };
+  }
+
   const rules = config.rules;
 
   if (rules === undefined) {

@@ -176,6 +176,25 @@ describe("MS-1 proving pipeline", () => {
       ruleResults: [],
     });
   });
+
+  it("VAL-4: rejects non-object validation configs", () => {
+    const document = normalize(parse(fixture).parsed).document;
+    const invalidConfigs: unknown[] = [null, [], "bad", 1];
+
+    for (const config of invalidConfigs) {
+      expect(validate(document, config as ValidationConfig)).toEqual({
+        valid: false,
+        diagnostics: [
+          {
+            code: "config.invalid",
+            severity: "error",
+            message: "Validation config must be an object.",
+          },
+        ],
+        ruleResults: [],
+      });
+    }
+  });
 });
 
 function findNode(
