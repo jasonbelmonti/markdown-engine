@@ -1,0 +1,282 @@
+{
+  "diagnostics": [],
+  "parsed": {
+    "body": "\n# Mission Brief\n\nUse [markdown-engine](https://example.com/markdown-engine) to prove intake.\n\n- [x] Parse a GFM task-list item\n\n```ts\nexport const signal = \"go\";\n```\n\n<div data-engine=\"inert\">Raw HTML data</div>\n",
+    "diagnostics": [],
+    "document": {
+      "children": [
+        {
+          "attributes": {
+            "depth": 1
+          },
+          "children": [
+            {
+              "sourceRange": {
+                "end": {
+                  "column": 16,
+                  "line": 10,
+                  "offset": 131
+                },
+                "start": {
+                  "column": 3,
+                  "line": 10,
+                  "offset": 118
+                }
+              },
+              "text": "Mission Brief",
+              "type": "text"
+            }
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 16,
+              "line": 10,
+              "offset": 131
+            },
+            "start": {
+              "column": 1,
+              "line": 10,
+              "offset": 116
+            }
+          },
+          "text": "Mission Brief",
+          "type": "heading"
+        },
+        {
+          "children": [
+            {
+              "sourceRange": {
+                "end": {
+                  "column": 5,
+                  "line": 12,
+                  "offset": 137
+                },
+                "start": {
+                  "column": 1,
+                  "line": 12,
+                  "offset": 133
+                }
+              },
+              "text": "Use ",
+              "type": "text"
+            },
+            {
+              "attributes": {
+                "url": "https://example.com/markdown-engine"
+              },
+              "children": [
+                {
+                  "sourceRange": {
+                    "end": {
+                      "column": 21,
+                      "line": 12,
+                      "offset": 153
+                    },
+                    "start": {
+                      "column": 6,
+                      "line": 12,
+                      "offset": 138
+                    }
+                  },
+                  "text": "markdown-engine",
+                  "type": "text"
+                }
+              ],
+              "sourceRange": {
+                "end": {
+                  "column": 59,
+                  "line": 12,
+                  "offset": 191
+                },
+                "start": {
+                  "column": 5,
+                  "line": 12,
+                  "offset": 137
+                }
+              },
+              "text": "markdown-engine",
+              "type": "link"
+            },
+            {
+              "sourceRange": {
+                "end": {
+                  "column": 76,
+                  "line": 12,
+                  "offset": 208
+                },
+                "start": {
+                  "column": 59,
+                  "line": 12,
+                  "offset": 191
+                }
+              },
+              "text": " to prove intake.",
+              "type": "text"
+            }
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 76,
+              "line": 12,
+              "offset": 208
+            },
+            "start": {
+              "column": 1,
+              "line": 12,
+              "offset": 133
+            }
+          },
+          "text": "Use markdown-engine to prove intake.",
+          "type": "paragraph"
+        },
+        {
+          "attributes": {
+            "ordered": false,
+            "spread": false
+          },
+          "children": [
+            {
+              "attributes": {
+                "checked": true,
+                "spread": false
+              },
+              "children": [
+                {
+                  "children": [
+                    {
+                      "sourceRange": {
+                        "end": {
+                          "column": 33,
+                          "line": 14,
+                          "offset": 242
+                        },
+                        "start": {
+                          "column": 7,
+                          "line": 14,
+                          "offset": 216
+                        }
+                      },
+                      "text": "Parse a GFM task-list item",
+                      "type": "text"
+                    }
+                  ],
+                  "sourceRange": {
+                    "end": {
+                      "column": 33,
+                      "line": 14,
+                      "offset": 242
+                    },
+                    "start": {
+                      "column": 7,
+                      "line": 14,
+                      "offset": 216
+                    }
+                  },
+                  "text": "Parse a GFM task-list item",
+                  "type": "paragraph"
+                }
+              ],
+              "sourceRange": {
+                "end": {
+                  "column": 33,
+                  "line": 14,
+                  "offset": 242
+                },
+                "start": {
+                  "column": 1,
+                  "line": 14,
+                  "offset": 210
+                }
+              },
+              "type": "listItem"
+            }
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 33,
+              "line": 14,
+              "offset": 242
+            },
+            "start": {
+              "column": 1,
+              "line": 14,
+              "offset": 210
+            }
+          },
+          "type": "list"
+        },
+        {
+          "attributes": {
+            "kind": "fenced",
+            "lang": "ts"
+          },
+          "sourceRange": {
+            "end": {
+              "column": 4,
+              "line": 18,
+              "offset": 281
+            },
+            "start": {
+              "column": 1,
+              "line": 16,
+              "offset": 244
+            }
+          },
+          "text": "export const signal = \"go\";",
+          "type": "code"
+        },
+        {
+          "sourceRange": {
+            "end": {
+              "column": 45,
+              "line": 20,
+              "offset": 327
+            },
+            "start": {
+              "column": 1,
+              "line": 20,
+              "offset": 283
+            }
+          },
+          "text": "<div data-engine=\"inert\">Raw HTML data</div>",
+          "type": "html"
+        }
+      ],
+      "frontmatter": {
+        "owner": "markdown-engine",
+        "status": "draft",
+        "tags": [
+          "parser",
+          "frontmatter"
+        ],
+        "title": "Representative parser fixture"
+      },
+      "kind": "markdown-document",
+      "path": "fixtures/representative.md",
+      "sourceRange": {
+        "end": {
+          "column": 1,
+          "line": 21,
+          "offset": 328
+        },
+        "start": {
+          "column": 1,
+          "line": 9,
+          "offset": 115
+        }
+      },
+      "version": "0.0.0"
+    },
+    "frontmatter": {
+      "owner": "markdown-engine",
+      "status": "draft",
+      "tags": [
+        "parser",
+        "frontmatter"
+      ],
+      "title": "Representative parser fixture"
+    },
+    "markdown": "---\ntitle: Representative parser fixture\nstatus: draft\ntags:\n  - parser\n  - frontmatter\nowner: markdown-engine\n---\n\n# Mission Brief\n\nUse [markdown-engine](https://example.com/markdown-engine) to prove intake.\n\n- [x] Parse a GFM task-list item\n\n```ts\nexport const signal = \"go\";\n```\n\n<div data-engine=\"inert\">Raw HTML data</div>\n",
+    "path": "fixtures/representative.md"
+  }
+}
