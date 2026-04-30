@@ -26,7 +26,11 @@ export function parseRequiredFrontmatterRuleConfig(
 
   const fields = config.fields;
 
-  if (!Array.isArray(fields) || !fields.every(isNonEmptyString)) {
+  if (
+    !Array.isArray(fields) ||
+    fields.length === 0 ||
+    !fields.every(isNonEmptyString)
+  ) {
     return invalidRequiredFrontmatterRule(
       "Rule frontmatter.required fields must be a non-empty string array.",
     );

@@ -151,6 +151,31 @@ describe("MS-1 proving pipeline", () => {
       ["frontmatter.required.missing", "frontmatter.required"],
     ]);
   });
+
+  it("VAL-4: rejects empty frontmatter required field lists", () => {
+    const document = normalize(parse(fixture).parsed).document;
+    const validationResult = validate(document, {
+      rules: {
+        "frontmatter.required": {
+          fields: [],
+        },
+      },
+    });
+
+    expect(validationResult).toEqual({
+      valid: false,
+      diagnostics: [
+        {
+          code: "config.rule.invalid",
+          ruleId: "frontmatter.required",
+          severity: "error",
+          message:
+            "Rule frontmatter.required fields must be a non-empty string array.",
+        },
+      ],
+      ruleResults: [],
+    });
+  });
 });
 
 function findNode(
