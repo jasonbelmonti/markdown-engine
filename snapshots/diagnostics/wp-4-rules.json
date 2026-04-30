@@ -1,0 +1,198 @@
+{
+  "valid": false,
+  "diagnostics": [
+    {
+      "code": "config.rule.unsupported",
+      "ruleId": "semantic.summaryQuality",
+      "message": "Unsupported validation rule \"semantic.summaryQuality\".",
+      "severity": "error"
+    },
+    {
+      "code": "headings.required.missing",
+      "ruleId": "headings.required",
+      "message": "Required heading \"Validation Gates\" is missing.",
+      "severity": "error"
+    },
+    {
+      "code": "codeFences.languages.missing",
+      "ruleId": "codeFences.languages",
+      "message": "Code fence language is required.",
+      "severity": "error",
+      "sourceRange": {
+        "start": {
+          "line": 12,
+          "column": 1,
+          "offset": 113
+        },
+        "end": {
+          "line": 14,
+          "column": 4,
+          "offset": 137
+        }
+      }
+    },
+    {
+      "code": "codeFences.languages.unsupported",
+      "ruleId": "codeFences.languages",
+      "message": "Code fence language \"js\" is not allowed.",
+      "severity": "error",
+      "sourceRange": {
+        "start": {
+          "line": 16,
+          "column": 1,
+          "offset": 139
+        },
+        "end": {
+          "line": 18,
+          "column": 4,
+          "offset": 172
+        }
+      }
+    },
+    {
+      "code": "links.allowedSchemes.disallowed",
+      "ruleId": "links.allowedSchemes",
+      "message": "Link URL scheme \"javascript\" is not allowed.",
+      "severity": "error",
+      "sourceRange": {
+        "start": {
+          "line": 21,
+          "column": 1,
+          "offset": 202
+        },
+        "end": {
+          "line": 21,
+          "column": 31,
+          "offset": 232
+        }
+      }
+    },
+    {
+      "code": "rawHtml.policy.denied",
+      "ruleId": "rawHtml.policy",
+      "message": "Raw HTML is not allowed by policy.",
+      "severity": "error",
+      "sourceRange": {
+        "start": {
+          "line": 24,
+          "column": 1,
+          "offset": 260
+        },
+        "end": {
+          "line": 24,
+          "column": 53,
+          "offset": 312
+        }
+      }
+    }
+  ],
+  "ruleResults": [
+    {
+      "ruleId": "frontmatter.required",
+      "passed": true,
+      "diagnostics": []
+    },
+    {
+      "ruleId": "headings.required",
+      "passed": false,
+      "diagnostics": [
+        {
+          "code": "headings.required.missing",
+          "ruleId": "headings.required",
+          "message": "Required heading \"Validation Gates\" is missing.",
+          "severity": "error"
+        }
+      ]
+    },
+    {
+      "ruleId": "codeFences.languages",
+      "passed": false,
+      "diagnostics": [
+        {
+          "code": "codeFences.languages.missing",
+          "ruleId": "codeFences.languages",
+          "message": "Code fence language is required.",
+          "severity": "error",
+          "sourceRange": {
+            "start": {
+              "line": 12,
+              "column": 1,
+              "offset": 113
+            },
+            "end": {
+              "line": 14,
+              "column": 4,
+              "offset": 137
+            }
+          }
+        },
+        {
+          "code": "codeFences.languages.unsupported",
+          "ruleId": "codeFences.languages",
+          "message": "Code fence language \"js\" is not allowed.",
+          "severity": "error",
+          "sourceRange": {
+            "start": {
+              "line": 16,
+              "column": 1,
+              "offset": 139
+            },
+            "end": {
+              "line": 18,
+              "column": 4,
+              "offset": 172
+            }
+          }
+        }
+      ]
+    },
+    {
+      "ruleId": "links.allowedSchemes",
+      "passed": false,
+      "diagnostics": [
+        {
+          "code": "links.allowedSchemes.disallowed",
+          "ruleId": "links.allowedSchemes",
+          "message": "Link URL scheme \"javascript\" is not allowed.",
+          "severity": "error",
+          "sourceRange": {
+            "start": {
+              "line": 21,
+              "column": 1,
+              "offset": 202
+            },
+            "end": {
+              "line": 21,
+              "column": 31,
+              "offset": 232
+            }
+          }
+        }
+      ]
+    },
+    {
+      "ruleId": "rawHtml.policy",
+      "passed": false,
+      "diagnostics": [
+        {
+          "code": "rawHtml.policy.denied",
+          "ruleId": "rawHtml.policy",
+          "message": "Raw HTML is not allowed by policy.",
+          "severity": "error",
+          "sourceRange": {
+            "start": {
+              "line": 24,
+              "column": 1,
+              "offset": 260
+            },
+            "end": {
+              "line": 24,
+              "column": 53,
+              "offset": 312
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

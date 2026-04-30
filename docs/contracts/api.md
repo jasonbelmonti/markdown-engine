@@ -88,13 +88,35 @@ validate(
 ```
 
 `ValidationConfig` is YAML-friendly and currently supports a `rules` object.
-The supported deterministic rule family in this contract slice is:
+The supported deterministic rule families in this contract slice are:
 
+- `codeFences.languages`
 - `frontmatter.required`
+- `headings.required`
+- `links.allowedSchemes`
+- `rawHtml.policy`
 
 `ValidateOptions.path` is accepted as a public option for API symmetry and
 future diagnostics, but the current implementation does not emit additional
 path-derived result fields from validation.
+
+`codeFences.languages` configuration shape:
+
+```yaml
+rules:
+  codeFences.languages:
+    allowed:
+      - ts
+      - bash
+    requireLanguage: true
+    severity: error
+```
+
+`allowed` is optional when `requireLanguage` is `true`; when present it must be
+a non-empty array of non-empty strings. `requireLanguage` is optional and
+defaults to `false`. At least one of `allowed` or `requireLanguage` must be
+configured. `severity` is optional and defaults to `error`; allowed values are
+`error`, `warning`, and `info`.
 
 `frontmatter.required` configuration shape:
 
@@ -110,6 +132,51 @@ rules:
 `fields` must be a non-empty array of non-empty strings. `severity` is optional
 and defaults to `error`; allowed values are `error`, `warning`, and `info`.
 
+`headings.required` configuration shape:
+
+```yaml
+rules:
+  headings.required:
+    headings:
+      - Objective
+      - Success Criteria
+    severity: error
+```
+
+`headings` must be a non-empty array of non-empty strings. The rule checks
+normalized heading text. `severity` is optional and defaults to `error`;
+allowed values are `error`, `warning`, and `info`.
+
+`links.allowedSchemes` configuration shape:
+
+```yaml
+rules:
+  links.allowedSchemes:
+    schemes:
+      - https
+      - mailto
+    severity: error
+```
+
+`schemes` must be a non-empty array of non-empty strings. URL schemes are
+compared case-insensitively. Relative URLs without a scheme do not produce
+diagnostics. `severity` is optional and defaults to `error`; allowed values are
+`error`, `warning`, and `info`.
+
+`rawHtml.policy` configuration shape:
+
+```yaml
+rules:
+  rawHtml.policy:
+    policy: deny
+```
+
+`policy` must be `allow`, `warn`, or `deny`. `allow` emits no diagnostics.
+`warn` emits warning diagnostics for raw HTML nodes and does not make the
+validation result invalid. `deny` emits error diagnostics for raw HTML nodes.
+The package still treats raw HTML as inert data; it does not execute, render,
+sanitize, fetch, or evaluate HTML.
+
 Unsupported rules produce `config.rule.unsupported` diagnostics. Invalid config
 shape produces config diagnostics. Unsupported rules are not inferred,
 executed, or delegated to semantic evaluation.
@@ -121,6 +188,8 @@ executed, or delegated to semantic evaluation.
 - `ruleResults`: per-rule deterministic results
 
 Each `ValidationRuleResult` contains `ruleId`, `passed`, and `diagnostics`.
+`passed` is `false` when the rule emits diagnostics, including warning or info
+diagnostics. `valid` is controlled by error-severity diagnostics only.
 
 ## `serialize`
 
@@ -161,7 +230,9 @@ model.
 - `children`: optional child nodes
 
 Node type coverage remains limited to the current parser/IR implementation and
-will expand through WP-3. Raw parser node objects are not public.
+will expand through implementation work packages. Code nodes may include a
+`kind` attribute of `fenced` or `indented`; `codeFences.*` rules apply only to
+code nodes with `kind: "fenced"`. Raw parser node objects are not public.
 
 ## Diagnostic Contract
 
