@@ -11,8 +11,8 @@ export function flattenNodes(nodes: readonly EngineNode[]): EngineNode[] {
   const flattened: EngineNode[] = [];
   const queue = [...nodes];
 
-  while (queue.length > 0) {
-    const node = queue.shift();
+  for (let index = 0; index < queue.length; index += 1) {
+    const node = queue[index];
 
     if (node === undefined) {
       continue;
