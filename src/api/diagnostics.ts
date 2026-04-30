@@ -13,6 +13,7 @@ export interface SourceRange {
 
 export interface MarkdownDiagnostic {
   code: string;
+  ruleId?: string;
   message: string;
   severity: MarkdownDiagnosticSeverity;
   sourceRange?: SourceRange;
