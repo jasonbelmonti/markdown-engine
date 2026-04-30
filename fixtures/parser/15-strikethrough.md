@@ -1,0 +1,1 @@
+Keep ~~obsolete~~ active text.

@@ -1,0 +1,2 @@
+- [x] Confirm parser adapter
+- [ ] Keep second item open

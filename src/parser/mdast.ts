@@ -12,11 +12,18 @@ export interface MdastPositionLike {
 export interface MdastNodeLike {
   type?: unknown;
   value?: unknown;
+  alt?: unknown;
+  align?: unknown;
   depth?: unknown;
+  identifier?: unknown;
+  label?: unknown;
   url?: unknown;
   title?: unknown;
   lang?: unknown;
   meta?: unknown;
+  referenceType?: unknown;
+  spread?: unknown;
+  start?: unknown;
   checked?: unknown;
   ordered?: unknown;
   position?: MdastPositionLike;

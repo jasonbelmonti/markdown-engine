@@ -1,0 +1,38 @@
+{
+  "diagnostics": [],
+  "document": {
+    "children": [
+      {
+        "sourceRange": {
+          "end": {
+            "column": 11,
+            "line": 3,
+            "offset": 73
+          },
+          "start": {
+            "column": 1,
+            "line": 1,
+            "offset": 0
+          }
+        },
+        "text": "<section data-engine=\"inert\">\n  <strong>Raw HTML data</strong>\n</section>",
+        "type": "html"
+      }
+    ],
+    "kind": "markdown-document",
+    "path": "fixtures/parser/21-raw-html-block.md",
+    "sourceRange": {
+      "end": {
+        "column": 1,
+        "line": 4,
+        "offset": 74
+      },
+      "start": {
+        "column": 1,
+        "line": 1,
+        "offset": 0
+      }
+    },
+    "version": "0.0.0"
+  }
+}
