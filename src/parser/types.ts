@@ -3,6 +3,7 @@ import type { EngineDocument } from "../api/document.js";
 
 export interface MarkdownBodyParseOptions {
   path?: string;
+  source?: string;
   lineOffset?: number;
   columnOffset?: number;
   offsetOffset?: number;

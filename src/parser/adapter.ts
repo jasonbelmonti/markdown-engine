@@ -19,7 +19,7 @@ export function parseMarkdownBody(
     const root = markdownParser.parse(markdown) as MdastNodeLike;
 
     return {
-      document: toEngineDocument(root, options),
+      document: toEngineDocument(root, { ...options, source: markdown }),
       diagnostics: [],
     };
   } catch (error) {

@@ -63,7 +63,10 @@ describe("WP-3 parser/frontmatter fixture corpus", () => {
     ).toMatchObject({ attributes: { checked: false } });
     expectFixtureNode("11-fenced-code-info-meta.md", "code").toMatchObject({
       text: 'export const phase = "wp-3";',
-      attributes: { lang: "ts", meta: "mission" },
+      attributes: { kind: "fenced", lang: "ts", meta: "mission" },
+    });
+    expectFixtureNode("12-indented-code.md", "code").toMatchObject({
+      attributes: { kind: "indented" },
     });
     expectFixtureNode("15-strikethrough.md", "delete").toBeDefined();
     expectFixtureNode("16-inline-link-title.md", "link").toMatchObject({

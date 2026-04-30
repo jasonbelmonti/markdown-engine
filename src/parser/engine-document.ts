@@ -37,7 +37,7 @@ function toEngineNode(
   options: MarkdownBodyParseOptions,
 ): EngineNode {
   const type = typeof node.type === "string" ? node.type : "unknown";
-  const attributes = nodeAttributes(type, node);
+  const attributes = nodeAttributes(type, node, options);
   const sourceRange = toSourceRange(node.position, options);
   const text = nodeText(type, node);
   const children = childNodes(node).map((child) => toEngineNode(child, options));
@@ -54,6 +54,7 @@ function toEngineNode(
 function nodeAttributes(
   type: string,
   node: MdastNodeLike,
+  options: MarkdownBodyParseOptions,
 ): Record<string, unknown> {
   const attributes: Record<string, unknown> = {};
 
@@ -125,6 +126,8 @@ function nodeAttributes(
       break;
 
     case "code":
+      assignStringAttribute(attributes, "kind", codeBlockKind(node, options));
+
       if (typeof node.lang === "string") {
         attributes.lang = node.lang;
       }
@@ -150,6 +153,23 @@ function nodeAttributes(
   }
 
   return attributes;
+}
+
+function codeBlockKind(
+  node: MdastNodeLike,
+  options: MarkdownBodyParseOptions,
+): "fenced" | "indented" | undefined {
+  if (
+    typeof options.source !== "string" ||
+    typeof node.position?.start?.offset !== "number"
+  ) {
+    return undefined;
+  }
+
+  const offset = node.position.start.offset;
+  const openingMarker = options.source.slice(offset, offset + 8);
+
+  return /^(?:`{3,}|~{3,})/.test(openingMarker) ? "fenced" : "indented";
 }
 
 function assignStringAttribute(
