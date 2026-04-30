@@ -77,6 +77,16 @@ describe("parser and frontmatter adapters", () => {
     });
     expect(result.parsed.document.frontmatter).toEqual(result.parsed.frontmatter);
     expect(result.parsed.body).not.toContain("title: Representative parser fixture");
+    expect(Object.keys(result).sort()).toEqual(["diagnostics", "parsed"]);
+    expect(Object.keys(result.parsed).sort()).toEqual([
+      "body",
+      "diagnostics",
+      "document",
+      "frontmatter",
+      "markdown",
+    ]);
+    expect(result.parsed.frontmatter).not.toHaveProperty("contents");
+    expect(result.parsed.frontmatter).not.toHaveProperty("items");
   });
 
   it("VAL-2: handles absent and empty YAML frontmatter", () => {
@@ -220,6 +230,209 @@ describe("parser and frontmatter adapters", () => {
         text: "Body",
       },
     );
+  });
+
+  it("uses YAML 1.2 core scalar resolution for frontmatter values", () => {
+    const result = parse(`---
+truthyWord: yes
+falsyWord: no
+onWord: on
+offWord: off
+trueValue: true
+falseValue: false
+nullValue: null
+tildeValue: ~
+numberValue: 42
+---
+# Body
+`);
+
+    expect(result.diagnostics).toEqual([]);
+    expect(result.parsed.frontmatter).toEqual({
+      truthyWord: "yes",
+      falsyWord: "no",
+      onWord: "on",
+      offWord: "off",
+      trueValue: true,
+      falseValue: false,
+      nullValue: null,
+      tildeValue: null,
+      numberValue: 42,
+    });
+    expect(JSON.stringify(result.parsed.frontmatter)).toBe(
+      '{"truthyWord":"yes","falsyWord":"no","onWord":"on","offWord":"off","trueValue":true,"falseValue":false,"nullValue":null,"tildeValue":null,"numberValue":42}',
+    );
+  });
+
+  it("rejects duplicate YAML mapping keys", () => {
+    const result = parse(`---
+title: First
+title: Second
+---
+# Body
+`);
+
+    expect(result.parsed.frontmatter).toBeUndefined();
+    expect(result.parsed.diagnostics).toEqual(result.diagnostics);
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "frontmatter.yaml.invalid",
+        severity: "error",
+        message: expect.stringContaining("Map keys must be unique"),
+      }),
+    ]);
+    expect(findNode(result.parsed.document, (node) => node.type === "heading")).toMatchObject(
+      {
+        text: "Body",
+      },
+    );
+  });
+
+  it("rejects multi-document YAML frontmatter instead of ignoring later documents", () => {
+    const result = parse(`---
+title: First
+...
+title: Second
+---
+# Body
+`);
+
+    expect(result.parsed.frontmatter).toBeUndefined();
+    expect(result.parsed.diagnostics).toEqual(result.diagnostics);
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "frontmatter.yaml.invalid",
+        severity: "error",
+        message: expect.stringContaining("Source contains multiple documents"),
+      }),
+    ]);
+    expect(findNode(result.parsed.document, (node) => node.type === "heading")).toMatchObject(
+      {
+        text: "Body",
+      },
+    );
+  });
+
+  it("rejects non-string YAML mapping keys before JavaScript key coercion", () => {
+    const result = parse(`---
+1: one
+---
+# Body
+`);
+
+    expect(result.parsed.frontmatter).toBeUndefined();
+    expect(result.parsed.diagnostics).toEqual(result.diagnostics);
+    expect(result.diagnostics).toEqual([
+      {
+        code: "frontmatter.yaml.invalid",
+        message: "YAML frontmatter mapping keys must be strings.",
+        severity: "error",
+        sourceRange: {
+          start: {
+            line: 2,
+            column: 1,
+            offset: 4,
+          },
+          end: {
+            line: 2,
+            column: 2,
+            offset: 5,
+          },
+        },
+      },
+    ]);
+  });
+
+  it("warns and preserves explicit YAML 1.1 known tags as JSON-safe strings", () => {
+    const result = parse(`---
+date: !!timestamp 2026-04-30
+---
+# Body
+`);
+
+    expect(result.parsed.frontmatter).toEqual({
+      date: "2026-04-30",
+    });
+    expect(result.parsed.diagnostics).toEqual(result.diagnostics);
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "frontmatter.yaml.warning",
+        severity: "warning",
+        message: expect.stringContaining(
+          "Unresolved tag: tag:yaml.org,2002:timestamp",
+        ),
+      }),
+    ]);
+  });
+
+  it("rejects non-finite YAML numbers before JSON stringification can coerce them", () => {
+    const result = parse(`---
+value: .nan
+---
+# Body
+`);
+
+    expect(result.parsed.frontmatter).toBeUndefined();
+    expect(result.parsed.diagnostics).toEqual(result.diagnostics);
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "frontmatter.yaml.invalid",
+        severity: "error",
+        message:
+          "YAML frontmatter contains non-finite numbers, which are not JSON-safe.",
+      }),
+    ]);
+  });
+
+  it("does not apply YAML merge keys while preserving supported aliases", () => {
+    const result = parse(`---
+base: &base
+  title: Base
+merged:
+  <<: *base
+  title: Override
+---
+# Body
+`);
+
+    expect(result.diagnostics).toEqual([]);
+    expect(result.parsed.frontmatter).toEqual({
+      base: {
+        title: "Base",
+      },
+      merged: {
+        "<<": {
+          title: "Base",
+        },
+        title: "Override",
+      },
+    });
+    expect(JSON.stringify(result.parsed.frontmatter)).toBe(
+      '{"base":{"title":"Base"},"merged":{"<<":{"title":"Base"},"title":"Override"}}',
+    );
+  });
+
+  it("rejects YAML alias expansion at the configured materialization limit", () => {
+    const aliases = Array.from(
+      { length: 50 },
+      (_value, index) => `alias${index}: *base`,
+    ).join("\n");
+    const result = parse(`---
+base: &base Base
+${aliases}
+---
+# Body
+`);
+
+    expect(result.parsed.frontmatter).toBeUndefined();
+    expect(result.parsed.diagnostics).toEqual(result.diagnostics);
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "frontmatter.yaml.invalid",
+        severity: "error",
+        message: expect.stringContaining("Excessive alias count"),
+      }),
+    ]);
   });
 
   it("returns structured diagnostics for cyclic YAML aliases", () => {
