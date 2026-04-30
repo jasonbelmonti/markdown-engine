@@ -1,0 +1,70 @@
+{
+  "diagnostics": [],
+  "document": {
+    "children": [
+      {
+        "attributes": {
+          "depth": 1
+        },
+        "children": [
+          {
+            "sourceRange": {
+              "end": {
+                "column": 14,
+                "line": 11,
+                "offset": 119
+              },
+              "start": {
+                "column": 3,
+                "line": 11,
+                "offset": 108
+              }
+            },
+            "text": "Nested Body",
+            "type": "text"
+          }
+        ],
+        "sourceRange": {
+          "end": {
+            "column": 14,
+            "line": 11,
+            "offset": 119
+          },
+          "start": {
+            "column": 1,
+            "line": 11,
+            "offset": 106
+          }
+        },
+        "text": "Nested Body",
+        "type": "heading"
+      }
+    ],
+    "frontmatter": {
+      "owners": {
+        "backup": "validation",
+        "primary": "engine"
+      },
+      "tags": [
+        "parser",
+        "ir"
+      ],
+      "title": "Nested frontmatter"
+    },
+    "kind": "markdown-document",
+    "path": "fixtures/parser/29-frontmatter-nested.md",
+    "sourceRange": {
+      "end": {
+        "column": 1,
+        "line": 12,
+        "offset": 120
+      },
+      "start": {
+        "column": 1,
+        "line": 10,
+        "offset": 105
+      }
+    },
+    "version": "0.0.0"
+  }
+}

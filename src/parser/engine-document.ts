@@ -74,15 +74,53 @@ function nodeAttributes(
       }
       break;
 
+    case "linkReference":
+      assignStringAttribute(attributes, "identifier", node.identifier);
+      assignStringAttribute(attributes, "label", node.label);
+      assignStringAttribute(attributes, "referenceType", node.referenceType);
+      break;
+
+    case "image":
+      assignStringAttribute(attributes, "url", node.url);
+      assignStringAttribute(attributes, "title", node.title);
+      assignStringAttribute(attributes, "alt", node.alt);
+      break;
+
+    case "imageReference":
+      assignStringAttribute(attributes, "identifier", node.identifier);
+      assignStringAttribute(attributes, "label", node.label);
+      assignStringAttribute(attributes, "referenceType", node.referenceType);
+      assignStringAttribute(attributes, "alt", node.alt);
+      break;
+
+    case "definition":
+      assignStringAttribute(attributes, "identifier", node.identifier);
+      assignStringAttribute(attributes, "label", node.label);
+      assignStringAttribute(attributes, "url", node.url);
+      assignStringAttribute(attributes, "title", node.title);
+      break;
+
     case "list":
       if (typeof node.ordered === "boolean") {
         attributes.ordered = node.ordered;
+      }
+
+      if (typeof node.start === "number") {
+        attributes.start = node.start;
+      }
+
+      if (typeof node.spread === "boolean") {
+        attributes.spread = node.spread;
       }
       break;
 
     case "listItem":
       if (typeof node.checked === "boolean") {
         attributes.checked = node.checked;
+      }
+
+      if (typeof node.spread === "boolean") {
+        attributes.spread = node.spread;
       }
       break;
 
@@ -95,9 +133,44 @@ function nodeAttributes(
         attributes.meta = node.meta;
       }
       break;
+
+    case "table":
+      if (Array.isArray(node.align)) {
+        attributes.align = node.align.map((alignment) =>
+          isTableAlignment(alignment) ? alignment : null,
+        );
+      }
+      break;
+
+    case "footnoteDefinition":
+    case "footnoteReference":
+      assignStringAttribute(attributes, "identifier", node.identifier);
+      assignStringAttribute(attributes, "label", node.label);
+      break;
   }
 
   return attributes;
+}
+
+function assignStringAttribute(
+  attributes: Record<string, unknown>,
+  name: string,
+  value: unknown,
+): void {
+  if (typeof value === "string") {
+    attributes[name] = value;
+  }
+}
+
+function isTableAlignment(
+  alignment: unknown,
+): alignment is "left" | "right" | "center" | null {
+  return (
+    alignment === "left" ||
+    alignment === "right" ||
+    alignment === "center" ||
+    alignment === null
+  );
 }
 
 function nodeText(type: string, node: MdastNodeLike): string | undefined {
@@ -108,7 +181,8 @@ function nodeText(type: string, node: MdastNodeLike): string | undefined {
   switch (type) {
     case "heading":
     case "paragraph":
-    case "link": {
+    case "link":
+    case "linkReference": {
       const text = collectText(node);
 
       return text.length > 0 ? text : undefined;

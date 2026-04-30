@@ -1,0 +1,278 @@
+{
+  "diagnostics": [],
+  "document": {
+    "children": [
+      {
+        "attributes": {
+          "align": [
+            "left",
+            "center",
+            "right"
+          ]
+        },
+        "children": [
+          {
+            "children": [
+              {
+                "children": [
+                  {
+                    "sourceRange": {
+                      "end": {
+                        "column": 8,
+                        "line": 1,
+                        "offset": 7
+                      },
+                      "start": {
+                        "column": 3,
+                        "line": 1,
+                        "offset": 2
+                      }
+                    },
+                    "text": "Phase",
+                    "type": "text"
+                  }
+                ],
+                "sourceRange": {
+                  "end": {
+                    "column": 9,
+                    "line": 1,
+                    "offset": 8
+                  },
+                  "start": {
+                    "column": 1,
+                    "line": 1,
+                    "offset": 0
+                  }
+                },
+                "type": "tableCell"
+              },
+              {
+                "children": [
+                  {
+                    "sourceRange": {
+                      "end": {
+                        "column": 16,
+                        "line": 1,
+                        "offset": 15
+                      },
+                      "start": {
+                        "column": 11,
+                        "line": 1,
+                        "offset": 10
+                      }
+                    },
+                    "text": "Owner",
+                    "type": "text"
+                  }
+                ],
+                "sourceRange": {
+                  "end": {
+                    "column": 17,
+                    "line": 1,
+                    "offset": 16
+                  },
+                  "start": {
+                    "column": 9,
+                    "line": 1,
+                    "offset": 8
+                  }
+                },
+                "type": "tableCell"
+              },
+              {
+                "children": [
+                  {
+                    "sourceRange": {
+                      "end": {
+                        "column": 25,
+                        "line": 1,
+                        "offset": 24
+                      },
+                      "start": {
+                        "column": 19,
+                        "line": 1,
+                        "offset": 18
+                      }
+                    },
+                    "text": "Status",
+                    "type": "text"
+                  }
+                ],
+                "sourceRange": {
+                  "end": {
+                    "column": 27,
+                    "line": 1,
+                    "offset": 26
+                  },
+                  "start": {
+                    "column": 17,
+                    "line": 1,
+                    "offset": 16
+                  }
+                },
+                "type": "tableCell"
+              }
+            ],
+            "sourceRange": {
+              "end": {
+                "column": 27,
+                "line": 1,
+                "offset": 26
+              },
+              "start": {
+                "column": 1,
+                "line": 1,
+                "offset": 0
+              }
+            },
+            "type": "tableRow"
+          },
+          {
+            "children": [
+              {
+                "children": [
+                  {
+                    "sourceRange": {
+                      "end": {
+                        "column": 7,
+                        "line": 3,
+                        "offset": 59
+                      },
+                      "start": {
+                        "column": 3,
+                        "line": 3,
+                        "offset": 55
+                      }
+                    },
+                    "text": "WP-3",
+                    "type": "text"
+                  }
+                ],
+                "sourceRange": {
+                  "end": {
+                    "column": 8,
+                    "line": 3,
+                    "offset": 60
+                  },
+                  "start": {
+                    "column": 1,
+                    "line": 3,
+                    "offset": 53
+                  }
+                },
+                "type": "tableCell"
+              },
+              {
+                "children": [
+                  {
+                    "sourceRange": {
+                      "end": {
+                        "column": 16,
+                        "line": 3,
+                        "offset": 68
+                      },
+                      "start": {
+                        "column": 10,
+                        "line": 3,
+                        "offset": 62
+                      }
+                    },
+                    "text": "engine",
+                    "type": "text"
+                  }
+                ],
+                "sourceRange": {
+                  "end": {
+                    "column": 17,
+                    "line": 3,
+                    "offset": 69
+                  },
+                  "start": {
+                    "column": 8,
+                    "line": 3,
+                    "offset": 60
+                  }
+                },
+                "type": "tableCell"
+              },
+              {
+                "children": [
+                  {
+                    "sourceRange": {
+                      "end": {
+                        "column": 25,
+                        "line": 3,
+                        "offset": 77
+                      },
+                      "start": {
+                        "column": 19,
+                        "line": 3,
+                        "offset": 71
+                      }
+                    },
+                    "text": "active",
+                    "type": "text"
+                  }
+                ],
+                "sourceRange": {
+                  "end": {
+                    "column": 27,
+                    "line": 3,
+                    "offset": 79
+                  },
+                  "start": {
+                    "column": 17,
+                    "line": 3,
+                    "offset": 69
+                  }
+                },
+                "type": "tableCell"
+              }
+            ],
+            "sourceRange": {
+              "end": {
+                "column": 27,
+                "line": 3,
+                "offset": 79
+              },
+              "start": {
+                "column": 1,
+                "line": 3,
+                "offset": 53
+              }
+            },
+            "type": "tableRow"
+          }
+        ],
+        "sourceRange": {
+          "end": {
+            "column": 27,
+            "line": 3,
+            "offset": 79
+          },
+          "start": {
+            "column": 1,
+            "line": 1,
+            "offset": 0
+          }
+        },
+        "type": "table"
+      }
+    ],
+    "kind": "markdown-document",
+    "path": "fixtures/parser/20-table-alignment.md",
+    "sourceRange": {
+      "end": {
+        "column": 1,
+        "line": 4,
+        "offset": 80
+      },
+      "start": {
+        "column": 1,
+        "line": 1,
+        "offset": 0
+      }
+    },
+    "version": "0.0.0"
+  }
+}
