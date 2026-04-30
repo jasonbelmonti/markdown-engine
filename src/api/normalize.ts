@@ -1,6 +1,8 @@
 import type { MarkdownDiagnostic } from "./diagnostics.js";
 import type { EngineDocument } from "./document.js";
 import type { ParsedMarkdown } from "./parse.js";
+import { cloneDiagnostics } from "../diagnostics/index.js";
+import { normalizeParsedMarkdown } from "../ir/index.js";
 
 export interface NormalizeOptions {
   preserveSourceLocations?: boolean;
@@ -15,3 +17,8 @@ export type NormalizeFunction = (
   parsed: ParsedMarkdown,
   options?: NormalizeOptions,
 ) => NormalizeResult;
+
+export const normalize: NormalizeFunction = (parsed, options = {}) => ({
+  document: normalizeParsedMarkdown(parsed, options),
+  diagnostics: cloneDiagnostics(parsed.diagnostics),
+});
