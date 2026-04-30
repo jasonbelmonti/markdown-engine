@@ -1,18 +1,30 @@
 #!/usr/bin/env node
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { dirname, join, relative } from "node:path";
-import { fileURLToPath } from "node:url";
+import { dirname, join, relative, resolve } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
-const repoRoot = join(scriptDir, "..");
-const sourceRoot = join(repoRoot, "src");
-const packageJsonPath = join(repoRoot, "package.json");
+const defaultRepoRoot = join(scriptDir, "..");
 
 const forbiddenSourcePatterns = [
   { label: "MCP", pattern: /\bmcp\b/gi },
+  { label: "MCP SDK", pattern: /@modelcontextprotocol\//gi },
   { label: "agent adapter", pattern: /agent[-_ ]?adapter/gi },
   { label: "LLM", pattern: /\bllm\b/gi },
+  { label: "OpenAI", pattern: /\bopenai\b|@openai\//gi },
+  { label: "Anthropic", pattern: /\banthropic\b|@anthropic-ai\//gi },
+  { label: "AI SDK", pattern: /@ai-sdk\//gi },
   { label: "fetch call", pattern: /\bfetch\s*\(/gi },
+  {
+    label: "network module",
+    pattern: /["'](?:node:)?(?:http|https|http2|net|tls|dgram|dns)["']/gi,
+  },
+  {
+    label: "network client package",
+    pattern: /["'](?:node-fetch|cross-fetch|isomorphic-fetch|undici|axios|got|ky|ws)["']/gi,
+  },
+  { label: "HTTP request", pattern: /\bhttps?\.(?:request|get)\s*\(/gi },
+  { label: "WebSocket", pattern: /\bWebSocket\b/gi },
   { label: "network service", pattern: /network[-_ ]?service/gi },
   { label: "profile compiler", pattern: /profile[-_ ]?compiler/gi },
   { label: "runtime lens", pattern: /runtime[-_ ]?lens/gi },
@@ -27,12 +39,23 @@ const forbiddenDependencyNames = new Set([
   "agent-adapter",
   "agent-adapters",
   "agent-eval-harness",
+  "axios",
+  "got",
+  "ky",
   "node-fetch",
+  "cross-fetch",
+  "isomorphic-fetch",
+  "undici",
+  "ws",
   "openai",
   "anthropic",
 ]);
 const forbiddenDependencyFragments = [
+  "modelcontextprotocol",
   "mcp",
+  "openai",
+  "anthropic",
+  "ai-sdk",
   "profile",
   "runtime",
   "agent-adapter",
@@ -45,34 +68,51 @@ const dependencySections = [
   "optionalDependencies",
 ];
 
-const sourceFiles = listFiles(sourceRoot).filter((file) => file.endsWith(".ts"));
-const sourceMatches = inspectSourceFiles(sourceFiles);
-const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"));
-const dependencyNames = dependencySections.flatMap((section) =>
-  Object.keys(packageJson[section] ?? {}).map((name) => ({ name, section })),
-);
-const dependencyMatches = inspectDependencies(dependencyNames);
+if (isMain(process.argv[1])) {
+  const result = runBoundaryInspection();
 
-if (sourceMatches.length > 0 || dependencyMatches.length > 0) {
-  console.error("Boundary inspection FAIL");
-  for (const match of sourceMatches) {
-    console.error(
-      `${match.file}:${match.line}:${match.column} ${match.label} ${match.text}`,
-    );
+  if (result.sourceMatches.length > 0 || result.dependencyMatches.length > 0) {
+    console.error("Boundary inspection FAIL");
+    for (const match of result.sourceMatches) {
+      console.error(
+        `${match.file}:${match.line}:${match.column} ${match.label} ${match.text}`,
+      );
+    }
+    for (const match of result.dependencyMatches) {
+      console.error(`${match.section}: ${match.name} matched ${match.label}`);
+    }
+    process.exit(1);
   }
-  for (const match of dependencyMatches) {
-    console.error(`${match.section}: ${match.name} matched ${match.label}`);
-  }
-  process.exit(1);
+
+  console.log("Boundary inspection PASS");
+  console.log(`Source files scanned: ${result.sourceFiles.length}`);
+  console.log(`Direct dependencies scanned: ${result.dependencyNames.length}`);
+  console.log("Forbidden source matches: 0");
+  console.log("Forbidden dependency matches: 0");
 }
 
-console.log("Boundary inspection PASS");
-console.log(`Source files scanned: ${sourceFiles.length}`);
-console.log(`Direct dependencies scanned: ${dependencyNames.length}`);
-console.log("Forbidden source matches: 0");
-console.log("Forbidden dependency matches: 0");
+export function runBoundaryInspection(repoRoot = defaultRepoRoot) {
+  const sourceRoot = join(repoRoot, "src");
+  const packageJsonPath = join(repoRoot, "package.json");
+  const sourceFiles = listFiles(sourceRoot).filter((file) =>
+    file.endsWith(".ts"),
+  );
+  const sourceMatches = inspectSourceFiles(sourceFiles, repoRoot);
+  const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"));
+  const dependencyNames = dependencySections.flatMap((section) =>
+    Object.keys(packageJson[section] ?? {}).map((name) => ({ name, section })),
+  );
+  const dependencyMatches = inspectDependencies(dependencyNames);
 
-function listFiles(directory) {
+  return {
+    sourceFiles,
+    sourceMatches,
+    dependencyNames,
+    dependencyMatches,
+  };
+}
+
+export function listFiles(directory) {
   if (!existsSync(directory)) {
     return [];
   }
@@ -87,17 +127,21 @@ function listFiles(directory) {
     });
 }
 
-function inspectSourceFiles(files) {
+export function inspectSourceFiles(files, repoRoot = defaultRepoRoot) {
   return files.flatMap((file) => {
     const text = readFileSync(file, "utf8");
 
-    return forbiddenSourcePatterns.flatMap(({ label, pattern }) =>
-      matchPattern(file, text, label, pattern),
-    );
+    return inspectSourceText(file, text, repoRoot);
   });
 }
 
-function matchPattern(file, text, label, pattern) {
+export function inspectSourceText(file, text, repoRoot = defaultRepoRoot) {
+  return forbiddenSourcePatterns.flatMap(({ label, pattern }) =>
+    matchPattern(file, text, repoRoot, label, pattern),
+  );
+}
+
+function matchPattern(file, text, repoRoot, label, pattern) {
   const matches = [];
   let match;
 
@@ -131,7 +175,7 @@ function lineAtOffset(text, offset) {
   return text.slice(lineStart, lineEnd === -1 ? text.length : lineEnd);
 }
 
-function inspectDependencies(dependencies) {
+export function inspectDependencies(dependencies) {
   return dependencies.flatMap(({ name, section }) => {
     const normalizedName = name.toLowerCase();
     const directMatch = forbiddenDependencyNames.has(normalizedName)
@@ -143,4 +187,11 @@ function inspectDependencies(dependencies) {
 
     return [...directMatch, ...fragmentMatches];
   });
+}
+
+function isMain(entryPath) {
+  return (
+    entryPath !== undefined &&
+    import.meta.url === pathToFileURL(resolve(entryPath)).href
+  );
 }

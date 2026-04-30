@@ -42,7 +42,9 @@ The script inspects:
 The script fails on forbidden source references or direct dependency names that
 would indicate profile/runtime/MCP/agent-adapter/LLM/network-service scope drift.
 Source matching is case-insensitive and accepts common hyphen, underscore, and
-space-separated variants for package-boundary terms.
+space-separated variants for package-boundary terms. It also covers common
+scoped SDK package names and Node/network client entry points that would bypass
+the engine boundary.
 
 ## Test Coverage
 
@@ -59,9 +61,9 @@ npm run build && npx vitest run tests/serialization-repeatability.test.ts tests/
 Focused result:
 
 ```text
-tests/boundary-inspection.test.ts (1 test) passed
+tests/boundary-inspection.test.ts (3 tests) passed
 tests/serialization-repeatability.test.ts (2 tests) passed
-Snapshots: 3 written
+Tests: 5 passed
 ```
 
 ## Boundary Notes
@@ -78,21 +80,21 @@ Full validation commands run for review readiness:
 npm run typecheck
 npm test
 git diff --check origin/main...HEAD
-rg -n "MCP|agent-adapter|agent adapter|LLM|fetch\\(|network service|profile compiler|runtime lens|markdown-profile|markdown-runtime|markdown-mcp" src tests
+rg -n "MCP|agent-adapter|agent adapter|LLM|fetch\\(|network service|profile compiler|runtime lens|markdown-profile|markdown-runtime|markdown-mcp" src
 node scripts/check-boundaries.mjs
 ```
 
 Final validation result:
 
 - `npm run typecheck`: pass
-- `npm test`: pass, 7 test files and 39 tests
+- `npm test`: pass, 7 test files and 41 tests
 - `git diff --check origin/main...HEAD`: pass
-- boundary grep over `src` and `tests`: no forbidden dependency or scope
-  matches
+- boundary grep over `src`: no forbidden dependency or scope matches
 - `node scripts/check-boundaries.mjs`: pass, 40 source files and 8 direct
   dependencies scanned
 
 ## Conclusion
 
 VAL-8 passes for the WP-5 boundary script. No forbidden source matches or direct
-dependency matches were found in the inspected engine boundary.
+dependency matches were found in the inspected engine boundary, and regression
+coverage now verifies common forbidden SDK and network entry-point examples.

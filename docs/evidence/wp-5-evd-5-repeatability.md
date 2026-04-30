@@ -71,9 +71,9 @@ npm run build && npx vitest run tests/serialization-repeatability.test.ts tests/
 Focused result:
 
 ```text
-tests/boundary-inspection.test.ts (1 test) passed
+tests/boundary-inspection.test.ts (3 tests) passed
 tests/serialization-repeatability.test.ts (2 tests) passed
-Snapshots: 3 written
+Tests: 5 passed
 ```
 
 ## Final Validation
@@ -90,7 +90,7 @@ git diff --check
 Final validation result:
 
 - `npm run typecheck`: pass
-- `npm test`: pass, 7 test files and 39 tests
+- `npm test`: pass, 7 test files and 41 tests
 - `git diff --check origin/main...HEAD`: pass
 - `git diff --check`: pass
 - no-index whitespace check over new untracked files: pass
