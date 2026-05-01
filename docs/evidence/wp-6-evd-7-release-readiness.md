@@ -111,7 +111,8 @@ Required before tag or publication:
 
 ## WP-6 Validation Output
 
-Final validation was run at 2026-05-01 13:23 CDT from
+Final validation was rerun after the Section 18 review fix at
+2026-05-01 13:45 CDT from
 `/Users/jasonbelmonti/Documents/Development/markdown-engine/.worktrees/bel-888-wp-6-release-handoff`.
 
 Results:
