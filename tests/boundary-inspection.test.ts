@@ -85,6 +85,8 @@ describe("WP-5 boundary inspection", () => {
       [
         'import { request } from "node:https";',
         'import net from "node:net";',
+        'import dnsPromises from "node:dns/promises";',
+        'import { resolve4 } from "dns/promises";',
         "const socket = new WebSocket(url);",
         "http.request(options);",
       ].join("\n"),

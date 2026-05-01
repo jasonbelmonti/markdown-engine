@@ -14,7 +14,7 @@ validation, and diagnostic-producing validation results through the public API.
 The check uses identical Markdown inputs and identical validation config for
 each run. It verifies UTF-8 byte equality, byte length equality, and SHA-256
 digest equality for compact and pretty serializer output. It also fails if any
-run returns a different repeatability case count.
+run returns a different repeatability case name or order.
 
 ## Command
 

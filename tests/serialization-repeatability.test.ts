@@ -4,6 +4,17 @@ import { describe, expect, it } from "vitest";
 import { snapshotRoot } from "./support/parser-fixture-support.js";
 import { serializedRepeatabilityCases } from "./support/repeatability.js";
 
+const expectedRepeatabilityCaseNames = [
+  "parse:representative:compact",
+  "parse:representative:pretty",
+  "normalize:representative:compact",
+  "normalize:representative:pretty",
+  "validate:representative-pass:compact",
+  "validate:representative-pass:pretty",
+  "validate:wp-4-diagnostics:compact",
+  "validate:wp-4-diagnostics:pretty",
+] as const;
+
 describe("WP-5 deterministic serialization repeatability", () => {
   it("VAL-5/EVD-5 serializes identical inputs and config byte-for-byte across ten runs", () => {
     const baseline = serializedRepeatabilityCases();
@@ -11,13 +22,15 @@ describe("WP-5 deterministic serialization repeatability", () => {
       serializedRepeatabilityCases(),
     );
 
-    expect(baseline).toHaveLength(8);
+    expect(baseline.map((testCase) => testCase.name)).toEqual(
+      expectedRepeatabilityCaseNames,
+    );
 
     for (const [runIndex, observed] of observedRuns.entries()) {
       expect(
         observed.map((testCase) => testCase.name),
         `run ${runIndex + 1} case order`,
-      ).toEqual(baseline.map((testCase) => testCase.name));
+      ).toEqual(expectedRepeatabilityCaseNames);
 
       for (const [caseIndex, observedCase] of observed.entries()) {
         const baselineCase = baseline[caseIndex];

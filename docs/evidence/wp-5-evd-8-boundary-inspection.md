@@ -44,7 +44,8 @@ would indicate profile/runtime/MCP/agent-adapter/LLM/network-service scope drift
 Source matching is case-insensitive and accepts common hyphen, underscore, and
 space-separated variants, plus camel and Pascal case TypeScript identifiers,
 for package-boundary terms. It also covers common scoped SDK package names and
-Node/network client entry points that would bypass the engine boundary.
+Node/network client entry points, including `dns/promises` module variants,
+that would bypass the engine boundary.
 Dependency matching is constrained to exact forbidden names, known forbidden
 scopes, or boundary-specific package tokens so routine packages with common
 substrings, such as `@babel/runtime`, do not fail the inspection.

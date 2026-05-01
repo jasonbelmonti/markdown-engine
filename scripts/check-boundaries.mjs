@@ -21,7 +21,8 @@ const forbiddenSourcePatterns = [
   { label: "fetch call", pattern: /\bfetch\s*\(/gi },
   {
     label: "network module",
-    pattern: /["'](?:node:)?(?:http|https|http2|net|tls|dgram|dns)["']/gi,
+    pattern:
+      /["'](?:node:)?(?:http|https|http2|net|tls|dgram|dns(?:\/promises)?)["']/gi,
   },
   {
     label: "network client package",
