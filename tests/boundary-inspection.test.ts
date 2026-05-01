@@ -87,6 +87,9 @@ describe("WP-5 boundary inspection", () => {
         'import net from "node:net";',
         'import dnsPromises from "node:dns/promises";',
         'import { resolve4 } from "dns/promises";',
+        'export { request } from "node:http";',
+        'const httpModule = await import("node:http");',
+        'const dnsModule = require("dns/promises");',
         "const socket = new WebSocket(url);",
         "http.request(options);",
       ].join("\n"),
@@ -100,6 +103,21 @@ describe("WP-5 boundary inspection", () => {
         expect.objectContaining({ label: "HTTP request" }),
       ]),
     );
+  });
+
+  it("does not flag protocol literals as network module imports", () => {
+    const sourceFile = join(repoRoot, "src/link-scheme-example.ts");
+    const matches = inspectSourceText(
+      sourceFile,
+      [
+        'const schemes = ["http", "https"];',
+        'const moduleName = "node:https";',
+        'const dnsSpecifier = "dns/promises";',
+      ].join("\n"),
+      repoRoot,
+    );
+
+    expect(matches).toEqual([]);
   });
 
   it("flags camel and Pascal case forbidden source identifiers", () => {

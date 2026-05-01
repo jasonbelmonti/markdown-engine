@@ -5,6 +5,17 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const defaultRepoRoot = join(scriptDir, "..");
+const networkModuleSpecifierPattern =
+  String.raw`(?:node:)?(?:http|https|http2|net|tls|dgram|dns(?:\/promises)?)`;
+const networkModuleImportPattern = new RegExp(
+  [
+    String.raw`\bimport\s+(?:type\s+)?(?:[^'"\n]+\s+from\s+)?["']${networkModuleSpecifierPattern}["']`,
+    String.raw`\bexport\s+(?:type\s+)?[^'"\n]+\s+from\s+["']${networkModuleSpecifierPattern}["']`,
+    String.raw`\bimport\s*\(\s*["']${networkModuleSpecifierPattern}["']`,
+    String.raw`\brequire\s*\(\s*["']${networkModuleSpecifierPattern}["']`,
+  ].join("|"),
+  "gi",
+);
 
 const forbiddenSourcePatterns = [
   { label: "MCP", pattern: /mcp/gi },
@@ -21,8 +32,7 @@ const forbiddenSourcePatterns = [
   { label: "fetch call", pattern: /\bfetch\s*\(/gi },
   {
     label: "network module",
-    pattern:
-      /["'](?:node:)?(?:http|https|http2|net|tls|dgram|dns(?:\/promises)?)["']/gi,
+    pattern: networkModuleImportPattern,
   },
   {
     label: "network client package",
