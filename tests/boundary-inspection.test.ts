@@ -1,4 +1,6 @@
 import { execFileSync } from "node:child_process";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -6,6 +8,7 @@ import { describe, expect, it } from "vitest";
 import {
   inspectDependencies,
   inspectSourceText,
+  runBoundaryInspection,
 } from "../scripts/check-boundaries.mjs";
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
@@ -76,6 +79,55 @@ describe("WP-5 boundary inspection", () => {
     ]);
 
     expect(matches).toEqual([]);
+  });
+
+  it("flags npm alias specs that point at forbidden dependency targets", () => {
+    const tempRepo = mkdtempSync(join(tmpdir(), "boundary-alias-"));
+
+    try {
+      writeFileSync(
+        join(tempRepo, "package.json"),
+        JSON.stringify({
+          dependencies: {
+            "engine-client": "npm:openai@latest",
+            "protocol-client": "npm:@modelcontextprotocol/sdk@1.0.0",
+            "remark-alias": "npm:remark-parse@latest",
+          },
+        }),
+      );
+
+      const result = runBoundaryInspection(tempRepo);
+
+      expect(result.dependencyNames).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            name: "engine-client",
+            spec: "npm:openai@latest",
+          }),
+        ]),
+      );
+      expect(result.dependencyMatches).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            name: "engine-client",
+            target: "openai",
+            targetKind: "npm alias target",
+          }),
+          expect.objectContaining({
+            name: "protocol-client",
+            target: "@modelcontextprotocol/sdk",
+            targetKind: "npm alias target",
+          }),
+        ]),
+      );
+      expect(result.dependencyMatches).not.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ name: "remark-alias" }),
+        ]),
+      );
+    } finally {
+      rmSync(tempRepo, { force: true, recursive: true });
+    }
   });
 
   it("flags common forbidden network source entry points", () => {

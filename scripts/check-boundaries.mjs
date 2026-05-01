@@ -131,7 +131,9 @@ if (isMain(process.argv[1])) {
       );
     }
     for (const match of result.dependencyMatches) {
-      console.error(`${match.section}: ${match.name} matched ${match.label}`);
+      console.error(
+        `${match.section}: ${formatDependencyMatch(match)} matched ${match.label}`,
+      );
     }
     process.exit(1);
   }
@@ -152,7 +154,11 @@ export function runBoundaryInspection(repoRoot = defaultRepoRoot) {
   const sourceMatches = inspectSourceFiles(sourceFiles, repoRoot);
   const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"));
   const dependencyNames = dependencySections.flatMap((section) =>
-    Object.keys(packageJson[section] ?? {}).map((name) => ({ name, section })),
+    Object.entries(packageJson[section] ?? {}).map(([name, spec]) => ({
+      name,
+      section,
+      spec,
+    })),
   );
   const dependencyMatches = inspectDependencies(dependencyNames);
 
@@ -228,23 +234,98 @@ function lineAtOffset(text, offset) {
 }
 
 export function inspectDependencies(dependencies) {
-  return dependencies.flatMap(({ name, section }) => {
-    const normalizedName = name.toLowerCase();
-    const matches = forbiddenDependencyNames.has(normalizedName)
-      ? [{ name, section, label: normalizedName }]
-      : [];
+  return dependencies.flatMap(({ name, section, spec }) => {
+    const targets = [
+      { kind: "name", value: name },
+      ...dependencySpecTargets(spec).map((target) => ({
+        kind: "npm alias target",
+        value: target,
+      })),
+    ];
+    const matches = [];
 
-    for (const { label, pattern } of forbiddenDependencyPatterns) {
-      if (
-        pattern.test(normalizedName) &&
-        !matches.some((match) => match.label === label)
-      ) {
-        matches.push({ name, section, label });
+    for (const { kind, value } of targets) {
+      const normalizedName = value.toLowerCase();
+      const targetMatches = [];
+
+      for (const { label, pattern } of forbiddenDependencyPatterns) {
+        if (
+          pattern.test(normalizedName) &&
+          !targetMatches.some(
+            (match) => match.target === value && match.label === label,
+          )
+        ) {
+          targetMatches.push({
+            name,
+            section,
+            spec,
+            target: value,
+            targetKind: kind,
+            label,
+          });
+        }
       }
+
+      if (
+        forbiddenDependencyNames.has(normalizedName) &&
+        targetMatches.length === 0
+      ) {
+        targetMatches.push({
+          name,
+          section,
+          spec,
+          target: value,
+          targetKind: kind,
+          label: normalizedName,
+        });
+      }
+
+      matches.push(...targetMatches);
     }
 
     return matches;
   });
+}
+
+function dependencySpecTargets(spec) {
+  if (typeof spec !== "string") {
+    return [];
+  }
+
+  const trimmedSpec = spec.trim();
+  if (!trimmedSpec.startsWith("npm:")) {
+    return [];
+  }
+
+  const aliasTarget = packageNameFromAliasTarget(trimmedSpec.slice(4));
+  return aliasTarget === undefined ? [] : [aliasTarget];
+}
+
+function packageNameFromAliasTarget(aliasTarget) {
+  if (aliasTarget.startsWith("@")) {
+    const scopeSeparator = aliasTarget.indexOf("/");
+    if (scopeSeparator === -1) {
+      return undefined;
+    }
+
+    const versionSeparator = aliasTarget.indexOf("@", scopeSeparator + 1);
+    return versionSeparator === -1
+      ? aliasTarget
+      : aliasTarget.slice(0, versionSeparator);
+  }
+
+  const versionSeparator = aliasTarget.indexOf("@");
+  return versionSeparator === -1
+    ? aliasTarget
+    : aliasTarget.slice(0, versionSeparator);
+}
+
+function formatDependencyMatch(match) {
+  if (match.targetKind === "npm alias target") {
+    return `${match.name} -> ${match.target}`;
+  }
+
+  return match.name;
 }
 
 function isMain(entryPath) {

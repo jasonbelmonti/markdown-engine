@@ -39,24 +39,28 @@ The script inspects:
 - direct package dependencies from `dependencies`, `devDependencies`,
   `peerDependencies`, and `optionalDependencies`
 
-The script fails on forbidden source references or direct dependency names that
-would indicate profile/runtime/MCP/agent-adapter/LLM/network-service scope drift.
+The script fails on forbidden source references, direct dependency names, or
+`npm:` alias dependency targets that would indicate
+profile/runtime/MCP/agent-adapter/LLM/network-service scope drift.
 Source matching is case-insensitive and accepts common hyphen, underscore, and
 space-separated variants, plus camel and Pascal case TypeScript identifiers,
 for package-boundary terms. It also covers common scoped SDK package names,
 actual Node/network module imports, dynamic imports, exports, and `require`
 calls, including `dns/promises` variants, that would bypass the engine boundary.
 Dependency matching is constrained to exact forbidden names, known forbidden
-scopes, or boundary-specific package tokens so routine packages with common
-substrings, such as `@babel/runtime`, do not fail the inspection.
-Boundary-specific tokens are detected in either the package scope or package
-name segment, including scoped names such as `@mcp/sdk`.
+scopes, boundary-specific package tokens, or parsed `npm:` alias targets so
+routine packages with common substrings, such as `@babel/runtime`, do not fail
+the inspection. Boundary-specific tokens are detected in either the package
+scope or package name segment, including scoped names such as `@mcp/sdk`, and
+alias specs such as `engine-client -> npm:openai@latest`.
 
 ## Test Coverage
 
 `tests/boundary-inspection.test.ts` executes the boundary script through Vitest
-and requires the pass marker. This keeps VAL-8 covered by `npm test` as well as
-by the standalone evidence command.
+and requires the pass marker. It also verifies that package.json `npm:` aliases
+are inspected by target package name, so innocuous alias names cannot hide
+forbidden SDK dependencies. This keeps VAL-8 covered by `npm test` as well as by
+the standalone evidence command.
 
 Focused command:
 
@@ -67,9 +71,9 @@ npm run build && npx vitest run tests/serialization-repeatability.test.ts tests/
 Focused result:
 
 ```text
-tests/boundary-inspection.test.ts (6 tests) passed
+tests/boundary-inspection.test.ts (7 tests) passed
 tests/serialization-repeatability.test.ts (2 tests) passed
-Tests: 8 passed
+Tests: 9 passed
 ```
 
 ## Boundary Notes
@@ -93,7 +97,7 @@ node scripts/check-boundaries.mjs
 Final validation result:
 
 - `npm run typecheck`: pass
-- `npm test`: pass, 7 test files and 44 tests
+- `npm test`: pass, 7 test files and 45 tests
 - `git diff --check origin/main...HEAD`: pass
 - boundary grep over `src`: no forbidden dependency or scope matches
 - `node scripts/check-boundaries.mjs`: pass, 40 source files and 8 direct
@@ -103,6 +107,6 @@ Final validation result:
 
 VAL-8 passes for the WP-5 boundary script. No forbidden source matches or direct
 dependency matches were found in the inspected engine boundary, and regression
-coverage now verifies common forbidden SDK, network entry-point, and
-camel/Pascal-case identifier examples, while allowing unrelated dependency
-names with common substrings.
+coverage now verifies common forbidden SDK, `npm:` alias target, network
+entry-point, and camel/Pascal-case identifier examples, while allowing unrelated
+dependency names with common substrings.
