@@ -15,9 +15,10 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "clean": "node scripts/clean-dist.mjs",
+    "build": "npm run clean && tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "npm run build && vitest run"
+    "test": "npm run build && vitest run \"--exclude=.worktrees/**\""
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
