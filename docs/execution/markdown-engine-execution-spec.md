@@ -13,9 +13,9 @@
 | Reviewers | Project owner, implementation reviewer, downstream profile/runtime consumer |
 | Decision owner | Project owner |
 | Target branch, release, or milestone | Initial `markdown-engine` implementation branch after PR #1 approval |
-| Last updated | 2026-04-28 |
+| Last updated | 2026-05-01 |
 | Related source docs | `RUNTIME_ARCHITECTURE.md`; `docs/design/markdown-engine-operational-design-spec.md`; PR #1 consensus review record in thread |
-| Related tickets | none |
+| Related tickets | `BEL-883` through `BEL-888` |
 
 ## 0. Execution Summary
 
@@ -103,7 +103,7 @@ Section status: Complete
 | ASM-1 | Assumption | TypeScript on Node.js remains the implementation platform. | Project owner | No | Confirm during `WP-1`; if false, stop and revise this execution spec. |
 | ASM-2 | Assumption | The unified/micromark/mdast ecosystem can provide sufficient GFM parse data and source locations for initial IR. | Implementer | No | Retire through `WP-1`, `VAL-1`, and `MS-1`. |
 | ASM-3 | Assumption | No persistent storage, network service, database, or browser runtime is required. | Implementer | No | `VAL-8` dependency audit and source-boundary review. |
-| DEP-1 | Dependency | Project-owner approval of PR #1 or equivalent approval record is required before implementation starts. | Project owner | Yes | Entry gate in section 18 remains unsatisfied until approval evidence exists. |
+| DEP-1 | Dependency | Project-owner approval of PR #1 or equivalent approval record is required before implementation starts. | Project owner | No (resolved) | Entry approval was resolved before implementation proceeded; WP-6 now records release containment and handoff state. |
 | DEP-2 | Dependency | Package manager and Node runtime choices must be established in `WP-1`. | Implementer | No | Record chosen versions in scaffold files and `EVD-1`. |
 
 Section status: Complete
@@ -620,6 +620,20 @@ Evidence artifact register:
 | EVD-10 | Rollback and containment record | Revert path, release withholding decision, or post-release containment notes. |
 | EVD-11 | Downstream consultation and handoff notes | Downstream profile/runtime feedback, plus implementation handoff notes. |
 
+WP-6 closeout evidence links:
+
+| ID | Artifact |
+| --- | --- |
+| EVD-7 | [`docs/evidence/wp-6-evd-7-release-readiness.md`](../evidence/wp-6-evd-7-release-readiness.md) |
+| EVD-9 | [`docs/evidence/wp-6-evd-9-merge-readiness.md`](../evidence/wp-6-evd-9-merge-readiness.md) |
+| EVD-10 | [`docs/evidence/wp-6-evd-10-rollback-containment.md`](../evidence/wp-6-evd-10-rollback-containment.md) |
+| EVD-11 | [`docs/evidence/wp-6-evd-11-downstream-handoff.md`](../evidence/wp-6-evd-11-downstream-handoff.md) |
+
+WP-6 closeout status as of 2026-05-01: release/tag is withheld, MS-3 approval
+is pending, and REV-4 downstream profile/runtime consumer confirmation is
+pending. This status allows handoff packet review but blocks package tag,
+package publication, and completion claim.
+
 Section status: Complete
 
 ## 13. Review Plan
@@ -687,7 +701,7 @@ Risks:
 
 Open questions:
 
-None. Rationale: parser/runtime/tooling decisions are bounded by assumptions and milestone gates rather than open blockers; `DEP-1` entry approval remains the only blocking dependency.
+None. Rationale: parser/runtime/tooling decisions are bounded by assumptions and milestone gates rather than open blockers. `DEP-1` entry approval is resolved for the current WP-6 handoff state; `MS-3` and `REV-4` remain pending release gates.
 
 Approved deviations:
 
@@ -723,16 +737,16 @@ Section status: Complete
 
 ## 18. Final Execution Gate
 
-Entry gate: Not satisfied. `DEP-1` requires project-owner approval of PR #1 or an equivalent approval record before implementation starts.
+Entry gate: Satisfied for the current WP-6 handoff state. `DEP-1` was resolved before implementation proceeded, and landed implementation evidence now exists through PR #11 at `add5fe7c336606b9bba9bd5ca9b32da320674e54`.
 
-Milestone approval gate: `MS-1`, `MS-2`, and `MS-3` are fully specified with verifier, due point, evidence, approval decision, and failure path. No due milestone has arrived because implementation has not started.
+Milestone approval gate: `MS-1`, `MS-2`, and `MS-3` are fully specified with verifier, due point, evidence, approval decision, and failure path. `MS-1` is satisfied by landed WP-1 evidence. `MS-2` is satisfied for WP-6 purposes by landed WP-2 through WP-5 evidence and merged PR #11. `MS-3` remains pending and blocks package tag, package publication, and completion claim.
 
-Completion gate: Completion requires all `WP-*` items complete, `MS-2` approved, blocking reviews resolved, `VAL-*` evidence captured, no open blocking `Q-*`, no unapproved `DEV-*`, and no unapproved `WVR-*`.
+Completion gate: Not yet satisfied. Completion requires all `WP-*` items complete, `MS-3` approved, blocking reviews resolved, `VAL-*` evidence captured, no open blocking `Q-*`, no unapproved `DEV-*`, and no unapproved `WVR-*`.
 
 Release gate: Release or package tag requires `MS-3` approval, `REL-3` evidence, semver classification, downstream-consumer confirmation, and containment notes.
 
 Handoff record: Handoff shall include links to `EVD-1` through `EVD-11`, final package commands, public contract docs, release/rollback notes, unresolved non-blocking follow-ups, and downstream profile/runtime integration notes.
 
-Final readiness state: Not ready
+Final readiness state: WP-6 handoff packet ready for MS-3 review; package tag, package publication, and completion claim remain blocked until `MS-3` and `REV-4` are resolved.
 
 Section status: Complete
