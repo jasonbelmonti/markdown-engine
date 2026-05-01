@@ -114,7 +114,7 @@ Required before tag or publication:
 ## BEL-928 Validation Output
 
 Final validation for the BEL-928 release metadata candidate was rerun at
-2026-05-01 16:41 CDT from
+2026-05-01 16:58 CDT from
 `/Users/jasonbelmonti/Documents/Development/markdown-engine/.worktrees/bel-928-public-package-metadata`.
 
 Results:
@@ -124,10 +124,11 @@ Results:
 - `node scripts/check-boundaries.mjs`: pass, 8 direct dependencies scanned and 0 forbidden dependency matches
 - `npm run build && node scripts/prove-repeatability.mjs --runs 10`: pass, 10 runs and 8 cases per run
 - `npm run release:verify`: pass
-- clean archive package preflight with `npm ci` and `npm pack --dry-run --json`: pass, package contains `dist/**`
+- direct `npm pack --dry-run --json`: pass, `prepack` runs `release:verify` before artifact creation
+- clean checkout package preflight with `npm ci` and `npm pack --dry-run --json`: pass, package contains `dist/**`
 - isolated tarball install smoke test importing `@jasonbelmonti/markdown-engine`: pass
 - `npm publish --dry-run --access public`: pass
-- `git diff --check`: pass
+- `git diff --check HEAD -- && git diff --exit-code HEAD --`: pass
 
 ## Conclusion
 

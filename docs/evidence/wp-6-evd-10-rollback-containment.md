@@ -83,8 +83,8 @@ Controls that remain active until MS-3 approval:
 - do not create a package tag
 - do not publish to a package registry
 - require project-owner approval for MS-3
-- require downstream profile/runtime consumer confirmation or explicit owner
-  waiver
+- preserve the downstream profile/runtime consumer confirmation recorded in
+  EVD-11
 - preserve the package boundary proved by EVD-8
 - require final package artifact verification from the exact release candidate
 

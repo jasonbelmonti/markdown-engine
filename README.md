@@ -112,6 +112,7 @@ When MS-3 is approved, publish the package as:
 npm publish --access public
 ```
 
-The publish path is guarded by npm lifecycle scripts: `prepublishOnly` runs the
-release verification gate, and `prepack` rebuilds `dist` before `npm pack` or
-`npm publish` creates an artifact.
+The publish path is guarded by npm lifecycle scripts: `prepublishOnly` and
+`prepack` both run the release verification gate before `npm publish` or
+`npm pack` creates an artifact. The gate rebuilds `dist` and fails if tracked
+files drift from `HEAD`.
