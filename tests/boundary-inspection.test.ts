@@ -63,4 +63,33 @@ describe("WP-5 boundary inspection", () => {
       ]),
     );
   });
+
+  it("flags camel and Pascal case forbidden source identifiers", () => {
+    const sourceFile = join(repoRoot, "src/identifier-boundary-example.ts");
+    const matches = inspectSourceText(
+      sourceFile,
+      [
+        "const mcpTransport = {};",
+        "type LLMClient = {};",
+        "const openAIClient = {};",
+        "class AnthropicClient {}",
+        "class WebSocketClient {}",
+        "class ModelContextProtocolClient {}",
+        "class AiSdkClient {}",
+      ].join("\n"),
+      repoRoot,
+    );
+
+    expect(matches).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ label: "MCP" }),
+        expect.objectContaining({ label: "LLM" }),
+        expect.objectContaining({ label: "OpenAI" }),
+        expect.objectContaining({ label: "Anthropic" }),
+        expect.objectContaining({ label: "WebSocket" }),
+        expect.objectContaining({ label: "Model Context Protocol" }),
+        expect.objectContaining({ label: "AI SDK" }),
+      ]),
+    );
+  });
 });

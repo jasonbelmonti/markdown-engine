@@ -7,13 +7,17 @@ const scriptDir = dirname(fileURLToPath(import.meta.url));
 const defaultRepoRoot = join(scriptDir, "..");
 
 const forbiddenSourcePatterns = [
-  { label: "MCP", pattern: /\bmcp\b/gi },
+  { label: "MCP", pattern: /mcp/gi },
+  {
+    label: "Model Context Protocol",
+    pattern: /model[-_ ]?context[-_ ]?protocol/gi,
+  },
   { label: "MCP SDK", pattern: /@modelcontextprotocol\//gi },
   { label: "agent adapter", pattern: /agent[-_ ]?adapter/gi },
-  { label: "LLM", pattern: /\bllm\b/gi },
-  { label: "OpenAI", pattern: /\bopenai\b|@openai\//gi },
-  { label: "Anthropic", pattern: /\banthropic\b|@anthropic-ai\//gi },
-  { label: "AI SDK", pattern: /@ai-sdk\//gi },
+  { label: "LLM", pattern: /llm/gi },
+  { label: "OpenAI", pattern: /openai|@openai\//gi },
+  { label: "Anthropic", pattern: /anthropic|@anthropic-ai\//gi },
+  { label: "AI SDK", pattern: /@ai-sdk\/|ai[-_ ]?sdk/gi },
   { label: "fetch call", pattern: /\bfetch\s*\(/gi },
   {
     label: "network module",
@@ -24,7 +28,7 @@ const forbiddenSourcePatterns = [
     pattern: /["'](?:node-fetch|cross-fetch|isomorphic-fetch|undici|axios|got|ky|ws)["']/gi,
   },
   { label: "HTTP request", pattern: /\bhttps?\.(?:request|get)\s*\(/gi },
-  { label: "WebSocket", pattern: /\bWebSocket\b/gi },
+  { label: "WebSocket", pattern: /web[-_ ]?socket/gi },
   { label: "network service", pattern: /network[-_ ]?service/gi },
   { label: "profile compiler", pattern: /profile[-_ ]?compiler/gi },
   { label: "runtime lens", pattern: /runtime[-_ ]?lens/gi },
