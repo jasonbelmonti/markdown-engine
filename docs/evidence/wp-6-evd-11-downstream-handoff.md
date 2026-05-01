@@ -12,13 +12,21 @@ handoff notes for the initial `markdown-engine` implementation package.
 
 ## Downstream Consultation Status
 
-Named downstream profile/runtime consumer: pending.
+Named downstream profile/runtime consumers:
 
-REV-4 status: not yet complete.
+- `agent-config-registry`
+- `spec-trace`
+- `markdown-issue-spec`
 
-Release effect: package tag and publication remain blocked until either a named
-downstream profile/runtime consumer confirms the contract is usable or the
-project owner records an explicit waiver.
+REV-4 status: complete by project-owner downstream-consumer confirmation.
+
+Release effect: package tag and publication remain blocked until MS-3 approval,
+but downstream-consumer confirmation is no longer a release blocker.
+
+Confirmation recorded on 2026-05-01: the project owner confirmed they are
+satisfied that the downstream contract criteria are met and are already
+planning refactors in `agent-config-registry`, `spec-trace`, and
+`markdown-issue-spec` to consume this engine.
 
 Required downstream confirmation:
 
@@ -102,25 +110,23 @@ The handoff does not include:
 
 ## Recommended Next Downstream Actions
 
-1. Assign or name the downstream profile/runtime consumer for REV-4.
-2. Review the README, API contract, frontmatter contract, and EVD-7 release
-   readiness record.
-3. Run a downstream spike that imports the package root and consumes
-   `EngineDocument`, diagnostics, validation config, and serialized output.
-4. Record confirmation, requested changes, or an owner waiver before MS-3
-   release approval.
-5. If contract changes are required, route them through the public contract
-   review path before any tag or publication.
+1. After publication, start the planned consumer refactors in
+   `agent-config-registry`, `spec-trace`, and `markdown-issue-spec`.
+2. Import only from `@jasonbelmonti/markdown-engine` package root.
+3. Consume `EngineDocument`, diagnostics, validation config, and serialized
+   output without reaching into internal parser, frontmatter, config, rule, IR,
+   diagnostic, or internal modules.
+4. If consumer refactors require contract changes, route them through the
+   public contract review path and semantic-version classification.
 
 ## Open Handoff Items
 
-- Downstream profile/runtime consumer identity is not recorded yet.
 - MS-3 approval is not recorded yet.
 - Package metadata is prepared as `@jasonbelmonti/markdown-engine@0.1.0`.
 - Package tag and publication remain withheld.
 
 ## Conclusion
 
-The implementation baseline is ready for downstream review, but REV-4 remains
-open. Release is contained until downstream confirmation or explicit owner
-waiver is recorded with MS-3 approval.
+REV-4 downstream confirmation is complete. Release remains contained until
+MS-3 approval records the final release-candidate decision, tag decision, and
+publication approval.
