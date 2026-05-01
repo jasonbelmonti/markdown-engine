@@ -13,9 +13,9 @@
 | Reviewers | Project owner, implementation reviewer, downstream profile/runtime consumer |
 | Decision owner | Project owner |
 | Target branch, release, or milestone | Initial `markdown-engine` implementation branch after PR #1 approval |
-| Last updated | 2026-04-28 |
+| Last updated | 2026-05-01 |
 | Related source docs | `RUNTIME_ARCHITECTURE.md`; `docs/design/markdown-engine-operational-design-spec.md`; PR #1 consensus review record in thread |
-| Related tickets | none |
+| Related tickets | `BEL-883` through `BEL-888` |
 
 ## 0. Execution Summary
 
@@ -619,6 +619,20 @@ Evidence artifact register:
 | EVD-9 | Merge readiness record | Branch status, review approvals, milestone approval status, and merge decision. |
 | EVD-10 | Rollback and containment record | Revert path, release withholding decision, or post-release containment notes. |
 | EVD-11 | Downstream consultation and handoff notes | Downstream profile/runtime feedback, plus implementation handoff notes. |
+
+WP-6 closeout evidence links:
+
+| ID | Artifact |
+| --- | --- |
+| EVD-7 | [`docs/evidence/wp-6-evd-7-release-readiness.md`](../evidence/wp-6-evd-7-release-readiness.md) |
+| EVD-9 | [`docs/evidence/wp-6-evd-9-merge-readiness.md`](../evidence/wp-6-evd-9-merge-readiness.md) |
+| EVD-10 | [`docs/evidence/wp-6-evd-10-rollback-containment.md`](../evidence/wp-6-evd-10-rollback-containment.md) |
+| EVD-11 | [`docs/evidence/wp-6-evd-11-downstream-handoff.md`](../evidence/wp-6-evd-11-downstream-handoff.md) |
+
+WP-6 closeout status as of 2026-05-01: release/tag is withheld, MS-3 approval
+is pending, and REV-4 downstream profile/runtime consumer confirmation is
+pending. This status allows handoff packet review but blocks package tag,
+package publication, and completion claim.
 
 Section status: Complete
 
