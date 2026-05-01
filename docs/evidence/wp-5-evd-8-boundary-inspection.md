@@ -48,6 +48,8 @@ Node/network client entry points that would bypass the engine boundary.
 Dependency matching is constrained to exact forbidden names, known forbidden
 scopes, or boundary-specific package tokens so routine packages with common
 substrings, such as `@babel/runtime`, do not fail the inspection.
+Boundary-specific tokens are detected in either the package scope or package
+name segment, including scoped names such as `@mcp/sdk`.
 
 ## Test Coverage
 

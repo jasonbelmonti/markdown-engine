@@ -27,9 +27,13 @@ describe("WP-5 boundary inspection", () => {
   it("flags common forbidden MCP and LLM SDK dependency names", () => {
     const matches = inspectDependencies([
       { name: "@modelcontextprotocol/sdk", section: "dependencies" },
+      { name: "@mcp/sdk", section: "dependencies" },
       { name: "@anthropic-ai/sdk", section: "dependencies" },
       { name: "@openai/agents", section: "dependencies" },
       { name: "@ai-sdk/openai", section: "dependencies" },
+      { name: "@llm/provider", section: "dependencies" },
+      { name: "@markdown-runtime/sdk", section: "dependencies" },
+      { name: "@profile-compiler/core", section: "dependencies" },
       { name: "markdown-runtime", section: "dependencies" },
       { name: "markdown-profile", section: "dependencies" },
       { name: "mcp-client", section: "dependencies" },
@@ -42,9 +46,13 @@ describe("WP-5 boundary inspection", () => {
     expect(matches).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ name: "@modelcontextprotocol/sdk" }),
+        expect.objectContaining({ name: "@mcp/sdk" }),
         expect.objectContaining({ name: "@anthropic-ai/sdk" }),
         expect.objectContaining({ name: "@openai/agents" }),
         expect.objectContaining({ name: "@ai-sdk/openai" }),
+        expect.objectContaining({ name: "@llm/provider" }),
+        expect.objectContaining({ name: "@markdown-runtime/sdk" }),
+        expect.objectContaining({ name: "@profile-compiler/core" }),
         expect.objectContaining({ name: "markdown-runtime" }),
         expect.objectContaining({ name: "markdown-profile" }),
         expect.objectContaining({ name: "mcp-client" }),
@@ -64,6 +72,7 @@ describe("WP-5 boundary inspection", () => {
       { name: "runtime-config", section: "dependencies" },
       { name: "openapi-types", section: "dependencies" },
       { name: "anthropics", section: "dependencies" },
+      { name: "@notmcp/sdk", section: "dependencies" },
     ]);
 
     expect(matches).toEqual([]);

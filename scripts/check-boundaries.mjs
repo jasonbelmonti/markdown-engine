@@ -57,49 +57,49 @@ const forbiddenDependencyNames = new Set([
 const forbiddenDependencyPatterns = [
   {
     label: "MCP SDK",
-    pattern: /^(?:@modelcontextprotocol\/|modelcontextprotocol(?:[-_].*)?$)/,
+    pattern: /(?:^|[@/_-])modelcontextprotocol(?:$|[\/_-])/,
   },
-  { label: "MCP", pattern: /^(?:@[^/]+\/)?(?:.*[-_])?mcp(?:[-_].*)?$/ },
+  { label: "MCP", pattern: /(?:^|[@/_-])mcp(?:$|[\/_-])/ },
   {
     label: "OpenAI",
-    pattern: /^(?:@openai\/|(?:.*[-_])?openai(?:[-_].*)?$)/,
+    pattern: /(?:^|[@/_-])openai(?:$|[\/_-])/,
   },
   {
     label: "Anthropic",
-    pattern: /^(?:@anthropic-ai\/|(?:.*[-_])?anthropic(?:[-_].*)?$)/,
+    pattern: /(?:^|[@/_-])anthropic(?:$|[\/_-])/,
   },
   {
     label: "AI SDK",
-    pattern: /^(?:@ai-sdk\/|(?:.*[-_])?ai[-_]sdk(?:[-_].*)?$)/,
+    pattern: /(?:^|[@/_-])ai[-_]sdk(?:$|[\/_-])/,
   },
   {
     label: "agent-adapter",
-    pattern: /^(?:@[^/]+\/)?(?:.*[-_])?agent[-_]adapter(?:s|[-_].*)?$/,
+    pattern: /(?:^|[@/_-])agent[-_]adapter(?:s)?(?:$|[\/_-])/,
   },
-  { label: "LLM", pattern: /^(?:@[^/]+\/)?(?:.*[-_])?llm(?:[-_].*)?$/ },
+  { label: "LLM", pattern: /(?:^|[@/_-])llm(?:$|[\/_-])/ },
   {
     label: "markdown-profile",
-    pattern: /^(?:@[^/]+\/)?markdown[-_]profile(?:[-_].*)?$/,
+    pattern: /(?:^|[@/_-])markdown[-_]profile(?:$|[\/_-])/,
   },
   {
     label: "markdown-runtime",
-    pattern: /^(?:@[^/]+\/)?markdown[-_]runtime(?:[-_].*)?$/,
+    pattern: /(?:^|[@/_-])markdown[-_]runtime(?:$|[\/_-])/,
   },
   {
     label: "markdown-mcp",
-    pattern: /^(?:@[^/]+\/)?markdown[-_]mcp(?:[-_].*)?$/,
+    pattern: /(?:^|[@/_-])markdown[-_]mcp(?:$|[\/_-])/,
   },
   {
     label: "profile compiler",
-    pattern: /^(?:@[^/]+\/)?(?:.*[-_])?profile[-_]compiler(?:[-_].*)?$/,
+    pattern: /(?:^|[@/_-])profile[-_]compiler(?:$|[\/_-])/,
   },
   {
     label: "runtime lens",
-    pattern: /^(?:@[^/]+\/)?(?:.*[-_])?runtime[-_]lens(?:[-_].*)?$/,
+    pattern: /(?:^|[@/_-])runtime[-_]lens(?:$|[\/_-])/,
   },
   {
     label: "network service",
-    pattern: /^(?:@[^/]+\/)?(?:.*[-_])?network[-_]service(?:[-_].*)?$/,
+    pattern: /(?:^|[@/_-])network[-_]service(?:$|[\/_-])/,
   },
 ];
 const dependencySections = [
