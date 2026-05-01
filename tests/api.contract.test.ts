@@ -6,7 +6,7 @@ import {
   serialize,
   validate,
   type ValidationConfig,
-} from "markdown-engine";
+} from "@jasonbelmonti/markdown-engine";
 
 const markdown = `---
 title: API contract

@@ -64,9 +64,11 @@ persistence, LLM calls, semantic rubrics, and arbitrary rule plugins.
 
 Current package state:
 
-- `package.json` name: `markdown-engine`
-- `package.json` version: `0.0.0`
-- `package.json` private flag: `true`
+- `package.json` name: `@jasonbelmonti/markdown-engine`
+- `package.json` version: `0.1.0`
+- `package.json` private flag: absent
+- `package.json` license: `MIT`
+- `package.json` publish access: public through `publishConfig.access`
 - package tag: none authorized by WP-6
 - package publication: none authorized by WP-6
 
@@ -74,9 +76,9 @@ Compatibility classification before first public release:
 
 - Initial package publication, if approved later, should be classified as an
   initial pre-1.0 release because there is no prior public package contract.
-- Recommended first published version after MS-3 approval: `0.1.0`.
-- Keep `0.0.0` and `private: true` in this WP-6 branch until the project owner
-  explicitly approves versioning, tag, and publication mechanics.
+- First public package version prepared by BEL-928: `0.1.0`.
+- Keep package tag and publication withheld until the project owner explicitly
+  approves MS-3, downstream confirmation or waiver, and publish mechanics.
 
 Post-release compatibility rules remain those recorded in
 [`docs/contracts/api.md`](../contracts/api.md) and EVD-6:
@@ -96,9 +98,10 @@ Rationale:
 
 - MS-3 approval is not yet recorded.
 - REV-4 downstream profile/runtime consumer confirmation is not yet recorded.
-- The package remains `private: true` at version `0.0.0`.
-- The current branch is a documentation and evidence handoff packet, not a
-  release mechanics change.
+- The package metadata is prepared for `@jasonbelmonti/markdown-engine@0.1.0`,
+  but publication is not authorized by metadata readiness alone.
+- The current branch is a release metadata preparation change, not a package
+  tag or publication.
 
 Required before tag or publication:
 
@@ -108,6 +111,7 @@ Required before tag or publication:
 - final package version decision
 - final release notes and containment approval
 - clean validation output from the current release candidate commit
+- successful `npm publish --dry-run` or equivalent final publish preflight
 
 ## WP-6 Validation Output
 
@@ -125,5 +129,6 @@ Results:
 
 ## Conclusion
 
-VAL-7 is ready for MS-3 review. Release remains contained: no tag, no package
-publication, and no public version change are authorized by this packet.
+VAL-7 is ready for MS-3 review after BEL-928 metadata preparation. Release
+remains contained: no tag and no package publication are authorized by this
+packet.

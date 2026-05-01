@@ -2,8 +2,8 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { normalize, parse } from "markdown-engine";
-import type { EngineDocument, EngineNode } from "markdown-engine";
+import { normalize, parse } from "@jasonbelmonti/markdown-engine";
+import type { EngineDocument, EngineNode } from "@jasonbelmonti/markdown-engine";
 
 const parserFixtureRoot = fileURLToPath(
   new URL("../../fixtures/parser", import.meta.url),

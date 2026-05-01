@@ -1,17 +1,18 @@
-# markdown-engine
+# @jasonbelmonti/markdown-engine
 
 Deterministic Markdown parsing and validation engine package for downstream
 profile and runtime work.
 
-The current package is private and unpublished:
+Current release candidate:
 
-- package name: `markdown-engine`
-- version: `0.0.0`
-- release status: no package tag or publication authorized
+- package name: `@jasonbelmonti/markdown-engine`
+- version: `0.1.0`
+- release status: package metadata is public-release-ready; package tag and
+  npm publication still require MS-3 approval
 
 ## Scope
 
-`markdown-engine` owns the local deterministic engine boundary:
+`@jasonbelmonti/markdown-engine` owns the deterministic engine boundary:
 
 - parse GFM Markdown and YAML frontmatter
 - normalize parser output into engine-owned IR
@@ -35,7 +36,12 @@ The package root exports:
 Example:
 
 ```ts
-import { normalize, parse, serialize, validate } from "markdown-engine";
+import {
+  normalize,
+  parse,
+  serialize,
+  validate,
+} from "@jasonbelmonti/markdown-engine";
 
 const markdown = `---
 title: Mission Brief
@@ -70,6 +76,8 @@ Contract references:
 
 - [Public API contract](docs/contracts/api.md)
 - [Frontmatter contract](docs/contracts/frontmatter.md)
+- [Changelog](CHANGELOG.md)
+- [Security policy](SECURITY.md)
 
 ## Validation
 
@@ -99,3 +107,9 @@ Do not tag or publish this package until MS-3 approval is recorded with:
 - rollback and containment notes
 - downstream profile/runtime consumer confirmation
 - complete evidence links from EVD-1 through EVD-11
+
+When MS-3 is approved, publish the package as:
+
+```sh
+npm publish --access public
+```

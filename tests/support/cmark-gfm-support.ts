@@ -1,7 +1,7 @@
 import { createRequire } from "node:module";
 import { expect } from "vitest";
 
-import type { EngineDocument } from "markdown-engine";
+import type { EngineDocument } from "@jasonbelmonti/markdown-engine";
 
 import {
   documentForFixture,

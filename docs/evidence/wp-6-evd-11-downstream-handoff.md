@@ -36,7 +36,12 @@ Required downstream confirmation:
 Current import surface:
 
 ```ts
-import { normalize, parse, serialize, validate } from "markdown-engine";
+import {
+  normalize,
+  parse,
+  serialize,
+  validate,
+} from "@jasonbelmonti/markdown-engine";
 ```
 
 Primary docs:
@@ -111,8 +116,7 @@ The handoff does not include:
 
 - Downstream profile/runtime consumer identity is not recorded yet.
 - MS-3 approval is not recorded yet.
-- Package version remains `0.0.0`; recommended first release version is
-  `0.1.0` only after approval.
+- Package metadata is prepared as `@jasonbelmonti/markdown-engine@0.1.0`.
 - Package tag and publication remain withheld.
 
 ## Conclusion

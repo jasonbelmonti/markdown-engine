@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-import { parse } from "markdown-engine";
-import type { EngineDocument, EngineNode } from "markdown-engine";
+import { parse } from "@jasonbelmonti/markdown-engine";
+import type { EngineDocument, EngineNode } from "@jasonbelmonti/markdown-engine";
 
 const fixture = readFileSync(
   new URL("../fixtures/representative.md", import.meta.url),

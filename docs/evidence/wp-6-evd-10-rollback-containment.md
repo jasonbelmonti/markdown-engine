@@ -14,8 +14,9 @@ limits for `markdown-engine` before any first package release.
 
 Current package state:
 
-- `private: true`
-- version `0.0.0`
+- package name `@jasonbelmonti/markdown-engine`
+- version `0.1.0`
+- publish access prepared as public package metadata
 - no package tag authorized by WP-6
 - no package publication authorized by WP-6
 - no runtime service, persistent storage, database, or live user data state
@@ -78,14 +79,14 @@ rollback in scope.
 
 Controls that remain active until MS-3 approval:
 
-- keep `private: true`
-- keep package version at `0.0.0`
+- keep package tag withheld
 - do not create a package tag
 - do not publish to a package registry
 - require project-owner approval for MS-3
 - require downstream profile/runtime consumer confirmation or explicit owner
   waiver
 - preserve the package boundary proved by EVD-8
+- require final package artifact verification from the exact release candidate
 
 ## Conclusion
 
