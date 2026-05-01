@@ -84,11 +84,9 @@ Contract references:
 Run the release-readiness gates from the repository root:
 
 ```sh
-npm run typecheck
-npm test
-node scripts/check-boundaries.mjs
-npm run build && node scripts/prove-repeatability.mjs --runs 10
-git diff --check
+npm run release:verify
+npm pack --dry-run
+npm publish --dry-run --access public
 ```
 
 The WP-6 validation record is:
@@ -113,3 +111,7 @@ When MS-3 is approved, publish the package as:
 ```sh
 npm publish --access public
 ```
+
+The publish path is guarded by npm lifecycle scripts: `prepublishOnly` runs the
+release verification gate, and `prepack` rebuilds `dist` before `npm pack` or
+`npm publish` creates an artifact.

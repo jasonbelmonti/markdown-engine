@@ -37,6 +37,9 @@
   "scripts": {
     "clean": "node scripts/clean-dist.mjs",
     "build": "npm run clean && tsc -p tsconfig.json",
+    "prepack": "npm run build",
+    "prepublishOnly": "npm run release:verify",
+    "release:verify": "npm run typecheck && npm test && node scripts/check-boundaries.mjs && npm run build && node scripts/prove-repeatability.mjs --runs 10 && git diff --check",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "npm run build && vitest run \"--exclude=.worktrees/**\""
   },

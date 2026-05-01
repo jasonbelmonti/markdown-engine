@@ -23,8 +23,8 @@ Current package state:
 
 Release decision: withhold package tag and publication.
 
-Release blocker: MS-3 approval and downstream profile/runtime consumer
-confirmation are not yet recorded.
+Release blocker: MS-3 approval is not yet recorded. REV-4 downstream
+profile/runtime consumer confirmation is recorded in EVD-11.
 
 ## Rollback Path Before Release
 

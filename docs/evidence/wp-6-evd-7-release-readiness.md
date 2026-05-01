@@ -4,8 +4,8 @@ Date: 2026-05-01
 Issue: BEL-888
 Work package: WP-6
 Validation: VAL-7, VAL-8
-Branch: `codex/bel-888-wp-6-release-handoff`
-Base: `origin/main` at `add5fe7c336606b9bba9bd5ca9b32da320674e54`
+Branch: `codex/bel-928-public-package-metadata`
+Base: `origin/main` at `9da314fe1b591ef63c282d0ef47c6efe648651d9`
 
 ## Scope
 
@@ -97,7 +97,7 @@ Recommendation: withhold tag and publication.
 Rationale:
 
 - MS-3 approval is not yet recorded.
-- REV-4 downstream profile/runtime consumer confirmation is not yet recorded.
+- REV-4 downstream profile/runtime consumer confirmation is recorded in EVD-11.
 - The package metadata is prepared for `@jasonbelmonti/markdown-engine@0.1.0`,
   but publication is not authorized by metadata readiness alone.
 - The current branch is a release metadata preparation change, not a package
@@ -106,18 +106,16 @@ Rationale:
 Required before tag or publication:
 
 - project-owner MS-3 approval
-- named downstream profile/runtime consumer confirmation or explicit owner
-  waiver
 - final package version decision
 - final release notes and containment approval
 - clean validation output from the current release candidate commit
 - successful `npm publish --dry-run` or equivalent final publish preflight
 
-## WP-6 Validation Output
+## BEL-928 Validation Output
 
-Final validation was rerun after the Section 18 review fix at
-2026-05-01 13:45 CDT from
-`/Users/jasonbelmonti/Documents/Development/markdown-engine/.worktrees/bel-888-wp-6-release-handoff`.
+Final validation for the BEL-928 release metadata candidate was rerun at
+2026-05-01 16:41 CDT from
+`/Users/jasonbelmonti/Documents/Development/markdown-engine/.worktrees/bel-928-public-package-metadata`.
 
 Results:
 
@@ -125,6 +123,10 @@ Results:
 - `npm test`: pass, 7 test files and 42 tests
 - `node scripts/check-boundaries.mjs`: pass, 8 direct dependencies scanned and 0 forbidden dependency matches
 - `npm run build && node scripts/prove-repeatability.mjs --runs 10`: pass, 10 runs and 8 cases per run
+- `npm run release:verify`: pass
+- clean archive package preflight with `npm ci` and `npm pack --dry-run --json`: pass, package contains `dist/**`
+- isolated tarball install smoke test importing `@jasonbelmonti/markdown-engine`: pass
+- `npm publish --dry-run --access public`: pass
 - `git diff --check`: pass
 
 ## Conclusion
