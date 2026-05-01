@@ -7,14 +7,13 @@ import { describe, expect, it } from "vitest";
 
 import {
   inspectDependencies,
-  inspectSourceText,
-  runBoundaryInspection,
+  runBoundaryDependencyAudit,
 } from "../scripts/check-boundaries.mjs";
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 
-describe("WP-5 boundary inspection", () => {
-  it("VAL-8/EVD-8 reports no forbidden source or dependency drift", () => {
+describe("WP-5 boundary dependency audit", () => {
+  it("VAL-8/EVD-8 reports no forbidden dependency drift", () => {
     const output = execFileSync(
       process.execPath,
       ["scripts/check-boundaries.mjs"],
@@ -24,7 +23,7 @@ describe("WP-5 boundary inspection", () => {
       },
     );
 
-    expect(output).toContain("Boundary inspection PASS");
+    expect(output).toContain("Boundary dependency audit PASS");
   });
 
   it("flags common forbidden MCP and LLM SDK dependency names", () => {
@@ -96,7 +95,7 @@ describe("WP-5 boundary inspection", () => {
         }),
       );
 
-      const result = runBoundaryInspection(tempRepo);
+      const result = runBoundaryDependencyAudit(tempRepo);
 
       expect(result.dependencyNames).toEqual(
         expect.arrayContaining([
@@ -128,76 +127,5 @@ describe("WP-5 boundary inspection", () => {
     } finally {
       rmSync(tempRepo, { force: true, recursive: true });
     }
-  });
-
-  it("flags common forbidden network source entry points", () => {
-    const sourceFile = join(repoRoot, "src/network-boundary-example.ts");
-    const matches = inspectSourceText(
-      sourceFile,
-      [
-        'import { request } from "node:https";',
-        'import net from "node:net";',
-        'import dnsPromises from "node:dns/promises";',
-        'import { resolve4 } from "dns/promises";',
-        'export { request } from "node:http";',
-        'const httpModule = await import("node:http");',
-        'const dnsModule = require("dns/promises");',
-        "const socket = new WebSocket(url);",
-        "http.request(options);",
-      ].join("\n"),
-      repoRoot,
-    );
-
-    expect(matches).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ label: "network module" }),
-        expect.objectContaining({ label: "WebSocket" }),
-        expect.objectContaining({ label: "HTTP request" }),
-      ]),
-    );
-  });
-
-  it("does not flag protocol literals as network module imports", () => {
-    const sourceFile = join(repoRoot, "src/link-scheme-example.ts");
-    const matches = inspectSourceText(
-      sourceFile,
-      [
-        'const schemes = ["http", "https"];',
-        'const moduleName = "node:https";',
-        'const dnsSpecifier = "dns/promises";',
-      ].join("\n"),
-      repoRoot,
-    );
-
-    expect(matches).toEqual([]);
-  });
-
-  it("flags camel and Pascal case forbidden source identifiers", () => {
-    const sourceFile = join(repoRoot, "src/identifier-boundary-example.ts");
-    const matches = inspectSourceText(
-      sourceFile,
-      [
-        "const mcpTransport = {};",
-        "type LLMClient = {};",
-        "const openAIClient = {};",
-        "class AnthropicClient {}",
-        "class WebSocketClient {}",
-        "class ModelContextProtocolClient {}",
-        "class AiSdkClient {}",
-      ].join("\n"),
-      repoRoot,
-    );
-
-    expect(matches).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ label: "MCP" }),
-        expect.objectContaining({ label: "LLM" }),
-        expect.objectContaining({ label: "OpenAI" }),
-        expect.objectContaining({ label: "Anthropic" }),
-        expect.objectContaining({ label: "WebSocket" }),
-        expect.objectContaining({ label: "Model Context Protocol" }),
-        expect.objectContaining({ label: "AI SDK" }),
-      ]),
-    );
   });
 });

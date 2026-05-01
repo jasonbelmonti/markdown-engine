@@ -90,11 +90,11 @@ Section status: Complete
 | CON-3 | Constraint | Frontmatter and engine config inputs use YAML-friendly authoring formats. | User answer in handoff context | Verify sample frontmatter and config fixtures in `VAL-2` and `VAL-4`. |
 | CON-4 | Invariant | Deterministic validation must not use LLM calls, semantic rubrics, or agent behavior traces. | Two-phase deterministic then semantic architecture | Add negative tests that reject semantic-style rule declarations through `VAL-4`. |
 | CON-5 | Invariant | Unsupported declarative rules must fail explicitly instead of being interpreted heuristically. | Runtime architecture decision | Verify unsupported-rule diagnostics through `VAL-4`. |
-| CON-6 | Invariant | The normalized engine IR and diagnostics are the stable public contracts; the raw parser AST is not a stable public contract in v1. | Downstream packages need parser-independent contracts. | Inspect public API and generated documentation in `VAL-7` and semver review in `VAL-8`. |
+| CON-6 | Invariant | The normalized engine IR and diagnostics are the stable public contracts; the raw parser AST is not a stable public contract in v1. | Downstream packages need parser-independent contracts. | Inspect public API, generated documentation, and semver classification in `VAL-7`. |
 | CON-7 | Invariant | Deterministic validation operates on parsed frontmatter and normalized engine IR, not directly on raw parser AST nodes. | Validation rules should remain stable across parser dependency changes. | Verify rule fixtures through `VAL-3`, `VAL-4`, and `VAL-5`. |
 | ASM-1 | Assumption | TypeScript on Node.js is acceptable for the initial package implementation. | Existing ecosystem fit for unified, micromark, mdast, and YAML tooling | Confirm when package scaffolding is created; if false, revise sections 12 through 17 before implementation proceeds. |
 | ASM-2 | Assumption | A unified/micromark/mdast stack can satisfy required GFM coverage while preserving source locations. | Prior technology review and ecosystem fit | Prove with parser fixture and source-position tests in `VAL-1` and `VAL-3`. |
-| ASM-3 | Assumption | The initial package can avoid persistent storage and network behavior. | Package is a local parser/validator library | Confirm in implementation review and fail the review if a service, database, or network dependency appears. |
+| ASM-3 | Assumption | The initial package can avoid persistent storage and network behavior. | Package is a local parser/validator library | Confirm by dependency audit and implementation review; fail the review if a service, database, or network dependency appears. |
 
 Section status: Complete
 
@@ -111,7 +111,7 @@ Section status: Complete
 | REQ-7 | Operability | Must | The system shall expose documented public API functions for parse, normalize, validate, and result serialization. | Consumers need a stable package surface. | VAL-7 |
 | REQ-8 | Reliability | Must | The system shall produce byte-for-byte identical JSON validation output for identical input, config, package version, and runtime version. | Deterministic validation is the central product guarantee. | VAL-5 |
 | REQ-9 | Security | Must | The system shall represent raw HTML as inert data and apply the configured raw-HTML policy without executing HTML. | Markdown files may contain raw HTML, but this package must not execute or trust it. | VAL-6 |
-| REQ-10 | Compatibility | Must | The system shall version public IR, config schema, diagnostic schema, and API contract changes with semantic versioning. | Downstream profile/runtime packages need predictable compatibility. | VAL-8 |
+| REQ-10 | Compatibility | Must | The system shall version public IR, config schema, diagnostic schema, and API contract changes with semantic versioning. | Downstream profile/runtime packages need predictable compatibility. | VAL-7 |
 
 Section status: Complete
 
@@ -291,7 +291,7 @@ Rollout plan: Implement on a feature branch, add package scaffold and tests, rev
 
 Rollback or containment plan: Trigger rollback if parser conformance, deterministic output, public API build, or contract review fails. The rollback action is to revert the feature branch or withhold package release. Reversibility is complete before first release because no persistent data or external service state is modified; after release, containment uses semver and deprecation rather than silent contract mutation.
 
-Operator actions: Maintainers run the test suite, inspect snapshot diffs, review diagnostics for source locations, classify public contract changes under semantic versioning, and stop release if boundary checks detect profile/runtime/MCP behavior inside `markdown-engine`.
+Operator actions: Maintainers run the test suite, inspect snapshot diffs, review diagnostics for source locations, classify public contract changes under semantic versioning, run the dependency audit, and stop release if dependency audit or implementation review detects profile/runtime/MCP behavior inside `markdown-engine`.
 
 Section status: Complete
 
@@ -305,8 +305,8 @@ Section status: Complete
 | VAL-4 | Test | Supported deterministic config evaluates correctly and unsupported declarations produce explicit diagnostics. | REQ-4 / REQ-5 / FUNC-2 / FUNC-3 / TECH-4 / TECH-5 / TECH-7 |
 | VAL-5 | Test | Repeated validation runs produce byte-for-byte identical serialized JSON output for identical inputs. | REQ-8 / FUNC-2 / TECH-5 / TECH-6 / TECH-7 |
 | VAL-6 | Test / Inspection | Diagnostics include stable rule ID, severity, message, and source location when available, and raw HTML policy does not execute HTML. | REQ-6 / REQ-9 / FUNC-2 / FUNC-3 / FUNC-4 / FUNC-5 / TECH-6 / TECH-7 |
-| VAL-7 | Inspection / Test | Public API functions and typed result contracts exist for parse, normalize, validate, and serialization. | REQ-7 / FUNC-1 / FUNC-2 / TECH-8 |
-| VAL-8 | Inspection | Public IR, config schema, diagnostic schema, and API changes are classified under semantic versioning. | REQ-10 / TECH-8 |
+| VAL-7 | Inspection / Test | Public API functions, typed result contracts, and semver classifications exist for parse, normalize, validate, and serialization. | REQ-7 / REQ-10 / FUNC-1 / FUNC-2 / TECH-8 |
+| VAL-8 | Review / Measurement | Dependency audit finds no profile/runtime/MCP/agent-adapter/LLM/network-service direct dependency or alias target, and implementation review confirms no forbidden source-boundary drift in engine code. | OBJ-3 / NG-1 / NG-2 / NG-3 / ASM-3 |
 
 | Behavior or requirement | Mechanisms | Verification |
 | --- | --- | --- |
@@ -324,7 +324,8 @@ Section status: Complete
 | REQ-7 | TECH-8 | VAL-7 |
 | REQ-8 | TECH-5 / TECH-6 / TECH-7 | VAL-5 |
 | REQ-9 | TECH-3 / TECH-5 / TECH-6 / TECH-7 | VAL-6 |
-| REQ-10 | TECH-8 | VAL-8 |
+| REQ-10 | TECH-8 | VAL-7 |
+| OBJ-3 / NG-1 / NG-2 / NG-3 / ASM-3 | Dependency audit / implementation review | VAL-8 |
 
 Section status: Complete
 
