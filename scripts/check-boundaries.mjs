@@ -1,0 +1,336 @@
+#!/usr/bin/env node
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { dirname, join, relative, resolve } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+
+const scriptDir = dirname(fileURLToPath(import.meta.url));
+const defaultRepoRoot = join(scriptDir, "..");
+const networkModuleSpecifierPattern =
+  String.raw`(?:node:)?(?:http|https|http2|net|tls|dgram|dns(?:\/promises)?)`;
+const networkModuleImportPattern = new RegExp(
+  [
+    String.raw`\bimport\s+(?:type\s+)?(?:[^'"\n]+\s+from\s+)?["']${networkModuleSpecifierPattern}["']`,
+    String.raw`\bexport\s+(?:type\s+)?[^'"\n]+\s+from\s+["']${networkModuleSpecifierPattern}["']`,
+    String.raw`\bimport\s*\(\s*["']${networkModuleSpecifierPattern}["']`,
+    String.raw`\brequire\s*\(\s*["']${networkModuleSpecifierPattern}["']`,
+  ].join("|"),
+  "gi",
+);
+
+const forbiddenSourcePatterns = [
+  { label: "MCP", pattern: /mcp/gi },
+  {
+    label: "Model Context Protocol",
+    pattern: /model[-_ ]?context[-_ ]?protocol/gi,
+  },
+  { label: "MCP SDK", pattern: /@modelcontextprotocol\//gi },
+  { label: "agent adapter", pattern: /agent[-_ ]?adapter/gi },
+  { label: "LLM", pattern: /llm/gi },
+  { label: "OpenAI", pattern: /openai|@openai\//gi },
+  { label: "Anthropic", pattern: /anthropic|@anthropic-ai\//gi },
+  { label: "AI SDK", pattern: /@ai-sdk\/|ai[-_ ]?sdk/gi },
+  { label: "fetch call", pattern: /\bfetch\s*\(/gi },
+  {
+    label: "network module",
+    pattern: networkModuleImportPattern,
+  },
+  {
+    label: "network client package",
+    pattern: /["'](?:node-fetch|cross-fetch|isomorphic-fetch|undici|axios|got|ky|ws)["']/gi,
+  },
+  { label: "HTTP request", pattern: /\bhttps?\.(?:request|get)\s*\(/gi },
+  { label: "WebSocket", pattern: /web[-_ ]?socket/gi },
+  { label: "network service", pattern: /network[-_ ]?service/gi },
+  { label: "profile compiler", pattern: /profile[-_ ]?compiler/gi },
+  { label: "runtime lens", pattern: /runtime[-_ ]?lens/gi },
+  { label: "markdown-profile", pattern: /markdown[-_ ]?profile/gi },
+  { label: "markdown-runtime", pattern: /markdown[-_ ]?runtime/gi },
+  { label: "markdown-mcp", pattern: /markdown[-_ ]?mcp/gi },
+];
+const forbiddenDependencyNames = new Set([
+  "markdown-profile",
+  "markdown-runtime",
+  "markdown-mcp",
+  "agent-adapter",
+  "agent-adapters",
+  "agent-eval-harness",
+  "axios",
+  "got",
+  "ky",
+  "node-fetch",
+  "cross-fetch",
+  "isomorphic-fetch",
+  "undici",
+  "ws",
+  "openai",
+  "anthropic",
+]);
+const forbiddenDependencyPatterns = [
+  {
+    label: "MCP SDK",
+    pattern: /(?:^|[@/_-])modelcontextprotocol(?:$|[\/_-])/,
+  },
+  { label: "MCP", pattern: /(?:^|[@/_-])mcp(?:$|[\/_-])/ },
+  {
+    label: "OpenAI",
+    pattern: /(?:^|[@/_-])openai(?:$|[\/_-])/,
+  },
+  {
+    label: "Anthropic",
+    pattern: /(?:^|[@/_-])anthropic(?:$|[\/_-])/,
+  },
+  {
+    label: "AI SDK",
+    pattern: /(?:^|[@/_-])ai[-_]sdk(?:$|[\/_-])/,
+  },
+  {
+    label: "agent-adapter",
+    pattern: /(?:^|[@/_-])agent[-_]adapter(?:s)?(?:$|[\/_-])/,
+  },
+  { label: "LLM", pattern: /(?:^|[@/_-])llm(?:$|[\/_-])/ },
+  {
+    label: "markdown-profile",
+    pattern: /(?:^|[@/_-])markdown[-_]profile(?:$|[\/_-])/,
+  },
+  {
+    label: "markdown-runtime",
+    pattern: /(?:^|[@/_-])markdown[-_]runtime(?:$|[\/_-])/,
+  },
+  {
+    label: "markdown-mcp",
+    pattern: /(?:^|[@/_-])markdown[-_]mcp(?:$|[\/_-])/,
+  },
+  {
+    label: "profile compiler",
+    pattern: /(?:^|[@/_-])profile[-_]compiler(?:$|[\/_-])/,
+  },
+  {
+    label: "runtime lens",
+    pattern: /(?:^|[@/_-])runtime[-_]lens(?:$|[\/_-])/,
+  },
+  {
+    label: "network service",
+    pattern: /(?:^|[@/_-])network[-_]service(?:$|[\/_-])/,
+  },
+];
+const dependencySections = [
+  "dependencies",
+  "devDependencies",
+  "peerDependencies",
+  "optionalDependencies",
+];
+
+if (isMain(process.argv[1])) {
+  const result = runBoundaryInspection();
+
+  if (result.sourceMatches.length > 0 || result.dependencyMatches.length > 0) {
+    console.error("Boundary inspection FAIL");
+    for (const match of result.sourceMatches) {
+      console.error(
+        `${match.file}:${match.line}:${match.column} ${match.label} ${match.text}`,
+      );
+    }
+    for (const match of result.dependencyMatches) {
+      console.error(
+        `${match.section}: ${formatDependencyMatch(match)} matched ${match.label}`,
+      );
+    }
+    process.exit(1);
+  }
+
+  console.log("Boundary inspection PASS");
+  console.log(`Source files scanned: ${result.sourceFiles.length}`);
+  console.log(`Direct dependencies scanned: ${result.dependencyNames.length}`);
+  console.log("Forbidden source matches: 0");
+  console.log("Forbidden dependency matches: 0");
+}
+
+export function runBoundaryInspection(repoRoot = defaultRepoRoot) {
+  const sourceRoot = join(repoRoot, "src");
+  const packageJsonPath = join(repoRoot, "package.json");
+  const sourceFiles = listFiles(sourceRoot).filter((file) =>
+    file.endsWith(".ts"),
+  );
+  const sourceMatches = inspectSourceFiles(sourceFiles, repoRoot);
+  const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"));
+  const dependencyNames = dependencySections.flatMap((section) =>
+    Object.entries(packageJson[section] ?? {}).map(([name, spec]) => ({
+      name,
+      section,
+      spec,
+    })),
+  );
+  const dependencyMatches = inspectDependencies(dependencyNames);
+
+  return {
+    sourceFiles,
+    sourceMatches,
+    dependencyNames,
+    dependencyMatches,
+  };
+}
+
+export function listFiles(directory) {
+  if (!existsSync(directory)) {
+    return [];
+  }
+
+  return readdirSync(directory)
+    .sort()
+    .flatMap((entry) => {
+      const path = join(directory, entry);
+      const stat = statSync(path);
+
+      return stat.isDirectory() ? listFiles(path) : [path];
+    });
+}
+
+export function inspectSourceFiles(files, repoRoot = defaultRepoRoot) {
+  return files.flatMap((file) => {
+    const text = readFileSync(file, "utf8");
+
+    return inspectSourceText(file, text, repoRoot);
+  });
+}
+
+export function inspectSourceText(file, text, repoRoot = defaultRepoRoot) {
+  return forbiddenSourcePatterns.flatMap(({ label, pattern }) =>
+    matchPattern(file, text, repoRoot, label, pattern),
+  );
+}
+
+function matchPattern(file, text, repoRoot, label, pattern) {
+  const matches = [];
+  let match;
+
+  while ((match = pattern.exec(text)) !== null) {
+    const location = locationForOffset(text, match.index);
+    matches.push({
+      file: relative(repoRoot, file),
+      line: location.line,
+      column: location.column,
+      label,
+      text: lineAtOffset(text, match.index).trim(),
+    });
+  }
+
+  pattern.lastIndex = 0;
+  return matches;
+}
+
+function locationForOffset(text, offset) {
+  const linesBeforeOffset = text.slice(0, offset).split("\n");
+  const line = linesBeforeOffset.length;
+  const column = linesBeforeOffset.at(-1).length + 1;
+
+  return { line, column };
+}
+
+function lineAtOffset(text, offset) {
+  const lineStart = text.lastIndexOf("\n", offset) + 1;
+  const lineEnd = text.indexOf("\n", offset);
+
+  return text.slice(lineStart, lineEnd === -1 ? text.length : lineEnd);
+}
+
+export function inspectDependencies(dependencies) {
+  return dependencies.flatMap(({ name, section, spec }) => {
+    const targets = [
+      { kind: "name", value: name },
+      ...dependencySpecTargets(spec).map((target) => ({
+        kind: "npm alias target",
+        value: target,
+      })),
+    ];
+    const matches = [];
+
+    for (const { kind, value } of targets) {
+      const normalizedName = value.toLowerCase();
+      const targetMatches = [];
+
+      for (const { label, pattern } of forbiddenDependencyPatterns) {
+        if (
+          pattern.test(normalizedName) &&
+          !targetMatches.some(
+            (match) => match.target === value && match.label === label,
+          )
+        ) {
+          targetMatches.push({
+            name,
+            section,
+            spec,
+            target: value,
+            targetKind: kind,
+            label,
+          });
+        }
+      }
+
+      if (
+        forbiddenDependencyNames.has(normalizedName) &&
+        targetMatches.length === 0
+      ) {
+        targetMatches.push({
+          name,
+          section,
+          spec,
+          target: value,
+          targetKind: kind,
+          label: normalizedName,
+        });
+      }
+
+      matches.push(...targetMatches);
+    }
+
+    return matches;
+  });
+}
+
+function dependencySpecTargets(spec) {
+  if (typeof spec !== "string") {
+    return [];
+  }
+
+  const trimmedSpec = spec.trim();
+  if (!trimmedSpec.startsWith("npm:")) {
+    return [];
+  }
+
+  const aliasTarget = packageNameFromAliasTarget(trimmedSpec.slice(4));
+  return aliasTarget === undefined ? [] : [aliasTarget];
+}
+
+function packageNameFromAliasTarget(aliasTarget) {
+  if (aliasTarget.startsWith("@")) {
+    const scopeSeparator = aliasTarget.indexOf("/");
+    if (scopeSeparator === -1) {
+      return undefined;
+    }
+
+    const versionSeparator = aliasTarget.indexOf("@", scopeSeparator + 1);
+    return versionSeparator === -1
+      ? aliasTarget
+      : aliasTarget.slice(0, versionSeparator);
+  }
+
+  const versionSeparator = aliasTarget.indexOf("@");
+  return versionSeparator === -1
+    ? aliasTarget
+    : aliasTarget.slice(0, versionSeparator);
+}
+
+function formatDependencyMatch(match) {
+  if (match.targetKind === "npm alias target") {
+    return `${match.name} -> ${match.target}`;
+  }
+
+  return match.name;
+}
+
+function isMain(entryPath) {
+  return (
+    entryPath !== undefined &&
+    import.meta.url === pathToFileURL(resolve(entryPath)).href
+  );
+}
