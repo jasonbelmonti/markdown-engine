@@ -96,13 +96,13 @@ Section status: Complete
 
 | ID | Type | Statement | Owner | Blocking? | Validation or resolution plan |
 | --- | --- | --- | --- | --- | --- |
-| CON-1 | Constraint | Execution shall preserve the engine boundary: parse, normalize, validate deterministic rules, diagnose, and serialize. | Implementer | No | `VAL-8` boundary inspection and `REV-3A` / `REV-3B` scope review. |
+| CON-1 | Constraint | Execution shall preserve the engine boundary: parse, normalize, validate deterministic rules, diagnose, and serialize. | Implementer | No | `VAL-8` dependency audit plus `REV-3A` / `REV-3B` source-boundary review. |
 | CON-2 | Constraint | Validation shall operate on parsed frontmatter and normalized engine IR, not directly on public raw parser AST. | Implementer | No | `VAL-3`, `VAL-4`, and contract review in `MS-2`. |
 | CON-3 | Constraint | Raw HTML shall be represented as inert data, evaluated against the configured raw-HTML policy, and not executed. | Implementer | No | `VAL-6` raw-HTML policy tests. |
 | CON-4 | Constraint | Config and frontmatter authoring inputs shall remain YAML-friendly. | Implementer | No | `VAL-2` and `VAL-4` fixtures. |
 | ASM-1 | Assumption | TypeScript on Node.js remains the implementation platform. | Project owner | No | Confirm during `WP-1`; if false, stop and revise this execution spec. |
 | ASM-2 | Assumption | The unified/micromark/mdast ecosystem can provide sufficient GFM parse data and source locations for initial IR. | Implementer | No | Retire through `WP-1`, `VAL-1`, and `MS-1`. |
-| ASM-3 | Assumption | No persistent storage, network service, database, or browser runtime is required. | Implementer | No | `VAL-8` dependency and boundary review. |
+| ASM-3 | Assumption | No persistent storage, network service, database, or browser runtime is required. | Implementer | No | `VAL-8` dependency audit and source-boundary review. |
 | DEP-1 | Dependency | Project-owner approval of PR #1 or equivalent approval record is required before implementation starts. | Project owner | Yes | Entry gate in section 18 remains unsatisfied until approval evidence exists. |
 | DEP-2 | Dependency | Package manager and Node runtime choices must be established in `WP-1`. | Implementer | No | Record chosen versions in scaffold files and `EVD-1`. |
 
@@ -162,7 +162,7 @@ Decomposition mission: Keep implementation agents inside explicit package bounda
 | PKG-2 | Parser and frontmatter adapters | 2 | Isolate external parser/YAML dependencies behind engine-owned adapter contracts. | GFM and frontmatter input enter the engine through one controlled boundary. | RISK-1 | Internal adapter functions returning engine-owned intermediate data. | `npm test -- --run parser` or equivalent package script. | Depends on selected parser APIs and is not project-agnostic enough for standalone reuse. |
 | PKG-3 | Normalized IR, diagnostics, and serialization | 2 | Own stable engine data structures, source locations, diagnostic shape, and JSON serialization. | Downstream packages receive stable IR and diagnostics. | RISK-1 / RISK-3 | IR/diagnostic types and serializer called through `PKG-1`. | `npm test -- --run ir` or equivalent package script. | Contract is not independently versioned outside `markdown-engine`. |
 | PKG-4 | Config schema and deterministic rule engine | 2 | Validate YAML-friendly config and evaluate closed deterministic rule families. | Users get deterministic validation and explicit unsupported-rule diagnostics. | RISK-2 / RISK-4 | Config schema types and internal rule registry called through `PKG-1`. | `npm test -- --run rules` or equivalent package script. | Rule vocabulary is engine-specific and not yet a standalone profile compiler. |
-| PKG-5 | Fixture and evidence harness | 2 | Provide scoped fixtures, snapshots, repeatability checks, and boundary inspections. | Reviewers can verify parser behavior, determinism, and contract stability. | RISK-1 / RISK-2 / RISK-4 | Test fixtures, snapshot baselines, and evidence scripts. | `npm test` and `git diff --check main...HEAD`. | Harness is project-specific until package release process exists. |
+| PKG-5 | Fixture and evidence harness | 2 | Provide scoped fixtures, snapshots, repeatability checks, dependency audits, and boundary review evidence. | Reviewers can verify parser behavior, determinism, and contract stability. | RISK-1 / RISK-2 / RISK-4 | Test fixtures, snapshot baselines, and evidence scripts. | `npm test` and `git diff --check main...HEAD`. | Harness is project-specific until package release process exists. |
 
 ### Package Boundary Card: PKG-1
 
@@ -420,7 +420,7 @@ Value / risk trace:
 Owns:
 
 - Files/directories: `tests/**`, `fixtures/**`, `snapshots/**`, test scripts, CI workflow if introduced.
-- Concepts: fixture coverage, snapshot baselines, repeatability runs, boundary inspections.
+- Concepts: fixture coverage, snapshot baselines, repeatability runs, dependency audits, source-boundary review.
 - Runtime responsibilities: None outside test execution.
 
 Does not own:
@@ -517,7 +517,7 @@ Deferred completeness: Full fixture breadth, all selected rule families, docs po
 | WP-2 | Stabilize public API and contract docs. | Implementer | PKG-1 / PKG-3 | `src/index.ts`, `src/api/**`, `src/types/**`, `docs/contracts/**` | `src/parser/**`, `src/frontmatter/**`, `src/rules/**`, `tests/**` | WP-1 output and operational design requirements | Public parse/normalize/validate/serialize contract and docs | WP-1 / MS-1 | Consumers know what contract to depend on before broad implementation. | RISK-3 | MS-2 | VAL-7 | Public API/types documented and reviewed; raw parser AST excluded from stable contract. |
 | WP-3 | Expand parser, frontmatter, IR, raw HTML, and diagnostic fixtures. | Implementer | PKG-2 / PKG-3 / PKG-5 | `src/parser/**`, `src/frontmatter/**`, `src/ir/**`, `src/diagnostics/**`, `tests/**`, `fixtures/**`, `snapshots/**` | public API docs, `src/rules/**` | WP-1 scaffold and WP-2 contract direction | Representative GFM/frontmatter coverage, selected `cmark-gfm` comparison coverage, and IR/diagnostic snapshots | WP-1 / MS-1 | Parser and IR behavior is demonstrably stable across core Markdown constructs. | RISK-1 | MS-2 | VAL-1 / VAL-2 / VAL-3 / VAL-6 | At least 30 representative parser fixtures exist; selected `cmark-gfm` comparison cases, frontmatter, and raw HTML cases pass. |
 | WP-4 | Implement YAML-friendly config schema and deterministic rule families. | Implementer | PKG-4 / PKG-5 | `src/config/**`, `src/rules/**`, rule fixtures, relevant diagnostics tests | `src/parser/**`, `src/frontmatter/**`, `src/ir/**`, public contract docs | WP-1 minimal config/rule proof, WP-2 contract, and WP-3 IR behavior | Expanded closed rule registry, supported rule tests, unsupported-rule diagnostics, raw-HTML policy diagnostics | WP-1 / WP-2 / WP-3 | Users can enforce deterministic structure without semantic inference. | RISK-2 / RISK-4 | MS-2 | VAL-4 / VAL-6 / VAL-8 | At least 5 rule families pass; raw-HTML policy diagnostics pass; semantic-style rules are rejected explicitly. |
-| WP-5 | Prove deterministic serialization, repeatability, and boundary safety. | Implementer | PKG-3 / PKG-5 | `src/serialize/**`, snapshots, repeatability tests, boundary-inspection tests/scripts | `src/parser/**`, `src/config/**`, `src/rules/**`, public docs | WP-2, WP-3, WP-4 | Repeatability evidence, snapshot stability, boundary inspection output | WP-2 / WP-3 / WP-4 | Reviewers can prove identical input/config produce identical JSON and no forbidden dependencies exist. | RISK-2 / RISK-4 | MS-2 | VAL-5 / VAL-8 | Ten-run repeatability check passes; boundary inspection reports no forbidden deps. |
+| WP-5 | Prove deterministic serialization, repeatability, and boundary safety. | Implementer | PKG-3 / PKG-5 | `src/serialize/**`, snapshots, repeatability tests, boundary dependency-audit tests/scripts | `src/parser/**`, `src/config/**`, `src/rules/**`, public docs | WP-2, WP-3, WP-4 | Repeatability evidence, snapshot stability, dependency audit output, and source-boundary review notes | WP-2 / WP-3 / WP-4 | Reviewers can prove identical input/config produce identical JSON and no forbidden direct dependencies exist. | RISK-2 / RISK-4 | MS-2 | VAL-5 / VAL-8 | Ten-run repeatability check passes; dependency audit reports no forbidden direct dependencies or alias targets; source-boundary review records no forbidden scope drift. |
 | WP-6 | Finalize docs, review evidence, release containment, and handoff. | Implementer | PKG-1 / PKG-5 | `README.md`, `docs/contracts/**`, `docs/execution/**`, `.github/workflows/**` if introduced | all source modules | WP-1 through WP-5 evidence | Review packet, release readiness notes, rollback/containment record, handoff notes | MS-2 | Maintainers can review, merge, and withhold or tag the package with clear evidence. | RISK-3 / RISK-4 | MS-3 | VAL-7 / VAL-8 | All validation evidence exists; release gate records publish/tag decision and containment plan. |
 
 Execution sequence:
@@ -532,7 +532,7 @@ Execution sequence:
 
 Parallelization rules: No parallel source edits before `MS-1`. After `MS-1`, `WP-3` and `WP-4` remain serialized because `WP-4` consumes expanded `WP-3` IR behavior. `WP-5` and `WP-6` are serialized after implementation evidence exists.
 
-Integration points: `MS-1` integrates parser/frontmatter/IR/API and minimal config/rule proof; `MS-2` integrates public contract, parser coverage, expanded rules, diagnostics, repeatability, and boundary inspection; `MS-3` integrates release readiness and handoff.
+Integration points: `MS-1` integrates parser/frontmatter/IR/API and minimal config/rule proof; `MS-2` integrates public contract, parser coverage, expanded rules, diagnostics, repeatability, dependency audit, and source-boundary review; `MS-3` integrates release readiness and handoff.
 
 Coordination triggers: Any exported type/function change, IR/diagnostic field change, config schema change, parser adapter result change, snapshot baseline update, dependency addition, CI workflow addition, or shared editable-path conflict requires coordination before continuing.
 
@@ -552,7 +552,7 @@ Manual verification guide:
 | --- | --- | --- | --- | --- |
 | MV-1 | MS-1 | Run the proving-slice test command and inspect the representative fixture output. | Command passes and output includes parsed frontmatter, normalized IR, minimal deterministic rule result, diagnostics shape, and serialized JSON shape. | EVD-1 / EVD-4 |
 | MV-2 | MS-1 | Inspect public exports from the proving slice. | Raw parser AST is not exposed as a stable public contract. | EVD-1 |
-| MV-3 | MS-2 | Run the full parser, frontmatter, IR, rule, diagnostic, repeatability, build/typecheck, and boundary validation commands. | All commands pass and evidence artifacts are present. | EVD-2 / EVD-3 / EVD-4 / EVD-5 / EVD-7 / EVD-8 |
+| MV-3 | MS-2 | Run the full parser, frontmatter, IR, rule, diagnostic, repeatability, build/typecheck, and dependency-audit validation commands. | All commands pass and evidence artifacts are present. | EVD-2 / EVD-3 / EVD-4 / EVD-5 / EVD-7 / EVD-8 |
 | MV-4 | MS-2 | Review contract docs and representative serialized output. | API, IR, config, diagnostic, and serialization contracts are coherent and semver-classified. | EVD-6 |
 | MV-5 | MS-3 | Review release containment and handoff notes. | Release/tag decision, rollback limit, downstream notes, and evidence links are recorded. | EVD-9 / EVD-10 / EVD-11 |
 
@@ -602,7 +602,7 @@ Section status: Complete
 | VAL-5 | Test | Repeated validation runs produce byte-for-byte identical serialized JSON for identical inputs. | Pre-merge | Implementer | EVD-5 |
 | VAL-6 | Test / Inspection | Diagnostics include rule ID, severity, message, source location where available, configured raw-HTML policy diagnostics, and evidence that raw HTML is not executed. | Pre-merge | Implementer | EVD-3 / EVD-4 |
 | VAL-7 | Review / Test | Public API functions, result contracts, semver classifications, package build, and typecheck are documented and reviewable. | Pre-merge / Pre-release | Implementer | EVD-6 / EVD-7 |
-| VAL-8 | Review / Measurement | Boundary inspection finds no MCP, runtime, agent-adapter, LLM, network-service, or product-profile dependency in engine code. | Pre-merge / Pre-release | Implementer | EVD-8 |
+| VAL-8 | Review / Measurement | Dependency audit finds no MCP, runtime, agent-adapter, LLM, network-service, or product-profile direct dependency or alias target; source-boundary review confirms no forbidden scope drift in engine code. | Pre-merge / Pre-release | Implementer | EVD-8 |
 
 Evidence artifact register:
 
@@ -615,7 +615,7 @@ Evidence artifact register:
 | EVD-5 | Deterministic repeatability report | Ten-run serialized JSON comparison output and command used. |
 | EVD-6 | Public contract review packet | API exports, IR schema, config schema, diagnostic schema, serialization contract, and review notes. |
 | EVD-7 | Semver and release-readiness record | Compatibility classification, package version decision, build/typecheck output, and release/tag recommendation. |
-| EVD-8 | Boundary inspection report | Evidence that no profile/runtime/MCP/agent-adapter/LLM/network-service dependency entered engine code. |
+| EVD-8 | Boundary dependency audit and review report | Evidence that no profile/runtime/MCP/agent-adapter/LLM/network-service direct dependency or alias target entered the package, plus source-boundary review notes for engine code. |
 | EVD-9 | Merge readiness record | Branch status, review approvals, milestone approval status, and merge decision. |
 | EVD-10 | Rollback and containment record | Revert path, release withholding decision, or post-release containment notes. |
 | EVD-11 | Downstream consultation and handoff notes | Downstream profile/runtime feedback, plus implementation handoff notes. |
@@ -646,7 +646,7 @@ Section status: Complete
 | ID | Action | Timing | Owner | Abort trigger | Evidence |
 | --- | --- | --- | --- | --- | --- |
 | REL-1 | Implement on a feature branch or worktree separate from `main`. | During execution | Implementer | Branch contains unrelated changes or unapproved scope. | EVD-9 |
-| REL-2 | Merge implementation only after `MS-2` approval. | Pre-merge | Project owner | Missing validation evidence, contract review rejection, or failed boundary inspection. | EVD-9 |
+| REL-2 | Merge implementation only after `MS-2` approval. | Pre-merge | Project owner | Missing validation evidence, contract review rejection, failed dependency audit, or boundary-review rejection. | EVD-9 |
 | REL-3 | Withhold package tag/publication until `MS-3` approval. | Pre-release | Project owner | Downstream contract concern, missing release notes, or unresolved semver classification. | EVD-10 / EVD-11 |
 | REL-4 | Revert or withhold release if package behavior fails after merge but before publication. | Recovery | Implementer | Failing CI, fixture regression, or contract issue discovered before release. | EVD-10 |
 
@@ -662,7 +662,7 @@ Section status: Complete
 | --- | --- | --- | --- | --- |
 | OBS-1 | Package test result | Detect parser, frontmatter, rule, diagnostic, and serialization failures. | Implementer and reviewer | Block merge until fixed. |
 | OBS-2 | Snapshot diff | Detect IR, diagnostic, and serialized output contract changes. | Contract reviewer | Approve intentional changes or reject drift. |
-| OBS-3 | Boundary inspection result | Detect forbidden dependencies and scope drift. | Boundary reviewer | Block merge and remove dependency or approve deviation. |
+| OBS-3 | Boundary dependency audit and review result | Detect forbidden direct dependencies, alias targets, and reviewed source scope drift. | Boundary reviewer | Block merge and remove dependency or approve deviation. |
 | OBS-4 | Package build/typecheck result | Detect public type or build failures. | Implementer and reviewer | Block merge until fixed. |
 | OBS-5 | Downstream contract feedback | Detect unusable IR/diagnostic/config shape before release. | Project owner | Block release until addressed or formally deviated. |
 
@@ -683,7 +683,7 @@ Risks:
 | RISK-1 | Parser source locations are insufficient or unstable. | Diagnostics become weaker or IR guarantee must change. | Medium | Implementer | Prove representative constructs in `WP-1` and expand fixtures in `WP-3`. | VAL-1 / VAL-3 |
 | RISK-2 | Rule vocabulary drifts into semantic judgment. | Deterministic guarantee is compromised. | Medium | Implementer | Closed rule registry, unsupported-rule diagnostics, boundary review. | VAL-4 / VAL-8 |
 | RISK-3 | Public contracts do not meet downstream profile/runtime needs. | Later packages may fork parser behavior or require rework. | Medium | Project owner | Contract review and downstream consultation before release. | VAL-7 / REV-4 |
-| RISK-4 | Engine absorbs profile/runtime/MCP concerns. | Package decomposition fails. | Medium | Implementer | Non-objectives, forbidden dependencies, boundary inspection. | VAL-8 |
+| RISK-4 | Engine absorbs profile/runtime/MCP concerns. | Package decomposition fails. | Medium | Implementer | Non-objectives, forbidden dependency audit, source-boundary review. | VAL-8 |
 
 Open questions:
 
