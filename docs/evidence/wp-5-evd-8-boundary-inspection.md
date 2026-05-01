@@ -45,6 +45,9 @@ Source matching is case-insensitive and accepts common hyphen, underscore, and
 space-separated variants, plus camel and Pascal case TypeScript identifiers,
 for package-boundary terms. It also covers common scoped SDK package names and
 Node/network client entry points that would bypass the engine boundary.
+Dependency matching is constrained to exact forbidden names, known forbidden
+scopes, or boundary-specific package tokens so routine packages with common
+substrings, such as `@babel/runtime`, do not fail the inspection.
 
 ## Test Coverage
 
@@ -61,9 +64,9 @@ npm run build && npx vitest run tests/serialization-repeatability.test.ts tests/
 Focused result:
 
 ```text
-tests/boundary-inspection.test.ts (4 tests) passed
+tests/boundary-inspection.test.ts (5 tests) passed
 tests/serialization-repeatability.test.ts (2 tests) passed
-Tests: 6 passed
+Tests: 7 passed
 ```
 
 ## Boundary Notes
@@ -87,7 +90,7 @@ node scripts/check-boundaries.mjs
 Final validation result:
 
 - `npm run typecheck`: pass
-- `npm test`: pass, 7 test files and 42 tests
+- `npm test`: pass, 7 test files and 43 tests
 - `git diff --check origin/main...HEAD`: pass
 - boundary grep over `src`: no forbidden dependency or scope matches
 - `node scripts/check-boundaries.mjs`: pass, 40 source files and 8 direct
@@ -98,4 +101,5 @@ Final validation result:
 VAL-8 passes for the WP-5 boundary script. No forbidden source matches or direct
 dependency matches were found in the inspected engine boundary, and regression
 coverage now verifies common forbidden SDK, network entry-point, and
-camel/Pascal-case identifier examples.
+camel/Pascal-case identifier examples, while allowing unrelated dependency
+names with common substrings.

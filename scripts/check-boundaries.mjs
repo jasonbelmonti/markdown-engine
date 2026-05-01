@@ -54,16 +54,53 @@ const forbiddenDependencyNames = new Set([
   "openai",
   "anthropic",
 ]);
-const forbiddenDependencyFragments = [
-  "modelcontextprotocol",
-  "mcp",
-  "openai",
-  "anthropic",
-  "ai-sdk",
-  "profile",
-  "runtime",
-  "agent-adapter",
-  "llm",
+const forbiddenDependencyPatterns = [
+  {
+    label: "MCP SDK",
+    pattern: /^(?:@modelcontextprotocol\/|modelcontextprotocol(?:[-_].*)?$)/,
+  },
+  { label: "MCP", pattern: /^(?:@[^/]+\/)?(?:.*[-_])?mcp(?:[-_].*)?$/ },
+  {
+    label: "OpenAI",
+    pattern: /^(?:@openai\/|(?:.*[-_])?openai(?:[-_].*)?$)/,
+  },
+  {
+    label: "Anthropic",
+    pattern: /^(?:@anthropic-ai\/|(?:.*[-_])?anthropic(?:[-_].*)?$)/,
+  },
+  {
+    label: "AI SDK",
+    pattern: /^(?:@ai-sdk\/|(?:.*[-_])?ai[-_]sdk(?:[-_].*)?$)/,
+  },
+  {
+    label: "agent-adapter",
+    pattern: /^(?:@[^/]+\/)?(?:.*[-_])?agent[-_]adapter(?:s|[-_].*)?$/,
+  },
+  { label: "LLM", pattern: /^(?:@[^/]+\/)?(?:.*[-_])?llm(?:[-_].*)?$/ },
+  {
+    label: "markdown-profile",
+    pattern: /^(?:@[^/]+\/)?markdown[-_]profile(?:[-_].*)?$/,
+  },
+  {
+    label: "markdown-runtime",
+    pattern: /^(?:@[^/]+\/)?markdown[-_]runtime(?:[-_].*)?$/,
+  },
+  {
+    label: "markdown-mcp",
+    pattern: /^(?:@[^/]+\/)?markdown[-_]mcp(?:[-_].*)?$/,
+  },
+  {
+    label: "profile compiler",
+    pattern: /^(?:@[^/]+\/)?(?:.*[-_])?profile[-_]compiler(?:[-_].*)?$/,
+  },
+  {
+    label: "runtime lens",
+    pattern: /^(?:@[^/]+\/)?(?:.*[-_])?runtime[-_]lens(?:[-_].*)?$/,
+  },
+  {
+    label: "network service",
+    pattern: /^(?:@[^/]+\/)?(?:.*[-_])?network[-_]service(?:[-_].*)?$/,
+  },
 ];
 const dependencySections = [
   "dependencies",
@@ -182,14 +219,20 @@ function lineAtOffset(text, offset) {
 export function inspectDependencies(dependencies) {
   return dependencies.flatMap(({ name, section }) => {
     const normalizedName = name.toLowerCase();
-    const directMatch = forbiddenDependencyNames.has(normalizedName)
+    const matches = forbiddenDependencyNames.has(normalizedName)
       ? [{ name, section, label: normalizedName }]
       : [];
-    const fragmentMatches = forbiddenDependencyFragments
-      .filter((fragment) => normalizedName.includes(fragment))
-      .map((fragment) => ({ name, section, label: fragment }));
 
-    return [...directMatch, ...fragmentMatches];
+    for (const { label, pattern } of forbiddenDependencyPatterns) {
+      if (
+        pattern.test(normalizedName) &&
+        !matches.some((match) => match.label === label)
+      ) {
+        matches.push({ name, section, label });
+      }
+    }
+
+    return matches;
   });
 }
 

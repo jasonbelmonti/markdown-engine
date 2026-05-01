@@ -30,6 +30,13 @@ describe("WP-5 boundary inspection", () => {
       { name: "@anthropic-ai/sdk", section: "dependencies" },
       { name: "@openai/agents", section: "dependencies" },
       { name: "@ai-sdk/openai", section: "dependencies" },
+      { name: "markdown-runtime", section: "dependencies" },
+      { name: "markdown-profile", section: "dependencies" },
+      { name: "mcp-client", section: "dependencies" },
+      { name: "llm-provider", section: "dependencies" },
+      { name: "profile-compiler", section: "dependencies" },
+      { name: "runtime-lens", section: "dependencies" },
+      { name: "network-service", section: "dependencies" },
     ]);
 
     expect(matches).toEqual(
@@ -38,8 +45,28 @@ describe("WP-5 boundary inspection", () => {
         expect.objectContaining({ name: "@anthropic-ai/sdk" }),
         expect.objectContaining({ name: "@openai/agents" }),
         expect.objectContaining({ name: "@ai-sdk/openai" }),
+        expect.objectContaining({ name: "markdown-runtime" }),
+        expect.objectContaining({ name: "markdown-profile" }),
+        expect.objectContaining({ name: "mcp-client" }),
+        expect.objectContaining({ name: "llm-provider" }),
+        expect.objectContaining({ name: "profile-compiler" }),
+        expect.objectContaining({ name: "runtime-lens" }),
+        expect.objectContaining({ name: "network-service" }),
       ]),
     );
+  });
+
+  it("does not flag unrelated dependency names with common substrings", () => {
+    const matches = inspectDependencies([
+      { name: "@babel/runtime", section: "dependencies" },
+      { name: "@types/node", section: "devDependencies" },
+      { name: "profile-photo", section: "dependencies" },
+      { name: "runtime-config", section: "dependencies" },
+      { name: "openapi-types", section: "dependencies" },
+      { name: "anthropics", section: "dependencies" },
+    ]);
+
+    expect(matches).toEqual([]);
   });
 
   it("flags common forbidden network source entry points", () => {
