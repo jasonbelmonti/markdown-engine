@@ -72,6 +72,27 @@ console.log(validationResult.valid);
 console.log(serialize(validationResult, { pretty: true }));
 ```
 
+## CLI
+
+The package includes a minimal local CLI for experimenting with one Markdown
+file at a time. It runs parse and normalization, then writes the normalized
+result as pretty JSON.
+
+After building, run:
+
+```sh
+npm run build
+node dist/cli/index.js --file fixtures/representative.md
+```
+
+The package binary accepts `--file` or `--path` as aliases for a single file:
+
+```sh
+markdown-engine --path fixtures/representative.md
+```
+
+Directory traversal is not supported by this CLI slice.
+
 Contract references:
 
 - [Public API contract](docs/contracts/api.md)

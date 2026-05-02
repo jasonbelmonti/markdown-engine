@@ -4,6 +4,9 @@
   "description": "Deterministic Markdown parsing and validation engine package.",
   "license": "MIT",
   "type": "module",
+  "bin": {
+    "markdown-engine": "./dist/cli/index.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jasonbelmonti/markdown-engine.git"
