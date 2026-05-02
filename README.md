@@ -3,12 +3,18 @@
 Deterministic Markdown parsing and validation engine package for downstream
 profile and runtime work.
 
-Current release candidate:
+Current published release:
 
 - package name: `@jasonbelmonti/markdown-engine`
 - version: `0.1.0`
-- release status: package metadata is public-release-ready; package tag and
-  npm publication still require MS-3 approval
+
+Next release target:
+
+- version: `1.0.0`
+- release focus: feature-complete rich IR, structural query helpers, source
+  targeting, table/list models, annotations, and deterministic serialization
+- design reference:
+  [Markdown Engine 1.0 Rich IR design](docs/design/markdown-engine-1.0-rich-ir-operational-design-spec.md)
 
 ## Scope
 
@@ -97,6 +103,7 @@ Contract references:
 
 - [Public API contract](docs/contracts/api.md)
 - [Frontmatter contract](docs/contracts/frontmatter.md)
+- [Markdown Engine 1.0 Rich IR design](docs/design/markdown-engine-1.0-rich-ir-operational-design-spec.md)
 - [Testing and snapshot operations](docs/testing.md)
 - [Changelog](CHANGELOG.md)
 - [Security policy](SECURITY.md)
@@ -122,9 +129,9 @@ Snapshot baseline updates are operational changes, not routine test-output
 cleanup. Use the [testing and snapshot operations](docs/testing.md) guide before
 updating files under `snapshots/**`.
 
-## Release Gate
+## 1.0 Release Gate
 
-Do not tag or publish this package until MS-3 approval is recorded with:
+Do not tag or publish the 1.0 release until approval is recorded with:
 
 - semver classification and package version decision
 - release/tag decision
@@ -132,7 +139,7 @@ Do not tag or publish this package until MS-3 approval is recorded with:
 - downstream profile/runtime consumer confirmation
 - complete evidence links from EVD-1 through EVD-11
 
-When MS-3 is approved, publish the package as:
+When 1.0 is approved, publish the package as:
 
 ```sh
 npm publish --access public

@@ -2,7 +2,7 @@
 
 ## 0.1.0 - 2026-05-01
 
-Initial public release candidate for `@jasonbelmonti/markdown-engine`.
+Initial public release for `@jasonbelmonti/markdown-engine`.
 
 ### Added
 
@@ -24,6 +24,6 @@ Initial public release candidate for `@jasonbelmonti/markdown-engine`.
 
 ### Release Status
 
-This version is prepared as the first public package version. Publication still
-requires MS-3 approval, downstream confirmation or owner waiver, final
-release-candidate validation, and npm publish verification.
+This version is the first published npm package version. The next planned
+release target is `1.0.0` with the feature-complete rich IR contract described
+in `docs/design/markdown-engine-1.0-rich-ir-operational-design-spec.md`.
