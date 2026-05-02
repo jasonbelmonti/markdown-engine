@@ -1,17 +1,18 @@
-# markdown-engine
+# @jasonbelmonti/markdown-engine
 
 Deterministic Markdown parsing and validation engine package for downstream
 profile and runtime work.
 
-The current package is private and unpublished:
+Current release candidate:
 
-- package name: `markdown-engine`
-- version: `0.0.0`
-- release status: no package tag or publication authorized
+- package name: `@jasonbelmonti/markdown-engine`
+- version: `0.1.0`
+- release status: package metadata is public-release-ready; package tag and
+  npm publication still require MS-3 approval
 
 ## Scope
 
-`markdown-engine` owns the local deterministic engine boundary:
+`@jasonbelmonti/markdown-engine` owns the deterministic engine boundary:
 
 - parse GFM Markdown and YAML frontmatter
 - normalize parser output into engine-owned IR
@@ -35,7 +36,12 @@ The package root exports:
 Example:
 
 ```ts
-import { normalize, parse, serialize, validate } from "markdown-engine";
+import {
+  normalize,
+  parse,
+  serialize,
+  validate,
+} from "@jasonbelmonti/markdown-engine";
 
 const markdown = `---
 title: Mission Brief
@@ -91,17 +97,18 @@ Contract references:
 
 - [Public API contract](docs/contracts/api.md)
 - [Frontmatter contract](docs/contracts/frontmatter.md)
+- [Testing and snapshot operations](docs/testing.md)
+- [Changelog](CHANGELOG.md)
+- [Security policy](SECURITY.md)
 
 ## Validation
 
 Run the release-readiness gates from the repository root:
 
 ```sh
-npm run typecheck
-npm test
-node scripts/check-boundaries.mjs
-npm run build && node scripts/prove-repeatability.mjs --runs 10
-git diff --check
+npm run release:verify
+npm pack --dry-run
+npm publish --dry-run --access public
 ```
 
 The WP-6 validation record is:
@@ -110,6 +117,10 @@ The WP-6 validation record is:
 - [EVD-9 merge readiness](docs/evidence/wp-6-evd-9-merge-readiness.md)
 - [EVD-10 rollback containment](docs/evidence/wp-6-evd-10-rollback-containment.md)
 - [EVD-11 downstream handoff](docs/evidence/wp-6-evd-11-downstream-handoff.md)
+
+Snapshot baseline updates are operational changes, not routine test-output
+cleanup. Use the [testing and snapshot operations](docs/testing.md) guide before
+updating files under `snapshots/**`.
 
 ## Release Gate
 
@@ -120,3 +131,14 @@ Do not tag or publish this package until MS-3 approval is recorded with:
 - rollback and containment notes
 - downstream profile/runtime consumer confirmation
 - complete evidence links from EVD-1 through EVD-11
+
+When MS-3 is approved, publish the package as:
+
+```sh
+npm publish --access public
+```
+
+The publish path is guarded by npm lifecycle scripts: `prepublishOnly` and
+`prepack` both run the release verification gate before `npm publish` or
+`npm pack` creates an artifact. The gate rebuilds `dist` and fails if tracked
+files drift from `HEAD`.

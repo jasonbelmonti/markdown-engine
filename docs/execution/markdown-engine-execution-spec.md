@@ -629,10 +629,11 @@ WP-6 closeout evidence links:
 | EVD-10 | [`docs/evidence/wp-6-evd-10-rollback-containment.md`](../evidence/wp-6-evd-10-rollback-containment.md) |
 | EVD-11 | [`docs/evidence/wp-6-evd-11-downstream-handoff.md`](../evidence/wp-6-evd-11-downstream-handoff.md) |
 
-WP-6 closeout status as of 2026-05-01: release/tag is withheld, MS-3 approval
-is pending, and REV-4 downstream profile/runtime consumer confirmation is
-pending. This status allows handoff packet review but blocks package tag,
-package publication, and completion claim.
+WP-6 closeout status as of 2026-05-01: release/tag is withheld and MS-3
+approval is the remaining release gate. REV-4 downstream profile/runtime
+consumer confirmation is recorded in EVD-11. This status allows handoff packet
+review but blocks package tag, package publication, and completion claim until
+MS-3 approval is recorded.
 
 Section status: Complete
 
@@ -651,7 +652,8 @@ Approval conditions:
 
 - `MS-1` requires passing `REV-1A` and `REV-3A` using only `EVD-1` and `EVD-4`.
 - Merge requires passing `REV-1B`, `REV-2`, and `REV-3B`, approval of `MS-2`, no blocking `Q-*`, no open `Blocker` or `Major` review findings, and no unapproved deviations from this spec.
-- Release or tag requires `REV-4` downstream-consumer confirmation.
+- Release or tag requires the `REV-4` downstream-consumer confirmation recorded
+  in EVD-11.
 
 Section status: Complete
 
@@ -701,7 +703,7 @@ Risks:
 
 Open questions:
 
-None. Rationale: parser/runtime/tooling decisions are bounded by assumptions and milestone gates rather than open blockers. `DEP-1` entry approval is resolved for the current WP-6 handoff state; `MS-3` and `REV-4` remain pending release gates.
+None. Rationale: parser/runtime/tooling decisions are bounded by assumptions and milestone gates rather than open blockers. `DEP-1` entry approval is resolved for the current WP-6 handoff state; `REV-4` downstream confirmation is recorded in EVD-11; `MS-3` remains the pending release gate.
 
 Approved deviations:
 
@@ -743,10 +745,10 @@ Milestone approval gate: `MS-1`, `MS-2`, and `MS-3` are fully specified with ver
 
 Completion gate: Not yet satisfied. Completion requires all `WP-*` items complete, `MS-3` approved, blocking reviews resolved, `VAL-*` evidence captured, no open blocking `Q-*`, no unapproved `DEV-*`, and no unapproved `WVR-*`.
 
-Release gate: Release or package tag requires `MS-3` approval, `REL-3` evidence, semver classification, downstream-consumer confirmation, and containment notes.
+Release gate: Release or package tag requires `MS-3` approval, `REL-3` evidence, semver classification, the downstream-consumer confirmation recorded in EVD-11, and containment notes.
 
 Handoff record: Handoff shall include links to `EVD-1` through `EVD-11`, final package commands, public contract docs, release/rollback notes, unresolved non-blocking follow-ups, and downstream profile/runtime integration notes.
 
-Final readiness state: WP-6 handoff packet ready for MS-3 review; package tag, package publication, and completion claim remain blocked until `MS-3` and `REV-4` are resolved.
+Final readiness state: WP-6 handoff packet ready for MS-3 review; package tag, package publication, and completion claim remain blocked until `MS-3` is resolved.
 
 Section status: Complete

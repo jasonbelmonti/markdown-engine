@@ -5,7 +5,7 @@ import {
   parse,
   serialize,
   validate,
-} from "markdown-engine";
+} from "@jasonbelmonti/markdown-engine";
 
 import { buildSerializedCases } from "../../scripts/repeatability-cases.mjs";
 

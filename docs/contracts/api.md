@@ -1,11 +1,12 @@
 # Public API Contract
 
-Status: Initial contract for `BEL-884 / WP-2`
-Last updated: 2026-04-30
+Status: Initial contract for `BEL-884 / WP-2`; release metadata updated by `BEL-928`
+Last updated: 2026-05-01
 
-This document defines the public `markdown-engine` package contract for the
-current `0.0.0` implementation. The stable public surface is the package export
-from `markdown-engine`, not internal adapter modules or raw parser output.
+This document defines the public `@jasonbelmonti/markdown-engine` package
+contract for the current `0.1.0` release candidate. The stable public surface
+is the package export from `@jasonbelmonti/markdown-engine`, not internal
+adapter modules or raw parser output.
 
 ## Exported Surface
 
@@ -249,13 +250,13 @@ code nodes with `kind: "fenced"`. Raw parser node objects are not public.
 
 ## Compatibility Notes
 
-Before the first package release, these contracts are review-gated by WP-2 and
-MS-2. After release, changes to public API signatures, result fields,
+Before the first package release, these contracts are review-gated by WP-2,
+MS-2, and MS-3. After release, changes to public API signatures, result fields,
 diagnostic schema, source-location semantics, validation config semantics, or
 serialized output shape require semantic-version classification.
 
-The `markdown-engine` package boundary remains limited to parsing,
-normalization, deterministic validation, diagnostics, and serialization.
-Profile compiler behavior, runtime lenses, MCP transport, agent adapters,
-network services, persistence, LLM calls, semantic rubrics, and arbitrary rule
-plugins are out of scope.
+The `@jasonbelmonti/markdown-engine` package boundary remains limited to
+parsing, normalization, deterministic validation, diagnostics, and
+serialization. Profile compiler behavior, runtime lenses, MCP transport, agent
+adapters, network services, persistence, LLM calls, semantic rubrics, and
+arbitrary rule plugins are out of scope.

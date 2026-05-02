@@ -1,12 +1,27 @@
 {
-  "name": "markdown-engine",
-  "version": "0.0.0",
+  "name": "@jasonbelmonti/markdown-engine",
+  "version": "0.1.0",
   "description": "Deterministic Markdown parsing and validation engine package.",
-  "private": true,
+  "license": "MIT",
   "type": "module",
   "bin": {
     "markdown-engine": "./dist/cli/index.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jasonbelmonti/markdown-engine.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jasonbelmonti/markdown-engine/issues"
+  },
+  "homepage": "https://github.com/jasonbelmonti/markdown-engine#readme",
+  "keywords": [
+    "markdown",
+    "gfm",
+    "frontmatter",
+    "validation",
+    "diagnostics"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -15,13 +30,26 @@
   },
   "types": "./dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "CHANGELOG.md",
+    "SECURITY.md"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "clean": "node scripts/clean-dist.mjs",
     "build": "npm run clean && tsc -p tsconfig.json",
+    "prepack": "npm run release:verify",
+    "prepublishOnly": "npm run release:verify",
+    "release:verify": "npm run typecheck && npm test && node scripts/check-boundaries.mjs && npm run build && node scripts/prove-repeatability.mjs --runs 10 && npm run release:check-clean",
+    "release:check-clean": "git diff --check HEAD -- && git diff --exit-code HEAD --",
+    "snapshots:update:parser": "npm run build && vitest run tests/parser-fixtures.test.ts -u \"--exclude=.worktrees/**\"",
+    "snapshots:update:rules": "npm run build && vitest run tests/rules.test.ts -u \"--exclude=.worktrees/**\"",
+    "snapshots:update:serialization": "npm run build && vitest run tests/serialization-repeatability.test.ts tests/boundary-inspection.test.ts -u \"--exclude=.worktrees/**\"",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "npm run build && vitest run \"--exclude=.worktrees/**\""
+    "test": "npm run build && vitest run \"--exclude=.worktrees/**\"",
+    "test:snapshots": "npm run build && vitest run tests/parser-fixtures.test.ts tests/rules.test.ts tests/serialization-repeatability.test.ts \"--exclude=.worktrees/**\""
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"

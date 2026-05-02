@@ -6,7 +6,7 @@ import { buildSerializedCases } from "./repeatability-cases.mjs";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(scriptDir, "..");
-const engine = await import("markdown-engine");
+const engine = await import("@jasonbelmonti/markdown-engine");
 
 const runCount = parseRunCount(process.argv);
 const baseline = buildSerializedCases(repoRoot, engine);
