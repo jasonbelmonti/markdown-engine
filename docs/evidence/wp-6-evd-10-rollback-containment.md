@@ -14,16 +14,17 @@ limits for `markdown-engine` before any first package release.
 
 Current package state:
 
-- `private: true`
-- version `0.0.0`
+- package name `@jasonbelmonti/markdown-engine`
+- version `0.1.0`
+- publish access prepared as public package metadata
 - no package tag authorized by WP-6
 - no package publication authorized by WP-6
 - no runtime service, persistent storage, database, or live user data state
 
 Release decision: withhold package tag and publication.
 
-Release blocker: MS-3 approval and downstream profile/runtime consumer
-confirmation are not yet recorded.
+Release blocker: MS-3 approval is not yet recorded. REV-4 downstream
+profile/runtime consumer confirmation is recorded in EVD-11.
 
 ## Rollback Path Before Release
 
@@ -78,14 +79,14 @@ rollback in scope.
 
 Controls that remain active until MS-3 approval:
 
-- keep `private: true`
-- keep package version at `0.0.0`
+- keep package tag withheld
 - do not create a package tag
 - do not publish to a package registry
 - require project-owner approval for MS-3
-- require downstream profile/runtime consumer confirmation or explicit owner
-  waiver
+- preserve the downstream profile/runtime consumer confirmation recorded in
+  EVD-11
 - preserve the package boundary proved by EVD-8
+- require final package artifact verification from the exact release candidate
 
 ## Conclusion
 

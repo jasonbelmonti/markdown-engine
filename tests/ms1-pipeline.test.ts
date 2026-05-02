@@ -7,7 +7,7 @@ import {
   serialize,
   validate,
   type ValidationConfig,
-} from "markdown-engine";
+} from "@jasonbelmonti/markdown-engine";
 
 const fixturePath = "fixtures/representative.md";
 const fixture = readFileSync(

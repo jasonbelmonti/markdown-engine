@@ -2,8 +2,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
-import { normalize, parse, serialize, validate } from "markdown-engine";
-import type { ValidationConfig } from "markdown-engine";
+import { normalize, parse, serialize, validate } from "@jasonbelmonti/markdown-engine";
+import type { ValidationConfig } from "@jasonbelmonti/markdown-engine";
 
 import { snapshotRoot, stableJson } from "./support/parser-fixture-support.js";
 

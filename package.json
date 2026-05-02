@@ -1,9 +1,24 @@
 {
-  "name": "markdown-engine",
-  "version": "0.0.0",
+  "name": "@jasonbelmonti/markdown-engine",
+  "version": "0.1.0",
   "description": "Deterministic Markdown parsing and validation engine package.",
-  "private": true,
+  "license": "MIT",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jasonbelmonti/markdown-engine.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jasonbelmonti/markdown-engine/issues"
+  },
+  "homepage": "https://github.com/jasonbelmonti/markdown-engine#readme",
+  "keywords": [
+    "markdown",
+    "gfm",
+    "frontmatter",
+    "validation",
+    "diagnostics"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -12,11 +27,20 @@
   },
   "types": "./dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "CHANGELOG.md",
+    "SECURITY.md"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "clean": "node scripts/clean-dist.mjs",
     "build": "npm run clean && tsc -p tsconfig.json",
+    "prepack": "npm run release:verify",
+    "prepublishOnly": "npm run release:verify",
+    "release:verify": "npm run typecheck && npm test && node scripts/check-boundaries.mjs && npm run build && node scripts/prove-repeatability.mjs --runs 10 && npm run release:check-clean",
+    "release:check-clean": "git diff --check HEAD -- && git diff --exit-code HEAD --",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "npm run build && vitest run \"--exclude=.worktrees/**\""
   },
