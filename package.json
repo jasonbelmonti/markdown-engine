@@ -41,8 +41,12 @@
     "prepublishOnly": "npm run release:verify",
     "release:verify": "npm run typecheck && npm test && node scripts/check-boundaries.mjs && npm run build && node scripts/prove-repeatability.mjs --runs 10 && npm run release:check-clean",
     "release:check-clean": "git diff --check HEAD -- && git diff --exit-code HEAD --",
+    "snapshots:update:parser": "npm run build && vitest run tests/parser-fixtures.test.ts -u \"--exclude=.worktrees/**\"",
+    "snapshots:update:rules": "npm run build && vitest run tests/rules.test.ts -u \"--exclude=.worktrees/**\"",
+    "snapshots:update:serialization": "npm run build && vitest run tests/serialization-repeatability.test.ts tests/boundary-inspection.test.ts -u \"--exclude=.worktrees/**\"",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "npm run build && vitest run \"--exclude=.worktrees/**\""
+    "test": "npm run build && vitest run \"--exclude=.worktrees/**\"",
+    "test:snapshots": "npm run build && vitest run tests/parser-fixtures.test.ts tests/rules.test.ts tests/serialization-repeatability.test.ts \"--exclude=.worktrees/**\""
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"

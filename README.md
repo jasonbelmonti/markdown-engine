@@ -76,6 +76,7 @@ Contract references:
 
 - [Public API contract](docs/contracts/api.md)
 - [Frontmatter contract](docs/contracts/frontmatter.md)
+- [Testing and snapshot operations](docs/testing.md)
 - [Changelog](CHANGELOG.md)
 - [Security policy](SECURITY.md)
 
@@ -95,6 +96,10 @@ The WP-6 validation record is:
 - [EVD-9 merge readiness](docs/evidence/wp-6-evd-9-merge-readiness.md)
 - [EVD-10 rollback containment](docs/evidence/wp-6-evd-10-rollback-containment.md)
 - [EVD-11 downstream handoff](docs/evidence/wp-6-evd-11-downstream-handoff.md)
+
+Snapshot baseline updates are operational changes, not routine test-output
+cleanup. Use the [testing and snapshot operations](docs/testing.md) guide before
+updating files under `snapshots/**`.
 
 ## Release Gate
 
