@@ -1,10 +1,11 @@
 import type { MarkdownDiagnostic } from "./diagnostics.js";
-import type { EngineDocument } from "./document.js";
+import type { EngineDocument, EngineDocumentVersion } from "./document.js";
 import type { ParsedMarkdown } from "./parse.js";
 import { cloneDiagnostics } from "../diagnostics/index.js";
 import { normalizeParsedMarkdown } from "../ir/index.js";
 
 export interface NormalizeOptions {
+  documentVersion?: EngineDocumentVersion;
   preserveSourceLocations?: boolean;
 }
 

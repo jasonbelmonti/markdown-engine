@@ -3,6 +3,7 @@ import type { EngineDocument, EngineNode } from "../api/document.js";
 import type { NormalizeOptions } from "../api/normalize.js";
 import type { ParsedMarkdown } from "../api/parse.js";
 import { hasOwnProperty, isPlainRecord } from "../internal/plain-record.js";
+import { buildDraftDocumentViews } from "./document-derived-views.js";
 
 export function normalizeParsedMarkdown(
   parsed: ParsedMarkdown,
@@ -11,10 +12,11 @@ export function normalizeParsedMarkdown(
   const preserveSourceLocations = options.preserveSourceLocations ?? true;
   const document = parsed.document;
   const path = document.path ?? parsed.path;
+  const version = options.documentVersion ?? document.version;
 
-  return {
+  const normalizedDocument: EngineDocument = {
     kind: "markdown-document",
-    version: document.version,
+    version,
     ...(path !== undefined ? { path } : {}),
     ...(hasOwnProperty(parsed, "frontmatter")
       ? { frontmatter: cloneUnknown(parsed.frontmatter) }
@@ -26,6 +28,15 @@ export function normalizeParsedMarkdown(
       normalizeNode(node, preserveSourceLocations),
     ),
   };
+
+  if (version === "1.0.0-draft") {
+    return buildDraftDocumentViews(normalizedDocument, {
+      preserveSourceLocations,
+      source: parsed.markdown,
+    });
+  }
+
+  return normalizedDocument;
 }
 
 function normalizeNode(
