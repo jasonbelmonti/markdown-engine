@@ -4,13 +4,12 @@ import { describe, expect, it } from "vitest";
 
 import type {
   EngineAnnotation,
+  EngineCompatibilityGate,
+  EngineDocument,
+  EngineDocumentQueries,
   EngineTarget,
-  RichEngineDocument,
-  RichIrCompatibilityGate,
-  RichIrQueryHelpers,
-  RichIrSerializableResult,
-  RichIrSerializeOptions,
-  ValidateRichIrAnnotationsFunction,
+  SerializableEngineResult,
+  ValidateAnnotationsFunction,
 } from "@jasonbelmonti/markdown-engine";
 
 const requiredScriptNames = [
@@ -36,6 +35,11 @@ const forbiddenContractTerms = [
   "LLM",
   "network service",
   "persistent storage",
+  "RichIr",
+  "richIr",
+  "queryRichIr",
+  "serializeRichIr",
+  "validateRichIr",
 ] as const;
 
 const packageJsonPath = join(process.cwd(), "package.json");
@@ -58,22 +62,18 @@ const paragraphTarget = {
   sourceRange,
 } satisfies EngineTarget;
 const compatibility = {
-  mode: "rich-ir-1.0-draft",
+  mode: "default",
   reason: "BEL-934 public contract skeleton",
-} satisfies RichIrCompatibilityGate;
-const serializeOptions = {
-  pretty: true,
-  compatibility,
-} satisfies RichIrSerializeOptions;
+} satisfies EngineCompatibilityGate;
 const annotation = {
   id: "annotation:1",
   target: { kind: "node", target: paragraphTarget },
   payload: { ownedByCaller: true },
 } satisfies EngineAnnotation<{ ownedByCaller: boolean }>;
-const richDocument = {
+const document = {
   kind: "markdown-document",
   version: "1.0.0-draft",
-  path: "rich-ir.md",
+  path: "document.md",
   target: rootTarget,
   children: [
     {
@@ -99,20 +99,20 @@ const richDocument = {
   links: [],
   annotations: [annotation],
   compatibility,
-} satisfies RichEngineDocument;
-const serializableResult = richDocument satisfies RichIrSerializableResult;
+} satisfies EngineDocument;
+const serializableResult = document satisfies SerializableEngineResult;
 
-const queryHelpers = {
+const queries = {
   nodes: (document) => document.children,
-  sections: (document) => document.sections,
-  textSpans: (document) => document.textSpans,
-  tables: (document) => document.tables,
-  lists: (document) => document.lists,
-  links: (document) => document.links,
+  sections: (document) => document.sections ?? [],
+  textSpans: (document) => document.textSpans ?? [],
+  tables: (document) => document.tables ?? [],
+  lists: (document) => document.lists ?? [],
+  links: (document) => document.links ?? [],
   sourceSlice: (document, target) =>
-    document.children.find((node) => node.target.id === target.id)?.source,
-} satisfies RichIrQueryHelpers;
-const validateAnnotations: ValidateRichIrAnnotationsFunction = (
+    document.children.find((node) => node.target?.id === target.id)?.source,
+} satisfies EngineDocumentQueries;
+const validateAnnotations: ValidateAnnotationsFunction = (
   _document,
   annotations,
 ) => ({
@@ -121,8 +121,8 @@ const validateAnnotations: ValidateRichIrAnnotationsFunction = (
   diagnostics: [],
 });
 
-describe("1.0 rich IR public contract skeleton", () => {
-  it("registers the required rich IR command names", () => {
+describe("1.0 document contract skeleton", () => {
+  it("registers the required implementation-lane command names", () => {
     const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8")) as {
       scripts?: Record<string, string>;
     };
@@ -132,32 +132,33 @@ describe("1.0 rich IR public contract skeleton", () => {
     }
   });
 
-  it("types the draft rich document, targets, query helpers, annotations, and compatibility gate", () => {
-    expect(richDocument.version).toBe("1.0.0-draft");
-    expect(serializableResult.compatibility).toEqual(
-      serializeOptions.compatibility,
-    );
-    expect(queryHelpers.nodes(richDocument)).toHaveLength(1);
-    expect(queryHelpers.textSpans(richDocument)[0]).toMatchObject({
+  it("types the draft document, targets, queries, annotations, and compatibility gate", () => {
+    expect(document.version).toBe("1.0.0-draft");
+    expect(serializableResult.compatibility).toEqual(compatibility);
+    expect(queries.nodes(document)).toHaveLength(1);
+    expect(queries.textSpans(document)[0]).toMatchObject({
       text: "Mission",
       target: paragraphTarget,
     });
-    expect(queryHelpers.sourceSlice(richDocument, paragraphTarget)).toEqual({
+    expect(queries.sourceSlice(document, paragraphTarget)).toEqual({
       range: sourceRange,
       text: "Mission",
     });
-    expect(validateAnnotations(richDocument, [annotation])).toEqual({
+    expect(validateAnnotations(document, [annotation])).toEqual({
       valid: true,
       annotations: [annotation],
       diagnostics: [],
     });
   });
 
-  it("keeps raw parser AST and downstream domain/runtime terms out of the rich IR public type module", () => {
-    const richIrSource = readFileSync("src/api/rich-ir.ts", "utf8");
+  it("keeps raw parser AST, downstream domain/runtime terms, and richIr labels out of public contract modules", () => {
+    const publicContractSources = [
+      readFileSync("src/api/contracts.ts", "utf8"),
+      readFileSync("src/api/document.ts", "utf8"),
+    ].join("\n");
 
     for (const forbiddenTerm of forbiddenContractTerms) {
-      expect(richIrSource).not.toContain(forbiddenTerm);
+      expect(publicContractSources).not.toContain(forbiddenTerm);
     }
   });
 });

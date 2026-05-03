@@ -5,6 +5,6 @@
     "rootDir": "."
   },
   "include": [
-    "tests/rich-ir-contract.test.ts"
+    "tests/document-contract.test.ts"
   ]
 }
