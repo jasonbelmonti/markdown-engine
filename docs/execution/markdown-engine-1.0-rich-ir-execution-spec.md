@@ -19,13 +19,13 @@
 
 ## 0. Execution Summary
 
-Decision requested: Approve to execute
+Decision status: Approved to execute
 
 Approved outcome: Execute the 1.0 rich IR implementation authorized by `SRC-1`, producing a deterministic public `markdown-engine` contract with node targets, sections, source slices, text spans, table/list views, query helpers, annotation targets, compatibility gates, and release evidence.
 
 Execution approach: Use risk retirement first, then progressive value. `WP-1` proves the narrowest 1.0 path through target identity, source grounding, section query, annotation target validation, serialization, and legacy compatibility on one representative fixture. Later work packages harden the source/target substrate, derived structural views, annotation and diagnostic behavior, compatibility documentation, repeatability, boundary safety, and downstream exercise evidence.
 
-Entry condition: Execution shall not start until the project owner approves `SRC-1` for implementation and approves this execution spec or an explicitly superseding execution plan.
+Entry condition: Satisfied on 2026-05-02 by project-owner approval recorded in Linear `BEL-932`. Implementation may proceed to `WP-1`; 1.0 tag, package publication, or release completion remains blocked until `MS-3`.
 
 Top risks or unknowns:
 
@@ -106,7 +106,7 @@ Section status: Complete
 | ASM-1 | Assumption | Current parser and YAML dependencies can provide enough source positions for the 1.0 representative constructs. | Implementer | No | Retire through `WP-1`, `WP-2`, `VAL-1`, and `VAL-2`; revise scope if false. |
 | ASM-2 | Assumption | Rich structural views can be derived from normalized engine IR without exposing raw parser AST publicly. | Implementer | No | Retire through `WP-1`, `WP-3`, and `VAL-3`. |
 | ASM-3 | Assumption | Existing package scripts can be extended to prove build, typecheck, tests, boundary audit, repeatability, and release readiness without introducing a new CI platform requirement. | Implementer | No | Confirm in `WP-6` and `VAL-10`. |
-| DEP-1 | Dependency | Project-owner approval of `SRC-1` and this execution spec is required before implementation starts. | Project owner | Yes | Entry gate in section 18. |
+| DEP-1 | Dependency | Project-owner approval of `SRC-1` and this execution spec is required before implementation starts. | Project owner | No (resolved) | Satisfied on 2026-05-02 by Linear `BEL-932`; implementation may proceed to `WP-1`. |
 | DEP-2 | Dependency | The current `0.1.0` API contract and release scripts must remain available as a compatibility baseline during implementation. | Implementer | No | `VAL-5` legacy compatibility tests and contract review. |
 | DEP-3 | Dependency | Downstream SpecTrace/profile/runtime consumer review is required before 1.0 release approval. | Project owner | No for coding; Yes for release | `MS-3`, `REV-3`, and `VAL-9`. |
 
@@ -778,7 +778,7 @@ Section status: Complete
 
 ## 18. Final Execution Gate
 
-Entry gate: Not satisfied until the project owner approves `SRC-1` and this execution spec or an explicit superseding execution plan. `DEP-1` blocks implementation start.
+Entry gate: Satisfied on 2026-05-02 by project-owner approval recorded in Linear `BEL-932`. `DEP-1` no longer blocks implementation start; execution may proceed to `WP-1` under the Linear 1.0 Rich IR sequence.
 
 Milestone approval gate: `MS-1`, `MS-2`, and `MS-3` are fully specified with verifier, due point, prerequisites, review gate, required evidence, approval decision, failure path, and manual verification guide. `MS-1` approval is required before broad source implementation; `MS-2` approval is required before merge; `MS-3` approval is required before release, tag, publication, or completion claim.
 
@@ -788,6 +788,6 @@ Release gate: Release, tag, or package publication requires `MS-3` approval, `VA
 
 Handoff record: Handoff shall include links to `EVD-1` through `EVD-10`, final public API and migration docs, package command results, downstream exercise notes, boundary audit, release/rollback decision, unresolved non-blocking follow-ups, and any approved deviations or waivers.
 
-Final readiness state: Not ready. Rationale: this draft execution spec is complete enough for review, but implementation cannot start until `DEP-1` entry approval is recorded.
+Final readiness state: Ready for implementation start, not release-ready. Rationale: `DEP-1` entry approval is recorded, so `WP-1` may begin; release, tag, publication, and completion claims remain blocked until `MS-3` approval.
 
 Section status: Complete
