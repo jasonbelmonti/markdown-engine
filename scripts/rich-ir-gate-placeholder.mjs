@@ -7,4 +7,3 @@ console.error(
 );
 console.error("Implement this gate in its assigned downstream work package.");
 process.exit(1);
-

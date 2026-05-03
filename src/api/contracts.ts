@@ -1,17 +1,8 @@
-export type CoreMarkdownEngineApiName =
+export type MarkdownEngineApiName =
   | "parse"
   | "normalize"
   | "validate"
   | "serialize";
-
-export type RichIrApiName =
-  | "queryRichIr"
-  | "validateRichIrAnnotations"
-  | "serializeRichIr";
-
-export type MarkdownEngineApiName =
-  | CoreMarkdownEngineApiName
-  | RichIrApiName;
 
 export * from "./diagnostics.js";
 export * from "./document.js";
