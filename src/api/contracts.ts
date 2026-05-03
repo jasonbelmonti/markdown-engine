@@ -1,4 +1,8 @@
-export type MarkdownEngineApiName = "parse" | "normalize" | "validate" | "serialize";
+export type MarkdownEngineApiName =
+  | "parse"
+  | "normalize"
+  | "validate"
+  | "serialize";
 
 export * from "./diagnostics.js";
 export * from "./document.js";
