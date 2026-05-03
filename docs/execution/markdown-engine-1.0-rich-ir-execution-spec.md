@@ -48,6 +48,17 @@ Section status: Complete
 
 In scope: 1.0 public TypeScript types and API entry points, rich `EngineDocument` shape, deterministic `EngineTarget` generation, source range and source slice behavior, heading-derived section tree, text spans, table row/cell coordinates, list metadata, link views, query helpers, caller-owned annotation target validation, compatibility selectors or namespaces for 0.1.x behavior where retained, deterministic serialization, CLI output compatibility if affected, fixtures, snapshots, repeatability tests, boundary audits, API contract docs, migration notes, downstream SpecTrace-style exercise, release containment, and handoff evidence.
 
+Public naming boundary: `rich IR` is an execution workstream label only. Public
+TypeScript symbols, package-root exports, and source modules shall use
+engine/document vocabulary such as `EngineDocument`, `EngineNode`,
+`EngineTarget`, query helpers, annotation helpers, `parse`, `normalize`,
+`validate`, and `serialize`. Do not introduce public `RichIr*`, `richIr`,
+`queryRichIr`, `serializeRichIr`, `validateRichIr*`, or a separate public
+`rich-ir` module without a `DEV-*` deviation and project-owner approval. The
+required `test:rich-ir:*`, `audit:rich-ir-boundary`, and
+`docs:rich-ir-contract` command names are execution-gate labels, not public API
+naming precedent.
+
 Out of scope: SpecTrace entity registries, canonical IDs, relationship graphs, issue-key policy, profile compilation, runtime lenses, MCP transport, agent adapters, LLM or semantic validators, graph database, persistent index, file-watching daemon, network service, browser UI, and any promise that node targets survive arbitrary author edits.
 
 Definition of done: The 1.0 contract is implemented and documented; tests and snapshots prove targets, source slices, sections, spans, tables, lists, links, query helpers, annotations, compatibility gates, inert raw HTML/source behavior, and deterministic serialization; boundary audit shows no forbidden domain or runtime dependencies; a downstream SpecTrace-style fixture exercise proves the motivating structural use case; milestone approvals and release containment evidence are recorded.
@@ -186,7 +197,7 @@ Value / risk trace:
 Owns:
 
 - Files/directories: `src/index.ts`, `src/api/**`, public API portions of `docs/contracts/**`.
-- Concepts: exported types, function names, option names, 1.0 default behavior, legacy selectors, semver classification.
+- Concepts: exported types, function names, option names, 1.0 default behavior, legacy selectors, semver classification, and public naming continuity with the existing engine/document contract.
 - Runtime responsibilities: Invoke internal packages through explicit typed boundaries and expose result objects.
 
 Does not own:
@@ -198,6 +209,11 @@ Public interface:
 
 - Exported types: 1.0 document, target, source range, section, span, table, list, link, annotation, query, diagnostic, compatibility, and result types.
 - Exported functions/classes/components: parse, normalize, validate, serialize, query helpers, source-slice helper, annotation validation/attachment functions, or final approved equivalents.
+- Public naming constraint: workstream labels such as `rich IR` shall not appear
+  as public TypeScript prefixes, package-root API names, or standalone public
+  module names. Contract review shall reject `RichIr*`, `richIr`, `queryRichIr`,
+  `serializeRichIr`, `validateRichIr*`, or `src/api/rich-ir.ts` unless a
+  recorded `DEV-*` deviation explicitly approves a parallel API.
 - Events/messages/contracts: none.
 - CLI/API surface: package root exports; CLI only through `PKG-5`.
 
@@ -578,11 +594,11 @@ Validation cadence: Each work package must produce mapped `VAL-*` evidence befor
 
 Deferred completeness: Final fixture breadth, migration docs polish, release notes, downstream integration examples, and 1.0 publication wait until `MS-1` and `MS-2` pass.
 
-Required verification command registry: `WP-1` shall add or update package scripts for `npm run test:rich-ir:proving`, `npm run test:rich-ir:contract`, `npm run test:rich-ir:targets`, `npm run test:rich-ir:queries`, `npm run test:rich-ir:annotations`, `npm run test:rich-ir:compat`, `npm run test:rich-ir:repeatability`, `npm run test:rich-ir:downstream`, `npm run audit:rich-ir-boundary`, and `npm run docs:rich-ir-contract` before `MS-1`. Later work packages may change command internals but shall preserve the script names unless a `DEV-*` deviation and `REV-2` approval update this spec and the evidence plan.
+Required verification command registry: `WP-1` shall add or update package scripts for `npm run test:rich-ir:proving`, `npm run test:rich-ir:contract`, `npm run test:rich-ir:targets`, `npm run test:rich-ir:queries`, `npm run test:rich-ir:annotations`, `npm run test:rich-ir:compat`, `npm run test:rich-ir:repeatability`, `npm run test:rich-ir:downstream`, `npm run audit:rich-ir-boundary`, and `npm run docs:rich-ir-contract` before `MS-1`. These script names are execution-gate labels only and shall not be copied into public TypeScript API names or module names. Later work packages may change command internals but shall preserve the script names unless a `DEV-*` deviation and `REV-2` approval update this spec and the evidence plan.
 
 | ID | Objective | Owner | Package boundary | Editable paths | Read-only paths | Inputs | Outputs | Dependencies | Observable value enabled | Risk retired | Milestone gate | Validation checkpoint | Completion criteria |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| WP-1 | Prove the 1.0 critical path on one representative fixture. | Implementer | PKG-1 / PKG-2 / PKG-3 / PKG-4 / PKG-5 / PKG-6 | `src/api/**`, `src/ir/**`, necessary `src/parser/**` or `src/frontmatter/**`, `src/serialize/**`, `package.json`, `tests/**`, `fixtures/**`, `snapshots/**` | `docs/design/**`, existing `docs/contracts/**`, `RUNTIME_ARCHITECTURE.md` | SRC-1, SRC-2, current 0.1.0 API, representative fixture | Minimal 1.0 document, target/source metadata, section/query result, one span/table/list view, valid annotation target, deterministic serialization, legacy compatibility assertion, required verification command registry, `EVD-1` | DEP-1 / DEP-2 | A reviewer can inspect one end-to-end rich IR result and decide whether the architecture is viable. | RISK-1 / RISK-2 / RISK-3 / RISK-4 | MS-1 | VAL-1 | `npm run test:rich-ir:proving` passes; required verification scripts exist; output demonstrates the critical path; legacy compatibility assertion passes; no domain semantics appear. |
+| WP-1 | Prove the 1.0 critical path on one representative fixture. | Implementer | PKG-1 / PKG-2 / PKG-3 / PKG-4 / PKG-5 / PKG-6 | `src/api/**`, `src/ir/**`, necessary `src/parser/**` or `src/frontmatter/**`, `src/serialize/**`, `package.json`, `tests/**`, `fixtures/**`, `snapshots/**` | `docs/design/**`, existing `docs/contracts/**`, `RUNTIME_ARCHITECTURE.md` | SRC-1, SRC-2, current 0.1.0 API, representative fixture | Minimal 1.0 document, target/source metadata, section/query result, one span/table/list view, valid annotation target, deterministic serialization, legacy compatibility assertion, required verification command registry, `EVD-1` | DEP-1 / DEP-2 | A reviewer can inspect one end-to-end rich IR result and decide whether the architecture is viable. | RISK-1 / RISK-2 / RISK-3 / RISK-4 | MS-1 | VAL-1 | `npm run test:rich-ir:proving` passes; required verification scripts exist; output demonstrates the critical path; legacy compatibility assertion passes; no domain semantics or public workstream-label API names appear. |
 | WP-2 | Harden target identity, source ranges, and source slices. | Implementer | PKG-2 / PKG-6 | `src/ir/**`, necessary `src/parser/**`, necessary `src/frontmatter/**`, target/source tests, fixtures, snapshots | `src/api/**`, `src/rules/**`, `docs/contracts/**` | WP-1 target/source shape and parser offset evidence | Deterministic target generator, source-slice helper behavior, missing-offset diagnostics, target/source fixture evidence, `EVD-2` | WP-1 / MS-1 | Diagnostics, annotations, and reports can target source-grounded nodes deterministically. | RISK-2 / RISK-3 | MS-2 | VAL-2 / VAL-6 | `npm run test:rich-ir:targets` passes; missing source ranges are diagnosed or documented; repeat target generation is stable. |
 | WP-3 | Implement derived structural views and query helpers. | Implementer | PKG-3 / PKG-6 | `src/ir/**`, `src/api/**` query modules, view/query tests, fixtures, snapshots | parser/frontmatter internals, annotation modules, rule/config modules | WP-2 target/source substrate and `SRC-1` requirements | Sections, text spans, tables, lists, links, query helper results, structural fixture evidence, `EVD-3` | WP-2 | Downstream apps can replace line scanners and raw traversal for common structural access. | RISK-1 / RISK-3 | MS-2 | VAL-3 | `npm run test:rich-ir:queries` passes with nested heading, text span, table, list, link, and documented zero-based coordinate fixtures. |
 | WP-4 | Implement annotation target validation and rich diagnostics without semantic leakage. | Implementer | PKG-4 / PKG-6 | annotation modules under `src/api/**` or `src/ir/**`, `src/diagnostics/**`, relevant `src/rules/**` or `src/config/**` only if rich targets affect diagnostics, tests/fixtures | target/source internals unless coordination is approved, derived view internals unless coordination is approved | WP-2 targets, WP-3 queries, `SRC-1` annotation target model | Annotation target API, malformed target diagnostics, opaque payload preservation, boundary evidence, `EVD-4` | WP-2 / WP-3 | Downstream annotations can bind to engine targets while semantics remain app-owned. | RISK-1 / RISK-2 | MS-2 | VAL-4 / VAL-7 | `npm run test:rich-ir:annotations` passes; malformed targets produce deterministic diagnostics; payload meaning is not interpreted; `npm run audit:rich-ir-boundary` reports no annotation semantic leakage. |
@@ -620,7 +636,7 @@ Manual verification guide:
 | Step ID | Milestone | Operator action | Expected result | Evidence artifact |
 | --- | --- | --- | --- | --- |
 | MV-1 | MS-1 | Run `npm run test:rich-ir:proving` and inspect `docs/evidence/wp-1-evd-1-rich-ir-proving-slice.md`. | Command passes and output contains 1.0 document version, target IDs, source ranges/slices where available, section body membership, one text span, one table cell coordinate, one list item coordinate, query result, annotation target validation, deterministic serialization, and legacy compatibility assertion. | EVD-1 |
-| MV-2 | MS-1 | Run `npm run typecheck && npm run test:rich-ir:contract`, then inspect the public exports and proving-slice serialized output referenced by `docs/evidence/wp-1-evd-1-rich-ir-proving-slice.md`. | Raw parser AST is not exposed, annotation payload semantics are opaque, and no SpecTrace/profile/runtime/MCP identifiers appear. | EVD-1 |
+| MV-2 | MS-1 | Run `npm run typecheck && npm run test:rich-ir:contract`, then inspect the public exports and proving-slice serialized output referenced by `docs/evidence/wp-1-evd-1-rich-ir-proving-slice.md`. | Raw parser AST is not exposed, annotation payload semantics are opaque, no SpecTrace/profile/runtime/MCP identifiers appear, and no public `RichIr*` or `richIr` API labels appear without approved deviation. | EVD-1 |
 | MV-3 | MS-2 | Run `npm run test:rich-ir:targets`, `npm run test:rich-ir:queries`, `npm run test:rich-ir:annotations`, `npm run test:rich-ir:compat`, `npm run test:rich-ir:repeatability`, `npm run audit:rich-ir-boundary`, `npm run build`, and `npm run typecheck`. | Commands pass and each `VAL-2` through `VAL-8` evidence artifact exists under `docs/evidence/`. | EVD-2 through EVD-8 |
 | MV-4 | MS-2 | Run `npm run docs:rich-ir-contract`, then review `docs/contracts/**`, migration notes, and representative snapshots referenced by `docs/evidence/wp-5-evd-8-contract-review.md`. | 1.0 default behavior, legacy gates, field semantics, target limits, source-slice limits, query helpers, annotations, and non-goals are documented. | EVD-5 / EVD-8 |
 | MV-5 | MS-3 | Run `npm run release:verify` and `npm run test:rich-ir:downstream`, then inspect `docs/evidence/wp-6-evd-9-downstream-exercise.md`. | Full validation passes, downstream exercise proves structural use without semantic leakage, and release containment notes are present. | EVD-6 / EVD-9 / EVD-10 |
@@ -650,7 +666,7 @@ Section status: Complete
 
 | Change | Impact | Compatibility | Reversibility | Validation |
 | --- | --- | --- | --- | --- |
-| 1.0 `EngineDocument` rich IR shape | Adds public sections, spans, tables, lists, links, targets, and source references to the canonical 1.0 contract. | 1.0 root API uses rich shape; any 0.1.x-compatible path is explicit and documented. | Reversible before 1.0 release; semver-controlled after release. | VAL-1 / VAL-3 / VAL-8 |
+| 1.0 `EngineDocument` shape | Adds public sections, spans, tables, lists, links, targets, and source references to the canonical 1.0 contract. | 1.0 root API uses the evolved document shape; any 0.1.x-compatible path is explicit and documented. | Reversible before 1.0 release; semver-controlled after release. | VAL-1 / VAL-3 / VAL-8 |
 | `EngineTarget` and target ID semantics | Adds public anchors for diagnostics, annotations, query results, and reports. | Deterministic for identical input/options only; no arbitrary edit-stability promise. | Reversible before 1.0 release; semver-controlled after release. | VAL-2 / VAL-6 / VAL-8 |
 | Source ranges and source slices | Exposes source-grounded text where parser offsets exist. | Missing offsets produce diagnostics or omitted slices, not guessed text. | Reversible before 1.0 release; semver-controlled after release. | VAL-2 / VAL-7 |
 | Section, text span, table, list, and link views | Adds derived public structural views. | Coordinate and membership semantics are documented before release. | Reversible before 1.0 release; semver-controlled after release. | VAL-3 / VAL-8 |

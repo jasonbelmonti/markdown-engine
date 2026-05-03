@@ -113,6 +113,17 @@ Section status: Complete
 | REQ-11 | Security | Must | The system shall keep raw HTML and recovered source text inert without rendering, fetching, sanitizing, or executing it. | Rich source support must not create an execution boundary. | VAL-6 / VAL-8 |
 | REQ-12 | Operability | Must | The system shall document 1.0 IR fields, query helpers, annotation targets, migration behavior, and non-goals before release. | Durable consumers need a contract rather than source-code inference. | VAL-7 |
 
+Public naming and API continuity constraint: `rich IR` is the initiative and
+workstream label, not a public TypeScript namespace, API prefix, or module
+boundary. The 1.0 contract shall evolve the existing `markdown-engine` public
+vocabulary: `EngineDocument`, `EngineNode`, `EngineTarget`, query helpers,
+annotation helpers, `parse`, `normalize`, `validate`, and `serialize`. Public
+exports shall not introduce `RichIr*`, `richIr`, `queryRichIr`,
+`serializeRichIr`, `validateRichIr*`, or a separate `rich-ir` public module
+unless an explicit design revision approves a parallel API. This constraint does
+not apply to execution-only script names or evidence labels such as
+`test:rich-ir:*`.
+
 Section status: Complete
 
 ## 6. Success Measures and Kill Criteria
@@ -142,7 +153,7 @@ Trust or control boundaries: Caller-controlled Markdown, YAML frontmatter, valid
 | Interface | Owner | Consumer or dependency | Inputs | Outputs |
 | --- | --- | --- | --- | --- |
 | 1.0 public package API | `markdown-engine` | Package consumers and CI | Markdown text, path, parse/normalize options, validation config | 1.0 parse, normalize, validate, query, annotation, and serialization results |
-| 1.0 IR contract | `markdown-engine` | SpecTrace, profile/runtime, docs tools | Parsed Markdown and normalization options | Rich document tree, sections, spans, tables, lists, node targets, source references |
+| 1.0 IR contract | `markdown-engine` | SpecTrace, profile/runtime, docs tools | Parsed Markdown and normalization options | 1.0 `EngineDocument` tree, sections, spans, tables, lists, node targets, source references |
 | Query helper API | `markdown-engine` | Downstream apps | 1.0 document and query options | Sections, nodes, spans, links, tables, lists, source slices |
 | Annotation target API | `markdown-engine` | Downstream apps | App-owned annotation records and target references | Validated annotation attachment result or target diagnostics |
 | Parser adapter | `markdown-engine` | GFM parser dependency | Markdown body text and parser options | Parser output converted to engine-owned 1.0 IR |
@@ -247,7 +258,7 @@ Section status: Complete
 | TECH-6 | Table and list structural views | Structural view builder | Add zero-based row/cell coordinates, header-row counting, zero-based list item indices, zero-based nesting depth, ordered state, ordered start value, and checked state. | FUNC-4 |
 | TECH-7 | Query helper module | Public query API | Expose stable functions for common structural access without raw traversal duplication. | FUNC-2 / FUNC-3 / FUNC-4 |
 | TECH-8 | Annotation target validator | Annotation API | Validate caller-owned annotation targets and keep annotation payload semantics opaque to the engine. | FUNC-5 |
-| TECH-9 | Compatibility and serializer controls | Serialization and contract layer | Make rich IR the canonical 1.0 root API behavior, expose any 0.1.x-compatible behavior only through explicit legacy selectors or namespaces, reject version mismatches, and serialize deterministic public results. | FUNC-1 / FUNC-5 |
+| TECH-9 | Compatibility and serializer controls | Serialization and contract layer | Make the 1.0 document contract the canonical root API behavior, expose any 0.1.x-compatible behavior only through explicit legacy selectors or namespaces, reject version mismatches, and serialize deterministic public results. | FUNC-1 / FUNC-5 |
 | TECH-10 | Boundary and fixture harness | Test infrastructure | Prove repeatability, source grounding, downstream-style fixture behavior, and absence of domain leakage. | FUNC-1 / FUNC-2 / FUNC-3 / FUNC-4 / FUNC-5 / FUNC-6 |
 
 Section status: Complete
@@ -391,6 +402,13 @@ tables, table rows, table cells, lists, list items, links, annotations, and
 source-slice query results. `VAL-7` shall freeze the released names and
 migration notes before 1.0 approval.
 
+Naming rule for this shape: use engine/document vocabulary for public symbols.
+The implementation may use `rich IR` as an execution-program phrase in docs,
+scripts, and evidence, but public TypeScript declarations and package-root API
+names must read as the normal 1.0 `markdown-engine` contract. If an implementer
+believes a separate `richIr` namespace or module is required, that is a
+re-decision boundary requiring project-owner approval before coding continues.
+
 Indexing and coordinate semantics: All public structural indexes are zero-based
 non-negative integers. `EngineTable.rows` includes the GFM header row when one is
 present; the header row has `rowIndex: 0` and `isHeader: true`, and body rows
@@ -417,7 +435,7 @@ classification before release approval.
 
 | Change | Type | Compatibility impact | Reversibility | Mitigation |
 | --- | --- | --- | --- | --- |
-| 1.0 `EngineDocument` contract | Schema | Makes rich IR the stable public document shape for 1.0 consumers. | Reversible before 1.0 release; semver-controlled after release | Version the document contract and preserve explicit 0.1.x compatibility gates until migration is approved. |
+| 1.0 `EngineDocument` contract | Schema | Makes the evolved document shape the stable public contract for 1.0 consumers. | Reversible before 1.0 release; semver-controlled after release | Version the document contract and preserve explicit 0.1.x compatibility gates until migration is approved. |
 | Node target format | Schema | New public target identifier used by diagnostics and annotations. | Reversible before 1.0 release; semver-controlled after release | Document target stability limits and snapshot representative fixtures. |
 | Section, span, table, and list views | Schema | New derived views become public downstream contracts. | Reversible before 1.0 release; semver-controlled after release | Treat as the 1.0 contract with compatibility docs and fixture snapshots. |
 | Query helper API | API | New package functions or namespaces for structural access. | Reversible before 1.0 release; semver-controlled after release | Add typed API tests and docs before release. |
@@ -461,8 +479,8 @@ Section status: Complete
 | Contract review checklist | Audit | Show that 1.0 IR, query helpers, annotations, and migration notes are documented. | Project owner and downstream consumers |
 | SpecTrace-style fixture exercise | Log | Show whether 1.0 IR supports section and span use cases that motivated the design. | SpecTrace consumer |
 
-Rollout plan: Implement rich IR as the 1.0 root API contract with explicit
-document versioning and deterministic serialization. If 0.1.x compatibility is
+Rollout plan: Implement the 1.0 document contract as the root API behavior with
+explicit document versioning and deterministic serialization. If 0.1.x compatibility is
 retained, expose it only through a documented legacy selector or namespace and
 test it alongside the 1.0 contract. Add representative fixture snapshots; update
 contract docs; run 0.1.x compatibility and 1.0 test suites together; run a
