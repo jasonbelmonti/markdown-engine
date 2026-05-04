@@ -3,8 +3,10 @@ export type MarkdownEngineApiName =
   | "normalize"
   | "validate"
   | "serialize"
-  | "documentQueries";
+  | "documentQueries"
+  | "validateAnnotations";
 
+export * from "./annotations.js";
 export * from "./diagnostics.js";
 export * from "./document.js";
 export * from "./document-queries.js";

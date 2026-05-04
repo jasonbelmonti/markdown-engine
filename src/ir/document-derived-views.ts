@@ -25,6 +25,10 @@ export function buildDraftDocumentViews(
     version: "1.0.0-draft",
     target: targetFor("document", [], document.sourceRange),
     children,
+    compatibility: {
+      mode: "default",
+      reason: "1.0 draft document contract",
+    },
     sections: buildSections(children),
     textSpans: collectTextSpans(children),
     tables: collectTables(children),

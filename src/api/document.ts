@@ -139,11 +139,6 @@ export interface AnnotationValidationResult {
   diagnostics: readonly EngineTargetDiagnostic[];
 }
 
-export type ValidateAnnotationsFunction = (
-  document: EngineDocument,
-  annotations: readonly EngineAnnotation[],
-) => AnnotationValidationResult;
-
 export type SerializableEngineResult =
   | EngineDocument
   | AnnotationValidationResult;
