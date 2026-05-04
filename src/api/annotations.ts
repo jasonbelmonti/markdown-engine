@@ -139,11 +139,15 @@ function isSourcePosition(position: unknown): position is SourceRange["start"] {
     typeof position === "object" &&
     position !== null &&
     "line" in position &&
-    typeof position.line === "number" &&
+    numberIsFinite(position.line) &&
     "column" in position &&
-    typeof position.column === "number" &&
-    (!("offset" in position) || typeof position.offset === "number")
+    numberIsFinite(position.column) &&
+    (!("offset" in position) || numberIsFinite(position.offset))
   );
+}
+
+function numberIsFinite(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
 }
 
 function sourceRangeIsInvalid(range: SourceRange): boolean {

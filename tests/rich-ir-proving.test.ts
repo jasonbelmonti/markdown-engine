@@ -182,6 +182,18 @@ describe("1.0 Rich IR proving path", () => {
           }),
         ],
       });
+    for (const range of nonFiniteRanges()) {
+      expect(validateAnnotations(document, [sourceAnnotationFor(range)]))
+        .toMatchObject({
+          valid: false,
+          diagnostics: [
+            expect.objectContaining({
+              code: "annotation.target.invalidRange",
+              severity: "error",
+            }),
+          ],
+        });
+    }
   });
 
   it("serializes deterministically and preserves explicit legacy compatibility", () => {
@@ -335,4 +347,21 @@ function invalidRange(): SourceRange {
     start: { line: 4, column: 1 },
     end: { line: 3, column: 1 },
   };
+}
+
+function nonFiniteRanges(): SourceRange[] {
+  return [
+    {
+      start: { line: Number.NaN, column: 1 },
+      end: { line: 1, column: 2 },
+    },
+    {
+      start: { line: 1, column: Number.POSITIVE_INFINITY },
+      end: { line: 1, column: 2 },
+    },
+    {
+      start: { line: 1, column: 1, offset: Number.NEGATIVE_INFINITY },
+      end: { line: 1, column: 2, offset: 1 },
+    },
+  ];
 }
