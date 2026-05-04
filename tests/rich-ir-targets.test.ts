@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -13,6 +14,12 @@ import {
 } from "@jasonbelmonti/markdown-engine";
 
 const fixturePath = "fixtures/rich-ir/proving.md";
+const snapshotPath = fileURLToPath(
+  new URL(
+    "../snapshots/rich-ir/wp-2-target-source-fixtures.json",
+    import.meta.url,
+  ),
+);
 const fixture = readFileSync(
   new URL("../fixtures/rich-ir/proving.md", import.meta.url),
   "utf8",
@@ -136,36 +143,22 @@ describe("1.0 Rich IR target/source substrate", () => {
     ).toBe(true);
   });
 
+  it("records durable target/source evidence for MS-2 review", async () => {
+    const baseline = targetSourceEvidence();
+    const repeatedEvidence = Array.from({ length: 10 }, () =>
+      targetSourceEvidence(),
+    );
+
+    for (const evidence of repeatedEvidence) {
+      expect(evidence).toEqual(baseline);
+    }
+
+    await expect(stableJson(baseline)).toMatchFileSnapshot(snapshotPath);
+  });
+
   it("does not synthesize source slices when parser offsets are unusable", () => {
-    const outOfBoundsRange = range(1, 1, 0, 1, 6, 99);
-    const missingOffsetRange = {
-      start: { line: 2, column: 1 },
-      end: { line: 2, column: 6 },
-    };
-    const parsed = {
-      markdown: "Alpha\nBravo",
-      body: "Alpha\nBravo",
-      document: {
-        kind: "markdown-document",
-        version: "0.0.0",
-        children: [
-          {
-            type: "paragraph",
-            text: "Alpha",
-            sourceRange: outOfBoundsRange,
-          },
-          {
-            type: "paragraph",
-            text: "Bravo",
-            sourceRange: missingOffsetRange,
-          },
-        ],
-      },
-      diagnostics: [],
-    } satisfies ParsedMarkdown;
-    const document = normalize(parsed, {
-      documentVersion: "1.0.0-draft",
-    }).document;
+    const { document, missingOffsetRange, outOfBoundsRange } =
+      normalizeUnsupportedSourceFixture();
     const paragraph = requireNode(document, "node:0:paragraph");
 
     expect(paragraph.target).toEqual({
@@ -218,6 +211,91 @@ function targetSourceSnapshot(document: EngineDocument) {
   };
 }
 
+function targetSourceEvidence() {
+  const document = normalizeDraftFixture();
+  const withoutSourceLocations = normalizeDraftFixture({
+    preserveSourceLocations: false,
+  });
+  const unsupportedSourceFixture = normalizeUnsupportedSourceFixture();
+
+  return {
+    fixture: fixturePath,
+    documentTarget: document.target,
+    representativeNodes: representativeNodes.map((expected) => {
+      const node = requireNode(document, expected.targetId);
+
+      return {
+        id: node.target?.id,
+        nodeType: node.target?.nodeType,
+        path: node.target?.path,
+        sourceRange: node.target?.sourceRange,
+        source: node.source,
+        sourceSlice: documentQueries.sourceSlice(document, requireTarget(node)),
+      };
+    }),
+    withoutSourceLocations: {
+      documentTarget: withoutSourceLocations.target,
+      nodeTargets: documentQueries.nodes(withoutSourceLocations).map((node) => ({
+        id: node.target?.id,
+        path: node.target?.path,
+        sourceRangeAvailable: node.target?.sourceRange !== undefined,
+        sourceSliceAvailable: node.source !== undefined,
+      })),
+    },
+    unsupportedSourceOffsets: unsupportedSourceEvidence(
+      unsupportedSourceFixture.document,
+    ),
+  };
+}
+
+function normalizeUnsupportedSourceFixture(): {
+  document: EngineDocument;
+  missingOffsetRange: SourceRange;
+  outOfBoundsRange: SourceRange;
+} {
+  const outOfBoundsRange = range(1, 1, 0, 1, 6, 99);
+  const missingOffsetRange = {
+    start: { line: 2, column: 1 },
+    end: { line: 2, column: 6 },
+  };
+  const parsed = {
+    markdown: "Alpha\nBravo",
+    body: "Alpha\nBravo",
+    document: {
+      kind: "markdown-document",
+      version: "0.0.0",
+      children: [
+        {
+          type: "paragraph",
+          text: "Alpha",
+          sourceRange: outOfBoundsRange,
+        },
+        {
+          type: "paragraph",
+          text: "Bravo",
+          sourceRange: missingOffsetRange,
+        },
+      ],
+    },
+    diagnostics: [],
+  } satisfies ParsedMarkdown;
+
+  return {
+    document: normalize(parsed, { documentVersion: "1.0.0-draft" }).document,
+    missingOffsetRange,
+    outOfBoundsRange,
+  };
+}
+
+function unsupportedSourceEvidence(document: EngineDocument) {
+  return documentQueries.nodes(document).map((node) => ({
+    id: node.target?.id,
+    sourceRange: node.target?.sourceRange,
+    sourceSliceAvailable:
+      documentQueries.sourceSlice(document, requireTarget(node)) !== undefined,
+  }));
+}
+
 function requireNode(document: EngineDocument, targetId: string): EngineNode {
   const node = documentQueries.nodes(document, { targetId })[0];
 
@@ -234,6 +312,10 @@ function requireTarget(node: EngineNode): EngineTarget {
   }
 
   return node.target;
+}
+
+function stableJson(value: unknown): string {
+  return JSON.stringify(value, null, 2);
 }
 
 function range(
