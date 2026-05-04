@@ -172,6 +172,16 @@ describe("1.0 Rich IR proving path", () => {
           }),
         ],
       });
+    expect(validateAnnotations(document, [malformedSourceAnnotation()]))
+      .toMatchObject({
+        valid: false,
+        diagnostics: [
+          expect.objectContaining({
+            code: "annotation.target.invalidRange",
+            severity: "error",
+          }),
+        ],
+      });
   });
 
   it("serializes deterministically and preserves explicit legacy compatibility", () => {
@@ -303,6 +313,19 @@ function malformedNodeAnnotation(target: EngineTarget | undefined): EngineAnnota
     payload: {
       ownedByCaller: true,
       signal: "malformed",
+    },
+  };
+}
+
+function malformedSourceAnnotation(): EngineAnnotation {
+  return {
+    id: "annotation:malformed-source-target",
+    target: {
+      kind: "source",
+    } as EngineAnnotation["target"],
+    payload: {
+      ownedByCaller: true,
+      signal: "malformed-source",
     },
   };
 }

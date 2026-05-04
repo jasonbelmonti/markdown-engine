@@ -3,6 +3,7 @@ import type {
   EngineAnnotation,
   EngineAnnotationTarget,
   EngineDocument,
+  EngineTarget,
   EngineTargetDiagnostic,
 } from "./document.js";
 import type { SourceRange } from "./diagnostics.js";
@@ -44,8 +45,14 @@ function diagnosticsForAnnotation(
   target: EngineAnnotationTarget,
   validTargetIds: ReadonlySet<string>,
 ): EngineTargetDiagnostic[] {
-  if (target.kind === "node") {
-    if (target.target.kind !== "node") {
+  const candidate = target as {
+    kind?: unknown;
+    range?: unknown;
+    target?: unknown;
+  };
+
+  if (candidate.kind === "node") {
+    if (!isNodeTarget(candidate.target)) {
       return [
         {
           code: "annotation.target.invalidKind",
@@ -56,31 +63,87 @@ function diagnosticsForAnnotation(
       ];
     }
 
-    return validTargetIds.has(target.target.id)
+    return validTargetIds.has(candidate.target.id)
       ? []
       : [
           {
             code: "annotation.target.unknown",
-            message: `Annotation target '${target.target.id}' does not exist in the document.`,
+            message: `Annotation target '${candidate.target.id}' does not exist in the document.`,
             severity: "error",
             target,
           },
         ];
   }
 
-  if (sourceRangeIsInvalid(target.range)) {
+  if (candidate.kind !== "source") {
+    return [
+      {
+        code: "annotation.target.invalidKind",
+        message: "Annotation target kind must be 'node' or 'source'.",
+        severity: "error",
+        target,
+      },
+    ];
+  }
+
+  if (!isSourceRange(candidate.range)) {
+    return [
+      {
+        code: "annotation.target.invalidRange",
+        message: "Annotation source target range must include start and end positions.",
+        severity: "error",
+        target,
+      },
+    ];
+  }
+
+  if (sourceRangeIsInvalid(candidate.range)) {
     return [
       {
         code: "annotation.target.invalidRange",
         message: "Annotation source target range ends before it starts.",
         severity: "error",
-        sourceRange: target.range,
+        sourceRange: candidate.range,
         target,
       },
     ];
   }
 
   return [];
+}
+
+function isNodeTarget(target: unknown): target is EngineTarget {
+  return (
+    typeof target === "object" &&
+    target !== null &&
+    "kind" in target &&
+    target.kind === "node" &&
+    "id" in target &&
+    typeof target.id === "string"
+  );
+}
+
+function isSourceRange(range: unknown): range is SourceRange {
+  return (
+    typeof range === "object" &&
+    range !== null &&
+    "start" in range &&
+    isSourcePosition(range.start) &&
+    "end" in range &&
+    isSourcePosition(range.end)
+  );
+}
+
+function isSourcePosition(position: unknown): position is SourceRange["start"] {
+  return (
+    typeof position === "object" &&
+    position !== null &&
+    "line" in position &&
+    typeof position.line === "number" &&
+    "column" in position &&
+    typeof position.column === "number" &&
+    (!("offset" in position) || typeof position.offset === "number")
+  );
 }
 
 function sourceRangeIsInvalid(range: SourceRange): boolean {
