@@ -9,6 +9,12 @@ import type {
 import type { SourceRange } from "./diagnostics.js";
 import { documentQueries } from "./document-queries.js";
 
+type AnnotationTargetCandidate = {
+  kind?: unknown;
+  range?: unknown;
+  target?: unknown;
+};
+
 export type ValidateAnnotationsFunction = (
   document: EngineDocument,
   annotations: readonly EngineAnnotation[],
@@ -45,11 +51,18 @@ function diagnosticsForAnnotation(
   target: EngineAnnotationTarget,
   validTargetIds: ReadonlySet<string>,
 ): EngineTargetDiagnostic[] {
-  const candidate = target as {
-    kind?: unknown;
-    range?: unknown;
-    target?: unknown;
-  };
+  if (!isAnnotationTargetCandidate(target)) {
+    return [
+      {
+        code: "annotation.target.invalidKind",
+        message: "Annotation target kind must be 'node' or 'source'.",
+        severity: "error",
+        target,
+      },
+    ];
+  }
+
+  const candidate = target;
 
   if (candidate.kind === "node") {
     if (!isNodeTarget(candidate.target)) {
@@ -112,6 +125,12 @@ function diagnosticsForAnnotation(
   return [];
 }
 
+function isAnnotationTargetCandidate(
+  target: unknown,
+): target is AnnotationTargetCandidate {
+  return typeof target === "object" && target !== null;
+}
+
 function isNodeTarget(target: unknown): target is EngineTarget {
   return (
     typeof target === "object" &&
@@ -139,15 +158,19 @@ function isSourcePosition(position: unknown): position is SourceRange["start"] {
     typeof position === "object" &&
     position !== null &&
     "line" in position &&
-    numberIsFinite(position.line) &&
+    sourceLineOrColumnIsValid(position.line) &&
     "column" in position &&
-    numberIsFinite(position.column) &&
-    (!("offset" in position) || numberIsFinite(position.offset))
+    sourceLineOrColumnIsValid(position.column) &&
+    (!("offset" in position) || sourceOffsetIsValid(position.offset))
   );
 }
 
-function numberIsFinite(value: unknown): value is number {
-  return typeof value === "number" && Number.isFinite(value);
+function sourceLineOrColumnIsValid(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value) && value >= 1;
+}
+
+function sourceOffsetIsValid(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0;
 }
 
 function sourceRangeIsInvalid(range: SourceRange): boolean {

@@ -182,7 +182,18 @@ describe("1.0 Rich IR proving path", () => {
           }),
         ],
       });
-    for (const range of nonFiniteRanges()) {
+    for (const annotation of malformedTargetAnnotations()) {
+      expect(validateAnnotations(document, [annotation])).toMatchObject({
+        valid: false,
+        diagnostics: [
+          expect.objectContaining({
+            code: "annotation.target.invalidKind",
+            severity: "error",
+          }),
+        ],
+      });
+    }
+    for (const range of invalidPositionRanges()) {
       expect(validateAnnotations(document, [sourceAnnotationFor(range)]))
         .toMatchObject({
           valid: false,
@@ -349,7 +360,35 @@ function invalidRange(): SourceRange {
   };
 }
 
-function nonFiniteRanges(): SourceRange[] {
+function malformedTargetAnnotations(): EngineAnnotation[] {
+  return [
+    {
+      id: "annotation:missing-target",
+      payload: {
+        ownedByCaller: true,
+        signal: "missing-target",
+      },
+    } as EngineAnnotation,
+    {
+      id: "annotation:null-target",
+      target: null,
+      payload: {
+        ownedByCaller: true,
+        signal: "null-target",
+      },
+    } as unknown as EngineAnnotation,
+    {
+      id: "annotation:string-target",
+      target: "node:1",
+      payload: {
+        ownedByCaller: true,
+        signal: "string-target",
+      },
+    } as unknown as EngineAnnotation,
+  ];
+}
+
+function invalidPositionRanges(): SourceRange[] {
   return [
     {
       start: { line: Number.NaN, column: 1 },
@@ -361,6 +400,18 @@ function nonFiniteRanges(): SourceRange[] {
     },
     {
       start: { line: 1, column: 1, offset: Number.NEGATIVE_INFINITY },
+      end: { line: 1, column: 2, offset: 1 },
+    },
+    {
+      start: { line: 0, column: 1 },
+      end: { line: 1, column: 2 },
+    },
+    {
+      start: { line: 1, column: 0 },
+      end: { line: 1, column: 2 },
+    },
+    {
+      start: { line: 1, column: 1, offset: -1 },
       end: { line: 1, column: 2, offset: 1 },
     },
   ];
