@@ -4,6 +4,7 @@ import type {
   EngineSourceSlice,
   EngineTarget,
 } from "../api/document.js";
+import { cloneSourceRange, sourceOffsetBounds } from "./source-ranges.js";
 
 export interface DraftViewBuildOptions {
   preserveSourceLocations: boolean;
@@ -39,9 +40,11 @@ export function targetFor(
   return {
     kind: "node",
     id: `node:${idPath}:${nodeType}`,
-    path,
+    path: [...path],
     nodeType,
-    ...(sourceRange !== undefined ? { sourceRange } : {}),
+    ...(sourceRange !== undefined
+      ? { sourceRange: cloneSourceRange(sourceRange) }
+      : {}),
   };
 }
 
@@ -57,17 +60,18 @@ function sourceSliceForRange(
   sourceRange: SourceRange | undefined,
   options: DraftViewBuildOptions,
 ): EngineSourceSlice | undefined {
-  if (
-    !options.preserveSourceLocations ||
-    typeof sourceRange?.start.offset !== "number" ||
-    typeof sourceRange.end.offset !== "number" ||
-    sourceRange.end.offset < sourceRange.start.offset
-  ) {
+  if (!options.preserveSourceLocations || sourceRange === undefined) {
+    return undefined;
+  }
+
+  const offsets = sourceOffsetBounds(sourceRange, options.source.length);
+
+  if (offsets === undefined) {
     return undefined;
   }
 
   return {
-    range: sourceRange,
-    text: options.source.slice(sourceRange.start.offset, sourceRange.end.offset),
+    range: cloneSourceRange(sourceRange),
+    text: options.source.slice(offsets.startOffset, offsets.endOffset),
   };
 }

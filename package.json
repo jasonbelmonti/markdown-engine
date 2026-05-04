@@ -49,7 +49,7 @@
     "snapshots:update:serialization": "npm run build && vitest run tests/serialization-repeatability.test.ts tests/boundary-inspection.test.ts -u \"--exclude=.worktrees/**\"",
     "test:rich-ir:proving": "npm run build && vitest run tests/rich-ir-proving.test.ts \"--exclude=.worktrees/**\"",
     "test:rich-ir:contract": "npm run build && tsc -p tsconfig.document-contract.json && vitest run tests/document-contract.test.ts \"--exclude=.worktrees/**\"",
-    "test:rich-ir:targets": "node scripts/gate-placeholder.mjs test:rich-ir:targets",
+    "test:rich-ir:targets": "npm run build && vitest run tests/rich-ir-targets.test.ts \"--exclude=.worktrees/**\"",
     "test:rich-ir:queries": "node scripts/gate-placeholder.mjs test:rich-ir:queries",
     "test:rich-ir:annotations": "node scripts/gate-placeholder.mjs test:rich-ir:annotations",
     "test:rich-ir:compat": "node scripts/gate-placeholder.mjs test:rich-ir:compat",
