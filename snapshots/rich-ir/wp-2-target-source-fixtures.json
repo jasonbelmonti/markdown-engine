@@ -1,0 +1,718 @@
+{
+  "fixture": "fixtures/rich-ir/proving.md",
+  "documentTarget": {
+    "kind": "node",
+    "id": "node:root:document",
+    "path": [],
+    "nodeType": "document",
+    "sourceRange": {
+      "start": {
+        "line": 6,
+        "column": 1,
+        "offset": 76
+      },
+      "end": {
+        "line": 27,
+        "column": 1,
+        "offset": 504
+      }
+    }
+  },
+  "representativeNodes": [
+    {
+      "id": "node:0:heading",
+      "nodeType": "heading",
+      "path": [
+        0
+      ],
+      "sourceRange": {
+        "start": {
+          "line": 7,
+          "column": 1,
+          "offset": 77
+        },
+        "end": {
+          "line": 7,
+          "column": 16,
+          "offset": 92
+        }
+      },
+      "source": {
+        "range": {
+          "start": {
+            "line": 7,
+            "column": 1,
+            "offset": 77
+          },
+          "end": {
+            "line": 7,
+            "column": 16,
+            "offset": 92
+          }
+        },
+        "text": "# Mission Brief"
+      },
+      "sourceSlice": {
+        "range": {
+          "start": {
+            "line": 7,
+            "column": 1,
+            "offset": 77
+          },
+          "end": {
+            "line": 7,
+            "column": 16,
+            "offset": 92
+          }
+        },
+        "text": "# Mission Brief"
+      }
+    },
+    {
+      "id": "node:1:paragraph",
+      "nodeType": "paragraph",
+      "path": [
+        1
+      ],
+      "sourceRange": {
+        "start": {
+          "line": 9,
+          "column": 1,
+          "offset": 94
+        },
+        "end": {
+          "line": 9,
+          "column": 89,
+          "offset": 182
+        }
+      },
+      "source": {
+        "range": {
+          "start": {
+            "line": 9,
+            "column": 1,
+            "offset": 94
+          },
+          "end": {
+            "line": 9,
+            "column": 89,
+            "offset": 182
+          }
+        },
+        "text": "Use [markdown-engine](https://example.com/markdown-engine) to prove the structural path."
+      },
+      "sourceSlice": {
+        "range": {
+          "start": {
+            "line": 9,
+            "column": 1,
+            "offset": 94
+          },
+          "end": {
+            "line": 9,
+            "column": 89,
+            "offset": 182
+          }
+        },
+        "text": "Use [markdown-engine](https://example.com/markdown-engine) to prove the structural path."
+      }
+    },
+    {
+      "id": "node:1.1:link",
+      "nodeType": "link",
+      "path": [
+        1,
+        1
+      ],
+      "sourceRange": {
+        "start": {
+          "line": 9,
+          "column": 5,
+          "offset": 98
+        },
+        "end": {
+          "line": 9,
+          "column": 59,
+          "offset": 152
+        }
+      },
+      "source": {
+        "range": {
+          "start": {
+            "line": 9,
+            "column": 5,
+            "offset": 98
+          },
+          "end": {
+            "line": 9,
+            "column": 59,
+            "offset": 152
+          }
+        },
+        "text": "[markdown-engine](https://example.com/markdown-engine)"
+      },
+      "sourceSlice": {
+        "range": {
+          "start": {
+            "line": 9,
+            "column": 5,
+            "offset": 98
+          },
+          "end": {
+            "line": 9,
+            "column": 59,
+            "offset": 152
+          }
+        },
+        "text": "[markdown-engine](https://example.com/markdown-engine)"
+      }
+    },
+    {
+      "id": "node:4:table",
+      "nodeType": "table",
+      "path": [
+        4
+      ],
+      "sourceRange": {
+        "start": {
+          "line": 15,
+          "column": 1,
+          "offset": 302
+        },
+        "end": {
+          "line": 17,
+          "column": 16,
+          "offset": 349
+        }
+      },
+      "source": {
+        "range": {
+          "start": {
+            "line": 15,
+            "column": 1,
+            "offset": 302
+          },
+          "end": {
+            "line": 17,
+            "column": 16,
+            "offset": 349
+          }
+        },
+        "text": "| Field | Value |\n| --- | --- |\n| signal | go |"
+      },
+      "sourceSlice": {
+        "range": {
+          "start": {
+            "line": 15,
+            "column": 1,
+            "offset": 302
+          },
+          "end": {
+            "line": 17,
+            "column": 16,
+            "offset": 349
+          }
+        },
+        "text": "| Field | Value |\n| --- | --- |\n| signal | go |"
+      }
+    },
+    {
+      "id": "node:5.0.1.0:listItem",
+      "nodeType": "listItem",
+      "path": [
+        5,
+        0,
+        1,
+        0
+      ],
+      "sourceRange": {
+        "start": {
+          "line": 20,
+          "column": 3,
+          "offset": 381
+        },
+        "end": {
+          "line": 20,
+          "column": 40,
+          "offset": 418
+        }
+      },
+      "source": {
+        "range": {
+          "start": {
+            "line": 20,
+            "column": 3,
+            "offset": 381
+          },
+          "end": {
+            "line": 20,
+            "column": 40,
+            "offset": 418
+          }
+        },
+        "text": "- [ ] Preserve the nested task target"
+      },
+      "sourceSlice": {
+        "range": {
+          "start": {
+            "line": 20,
+            "column": 3,
+            "offset": 381
+          },
+          "end": {
+            "line": 20,
+            "column": 40,
+            "offset": 418
+          }
+        },
+        "text": "- [ ] Preserve the nested task target"
+      }
+    },
+    {
+      "id": "node:6:code",
+      "nodeType": "code",
+      "path": [
+        6
+      ],
+      "sourceRange": {
+        "start": {
+          "line": 22,
+          "column": 1,
+          "offset": 420
+        },
+        "end": {
+          "line": 24,
+          "column": 4,
+          "offset": 457
+        }
+      },
+      "source": {
+        "range": {
+          "start": {
+            "line": 22,
+            "column": 1,
+            "offset": 420
+          },
+          "end": {
+            "line": 24,
+            "column": 4,
+            "offset": 457
+          }
+        },
+        "text": "```ts\nexport const signal = \"go\";\n```"
+      },
+      "sourceSlice": {
+        "range": {
+          "start": {
+            "line": 22,
+            "column": 1,
+            "offset": 420
+          },
+          "end": {
+            "line": 24,
+            "column": 4,
+            "offset": 457
+          }
+        },
+        "text": "```ts\nexport const signal = \"go\";\n```"
+      }
+    },
+    {
+      "id": "node:7:html",
+      "nodeType": "html",
+      "path": [
+        7
+      ],
+      "sourceRange": {
+        "start": {
+          "line": 26,
+          "column": 1,
+          "offset": 459
+        },
+        "end": {
+          "line": 26,
+          "column": 45,
+          "offset": 503
+        }
+      },
+      "source": {
+        "range": {
+          "start": {
+            "line": 26,
+            "column": 1,
+            "offset": 459
+          },
+          "end": {
+            "line": 26,
+            "column": 45,
+            "offset": 503
+          }
+        },
+        "text": "<div data-engine=\"inert\">Raw HTML data</div>"
+      },
+      "sourceSlice": {
+        "range": {
+          "start": {
+            "line": 26,
+            "column": 1,
+            "offset": 459
+          },
+          "end": {
+            "line": 26,
+            "column": 45,
+            "offset": 503
+          }
+        },
+        "text": "<div data-engine=\"inert\">Raw HTML data</div>"
+      }
+    }
+  ],
+  "withoutSourceLocations": {
+    "documentTarget": {
+      "kind": "node",
+      "id": "node:root:document",
+      "path": [],
+      "nodeType": "document"
+    },
+    "nodeTargets": [
+      {
+        "id": "node:0:heading",
+        "path": [
+          0
+        ],
+        "sourceRangeAvailable": false,
+        "sourceSliceAvailable": false
+      },
+      {
+        "id": "node:0.0:text",
+        "path": [
+          0,
+          0
+        ],
+        "sourceRangeAvailable": false,
+        "sourceSliceAvailable": false
+      },
+      {
+        "id": "node:1:paragraph",
+        "path": [
+          1
+        ],
+        "sourceRangeAvailable": false,
+        "sourceSliceAvailable": false
+      },
+      {
+        "id": "node:1.0:text",
+        "path": [
+          1,
+          0
+        ],
+        "sourceRangeAvailable": false,
+        "sourceSliceAvailable": false
+      },
+      {
+        "id": "node:1.1:link",
+        "path": [
+          1,
+          1
+        ],
+        "sourceRangeAvailable": false,
+        "sourceSliceAvailable": false
+      },
+      {
+        "id": "node:1.1.0:text",
+        "path": [
+          1,
+          1,
+          0
+        ],
+        "sourceRangeAvailable": false,
+        "sourceSliceAvailable": false
+      },
+      {
+        "id": "node:1.2:text",
+        "path": [
+          1,
+          2
+        ],
+        "sourceRangeAvailable": false,
+        "sourceSliceAvailable": false
+      },
+      {
+        "id": "node:2:heading",
+        "path": [
+          2
+        ],
+        "sourceRangeAvailable": false,
+        "sourceSliceAvailable": false
+      },
+      {
+        "id": "node:2.0:text",
+        "path": [
+          2,
+          0
+        ],
+        "sourceRangeAvailable": false,
+        "sourceSliceAvailable": false
+      },
+      {
+        "id": "node:3:paragraph",
+        "path": [
+          3
+        ],
+        "sourceRangeAvailable": false,
+        "sourceSliceAvailable": false
+      },
+      {
+        "id": "node:3.0:text",
+        "path": [
+          3,
+          0
+        ],
+        "sourceRangeAvailable": false,
+        "sourceSliceAvailable": false
+      },
+      {
+        "id": "node:4:table",
+        "path": [
+          4
+        ],
+        "sourceRangeAvailable": false,
+        "sourceSliceAvailable": false
+      },
+      {
+        "id": "node:4.0:tableRow",
+        "path": [
+          4,
+          0
+        ],
+        "sourceRangeAvailable": false,
+        "sourceSliceAvailable": false
+      },
+      {
+        "id": "node:4.0.0:tableCell",
+        "path": [
+          4,
+          0,
+          0
+        ],
+        "sourceRangeAvailable": false,
+        "sourceSliceAvailable": false
+      },
+      {
+        "id": "node:4.0.0.0:text",
+        "path": [
+          4,
+          0,
+          0,
+          0
+        ],
+        "sourceRangeAvailable": false,
+        "sourceSliceAvailable": false
+      },
+      {
+        "id": "node:4.0.1:tableCell",
+        "path": [
+          4,
+          0,
+          1
+        ],
+        "sourceRangeAvailable": false,
+        "sourceSliceAvailable": false
+      },
+      {
+        "id": "node:4.0.1.0:text",
+        "path": [
+          4,
+          0,
+          1,
+          0
+        ],
+        "sourceRangeAvailable": false,
+        "sourceSliceAvailable": false
+      },
+      {
+        "id": "node:4.1:tableRow",
+        "path": [
+          4,
+          1
+        ],
+        "sourceRangeAvailable": false,
+        "sourceSliceAvailable": false
+      },
+      {
+        "id": "node:4.1.0:tableCell",
+        "path": [
+          4,
+          1,
+          0
+        ],
+        "sourceRangeAvailable": false,
+        "sourceSliceAvailable": false
+      },
+      {
+        "id": "node:4.1.0.0:text",
+        "path": [
+          4,
+          1,
+          0,
+          0
+        ],
+        "sourceRangeAvailable": false,
+        "sourceSliceAvailable": false
+      },
+      {
+        "id": "node:4.1.1:tableCell",
+        "path": [
+          4,
+          1,
+          1
+        ],
+        "sourceRangeAvailable": false,
+        "sourceSliceAvailable": false
+      },
+      {
+        "id": "node:4.1.1.0:text",
+        "path": [
+          4,
+          1,
+          1,
+          0
+        ],
+        "sourceRangeAvailable": false,
+        "sourceSliceAvailable": false
+      },
+      {
+        "id": "node:5:list",
+        "path": [
+          5
+        ],
+        "sourceRangeAvailable": false,
+        "sourceSliceAvailable": false
+      },
+      {
+        "id": "node:5.0:listItem",
+        "path": [
+          5,
+          0
+        ],
+        "sourceRangeAvailable": false,
+        "sourceSliceAvailable": false
+      },
+      {
+        "id": "node:5.0.0:paragraph",
+        "path": [
+          5,
+          0,
+          0
+        ],
+        "sourceRangeAvailable": false,
+        "sourceSliceAvailable": false
+      },
+      {
+        "id": "node:5.0.0.0:text",
+        "path": [
+          5,
+          0,
+          0,
+          0
+        ],
+        "sourceRangeAvailable": false,
+        "sourceSliceAvailable": false
+      },
+      {
+        "id": "node:5.0.1:list",
+        "path": [
+          5,
+          0,
+          1
+        ],
+        "sourceRangeAvailable": false,
+        "sourceSliceAvailable": false
+      },
+      {
+        "id": "node:5.0.1.0:listItem",
+        "path": [
+          5,
+          0,
+          1,
+          0
+        ],
+        "sourceRangeAvailable": false,
+        "sourceSliceAvailable": false
+      },
+      {
+        "id": "node:5.0.1.0.0:paragraph",
+        "path": [
+          5,
+          0,
+          1,
+          0,
+          0
+        ],
+        "sourceRangeAvailable": false,
+        "sourceSliceAvailable": false
+      },
+      {
+        "id": "node:5.0.1.0.0.0:text",
+        "path": [
+          5,
+          0,
+          1,
+          0,
+          0,
+          0
+        ],
+        "sourceRangeAvailable": false,
+        "sourceSliceAvailable": false
+      },
+      {
+        "id": "node:6:code",
+        "path": [
+          6
+        ],
+        "sourceRangeAvailable": false,
+        "sourceSliceAvailable": false
+      },
+      {
+        "id": "node:7:html",
+        "path": [
+          7
+        ],
+        "sourceRangeAvailable": false,
+        "sourceSliceAvailable": false
+      }
+    ]
+  },
+  "unsupportedSourceOffsets": [
+    {
+      "id": "node:0:paragraph",
+      "sourceRange": {
+        "start": {
+          "line": 1,
+          "column": 1,
+          "offset": 0
+        },
+        "end": {
+          "line": 1,
+          "column": 6,
+          "offset": 99
+        }
+      },
+      "sourceSliceAvailable": false
+    },
+    {
+      "id": "node:1:paragraph",
+      "sourceRange": {
+        "start": {
+          "line": 2,
+          "column": 1
+        },
+        "end": {
+          "line": 2,
+          "column": 6
+        }
+      },
+      "sourceSliceAvailable": false
+    }
+  ]
+}
