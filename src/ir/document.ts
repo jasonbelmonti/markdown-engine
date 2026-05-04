@@ -1,9 +1,9 @@
-import type { SourceRange } from "../api/diagnostics.js";
 import type { EngineDocument, EngineNode } from "../api/document.js";
 import type { NormalizeOptions } from "../api/normalize.js";
 import type { ParsedMarkdown } from "../api/parse.js";
 import { hasOwnProperty, isPlainRecord } from "../internal/plain-record.js";
 import { buildDraftDocumentViews } from "./document-derived-views.js";
+import { cloneSourceRange } from "./source-ranges.js";
 
 export function normalizeParsedMarkdown(
   parsed: ParsedMarkdown,
@@ -80,11 +80,4 @@ function cloneUnknown(value: unknown): unknown {
   }
 
   return value;
-}
-
-function cloneSourceRange(sourceRange: SourceRange): SourceRange {
-  return {
-    start: { ...sourceRange.start },
-    end: { ...sourceRange.end },
-  };
 }
