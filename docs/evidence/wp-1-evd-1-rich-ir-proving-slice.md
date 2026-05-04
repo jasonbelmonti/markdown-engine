@@ -45,7 +45,8 @@ BEL-935 and extends it with:
   source-range targets from the fixture and returning annotation payloads
   unchanged.
 - deterministic rejection of an unknown node target with
-  `annotation.target.unknown` and an invalid source range with
+  `annotation.target.unknown`, a malformed node target with
+  `annotation.target.invalidKind`, and an invalid source range with
   `annotation.target.invalidRange`.
 - `serialize(annotatedDocument, { pretty: true })` producing identical output
   for repeated calls.

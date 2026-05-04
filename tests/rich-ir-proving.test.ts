@@ -152,6 +152,16 @@ describe("1.0 Rich IR proving path", () => {
           }),
         ],
       });
+    expect(validateAnnotations(document, [malformedNodeAnnotation(paragraph.target)]))
+      .toMatchObject({
+        valid: false,
+        diagnostics: [
+          expect.objectContaining({
+            code: "annotation.target.invalidKind",
+            severity: "error",
+          }),
+        ],
+      });
     expect(validateAnnotations(document, [sourceAnnotationFor(invalidRange())]))
       .toMatchObject({
         valid: false,
@@ -273,6 +283,27 @@ function missingNodeTarget(): EngineTarget {
     id: "node:missing",
     path: [999],
     nodeType: "paragraph",
+  };
+}
+
+function malformedNodeAnnotation(target: EngineTarget | undefined): EngineAnnotation {
+  if (target === undefined) {
+    return missingTarget();
+  }
+
+  return {
+    id: "annotation:malformed-node-target",
+    target: {
+      kind: "node",
+      target: {
+        ...target,
+        kind: "source",
+      },
+    },
+    payload: {
+      ownedByCaller: true,
+      signal: "malformed",
+    },
   };
 }
 

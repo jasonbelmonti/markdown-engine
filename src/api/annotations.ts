@@ -45,6 +45,17 @@ function diagnosticsForAnnotation(
   validTargetIds: ReadonlySet<string>,
 ): EngineTargetDiagnostic[] {
   if (target.kind === "node") {
+    if (target.target.kind !== "node") {
+      return [
+        {
+          code: "annotation.target.invalidKind",
+          message: "Annotation node target must reference an engine node target.",
+          severity: "error",
+          target,
+        },
+      ];
+    }
+
     return validTargetIds.has(target.target.id)
       ? []
       : [
