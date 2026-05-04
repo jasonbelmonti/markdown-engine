@@ -2,14 +2,14 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
-import type {
-  EngineAnnotation,
-  EngineCompatibilityGate,
-  EngineDocument,
-  EngineDocumentQueries,
-  EngineTarget,
-  SerializableEngineResult,
-  ValidateAnnotationsFunction,
+import {
+  validateAnnotations,
+  type EngineAnnotation,
+  type EngineCompatibilityGate,
+  type EngineDocument,
+  type EngineDocumentQueries,
+  type EngineTarget,
+  type SerializableEngineResult,
 } from "@jasonbelmonti/markdown-engine";
 
 const requiredScriptNames = [
@@ -112,15 +112,6 @@ const queries = {
   sourceSlice: (document, target) =>
     document.children.find((node) => node.target?.id === target.id)?.source,
 } satisfies EngineDocumentQueries;
-const validateAnnotations: ValidateAnnotationsFunction = (
-  _document,
-  annotations,
-) => ({
-  valid: true,
-  annotations,
-  diagnostics: [],
-});
-
 describe("1.0 document contract skeleton", () => {
   it("registers the required implementation-lane command names", () => {
     const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8")) as {
@@ -153,6 +144,7 @@ describe("1.0 document contract skeleton", () => {
 
   it("keeps raw parser AST, downstream domain/runtime terms, and richIr labels out of public contract modules", () => {
     const publicContractSources = [
+      readFileSync("src/api/annotations.ts", "utf8"),
       readFileSync("src/api/contracts.ts", "utf8"),
       readFileSync("src/api/document.ts", "utf8"),
     ].join("\n");

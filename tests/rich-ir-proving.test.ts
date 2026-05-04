@@ -5,7 +5,12 @@ import {
   documentQueries,
   normalize,
   parse,
+  serialize,
+  validateAnnotations,
+  type EngineAnnotation,
   type EngineDocument,
+  type EngineTarget,
+  type SourceRange,
 } from "@jasonbelmonti/markdown-engine";
 
 const fixturePath = "fixtures/rich-ir/proving.md";
@@ -117,6 +122,133 @@ describe("1.0 Rich IR proving path", () => {
       }),
     );
   });
+
+  it("validates caller-owned annotation targets without interpreting payloads", () => {
+    const document = normalizeDraftFixture();
+    const paragraph = firstParagraph(document);
+    const section = documentQueries.sections(document)[0] ?? missingTarget();
+
+    const annotation = annotationFor(paragraph.target);
+    const sectionAnnotation = annotationFor(section.target);
+    const sourceAnnotation = sourceAnnotationFor(paragraph.sourceRange);
+    const annotationResult = validateAnnotations(document, [
+      annotation,
+      sectionAnnotation,
+      sourceAnnotation,
+    ]);
+
+    expect(annotationResult).toEqual({
+      valid: true,
+      annotations: [annotation, sectionAnnotation, sourceAnnotation],
+      diagnostics: [],
+    });
+    expect(validateAnnotations(document, [annotationFor(missingNodeTarget())]))
+      .toMatchObject({
+        valid: false,
+        diagnostics: [
+          expect.objectContaining({
+            code: "annotation.target.unknown",
+            severity: "error",
+          }),
+        ],
+      });
+    expect(validateAnnotations(document, [malformedNodeAnnotation(paragraph.target)]))
+      .toMatchObject({
+        valid: false,
+        diagnostics: [
+          expect.objectContaining({
+            code: "annotation.target.invalidKind",
+            severity: "error",
+          }),
+        ],
+      });
+    expect(validateAnnotations(document, [sourceAnnotationFor(invalidRange())]))
+      .toMatchObject({
+        valid: false,
+        diagnostics: [
+          expect.objectContaining({
+            code: "annotation.target.invalidRange",
+            severity: "error",
+          }),
+        ],
+      });
+    expect(validateAnnotations(document, [malformedSourceAnnotation()]))
+      .toMatchObject({
+        valid: false,
+        diagnostics: [
+          expect.objectContaining({
+            code: "annotation.target.invalidRange",
+            severity: "error",
+          }),
+        ],
+      });
+    for (const annotation of malformedTargetAnnotations()) {
+      expect(validateAnnotations(document, [annotation])).toMatchObject({
+        valid: false,
+        diagnostics: [
+          expect.objectContaining({
+            code: "annotation.target.invalidKind",
+            severity: "error",
+          }),
+        ],
+      });
+    }
+    for (const range of invalidPositionRanges()) {
+      expect(validateAnnotations(document, [sourceAnnotationFor(range)]))
+        .toMatchObject({
+          valid: false,
+          diagnostics: [
+            expect.objectContaining({
+              code: "annotation.target.invalidRange",
+              severity: "error",
+            }),
+          ],
+        });
+    }
+  });
+
+  it("serializes deterministically and preserves explicit legacy compatibility", () => {
+    const document = normalizeDraftFixture();
+    const paragraph = firstParagraph(document);
+    const annotationResult = validateAnnotations(document, [
+      annotationFor(paragraph.target),
+    ]);
+
+    const annotatedDocument = {
+      ...document,
+      annotations: annotationResult.annotations,
+    };
+    const serializedDocument = serialize(annotatedDocument, { pretty: true });
+
+    expect(serializedDocument).toEqual(
+      serialize(annotatedDocument, { pretty: true }),
+    );
+    expect(JSON.parse(serializedDocument)).toMatchObject({
+      version: "1.0.0-draft",
+      annotations: [
+        {
+          id: "annotation:mission-paragraph",
+          payload: {
+            ownedByCaller: true,
+            signal: "go",
+          },
+        },
+      ],
+      compatibility: {
+        mode: "default",
+      },
+    });
+
+    const legacyDocument = normalize(
+      parse(fixture, { path: fixturePath }).parsed,
+      { documentVersion: "0.0.0" },
+    ).document;
+
+    expect(legacyDocument.version).toBe("0.0.0");
+    expect(legacyDocument.target).toBeUndefined();
+    expect(legacyDocument.sections).toBeUndefined();
+    expect(legacyDocument.annotations).toBeUndefined();
+  });
 });
 
 function normalizeDraftFixture(): EngineDocument {
@@ -134,4 +266,153 @@ function targetIds(document: EngineDocument): string[] {
 
 function missingTarget() {
   throw new Error("Expected paragraph target to be present.");
+}
+
+function firstParagraph(document: EngineDocument) {
+  const paragraph = documentQueries.nodes(document, { type: "paragraph" })[0];
+
+  return paragraph ?? missingTarget();
+}
+
+function annotationFor(target: EngineTarget | undefined): EngineAnnotation {
+  if (target === undefined) {
+    return missingTarget();
+  }
+
+  return {
+    id: "annotation:mission-paragraph",
+    target: {
+      kind: "node",
+      target,
+    },
+    payload: {
+      ownedByCaller: true,
+      signal: "go",
+    },
+  };
+}
+
+function sourceAnnotationFor(range: SourceRange | undefined): EngineAnnotation {
+  if (range === undefined) {
+    return missingTarget();
+  }
+
+  return {
+    id: "annotation:source-range",
+    target: {
+      kind: "source",
+      range,
+    },
+    payload: {
+      ownedByCaller: true,
+      signal: "source",
+    },
+  };
+}
+
+function missingNodeTarget(): EngineTarget {
+  return {
+    kind: "node",
+    id: "node:missing",
+    path: [999],
+    nodeType: "paragraph",
+  };
+}
+
+function malformedNodeAnnotation(target: EngineTarget | undefined): EngineAnnotation {
+  if (target === undefined) {
+    return missingTarget();
+  }
+
+  return {
+    id: "annotation:malformed-node-target",
+    target: {
+      kind: "node",
+      target: {
+        ...target,
+        kind: "source",
+      },
+    },
+    payload: {
+      ownedByCaller: true,
+      signal: "malformed",
+    },
+  };
+}
+
+function malformedSourceAnnotation(): EngineAnnotation {
+  return {
+    id: "annotation:malformed-source-target",
+    target: {
+      kind: "source",
+    } as EngineAnnotation["target"],
+    payload: {
+      ownedByCaller: true,
+      signal: "malformed-source",
+    },
+  };
+}
+
+function invalidRange(): SourceRange {
+  return {
+    start: { line: 4, column: 1 },
+    end: { line: 3, column: 1 },
+  };
+}
+
+function malformedTargetAnnotations(): EngineAnnotation[] {
+  return [
+    {
+      id: "annotation:missing-target",
+      payload: {
+        ownedByCaller: true,
+        signal: "missing-target",
+      },
+    } as EngineAnnotation,
+    {
+      id: "annotation:null-target",
+      target: null,
+      payload: {
+        ownedByCaller: true,
+        signal: "null-target",
+      },
+    } as unknown as EngineAnnotation,
+    {
+      id: "annotation:string-target",
+      target: "node:1",
+      payload: {
+        ownedByCaller: true,
+        signal: "string-target",
+      },
+    } as unknown as EngineAnnotation,
+  ];
+}
+
+function invalidPositionRanges(): SourceRange[] {
+  return [
+    {
+      start: { line: Number.NaN, column: 1 },
+      end: { line: 1, column: 2 },
+    },
+    {
+      start: { line: 1, column: Number.POSITIVE_INFINITY },
+      end: { line: 1, column: 2 },
+    },
+    {
+      start: { line: 1, column: 1, offset: Number.NEGATIVE_INFINITY },
+      end: { line: 1, column: 2, offset: 1 },
+    },
+    {
+      start: { line: 0, column: 1 },
+      end: { line: 1, column: 2 },
+    },
+    {
+      start: { line: 1, column: 0 },
+      end: { line: 1, column: 2 },
+    },
+    {
+      start: { line: 1, column: 1, offset: -1 },
+      end: { line: 1, column: 2, offset: 1 },
+    },
+  ];
 }

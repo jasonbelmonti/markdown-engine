@@ -1,3 +1,4 @@
+import type { SerializableEngineResult } from "./document.js";
 import type { NormalizeResult } from "./normalize.js";
 import type { ParseResult } from "./parse.js";
 import type { ValidationResult } from "./validate.js";
@@ -6,7 +7,8 @@ import { isPlainRecord } from "../internal/plain-record.js";
 export type SerializableMarkdownEngineResult =
   | ParseResult
   | NormalizeResult
-  | ValidationResult;
+  | ValidationResult
+  | SerializableEngineResult;
 
 export interface SerializeOptions {
   pretty?: boolean;
