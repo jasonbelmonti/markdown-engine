@@ -373,8 +373,16 @@ function cloneEngineTarget(target: EngineTarget): EngineTarget {
 
 function cloneSourceRange(sourceRange: SourceRange): SourceRange {
   return {
-    start: { ...sourceRange.start },
-    end: { ...sourceRange.end },
+    start: cloneSourcePosition(sourceRange.start),
+    end: cloneSourcePosition(sourceRange.end),
+  };
+}
+
+function cloneSourcePosition(position: SourcePosition): SourcePosition {
+  return {
+    line: position.line,
+    column: position.column,
+    ...(position.offset !== undefined ? { offset: position.offset } : {}),
   };
 }
 

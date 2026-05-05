@@ -285,6 +285,41 @@ describe("1.0 Rich IR annotation target validation", () => {
     );
   });
 
+  it("strips extra source position fields before serialization", () => {
+    const document = normalizeDraftFixture();
+    const unsafeSourceRange = rangeWithExtraFields(7, 1, 77, 7, 3, 79);
+    const unsafeNodeRange = rangeWithExtraFields(9, 1, 90, 9, 6, 95);
+    const unknownNodeTarget = {
+      kind: "node",
+      id: "node:missing:unsafe",
+      sourceRange: unsafeNodeRange,
+    } satisfies EngineTarget;
+
+    const result = validateAnnotations(document, [
+      sourceAnnotation("annotation:unsafe-source-range", unsafeSourceRange, {
+        callerOwnsMeaning: true,
+      }),
+      nodeAnnotation("annotation:unsafe-node-range", unknownNodeTarget, {
+        callerOwnsMeaning: true,
+      }),
+    ]);
+
+    const serialized = serialize(result, { pretty: true });
+    const parsed = JSON.parse(serialized);
+
+    expect(result.valid).toBe(false);
+    expect(parsed.annotations[0].target.range).toEqual(range(7, 1, 77, 7, 3, 79));
+    expect(parsed.annotations[1].target.target.sourceRange).toEqual(
+      range(9, 1, 90, 9, 6, 95),
+    );
+    expect(parsed.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "annotation.target.unknown",
+        sourceRange: range(9, 1, 90, 9, 6, 95),
+      }),
+    ]);
+  });
+
   it("serializes annotation validation results in stable key order", () => {
     const document = normalizeDraftFixture();
     const paragraph = firstNode(document, "paragraph");
@@ -489,4 +524,28 @@ function rangeWithoutOffsets(
       column: endColumn,
     },
   };
+}
+
+function rangeWithExtraFields(
+  startLine: number,
+  startColumn: number,
+  startOffset: number,
+  endLine: number,
+  endColumn: number,
+  endOffset: number,
+): SourceRange {
+  return {
+    start: {
+      line: startLine,
+      column: startColumn,
+      offset: startOffset,
+      nonJson: BigInt(1),
+    },
+    end: {
+      line: endLine,
+      column: endColumn,
+      offset: endOffset,
+      nonJson: BigInt(2),
+    },
+  } as unknown as SourceRange;
 }
