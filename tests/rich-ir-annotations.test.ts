@@ -404,6 +404,85 @@ describe("1.0 Rich IR annotation target validation", () => {
     ]);
   });
 
+  it("normalizes proxy-backed target internals before validation reads them", () => {
+    const document = normalizeDraftFixture();
+    const proxyRange = descriptorBackedProxy(
+      {
+        start: { line: 7, column: 1, offset: 77 },
+        end: { line: 7, column: 3, offset: 79 },
+      },
+      "source range",
+    );
+    const proxyPositionRange = {
+      start: descriptorBackedProxy(
+        { line: 8, column: 1, offset: 88 },
+        "source position",
+      ),
+      end: { line: 8, column: 4, offset: 91 },
+    };
+    const proxyNodeTarget = descriptorBackedProxy(
+      {
+        kind: "node",
+        id: "node:missing:proxy",
+        sourceRange: range(9, 1, 90, 9, 6, 95),
+      },
+      "node target",
+    );
+
+    const result = validateAnnotations(document, [
+      sourceAnnotation(
+        "annotation:proxy-range",
+        proxyRange as unknown as SourceRange,
+        { callerOwnsMeaning: true },
+      ),
+      sourceAnnotation(
+        "annotation:proxy-position",
+        proxyPositionRange as unknown as SourceRange,
+        { callerOwnsMeaning: true },
+      ),
+      malformedAnnotation("annotation:proxy-node-target", {
+        kind: "node",
+        target: proxyNodeTarget,
+      }),
+    ]);
+
+    const parsed = JSON.parse(serialize(result, { pretty: true }));
+
+    expect(result.valid).toBe(false);
+    expect(parsed.annotations).toEqual([
+      expect.objectContaining({
+        target: { kind: "source", range: range(7, 1, 77, 7, 3, 79) },
+      }),
+      expect.objectContaining({
+        target: { kind: "source", range: range(8, 1, 88, 8, 4, 91) },
+      }),
+      expect.objectContaining({
+        target: {
+          kind: "node",
+          target: {
+            kind: "node",
+            id: "node:missing:proxy",
+            sourceRange: range(9, 1, 90, 9, 6, 95),
+          },
+        },
+      }),
+    ]);
+    expect(parsed.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "annotation.target.unknown",
+        sourceRange: range(9, 1, 90, 9, 6, 95),
+        target: {
+          kind: "node",
+          target: {
+            kind: "node",
+            id: "node:missing:proxy",
+            sourceRange: range(9, 1, 90, 9, 6, 95),
+          },
+        },
+      }),
+    ]);
+  });
+
   it("serializes annotation validation results in stable key order", () => {
     const document = normalizeDraftFixture();
     const paragraph = firstNode(document, "paragraph");
@@ -519,6 +598,31 @@ function throwingAccessorTarget(
   });
 
   return target;
+}
+
+function descriptorBackedProxy(
+  properties: Record<string, unknown>,
+  label: string,
+): Record<string, unknown> {
+  return new Proxy(
+    {},
+    {
+      get() {
+        throw new Error(`Expected ${label} getter not to be invoked.`);
+      },
+      getOwnPropertyDescriptor(_target, property) {
+        if (!Object.prototype.hasOwnProperty.call(properties, property)) {
+          return undefined;
+        }
+
+        return {
+          configurable: true,
+          enumerable: true,
+          value: properties[String(property)],
+        };
+      },
+    },
+  );
 }
 
 function diagnosticSummary(result: AnnotationValidationResult) {

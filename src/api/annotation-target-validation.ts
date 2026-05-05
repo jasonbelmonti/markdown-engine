@@ -27,13 +27,17 @@ export function annotationTargetDiagnostics(
   annotations: readonly EngineAnnotation[],
 ): EngineTargetDiagnostic[] {
   const validTargetIds = documentTargetIds(document);
+  const documentSourceRange =
+    document.sourceRange !== undefined
+      ? cloneSourceRangeCandidate(document.sourceRange)
+      : undefined;
 
   return annotations
     .flatMap((annotation, order) =>
       diagnosticsForAnnotation(
         annotation.target,
         validTargetIds,
-        document.sourceRange,
+        documentSourceRange,
         order,
       ),
     )
@@ -100,9 +104,9 @@ function nodeTargetDiagnostics(
   validTargetIds: ReadonlySet<string>,
   order: number,
 ): SortableTargetDiagnostic[] {
-  const nodeTarget = annotationTargetValue(target);
+  const nodeTarget = cloneEngineTargetCandidate(annotationTargetValue(target));
 
-  if (!isNodeTarget(nodeTarget)) {
+  if (nodeTarget === undefined) {
     return [
       sortableDiagnostic(
         {
@@ -141,9 +145,9 @@ function sourceTargetDiagnostics(
   documentSourceRange: SourceRange | undefined,
   order: number,
 ): SortableTargetDiagnostic[] {
-  const range = annotationTargetRange(target);
+  const range = cloneSourceRangeCandidate(annotationTargetRange(target));
 
-  if (!isSourceRange(range)) {
+  if (range === undefined) {
     return [
       sortableDiagnostic(
         {
@@ -416,44 +420,102 @@ function cloneKnownAnnotationTarget(
   const kind = annotationTargetKind(target);
 
   if (kind === "node") {
-    const nodeTarget = annotationTargetValue(target);
+    const nodeTarget = cloneEngineTargetCandidate(annotationTargetValue(target));
 
-    if (!isNodeTarget(nodeTarget)) {
+    if (nodeTarget === undefined) {
       return undefined;
     }
 
     return {
       kind: "node",
-      target: cloneEngineTarget(nodeTarget),
+      target: nodeTarget,
     };
   }
 
   if (kind === "source") {
-    const range = annotationTargetRange(target);
+    const range = cloneSourceRangeCandidate(annotationTargetRange(target));
 
-    if (!isSourceRange(range)) {
+    if (range === undefined) {
       return undefined;
     }
 
     return {
       kind: "source",
-      range: cloneSourceRange(range),
+      range,
     };
   }
 
   return undefined;
 }
 
-function cloneEngineTarget(target: EngineTarget): EngineTarget {
+function cloneEngineTargetCandidate(target: unknown): EngineTarget | undefined {
+  if (!isPlainObject(target)) {
+    return undefined;
+  }
+
+  const kind = ownDataProperty(target, "kind");
+  const id = ownDataProperty(target, "id");
+  const path = ownDataProperty(target, "path");
+  const nodeType = ownDataProperty(target, "nodeType");
+  const sourceRange = ownDataProperty(target, "sourceRange");
+
+  if (kind !== "node" || typeof id !== "string") {
+    return undefined;
+  }
+
+  const clonedPath = path !== undefined ? cloneTargetPathCandidate(path) : undefined;
+  const clonedSourceRange =
+    sourceRange !== undefined ? cloneSourceRangeCandidate(sourceRange) : undefined;
+
+  if (
+    (path !== undefined && clonedPath === undefined) ||
+    (nodeType !== undefined && typeof nodeType !== "string") ||
+    (sourceRange !== undefined && clonedSourceRange === undefined)
+  ) {
+    return undefined;
+  }
+
   return {
-    kind: target.kind,
-    id: target.id,
-    ...(target.path !== undefined ? { path: [...target.path] } : {}),
-    ...(target.nodeType !== undefined ? { nodeType: target.nodeType } : {}),
-    ...(target.sourceRange !== undefined
-      ? { sourceRange: cloneSourceRange(target.sourceRange) }
-      : {}),
+    kind,
+    id,
+    ...(clonedPath !== undefined ? { path: clonedPath } : {}),
+    ...(typeof nodeType === "string" ? { nodeType } : {}),
+    ...(clonedSourceRange !== undefined ? { sourceRange: clonedSourceRange } : {}),
   };
+}
+
+function cloneTargetPathCandidate(path: unknown): readonly number[] | undefined {
+  if (!Array.isArray(path)) {
+    return undefined;
+  }
+
+  try {
+    return path.every(
+      (segment) =>
+        typeof segment === "number" &&
+        Number.isInteger(segment) &&
+        segment >= 0,
+    )
+      ? [...path]
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function cloneSourceRangeCandidate(range: unknown): SourceRange | undefined {
+  if (!isPlainObject(range)) {
+    return undefined;
+  }
+
+  const start = cloneSourcePositionCandidate(ownDataProperty(range, "start"));
+  const end = cloneSourcePositionCandidate(ownDataProperty(range, "end"));
+
+  if (start === undefined || end === undefined) {
+    return undefined;
+  }
+
+  return { start, end };
 }
 
 function cloneSourceRange(sourceRange: SourceRange): SourceRange {
@@ -471,75 +533,36 @@ function cloneSourcePosition(position: SourcePosition): SourcePosition {
   };
 }
 
-function isAnnotationTargetCandidate(
-  target: unknown,
-): target is AnnotationTargetCandidate {
-  return typeof target === "object" && target !== null && !Array.isArray(target);
-}
-
-function isNodeTarget(target: unknown): target is EngineTarget {
-  if (!isPlainObject(target)) {
-    return false;
-  }
-
-  const kind = ownDataProperty(target, "kind");
-  const id = ownDataProperty(target, "id");
-  const path = ownDataProperty(target, "path");
-  const nodeType = ownDataProperty(target, "nodeType");
-  const sourceRange = ownDataProperty(target, "sourceRange");
-
-  if (kind !== "node" || typeof id !== "string") {
-    return false;
-  }
-
-  if (path !== undefined && !isTargetPath(path)) {
-    return false;
-  }
-
-  if (nodeType !== undefined && typeof nodeType !== "string") {
-    return false;
-  }
-
-  return sourceRange === undefined || isSourceRange(sourceRange);
-}
-
-function isTargetPath(path: unknown): path is readonly number[] {
-  return (
-    Array.isArray(path) &&
-    path.every(
-      (segment) =>
-        typeof segment === "number" &&
-        Number.isInteger(segment) &&
-        segment >= 0,
-    )
-  );
-}
-
-function isSourceRange(range: unknown): range is SourceRange {
-  if (!isPlainObject(range)) {
-    return false;
-  }
-
-  return (
-    isSourcePosition(ownDataProperty(range, "start")) &&
-    isSourcePosition(ownDataProperty(range, "end"))
-  );
-}
-
-function isSourcePosition(position: unknown): position is SourcePosition {
+function cloneSourcePositionCandidate(
+  position: unknown,
+): SourcePosition | undefined {
   if (!isPlainObject(position)) {
-    return false;
+    return undefined;
   }
 
   const line = ownDataProperty(position, "line");
   const column = ownDataProperty(position, "column");
   const offset = ownDataProperty(position, "offset");
 
-  return (
-    isPositiveInteger(line) &&
-    isPositiveInteger(column) &&
-    (offset === undefined || isNonNegativeInteger(offset))
-  );
+  if (
+    !isPositiveInteger(line) ||
+    !isPositiveInteger(column) ||
+    (offset !== undefined && !isNonNegativeInteger(offset))
+  ) {
+    return undefined;
+  }
+
+  return {
+    line,
+    column,
+    ...(offset !== undefined ? { offset } : {}),
+  };
+}
+
+function isAnnotationTargetCandidate(
+  target: unknown,
+): target is AnnotationTargetCandidate {
+  return typeof target === "object" && target !== null && !Array.isArray(target);
 }
 
 function isPositiveInteger(value: unknown): value is number {
