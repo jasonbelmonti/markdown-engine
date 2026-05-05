@@ -261,6 +261,11 @@ describe("WP-5 boundary dependency audit", () => {
         term: "ProfileIDs",
       },
       {
+        content: "type ProfileIDsList = string[];",
+        label: "profile ID",
+        term: "ProfileIDsList",
+      },
+      {
         content: 'const note = "profile IDs policy";',
         label: "profile ID",
         term: "profile IDs",
@@ -289,6 +294,11 @@ describe("WP-5 boundary dependency audit", () => {
         content: "type EntityIDs = string[];",
         label: "entity ID",
         term: "EntityIDs",
+      },
+      {
+        content: "type EntityIDsList = string[];",
+        label: "entity ID",
+        term: "EntityIDsList",
       },
       {
         content: 'const note = "entity IDs policy";',
