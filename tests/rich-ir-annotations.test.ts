@@ -234,6 +234,20 @@ describe("1.0 Rich IR annotation target validation", () => {
     const accessorKindTarget = throwingAccessorTarget("kind");
     const accessorNodeTarget = throwingAccessorTarget("target", "node");
     const accessorSourceTarget = throwingAccessorTarget("range", "source");
+    const accessorArrayTarget = throwingArrayTarget("array target");
+    const accessorPathTarget = {
+      kind: "node",
+      target: {
+        kind: "node",
+        id: "node:accessor-path",
+        path: throwingArrayTarget("target path"),
+      },
+    };
+    const proxyArrayTarget = new Proxy([1], {
+      get() {
+        throw new Error("Expected array proxy get trap not to escape validation.");
+      },
+    });
     const proxyTarget = new Proxy(
       { kind: "block" },
       {
@@ -258,11 +272,14 @@ describe("1.0 Rich IR annotation target validation", () => {
       malformedAnnotation("annotation:accessor-kind-target", accessorKindTarget),
       malformedAnnotation("annotation:accessor-node-target", accessorNodeTarget),
       malformedAnnotation("annotation:accessor-source-target", accessorSourceTarget),
+      malformedAnnotation("annotation:accessor-array-target", accessorArrayTarget),
+      malformedAnnotation("annotation:accessor-path-target", accessorPathTarget),
+      malformedAnnotation("annotation:proxy-array-target", proxyArrayTarget),
       malformedAnnotation("annotation:proxy-target", proxyTarget),
     ]);
 
     expect(result.valid).toBe(false);
-    expect(result.diagnostics).toHaveLength(8);
+    expect(result.diagnostics).toHaveLength(11);
     expect(result.diagnostics).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -307,6 +324,22 @@ describe("1.0 Rich IR annotation target validation", () => {
         target: { kind: "source", range: "[Accessor]" },
       }),
       expect.objectContaining({
+        target: ["[Accessor]"],
+      }),
+      expect.objectContaining({
+        target: {
+          kind: "node",
+          target: {
+            id: "node:accessor-path",
+            kind: "node",
+            path: ["[Accessor]"],
+          },
+        },
+      }),
+      expect.objectContaining({
+        target: [1],
+      }),
+      expect.objectContaining({
         target: "[Unavailable]",
       }),
     ]);
@@ -339,6 +372,25 @@ describe("1.0 Rich IR annotation target validation", () => {
         expect.objectContaining({
           code: "annotation.target.invalidRange",
           target: { kind: "source", range: "[Accessor]" },
+        }),
+        expect.objectContaining({
+          code: "annotation.target.invalidKind",
+          target: ["[Accessor]"],
+        }),
+        expect.objectContaining({
+          code: "annotation.target.invalidKind",
+          target: {
+            kind: "node",
+            target: {
+              id: "node:accessor-path",
+              kind: "node",
+              path: ["[Accessor]"],
+            },
+          },
+        }),
+        expect.objectContaining({
+          code: "annotation.target.invalidKind",
+          target: [1],
         }),
         expect.objectContaining({
           code: "annotation.target.invalidKind",
@@ -594,6 +646,19 @@ function throwingAccessorTarget(
     enumerable: true,
     get() {
       throw new Error(`Expected ${property} getter not to be invoked.`);
+    },
+  });
+
+  return target;
+}
+
+function throwingArrayTarget(label: string): unknown[] {
+  const target: unknown[] = [];
+
+  Object.defineProperty(target, "0", {
+    enumerable: true,
+    get() {
+      throw new Error(`Expected ${label} getter not to be invoked.`);
     },
   });
 

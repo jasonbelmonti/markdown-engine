@@ -335,7 +335,7 @@ function normalizeSortValue(value: unknown, path: WeakSet<object>): unknown {
 
   try {
     if (Array.isArray(value)) {
-      return value.map((item) => normalizeSortValue(item, path));
+      return normalizeArrayValue(value, path);
     }
 
     if (isPlainObject(value)) {
@@ -356,6 +356,55 @@ function normalizeSortValue(value: unknown, path: WeakSet<object>): unknown {
   } finally {
     path.delete(value);
   }
+}
+
+function normalizeArrayValue(
+  value: readonly unknown[],
+  path: WeakSet<object>,
+): unknown {
+  const length = arrayLength(value);
+
+  if (length === undefined) {
+    return UNAVAILABLE_PLACEHOLDER;
+  }
+
+  return Array.from({ length }, (_item, index) =>
+    normalizeArrayProperty(value, index, path),
+  );
+}
+
+function arrayLength(value: readonly unknown[]): number | undefined {
+  const descriptor = ownPropertyDescriptor(
+    value as unknown as Record<string, unknown>,
+    "length",
+  );
+
+  return descriptor !== undefined &&
+    "value" in descriptor &&
+    isNonNegativeInteger(descriptor.value)
+    ? descriptor.value
+    : undefined;
+}
+
+function normalizeArrayProperty(
+  value: readonly unknown[],
+  index: number,
+  path: WeakSet<object>,
+): unknown {
+  const descriptor = ownPropertyDescriptor(
+    value as unknown as Record<string, unknown>,
+    String(index),
+  );
+
+  if (descriptor === undefined) {
+    return undefined;
+  }
+
+  if (!("value" in descriptor)) {
+    return ACCESSOR_PLACEHOLDER;
+  }
+
+  return normalizeSortValue(descriptor.value, path);
 }
 
 function normalizePlainObjectProperty(
