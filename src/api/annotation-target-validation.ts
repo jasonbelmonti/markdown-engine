@@ -580,17 +580,22 @@ function sourceOffsetsAreContained(
   container: SourceRange,
   target: SourceRange,
 ): boolean {
-  if (
-    container.start.offset === undefined ||
-    container.end.offset === undefined ||
-    target.start.offset === undefined ||
-    target.end.offset === undefined
-  ) {
+  return (
+    sourceOffsetIsContained(container, target.start.offset) &&
+    sourceOffsetIsContained(container, target.end.offset)
+  );
+}
+
+function sourceOffsetIsContained(
+  container: SourceRange,
+  offset: number | undefined,
+): boolean {
+  if (offset === undefined) {
     return true;
   }
 
   return (
-    container.start.offset <= target.start.offset &&
-    target.end.offset <= container.end.offset
+    (container.start.offset === undefined || container.start.offset <= offset) &&
+    (container.end.offset === undefined || offset <= container.end.offset)
   );
 }

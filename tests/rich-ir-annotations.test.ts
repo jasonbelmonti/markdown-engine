@@ -187,6 +187,78 @@ describe("1.0 Rich IR annotation target validation", () => {
     ]);
   });
 
+  it("checks provided source offsets even when the opposite endpoint omits offset", () => {
+    const document = normalizeDraftFixture();
+    const documentSourceRange = document.sourceRange ?? missing();
+    const documentEndOffset = documentSourceRange.end.offset ?? missing();
+    const partialStartOffsetOutOfBounds = {
+      start: {
+        line: documentSourceRange.start.line,
+        column: documentSourceRange.start.column,
+        offset: documentEndOffset + 1,
+      },
+      end: {
+        line: documentSourceRange.end.line,
+        column: documentSourceRange.end.column,
+      },
+    };
+    const partialEndOffsetOutOfBounds = {
+      start: {
+        line: documentSourceRange.start.line,
+        column: documentSourceRange.start.column,
+      },
+      end: {
+        line: documentSourceRange.end.line,
+        column: documentSourceRange.end.column,
+        offset: documentEndOffset + 1,
+      },
+    };
+    const partialOffsetInBounds = {
+      start: {
+        line: documentSourceRange.start.line,
+        column: documentSourceRange.start.column,
+        offset: documentSourceRange.start.offset ?? 0,
+      },
+      end: {
+        line: documentSourceRange.end.line,
+        column: documentSourceRange.end.column,
+      },
+    };
+
+    const result = validateAnnotations(document, [
+      sourceAnnotation(
+        "annotation:partial-start-offset-out-of-bounds",
+        partialStartOffsetOutOfBounds,
+        { callerOwnsMeaning: true },
+      ),
+      sourceAnnotation(
+        "annotation:partial-end-offset-out-of-bounds",
+        partialEndOffsetOutOfBounds,
+        { callerOwnsMeaning: true },
+      ),
+      sourceAnnotation("annotation:partial-offset-in-bounds", partialOffsetInBounds, {
+        callerOwnsMeaning: true,
+      }),
+    ]);
+
+    expect(result.valid).toBe(false);
+    expect(result.diagnostics).toHaveLength(2);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "annotation.target.outOfBounds",
+          sourceRange: partialStartOffsetOutOfBounds,
+          target: { kind: "source", range: partialStartOffsetOutOfBounds },
+        }),
+        expect.objectContaining({
+          code: "annotation.target.outOfBounds",
+          sourceRange: partialEndOffsetOutOfBounds,
+          target: { kind: "source", range: partialEndOffsetOutOfBounds },
+        }),
+      ]),
+    );
+  });
+
   it("sorts same-position diagnostics with offsets before diagnostics without offsets", () => {
     const document = normalizeDraftFixture();
     const knownOffsetTarget = {
