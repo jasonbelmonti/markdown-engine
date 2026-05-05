@@ -106,6 +106,22 @@ describe("1.0 Rich IR annotation target validation", () => {
       malformedAnnotation("annotation:missing-source-range", {
         kind: "source",
       }),
+      malformedAnnotation("annotation:non-ascii-target-a", {
+        kind: "node",
+        target: {
+          kind: "node",
+          id: "node:ä",
+          path: [-1],
+        },
+      }),
+      malformedAnnotation("annotation:non-ascii-target-z", {
+        kind: "node",
+        target: {
+          kind: "node",
+          id: "node:z",
+          path: [-1],
+        },
+      }),
     ];
 
     const firstResult = validateAnnotations(document, malformedAnnotations);
@@ -147,6 +163,16 @@ describe("1.0 Rich IR annotation target validation", () => {
         code: "annotation.target.invalidKind",
         sourceStart: undefined,
         targetKey: "node:1:paragraph",
+      },
+      {
+        code: "annotation.target.invalidKind",
+        sourceStart: undefined,
+        targetKey: "node:z",
+      },
+      {
+        code: "annotation.target.invalidKind",
+        sourceStart: undefined,
+        targetKey: "node:ä",
       },
       {
         code: "annotation.target.invalidKind",

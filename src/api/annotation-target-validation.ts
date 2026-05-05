@@ -210,9 +210,10 @@ function compareSortableDiagnostics(
       left.diagnostic.sourceRange,
       right.diagnostic.sourceRange,
     ) ||
-    left.diagnostic.code.localeCompare(right.diagnostic.code) ||
-    left.diagnostic.message.localeCompare(right.diagnostic.message) ||
-    targetSortKey(left.diagnostic.target).localeCompare(
+    compareStrings(left.diagnostic.code, right.diagnostic.code) ||
+    compareStrings(left.diagnostic.message, right.diagnostic.message) ||
+    compareStrings(
+      targetSortKey(left.diagnostic.target),
       targetSortKey(right.diagnostic.target),
     ) ||
     left.order - right.order
@@ -255,6 +256,18 @@ function compareSourcePositions(
     left.column - right.column ||
     offsetComparison
   );
+}
+
+function compareStrings(left: string, right: string): number {
+  if (left < right) {
+    return -1;
+  }
+
+  if (left > right) {
+    return 1;
+  }
+
+  return 0;
 }
 
 function targetSortKey(target: unknown): string {
