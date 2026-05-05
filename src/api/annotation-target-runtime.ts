@@ -18,6 +18,11 @@ interface NormalizeRuntimeContext {
   remainingWork: number;
 }
 
+interface EnumerableRuntimeProperty {
+  key: string;
+  property: OwnRuntimeProperty;
+}
+
 export function normalizeRuntimeValue(
   value: unknown,
   context = createNormalizeRuntimeContext(),
@@ -204,34 +209,31 @@ function normalizePlainObjectValue(
   context: NormalizeRuntimeContext,
   depth: number,
 ): unknown {
-  const keys = enumerableOwnKeys(value);
-
-  if (keys === undefined || keys.length > MAX_NORMALIZED_OBJECT_KEYS) {
+  if (!reserveNormalizationWork(context, 1)) {
     return UNAVAILABLE_PLACEHOLDER;
   }
 
-  if (!reserveNormalizationWork(context, keys.length + 1)) {
+  const properties = boundedEnumerableOwnProperties(value, context);
+
+  if (properties === undefined) {
     return UNAVAILABLE_PLACEHOLDER;
   }
 
   return Object.fromEntries(
-    keys
-      .sort(compareStrings)
-      .map((key) => [
+    properties
+      .sort((left, right) => compareStrings(left.key, right.key))
+      .map(({ key, property }) => [
         key,
-        normalizePlainObjectProperty(value, key, context, depth),
+        normalizePlainObjectProperty(property, context, depth),
       ]),
   );
 }
 
 function normalizePlainObjectProperty(
-  value: Record<string, unknown>,
-  key: string,
+  property: OwnRuntimeProperty,
   context: NormalizeRuntimeContext,
   depth: number,
 ): unknown {
-  const property = ownRuntimeProperty(value, key);
-
   if (property.kind === "missing") {
     return undefined;
   }
@@ -317,12 +319,35 @@ function reserveNormalizationWork(
   return true;
 }
 
-function enumerableOwnKeys(value: Record<string, unknown>): string[] | undefined {
+function boundedEnumerableOwnProperties(
+  value: Record<string, unknown>,
+  context: NormalizeRuntimeContext,
+): EnumerableRuntimeProperty[] | undefined {
+  const properties: EnumerableRuntimeProperty[] = [];
+
   try {
-    return Object.keys(value);
+    for (const key in value) {
+      if (!reserveNormalizationWork(context, 1)) {
+        return undefined;
+      }
+
+      const property = ownRuntimeProperty(value, key);
+
+      if (property.kind === "missing") {
+        continue;
+      }
+
+      properties.push({ key, property });
+
+      if (properties.length > MAX_NORMALIZED_OBJECT_KEYS) {
+        return undefined;
+      }
+    }
   } catch {
     return undefined;
   }
+
+  return properties;
 }
 
 function objectPrototype(value: object): object | null | undefined {

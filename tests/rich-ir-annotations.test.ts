@@ -730,6 +730,33 @@ describe("1.0 Rich IR annotation target validation", () => {
     expect(serialized).not.toContain("wide:1999");
   });
 
+  it("bounds key enumeration for proxy-backed wide object targets", () => {
+    const document = normalizeDraftFixture();
+    const wideProxy = wideProxyObjectTarget(50_000);
+    const result = validateAnnotations(document, [
+      malformedAnnotation("annotation:wide-proxy-target", wideProxy.target),
+    ]);
+
+    const serialized = serialize(result, { pretty: true });
+    const parsed = JSON.parse(serialized);
+
+    expect(result.valid).toBe(false);
+    expect(result.diagnostics).toHaveLength(1);
+    expect(parsed.annotations).toEqual([
+      expect.objectContaining({
+        target: "[Unavailable]",
+      }),
+    ]);
+    expect(parsed.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "annotation.target.invalidKind",
+        target: "[Unavailable]",
+      }),
+    ]);
+    expect(wideProxy.descriptorReads()).toBeLessThan(5_000);
+    expect(serialized.length).toBeLessThan(1_000);
+  });
+
   it("bounds normalization work for shared malformed target graphs", () => {
     const document = normalizeDraftFixture();
     const result = validateAnnotations(document, [
@@ -1137,6 +1164,42 @@ function wideObjectTarget(propertyCount: number): Record<string, unknown> {
   }
 
   return target;
+}
+
+function wideProxyObjectTarget(propertyCount: number): {
+  descriptorReads: () => number;
+  target: Record<string, unknown>;
+} {
+  let descriptorReadCount = 0;
+  const keys = Array.from({ length: propertyCount }, (_, index) => `wide:${index}`);
+  const target = new Proxy(
+    {},
+    {
+      get() {
+        throw new Error("Expected wide proxy getter not to escape validation.");
+      },
+      getOwnPropertyDescriptor(_target, property) {
+        descriptorReadCount += 1;
+
+        return {
+          configurable: true,
+          enumerable: true,
+          value: property === "kind" ? "block" : String(property),
+        };
+      },
+      getPrototypeOf() {
+        return Object.prototype;
+      },
+      ownKeys() {
+        return ["kind", ...keys];
+      },
+    },
+  ) as Record<string, unknown>;
+
+  return {
+    descriptorReads: () => descriptorReadCount,
+    target,
+  };
 }
 
 function sharedFanoutTarget(width: number, depth: number): Record<string, unknown> {
