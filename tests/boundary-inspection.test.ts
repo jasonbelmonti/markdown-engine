@@ -6,7 +6,9 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import {
+  inspectAnnotationSemanticLeakage,
   inspectDependencies,
+  runBoundaryAudit,
   runBoundaryDependencyAudit,
 } from "../scripts/check-boundaries.mjs";
 
@@ -24,6 +26,15 @@ describe("WP-5 boundary dependency audit", () => {
     );
 
     expect(output).toContain("Boundary dependency audit PASS");
+    expect(output).toContain("Annotation semantic boundary PASS");
+    expect(output).toContain("Annotation semantic leakage matches: 0");
+  });
+
+  it("returns dependency and annotation semantic boundary results together", () => {
+    const result = runBoundaryAudit(repoRoot);
+
+    expect(result.dependencyMatches).toEqual([]);
+    expect(result.annotationSemanticMatches).toEqual([]);
   });
 
   it("flags common forbidden MCP and LLM SDK dependency names", () => {
@@ -127,5 +138,208 @@ describe("WP-5 boundary dependency audit", () => {
     } finally {
       rmSync(tempRepo, { force: true, recursive: true });
     }
+  });
+
+  it("flags annotation semantic identifiers that belong outside the engine", () => {
+    const matches = inspectAnnotationSemanticLeakage([
+      {
+        filePath: "src/api/annotations.ts",
+        content: [
+          "type ProfileId = string;",
+          "interface IssueKey {}",
+          "type EntityID = string;",
+          "const relationship_type = 'blocks';",
+          "class SemanticEvaluator {",
+          "  run() { return 'done'; }",
+          "}",
+          "const registry = EntityRegistries.open(markdown_profile);",
+        ].join("\n"),
+      },
+    ]);
+
+    expect(matches).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ label: "profile ID" }),
+        expect.objectContaining({ label: "entity registry" }),
+        expect.objectContaining({ label: "issue key" }),
+        expect.objectContaining({ label: "entity ID" }),
+        expect.objectContaining({ label: "relationship type" }),
+        expect.objectContaining({ label: "semantic evaluator" }),
+        expect.objectContaining({ label: "markdown-profile" }),
+      ]),
+    );
+  });
+
+  it("flags each MCP and LLM identifier form independently", () => {
+    const cases = [
+      {
+        content: "const mcpClient = createClient();",
+        label: "MCP",
+        term: "mcpClient",
+      },
+      { content: "class MCPClient {}", label: "MCP", term: "MCPClient" },
+      {
+        content: "const llmProvider = createProvider();",
+        label: "LLM",
+        term: "llmProvider",
+      },
+      { content: "class LLMProvider {}", label: "LLM", term: "LLMProvider" },
+      {
+        content: "const protocol = new ModelContextProtocolClient();",
+        label: "MCP",
+        term: "ModelContextProtocolClient",
+      },
+      {
+        content: "const model = new LargeLanguageModelProvider();",
+        label: "LLM",
+        term: "LargeLanguageModelProvider",
+      },
+    ];
+
+    for (const { content, label, term } of cases) {
+      const matches = inspectAnnotationSemanticLeakage([
+        { filePath: `src/api/${term}.ts`, content },
+      ]);
+
+      expect(matches).toEqual([
+        expect.objectContaining({
+          label,
+          term,
+        }),
+      ]);
+    }
+  });
+
+  it("flags annotation semantic phrases across separate words", () => {
+    const cases = [
+      {
+        content: 'const note = "model context protocol client";',
+        label: "MCP",
+        term: "model context protocol",
+      },
+      {
+        content: 'const note = "large language model provider";',
+        label: "LLM",
+        term: "large language model",
+      },
+      {
+        content: 'const note = "profile ID policy";',
+        label: "profile ID",
+        term: "profile ID",
+      },
+      {
+        content: "// entity registry lookup",
+        label: "entity registry",
+        term: "entity registry",
+      },
+    ];
+
+    for (const { content, label, term } of cases) {
+      const matches = inspectAnnotationSemanticLeakage([
+        { filePath: `src/api/${label}.ts`, content },
+      ]);
+
+      expect(matches).toEqual([
+        expect.objectContaining({
+          label,
+          term,
+        }),
+      ]);
+    }
+  });
+
+  it("flags plural profile, issue, and entity semantic forms", () => {
+    const cases = [
+      {
+        content: "const profileIds = [];",
+        label: "profile ID",
+        term: "profileIds",
+      },
+      {
+        content: "type ProfileIDs = string[];",
+        label: "profile ID",
+        term: "ProfileIDs",
+      },
+      {
+        content: "type ProfileIDsList = string[];",
+        label: "profile ID",
+        term: "ProfileIDsList",
+      },
+      {
+        content: 'const note = "profile IDs policy";',
+        label: "profile ID",
+        term: "profile IDs",
+      },
+      {
+        content: "const issueKeys = [];",
+        label: "issue key",
+        term: "issueKeys",
+      },
+      {
+        content: "interface IssueKeys {}",
+        label: "issue key",
+        term: "IssueKeys",
+      },
+      {
+        content: 'const note = "issue keys policy";',
+        label: "issue key",
+        term: "issue keys",
+      },
+      {
+        content: "const entityIds = [];",
+        label: "entity ID",
+        term: "entityIds",
+      },
+      {
+        content: "type EntityIDs = string[];",
+        label: "entity ID",
+        term: "EntityIDs",
+      },
+      {
+        content: "type EntityIDsList = string[];",
+        label: "entity ID",
+        term: "EntityIDsList",
+      },
+      {
+        content: 'const note = "entity IDs policy";',
+        label: "entity ID",
+        term: "entity IDs",
+      },
+    ];
+
+    for (const { content, label, term } of cases) {
+      const matches = inspectAnnotationSemanticLeakage([
+        { filePath: `src/api/${term}.ts`, content },
+      ]);
+
+      expect(matches).toEqual([
+        expect.objectContaining({
+          label,
+          term,
+        }),
+      ]);
+    }
+  });
+
+  it("does not flag unrelated identifiers that only contain acronym letters", () => {
+    const matches = inspectAnnotationSemanticLeakage([
+      {
+        filePath: "src/api/renderer.ts",
+        content: "const shellMode = true; const promptCompiler = shellMode;",
+      },
+    ]);
+
+    expect(matches).toEqual([]);
+  });
+
+  it("does not treat separated code identifiers as semantic phrases", () => {
+    const matches = inspectAnnotationSemanticLeakage([
+      {
+        filePath: "src/api/annotations.ts",
+        content: "const entity = registry; const model = context.protocol;",
+      },
+    ]);
+
+    expect(matches).toEqual([]);
   });
 });
