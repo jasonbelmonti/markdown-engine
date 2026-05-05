@@ -2,6 +2,7 @@ export const ACCESSOR_PLACEHOLDER = "[Accessor]";
 export const FUNCTION_PLACEHOLDER = "[Function]";
 export const UNAVAILABLE_PLACEHOLDER = "[Unavailable]";
 export const MAX_NORMALIZED_ARRAY_LENGTH = 1_024;
+export const MAX_NORMALIZED_OBJECT_KEYS = 1_024;
 export const MAX_NORMALIZED_DEPTH = 64;
 
 export type OwnRuntimeProperty =
@@ -53,7 +54,10 @@ export function normalizeRuntimeValue(
     if (isPlainObject(value)) {
       const keys = enumerableOwnKeys(value);
 
-      if (keys === undefined) {
+      if (
+        keys === undefined ||
+        keys.length > MAX_NORMALIZED_OBJECT_KEYS
+      ) {
         return UNAVAILABLE_PLACEHOLDER;
       }
 

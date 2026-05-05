@@ -676,6 +676,31 @@ describe("1.0 Rich IR annotation target validation", () => {
     expect(serialized).toContain("[Unavailable]");
   });
 
+  it("bounds normalization width for wide malformed object targets", () => {
+    const document = normalizeDraftFixture();
+    const result = validateAnnotations(document, [
+      malformedAnnotation("annotation:wide-target", wideObjectTarget(2_000)),
+    ]);
+
+    const serialized = serialize(result, { pretty: true });
+    const parsed = JSON.parse(serialized);
+
+    expect(result.valid).toBe(false);
+    expect(result.diagnostics).toHaveLength(1);
+    expect(parsed.annotations).toEqual([
+      expect.objectContaining({
+        target: "[Unavailable]",
+      }),
+    ]);
+    expect(parsed.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "annotation.target.invalidKind",
+        target: "[Unavailable]",
+      }),
+    ]);
+    expect(serialized).not.toContain("wide:1999");
+  });
+
   it("rejects accessor-backed optional target fields", () => {
     const document = normalizeDraftFixture();
     const paragraphTarget = requireTarget(firstNode(document, "paragraph"));
@@ -1050,6 +1075,16 @@ function deeplyNestedTarget(depth: number): Record<string, unknown> {
 
   for (let index = 0; index < depth; index += 1) {
     target = { kind: "block", next: target };
+  }
+
+  return target;
+}
+
+function wideObjectTarget(propertyCount: number): Record<string, unknown> {
+  const target: Record<string, unknown> = { kind: "block" };
+
+  for (let index = 0; index < propertyCount; index += 1) {
+    target[`wide:${index}`] = index;
   }
 
   return target;
