@@ -6,7 +6,9 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import {
+  inspectAnnotationSemanticLeakage,
   inspectDependencies,
+  runBoundaryAudit,
   runBoundaryDependencyAudit,
 } from "../scripts/check-boundaries.mjs";
 
@@ -24,6 +26,15 @@ describe("WP-5 boundary dependency audit", () => {
     );
 
     expect(output).toContain("Boundary dependency audit PASS");
+    expect(output).toContain("Annotation semantic boundary PASS");
+    expect(output).toContain("Annotation semantic leakage matches: 0");
+  });
+
+  it("returns dependency and annotation semantic boundary results together", () => {
+    const result = runBoundaryAudit(repoRoot);
+
+    expect(result.dependencyMatches).toEqual([]);
+    expect(result.annotationSemanticMatches).toEqual([]);
   });
 
   it("flags common forbidden MCP and LLM SDK dependency names", () => {
@@ -127,5 +138,22 @@ describe("WP-5 boundary dependency audit", () => {
     } finally {
       rmSync(tempRepo, { force: true, recursive: true });
     }
+  });
+
+  it("flags annotation semantic identifiers that belong outside the engine", () => {
+    const matches = inspectAnnotationSemanticLeakage([
+      {
+        filePath: "src/api/annotations.ts",
+        content: "const profileId = entityRegistry.lookup(issueKey);",
+      },
+    ]);
+
+    expect(matches).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ label: "profile ID" }),
+        expect.objectContaining({ label: "entity registry" }),
+        expect.objectContaining({ label: "issue key" }),
+      ]),
+    );
   });
 });
