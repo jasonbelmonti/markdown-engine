@@ -277,6 +277,17 @@ describe("1.0 Rich IR annotation target validation", () => {
       },
     });
     const revokedProxyTarget = revokedProxy();
+    const functionTarget = throwingFunctionTarget("function target");
+    const proxyFunctionTarget = proxiedFunctionTarget("function proxy target");
+    const hugeArrayTarget = hugeSparseArrayTarget("array target");
+    const hugePathTarget = {
+      kind: "node",
+      target: {
+        kind: "node",
+        id: paragraphTarget.id,
+        path: hugeSparseArrayTarget("target path"),
+      },
+    };
 
     const result = validateAnnotations(document, [
       malformedAnnotation("annotation:bigint-target", {
@@ -303,12 +314,16 @@ describe("1.0 Rich IR annotation target validation", () => {
       malformedAnnotation("annotation:proxy-target", proxyTarget),
       malformedAnnotation("annotation:non-plain-tagged-target", nonPlainTaggedTarget),
       malformedAnnotation("annotation:revoked-proxy-target", revokedProxyTarget),
+      malformedAnnotation("annotation:function-target", functionTarget),
+      malformedAnnotation("annotation:function-proxy-target", proxyFunctionTarget),
+      malformedAnnotation("annotation:huge-array-target", hugeArrayTarget),
+      malformedAnnotation("annotation:huge-path-target", hugePathTarget),
     ]);
 
     expect(result.valid).toBe(false);
     expect(readableAccessorPathReads).toBe(0);
     expect(nonPlainTagReads).toBe(0);
-    expect(result.diagnostics).toHaveLength(14);
+    expect(result.diagnostics).toHaveLength(18);
     expect(result.diagnostics).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -387,6 +402,25 @@ describe("1.0 Rich IR annotation target validation", () => {
       expect.objectContaining({
         target: "[Unavailable]",
       }),
+      expect.objectContaining({
+        target: "[Function]",
+      }),
+      expect.objectContaining({
+        target: "[Function]",
+      }),
+      expect.objectContaining({
+        target: "[Unavailable]",
+      }),
+      expect.objectContaining({
+        target: {
+          kind: "node",
+          target: {
+            id: paragraphTarget.id,
+            kind: "node",
+            path: "[Unavailable]",
+          },
+        },
+      }),
     ]);
     expect(parsed.diagnostics).toEqual(
       expect.arrayContaining([
@@ -450,7 +484,22 @@ describe("1.0 Rich IR annotation target validation", () => {
         }),
         expect.objectContaining({
           code: "annotation.target.invalidKind",
+          target: "[Function]",
+        }),
+        expect.objectContaining({
+          code: "annotation.target.invalidKind",
           target: "[Unavailable]",
+        }),
+        expect.objectContaining({
+          code: "annotation.target.invalidKind",
+          target: {
+            kind: "node",
+            target: {
+              id: paragraphTarget.id,
+              kind: "node",
+              path: "[Unavailable]",
+            },
+          },
         }),
       ]),
     );
@@ -729,6 +778,41 @@ function readableAccessorArrayTarget(value: unknown, onRead: () => void): unknow
     get() {
       onRead();
       return value;
+    },
+  });
+
+  return target;
+}
+
+function throwingFunctionTarget(label: string): () => void {
+  const target = function runtimeTarget(): void {};
+
+  Object.defineProperty(target, "toString", {
+    get() {
+      throw new Error(`Expected ${label} toString getter not to be invoked.`);
+    },
+  });
+
+  return target;
+}
+
+function proxiedFunctionTarget(label: string): () => void {
+  return new Proxy(function runtimeTarget(): void {}, {
+    get() {
+      throw new Error(`Expected ${label} proxy get trap not to escape validation.`);
+    },
+  });
+}
+
+function hugeSparseArrayTarget(label: string): unknown[] {
+  const target: unknown[] = [];
+
+  target.length = 2 ** 32 - 1;
+
+  Object.defineProperty(target, "0", {
+    enumerable: true,
+    get() {
+      throw new Error(`Expected ${label} getter not to be invoked.`);
     },
   });
 

@@ -10,8 +10,10 @@ import { documentQueries } from "./document-queries.js";
 import {
   arrayDataProperty,
   arrayLength,
+  FUNCTION_PLACEHOLDER,
   isArray,
   isPlainObject,
+  MAX_NORMALIZED_ARRAY_LENGTH,
   normalizeRuntimeValue,
   ownDataProperty,
   UNAVAILABLE_PLACEHOLDER,
@@ -306,9 +308,15 @@ function targetSortKey(target: unknown): string {
 
     return serialized ?? String(target);
   } catch {
-    return typeof target === "object" && target !== null
-      ? UNAVAILABLE_PLACEHOLDER
-      : String(target);
+    if (typeof target === "function") {
+      return FUNCTION_PLACEHOLDER;
+    }
+
+    if (typeof target === "object" && target !== null) {
+      return UNAVAILABLE_PLACEHOLDER;
+    }
+
+    return String(target);
   }
 }
 
@@ -431,7 +439,7 @@ function cloneTargetPathCandidate(path: unknown): readonly number[] | undefined 
 
   const length = arrayLength(path);
 
-  if (length === undefined) {
+  if (length === undefined || length > MAX_NORMALIZED_ARRAY_LENGTH) {
     return undefined;
   }
 

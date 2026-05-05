@@ -1,5 +1,7 @@
 export const ACCESSOR_PLACEHOLDER = "[Accessor]";
+export const FUNCTION_PLACEHOLDER = "[Function]";
 export const UNAVAILABLE_PLACEHOLDER = "[Unavailable]";
+export const MAX_NORMALIZED_ARRAY_LENGTH = 1_024;
 
 export function normalizeRuntimeValue(
   value: unknown,
@@ -9,7 +11,11 @@ export function normalizeRuntimeValue(
     return value.toString();
   }
 
-  if (typeof value === "function" || typeof value === "symbol") {
+  if (typeof value === "function") {
+    return FUNCTION_PLACEHOLDER;
+  }
+
+  if (typeof value === "symbol") {
     return String(value);
   }
 
@@ -114,13 +120,17 @@ function normalizeArrayValue(
 ): unknown {
   const length = arrayLength(value);
 
-  if (length === undefined) {
+  if (length === undefined || length > MAX_NORMALIZED_ARRAY_LENGTH) {
     return UNAVAILABLE_PLACEHOLDER;
   }
 
-  return Array.from({ length }, (_item, index) =>
-    normalizeArrayProperty(value, index, path),
-  );
+  const normalized: unknown[] = [];
+
+  for (let index = 0; index < length; index += 1) {
+    normalized.push(normalizeArrayProperty(value, index, path));
+  }
+
+  return normalized;
 }
 
 function normalizeArrayProperty(
