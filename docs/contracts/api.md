@@ -236,6 +236,45 @@ will expand through implementation work packages. Code nodes may include a
 `kind` attribute of `fenced` or `indented`; `codeFences.*` rules apply only to
 code nodes with `kind: "fenced"`. Raw parser node objects are not public.
 
+### 1.0 Draft Structural Views And Query Helpers
+
+When callers normalize with `documentVersion: "1.0.0-draft"`, the document may
+include deterministic derived structural views:
+
+- `target`: a deterministic document or node target for identical input and
+  options.
+- `sections`: heading-derived sections with heading target, optional parent
+  section, child section targets, and body node targets.
+- `textSpans`: normalized text-bearing node spans with target and source range
+  when source locations are preserved.
+- `tables`: table views whose cells expose normalized text, zero-based
+  `rowIndex`, zero-based `columnIndex`, and `header` state. The header row is
+  row index `0`; body rows continue at `1`, `2`, and so on.
+- `lists`: list views with `ordered`, optional `start`, and item coordinates.
+  `itemIndex` is zero-based within its immediate list container, and `depth` is
+  zero-based by list nesting depth.
+- `links`: link views with normalized text, URL, optional title, and source
+  range when available.
+
+`documentQueries` exposes deterministic helper methods over this public IR:
+
+- `nodes(document, query?)` filters recursive nodes by node type or target ID.
+- `sections(document, query?)` filters sections by target ID, heading target
+  ID, parent section target ID, title, or depth.
+- `textSpans(document, query?)` filters spans by target ID, node type, exact
+  text, or included text.
+- `tables(document, query?)` filters table views by target ID.
+- `lists(document, query?)` filters list views by target ID, ordered state, or
+  item depth.
+- `links(document, query?)` filters link views by target ID, URL, or text.
+- `sourceSlice(document, target)` returns the precomputed source slice for node
+  targets when parser offsets are available. For section targets, it returns
+  the source slice for the owning heading target. It does not guess slices when
+  offsets are absent or unsupported.
+
+Structural views are derived from engine-owned document nodes, targets, and
+source metadata. They do not expose raw parser AST fields as public contract.
+
 ## Diagnostic Contract
 
 `MarkdownDiagnostic` contains:

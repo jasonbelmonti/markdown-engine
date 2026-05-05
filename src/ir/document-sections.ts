@@ -8,6 +8,7 @@ import { requireNodeTarget } from "./document-targets.js";
 interface MutableSection {
   target: EngineTarget;
   headingTarget: EngineTarget;
+  parentSection?: EngineTarget;
   depth: number;
   title: string;
   bodyTargets: EngineTarget[];
@@ -23,13 +24,14 @@ export function buildSections(
   for (const node of children) {
     if (isHeading(node)) {
       const depth = headingDepth(node);
-      const section = sectionForHeading(node, depth);
       let currentSection = stack.at(-1);
 
       while (currentSection !== undefined && currentSection.depth >= depth) {
         stack.pop();
         currentSection = stack.at(-1);
       }
+
+      const section = sectionForHeading(node, depth, currentSection);
 
       currentSection?.childSections.push(section.target);
       sections.push(section);
@@ -45,6 +47,9 @@ export function buildSections(
   return sections.map((section) => ({
     target: section.target,
     headingTarget: section.headingTarget,
+    ...(section.parentSection !== undefined
+      ? { parentSection: section.parentSection }
+      : {}),
     depth: section.depth,
     title: section.title,
     bodyTargets: section.bodyTargets,
@@ -63,6 +68,7 @@ function headingDepth(node: EngineNode): number {
 function sectionForHeading(
   node: EngineNode,
   depth: number,
+  parentSection: MutableSection | undefined,
 ): MutableSection {
   const headingTarget = requireNodeTarget(node);
 
@@ -73,6 +79,7 @@ function sectionForHeading(
       nodeType: "section",
     },
     headingTarget,
+    ...(parentSection !== undefined ? { parentSection: parentSection.target } : {}),
     depth,
     title: node.text ?? "",
     bodyTargets: [],

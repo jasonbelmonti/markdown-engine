@@ -1,16 +1,14 @@
 import type { EngineDocument } from "../api/document.js";
+import { collectLinks } from "./document-link-views.js";
+import { collectLists } from "./document-list-views.js";
 import { buildSections } from "./document-sections.js";
-import {
-  collectLinks,
-  collectLists,
-  collectTables,
-  collectTextSpans,
-} from "./document-structural-views.js";
+import { collectTables } from "./document-table-views.js";
 import {
   targetFor,
   type DraftViewBuildOptions,
   withNodeMetadata,
 } from "./document-targets.js";
+import { collectTextSpans } from "./document-text-spans.js";
 
 export function buildDraftDocumentViews(
   document: EngineDocument,

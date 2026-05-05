@@ -30,6 +30,7 @@ export interface EngineNode {
 export interface EngineSection {
   target: EngineTarget;
   headingTarget: EngineTarget;
+  parentSection?: EngineTarget;
   depth: number;
   title: string;
   bodyTargets: readonly EngineTarget[];
@@ -120,13 +121,50 @@ export interface EngineNodeQuery {
   targetId?: string;
 }
 
+export interface EngineSectionQuery {
+  targetId?: string;
+  headingTargetId?: string;
+  parentSectionTargetId?: string;
+  title?: string;
+  depth?: number;
+}
+
+export interface EngineTextSpanQuery {
+  targetId?: string;
+  nodeType?: string;
+  text?: string;
+  textIncludes?: string;
+}
+
+export interface EngineTableQuery {
+  targetId?: string;
+}
+
+export interface EngineListQuery {
+  targetId?: string;
+  depth?: number;
+  ordered?: boolean;
+}
+
+export interface EngineLinkQuery {
+  targetId?: string;
+  url?: string;
+  text?: string;
+}
+
 export interface EngineDocumentQueries {
   nodes(document: EngineDocument, query?: EngineNodeQuery): readonly EngineNode[];
-  sections(document: EngineDocument): readonly EngineSection[];
-  textSpans(document: EngineDocument): readonly EngineTextSpan[];
-  tables(document: EngineDocument): readonly EngineTable[];
-  lists(document: EngineDocument): readonly EngineList[];
-  links(document: EngineDocument): readonly EngineLink[];
+  sections(
+    document: EngineDocument,
+    query?: EngineSectionQuery,
+  ): readonly EngineSection[];
+  textSpans(
+    document: EngineDocument,
+    query?: EngineTextSpanQuery,
+  ): readonly EngineTextSpan[];
+  tables(document: EngineDocument, query?: EngineTableQuery): readonly EngineTable[];
+  lists(document: EngineDocument, query?: EngineListQuery): readonly EngineList[];
+  links(document: EngineDocument, query?: EngineLinkQuery): readonly EngineLink[];
   sourceSlice(
     document: EngineDocument,
     target: EngineTarget,
