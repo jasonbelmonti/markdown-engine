@@ -221,9 +221,11 @@ describe("1.0 Rich IR annotation target validation", () => {
 
   it("returns diagnostics for malformed targets with non-JSON-safe values", () => {
     const document = normalizeDraftFixture();
+    const paragraphTarget = requireTarget(firstNode(document, "paragraph"));
     const circularTarget: Record<string, unknown> = { kind: "block" };
     circularTarget.self = circularTarget;
     const sharedTargetValue = { value: "shared" };
+    let readableAccessorPathReads = 0;
     const accessorTarget = { kind: "block" };
     Object.defineProperty(accessorTarget, "bad", {
       enumerable: true,
@@ -241,6 +243,16 @@ describe("1.0 Rich IR annotation target validation", () => {
         kind: "node",
         id: "node:accessor-path",
         path: throwingArrayTarget("target path"),
+      },
+    };
+    const readableAccessorPathTarget = {
+      kind: "node",
+      target: {
+        kind: "node",
+        id: paragraphTarget.id,
+        path: readableAccessorArrayTarget(0, () => {
+          readableAccessorPathReads += 1;
+        }),
       },
     };
     const proxyArrayTarget = new Proxy([1], {
@@ -274,12 +286,17 @@ describe("1.0 Rich IR annotation target validation", () => {
       malformedAnnotation("annotation:accessor-source-target", accessorSourceTarget),
       malformedAnnotation("annotation:accessor-array-target", accessorArrayTarget),
       malformedAnnotation("annotation:accessor-path-target", accessorPathTarget),
+      malformedAnnotation(
+        "annotation:readable-accessor-path-target",
+        readableAccessorPathTarget,
+      ),
       malformedAnnotation("annotation:proxy-array-target", proxyArrayTarget),
       malformedAnnotation("annotation:proxy-target", proxyTarget),
     ]);
 
     expect(result.valid).toBe(false);
-    expect(result.diagnostics).toHaveLength(11);
+    expect(readableAccessorPathReads).toBe(0);
+    expect(result.diagnostics).toHaveLength(12);
     expect(result.diagnostics).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -337,6 +354,16 @@ describe("1.0 Rich IR annotation target validation", () => {
         },
       }),
       expect.objectContaining({
+        target: {
+          kind: "node",
+          target: {
+            id: paragraphTarget.id,
+            kind: "node",
+            path: ["[Accessor]"],
+          },
+        },
+      }),
+      expect.objectContaining({
         target: [1],
       }),
       expect.objectContaining({
@@ -383,6 +410,17 @@ describe("1.0 Rich IR annotation target validation", () => {
             kind: "node",
             target: {
               id: "node:accessor-path",
+              kind: "node",
+              path: ["[Accessor]"],
+            },
+          },
+        }),
+        expect.objectContaining({
+          code: "annotation.target.invalidKind",
+          target: {
+            kind: "node",
+            target: {
+              id: paragraphTarget.id,
               kind: "node",
               path: ["[Accessor]"],
             },
@@ -659,6 +697,20 @@ function throwingArrayTarget(label: string): unknown[] {
     enumerable: true,
     get() {
       throw new Error(`Expected ${label} getter not to be invoked.`);
+    },
+  });
+
+  return target;
+}
+
+function readableAccessorArrayTarget(value: unknown, onRead: () => void): unknown[] {
+  const target: unknown[] = [];
+
+  Object.defineProperty(target, "0", {
+    enumerable: true,
+    get() {
+      onRead();
+      return value;
     },
   });
 

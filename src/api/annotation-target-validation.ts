@@ -538,18 +538,36 @@ function cloneTargetPathCandidate(path: unknown): readonly number[] | undefined 
     return undefined;
   }
 
-  try {
-    return path.every(
-      (segment) =>
-        typeof segment === "number" &&
-        Number.isInteger(segment) &&
-        segment >= 0,
-    )
-      ? [...path]
-      : undefined;
-  } catch {
+  const length = arrayLength(path);
+
+  if (length === undefined) {
     return undefined;
   }
+
+  const clonedPath: number[] = [];
+
+  for (let index = 0; index < length; index += 1) {
+    const segment = arrayDataProperty(path, index);
+
+    if (!isNonNegativeInteger(segment)) {
+      return undefined;
+    }
+
+    clonedPath.push(segment);
+  }
+
+  return clonedPath;
+}
+
+function arrayDataProperty(value: readonly unknown[], index: number): unknown {
+  const descriptor = ownPropertyDescriptor(
+    value as unknown as Record<string, unknown>,
+    String(index),
+  );
+
+  return descriptor !== undefined && "value" in descriptor
+    ? descriptor.value
+    : undefined;
 }
 
 function cloneSourceRangeCandidate(range: unknown): SourceRange | undefined {
