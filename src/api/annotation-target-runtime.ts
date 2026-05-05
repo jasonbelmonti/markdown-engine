@@ -2,10 +2,18 @@ export const ACCESSOR_PLACEHOLDER = "[Accessor]";
 export const FUNCTION_PLACEHOLDER = "[Function]";
 export const UNAVAILABLE_PLACEHOLDER = "[Unavailable]";
 export const MAX_NORMALIZED_ARRAY_LENGTH = 1_024;
+export const MAX_NORMALIZED_DEPTH = 64;
+
+export type OwnRuntimeProperty =
+  | { kind: "accessor" }
+  | { kind: "data"; value: unknown }
+  | { kind: "missing" }
+  | { kind: "unavailable" };
 
 export function normalizeRuntimeValue(
   value: unknown,
   path = new WeakSet<object>(),
+  depth = MAX_NORMALIZED_DEPTH,
 ): unknown {
   if (typeof value === "bigint") {
     return value.toString();
@@ -31,11 +39,15 @@ export function normalizeRuntimeValue(
     return "[Circular]";
   }
 
+  if (depth <= 0) {
+    return UNAVAILABLE_PLACEHOLDER;
+  }
+
   path.add(value);
 
   try {
     if (isArray(value)) {
-      return normalizeArrayValue(value, path);
+      return normalizeArrayValue(value, path, depth);
     }
 
     if (isPlainObject(value)) {
@@ -48,7 +60,10 @@ export function normalizeRuntimeValue(
       return Object.fromEntries(
         keys
           .sort(compareStrings)
-          .map((key) => [key, normalizePlainObjectProperty(value, key, path)]),
+          .map((key) => [
+            key,
+            normalizePlainObjectProperty(value, key, path, depth),
+          ]),
       );
     }
 
@@ -80,23 +95,19 @@ export function ownDataProperty(
   value: Record<string, unknown>,
   key: string,
 ): unknown {
-  const descriptor = ownPropertyDescriptor(value, key);
+  const property = ownRuntimeProperty(value, key);
 
-  return descriptor !== undefined && "value" in descriptor
-    ? descriptor.value
-    : undefined;
+  return property.kind === "data" ? property.value : undefined;
 }
 
 export function arrayLength(value: readonly unknown[]): number | undefined {
-  const descriptor = ownPropertyDescriptor(
+  const property = ownRuntimeProperty(
     value as unknown as Record<string, unknown>,
     "length",
   );
 
-  return descriptor !== undefined &&
-    "value" in descriptor &&
-    isNonNegativeInteger(descriptor.value)
-    ? descriptor.value
+  return property.kind === "data" && isNonNegativeInteger(property.value)
+    ? property.value
     : undefined;
 }
 
@@ -104,19 +115,41 @@ export function arrayDataProperty(
   value: readonly unknown[],
   index: number,
 ): unknown {
-  const descriptor = ownPropertyDescriptor(
+  const property = ownRuntimeProperty(
     value as unknown as Record<string, unknown>,
     String(index),
   );
 
-  return descriptor !== undefined && "value" in descriptor
-    ? descriptor.value
-    : undefined;
+  return property.kind === "data" ? property.value : undefined;
+}
+
+export function ownRuntimeProperty(
+  value: Record<string, unknown>,
+  key: string,
+): OwnRuntimeProperty {
+  let descriptor: PropertyDescriptor | undefined;
+
+  try {
+    descriptor = Object.getOwnPropertyDescriptor(value, key);
+  } catch {
+    return { kind: "unavailable" };
+  }
+
+  if (descriptor === undefined) {
+    return { kind: "missing" };
+  }
+
+  if (!("value" in descriptor)) {
+    return { kind: "accessor" };
+  }
+
+  return { kind: "data", value: descriptor.value };
 }
 
 function normalizeArrayValue(
   value: readonly unknown[],
   path: WeakSet<object>,
+  depth: number,
 ): unknown {
   const length = arrayLength(value);
 
@@ -127,7 +160,7 @@ function normalizeArrayValue(
   const normalized: unknown[] = [];
 
   for (let index = 0; index < length; index += 1) {
-    normalized.push(normalizeArrayProperty(value, index, path));
+    normalized.push(normalizeArrayProperty(value, index, path, depth));
   }
 
   return normalized;
@@ -137,50 +170,49 @@ function normalizeArrayProperty(
   value: readonly unknown[],
   index: number,
   path: WeakSet<object>,
+  depth: number,
 ): unknown {
-  const descriptor = ownPropertyDescriptor(
+  const property = ownRuntimeProperty(
     value as unknown as Record<string, unknown>,
     String(index),
   );
 
-  if (descriptor === undefined) {
+  if (property.kind === "missing") {
     return undefined;
   }
 
-  if (!("value" in descriptor)) {
+  if (property.kind === "accessor") {
     return ACCESSOR_PLACEHOLDER;
   }
 
-  return normalizeRuntimeValue(descriptor.value, path);
+  if (property.kind === "unavailable") {
+    return UNAVAILABLE_PLACEHOLDER;
+  }
+
+  return normalizeRuntimeValue(property.value, path, depth - 1);
 }
 
 function normalizePlainObjectProperty(
   value: Record<string, unknown>,
   key: string,
   path: WeakSet<object>,
+  depth: number,
 ): unknown {
-  const descriptor = ownPropertyDescriptor(value, key);
+  const property = ownRuntimeProperty(value, key);
 
-  if (descriptor === undefined) {
+  if (property.kind === "missing") {
     return undefined;
   }
 
-  if (!("value" in descriptor)) {
+  if (property.kind === "accessor") {
     return ACCESSOR_PLACEHOLDER;
   }
 
-  return normalizeRuntimeValue(descriptor.value, path);
-}
-
-function ownPropertyDescriptor(
-  value: Record<string, unknown>,
-  key: string,
-): PropertyDescriptor | undefined {
-  try {
-    return Object.getOwnPropertyDescriptor(value, key);
-  } catch {
-    return undefined;
+  if (property.kind === "unavailable") {
+    return UNAVAILABLE_PLACEHOLDER;
   }
+
+  return normalizeRuntimeValue(property.value, path, depth - 1);
 }
 
 function enumerableOwnKeys(value: Record<string, unknown>): string[] | undefined {

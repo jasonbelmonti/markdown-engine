@@ -505,6 +505,115 @@ describe("1.0 Rich IR annotation target validation", () => {
     );
   });
 
+  it("bounds normalization depth for deeply nested malformed targets", () => {
+    const document = normalizeDraftFixture();
+    const result = validateAnnotations(document, [
+      malformedAnnotation("annotation:deep-target", deeplyNestedTarget(5_000)),
+    ]);
+
+    const serialized = serialize(result, { pretty: true });
+    const parsed = JSON.parse(serialized);
+
+    expect(result.valid).toBe(false);
+    expect(result.diagnostics).toHaveLength(1);
+    expect(parsed.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "annotation.target.invalidKind",
+      }),
+    ]);
+    expect(serialized).toContain("[Unavailable]");
+  });
+
+  it("rejects accessor-backed optional target fields", () => {
+    const document = normalizeDraftFixture();
+    const paragraphTarget = requireTarget(firstNode(document, "paragraph"));
+    const expectedPathTarget = {
+      kind: "node",
+      target: {
+        id: paragraphTarget.id,
+        kind: "node",
+        path: "[Accessor]",
+      },
+    };
+    const expectedNodeTypeTarget = {
+      kind: "node",
+      target: {
+        id: paragraphTarget.id,
+        kind: "node",
+        nodeType: "[Accessor]",
+      },
+    };
+    const expectedSourceRangeTarget = {
+      kind: "node",
+      target: {
+        id: paragraphTarget.id,
+        kind: "node",
+        sourceRange: "[Accessor]",
+      },
+    };
+    const expectedSourceOffsetTarget = {
+      kind: "source",
+      range: {
+        end: { line: 7, column: 3, offset: 79 },
+        start: { line: 7, column: 1, offset: "[Accessor]" },
+      },
+    };
+
+    const result = validateAnnotations(document, [
+      malformedAnnotation("annotation:accessor-path", {
+        kind: "node",
+        target: accessorBackedEngineTarget(paragraphTarget.id, "path"),
+      }),
+      malformedAnnotation("annotation:accessor-node-type", {
+        kind: "node",
+        target: accessorBackedEngineTarget(paragraphTarget.id, "nodeType"),
+      }),
+      malformedAnnotation("annotation:accessor-source-range", {
+        kind: "node",
+        target: accessorBackedEngineTarget(paragraphTarget.id, "sourceRange"),
+      }),
+      sourceAnnotation(
+        "annotation:accessor-offset",
+        {
+          start: accessorBackedSourcePosition(7, 1, "source offset"),
+          end: { line: 7, column: 3, offset: 79 },
+        },
+        { callerOwnsMeaning: true },
+      ),
+    ]);
+
+    const parsed = JSON.parse(serialize(result, { pretty: true }));
+
+    expect(result.valid).toBe(false);
+    expect(result.diagnostics).toHaveLength(4);
+    expect(parsed.annotations).toEqual([
+      expect.objectContaining({ target: expectedPathTarget }),
+      expect.objectContaining({ target: expectedNodeTypeTarget }),
+      expect.objectContaining({ target: expectedSourceRangeTarget }),
+      expect.objectContaining({ target: expectedSourceOffsetTarget }),
+    ]);
+    expect(parsed.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "annotation.target.invalidKind",
+          target: expectedPathTarget,
+        }),
+        expect.objectContaining({
+          code: "annotation.target.invalidKind",
+          target: expectedNodeTypeTarget,
+        }),
+        expect.objectContaining({
+          code: "annotation.target.invalidKind",
+          target: expectedSourceRangeTarget,
+        }),
+        expect.objectContaining({
+          code: "annotation.target.invalidRange",
+          target: expectedSourceOffsetTarget,
+        }),
+      ]),
+    );
+  });
+
   it("strips extra source position fields before serialization", () => {
     const document = normalizeDraftFixture();
     const unsafeSourceRange = rangeWithExtraFields(7, 1, 77, 7, 3, 79);
@@ -782,6 +891,49 @@ function readableAccessorArrayTarget(value: unknown, onRead: () => void): unknow
   });
 
   return target;
+}
+
+function deeplyNestedTarget(depth: number): Record<string, unknown> {
+  let target: Record<string, unknown> = { kind: "block", leaf: true };
+
+  for (let index = 0; index < depth; index += 1) {
+    target = { kind: "block", next: target };
+  }
+
+  return target;
+}
+
+function accessorBackedEngineTarget(
+  id: string,
+  property: "nodeType" | "path" | "sourceRange",
+): EngineTarget {
+  const target: Record<string, unknown> = { kind: "node", id };
+
+  Object.defineProperty(target, property, {
+    enumerable: true,
+    get() {
+      throw new Error(`Expected ${property} getter not to be invoked.`);
+    },
+  });
+
+  return target as unknown as EngineTarget;
+}
+
+function accessorBackedSourcePosition(
+  line: number,
+  column: number,
+  label: string,
+): SourceRange["start"] {
+  const position: Record<string, unknown> = { line, column };
+
+  Object.defineProperty(position, "offset", {
+    enumerable: true,
+    get() {
+      throw new Error(`Expected ${label} getter not to be invoked.`);
+    },
+  });
+
+  return position as SourceRange["start"];
 }
 
 function throwingFunctionTarget(label: string): () => void {

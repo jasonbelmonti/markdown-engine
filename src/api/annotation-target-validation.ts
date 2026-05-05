@@ -1,4 +1,5 @@
 import type { SourcePosition, SourceRange } from "./diagnostics.js";
+import type { OwnRuntimeProperty } from "./annotation-target-runtime.js";
 import type {
   EngineAnnotation,
   EngineAnnotationTarget,
@@ -16,6 +17,7 @@ import {
   MAX_NORMALIZED_ARRAY_LENGTH,
   normalizeRuntimeValue,
   ownDataProperty,
+  ownRuntimeProperty,
   UNAVAILABLE_PLACEHOLDER,
 } from "./annotation-target-runtime.js";
 
@@ -403,9 +405,12 @@ function cloneEngineTargetCandidate(target: unknown): EngineTarget | undefined {
 
   const kind = ownDataProperty(target, "kind");
   const id = ownDataProperty(target, "id");
-  const path = ownDataProperty(target, "path");
-  const nodeType = ownDataProperty(target, "nodeType");
-  const sourceRange = ownDataProperty(target, "sourceRange");
+  const pathProperty = ownRuntimeProperty(target, "path");
+  const nodeTypeProperty = ownRuntimeProperty(target, "nodeType");
+  const sourceRangeProperty = ownRuntimeProperty(target, "sourceRange");
+  const path = optionalDataPropertyValue(pathProperty);
+  const nodeType = optionalDataPropertyValue(nodeTypeProperty);
+  const sourceRange = optionalDataPropertyValue(sourceRangeProperty);
 
   if (kind !== "node" || typeof id !== "string") {
     return undefined;
@@ -416,6 +421,9 @@ function cloneEngineTargetCandidate(target: unknown): EngineTarget | undefined {
     sourceRange !== undefined ? cloneSourceRangeCandidate(sourceRange) : undefined;
 
   if (
+    optionalDataPropertyIsInvalid(pathProperty) ||
+    optionalDataPropertyIsInvalid(nodeTypeProperty) ||
+    optionalDataPropertyIsInvalid(sourceRangeProperty) ||
     (path !== undefined && clonedPath === undefined) ||
     (nodeType !== undefined && typeof nodeType !== "string") ||
     (sourceRange !== undefined && clonedSourceRange === undefined)
@@ -497,11 +505,13 @@ function cloneSourcePositionCandidate(
 
   const line = ownDataProperty(position, "line");
   const column = ownDataProperty(position, "column");
-  const offset = ownDataProperty(position, "offset");
+  const offsetProperty = ownRuntimeProperty(position, "offset");
+  const offset = optionalDataPropertyValue(offsetProperty);
 
   if (
     !isPositiveInteger(line) ||
     !isPositiveInteger(column) ||
+    optionalDataPropertyIsInvalid(offsetProperty) ||
     (offset !== undefined && !isNonNegativeInteger(offset))
   ) {
     return undefined;
@@ -518,6 +528,14 @@ function isAnnotationTargetCandidate(
   target: unknown,
 ): target is AnnotationTargetCandidate {
   return typeof target === "object" && target !== null && !isArray(target);
+}
+
+function optionalDataPropertyValue(property: OwnRuntimeProperty): unknown {
+  return property.kind === "data" ? property.value : undefined;
+}
+
+function optionalDataPropertyIsInvalid(property: OwnRuntimeProperty): boolean {
+  return property.kind === "accessor" || property.kind === "unavailable";
 }
 
 function isPositiveInteger(value: unknown): value is number {
