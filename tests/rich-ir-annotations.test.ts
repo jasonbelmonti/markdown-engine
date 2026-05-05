@@ -226,6 +226,7 @@ describe("1.0 Rich IR annotation target validation", () => {
     circularTarget.self = circularTarget;
     const sharedTargetValue = { value: "shared" };
     let readableAccessorPathReads = 0;
+    let nonPlainTagReads = 0;
     const accessorTarget = { kind: "block" };
     Object.defineProperty(accessorTarget, "bad", {
       enumerable: true,
@@ -268,6 +269,14 @@ describe("1.0 Rich IR annotation target validation", () => {
         },
       },
     );
+    const nonPlainTaggedTarget = Object.create(Date.prototype) as object;
+    Object.defineProperty(nonPlainTaggedTarget, Symbol.toStringTag, {
+      get() {
+        nonPlainTagReads += 1;
+        return "UnsafeTarget";
+      },
+    });
+    const revokedProxyTarget = revokedProxy();
 
     const result = validateAnnotations(document, [
       malformedAnnotation("annotation:bigint-target", {
@@ -292,11 +301,14 @@ describe("1.0 Rich IR annotation target validation", () => {
       ),
       malformedAnnotation("annotation:proxy-array-target", proxyArrayTarget),
       malformedAnnotation("annotation:proxy-target", proxyTarget),
+      malformedAnnotation("annotation:non-plain-tagged-target", nonPlainTaggedTarget),
+      malformedAnnotation("annotation:revoked-proxy-target", revokedProxyTarget),
     ]);
 
     expect(result.valid).toBe(false);
     expect(readableAccessorPathReads).toBe(0);
-    expect(result.diagnostics).toHaveLength(12);
+    expect(nonPlainTagReads).toBe(0);
+    expect(result.diagnostics).toHaveLength(14);
     expect(result.diagnostics).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -365,6 +377,12 @@ describe("1.0 Rich IR annotation target validation", () => {
       }),
       expect.objectContaining({
         target: [1],
+      }),
+      expect.objectContaining({
+        target: "[Unavailable]",
+      }),
+      expect.objectContaining({
+        target: "[Unavailable]",
       }),
       expect.objectContaining({
         target: "[Unavailable]",
@@ -715,6 +733,14 @@ function readableAccessorArrayTarget(value: unknown, onRead: () => void): unknow
   });
 
   return target;
+}
+
+function revokedProxy(): object {
+  const { proxy, revoke } = Proxy.revocable({}, {});
+
+  revoke();
+
+  return proxy;
 }
 
 function descriptorBackedProxy(

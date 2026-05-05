@@ -7,6 +7,15 @@ import type {
   EngineTargetDiagnostic,
 } from "./document.js";
 import { documentQueries } from "./document-queries.js";
+import {
+  arrayDataProperty,
+  arrayLength,
+  isArray,
+  isPlainObject,
+  normalizeRuntimeValue,
+  ownDataProperty,
+  UNAVAILABLE_PLACEHOLDER,
+} from "./annotation-target-runtime.js";
 
 type AnnotationTargetCandidate = {
   kind?: unknown;
@@ -18,9 +27,6 @@ interface SortableTargetDiagnostic {
   diagnostic: EngineTargetDiagnostic;
   order: number;
 }
-
-const ACCESSOR_PLACEHOLDER = "[Accessor]";
-const UNAVAILABLE_PLACEHOLDER = "[Unavailable]";
 
 export function annotationTargetDiagnostics(
   document: EngineDocument,
@@ -296,133 +302,18 @@ function compareStrings(left: string, right: string): number {
 
 function targetSortKey(target: unknown): string {
   try {
-    const serialized = JSON.stringify(normalizeSortValue(target, new WeakSet()));
+    const serialized = JSON.stringify(normalizeRuntimeValue(target));
 
     return serialized ?? String(target);
   } catch {
     return typeof target === "object" && target !== null
-      ? objectTag(target)
+      ? UNAVAILABLE_PLACEHOLDER
       : String(target);
   }
 }
 
 function serializableTarget(target: unknown): unknown {
-  return normalizeSortValue(target, new WeakSet());
-}
-
-function normalizeSortValue(value: unknown, path: WeakSet<object>): unknown {
-  if (typeof value === "bigint") {
-    return value.toString();
-  }
-
-  if (typeof value === "function" || typeof value === "symbol") {
-    return String(value);
-  }
-
-  if (typeof value === "number" && !Number.isFinite(value)) {
-    return String(value);
-  }
-
-  if (typeof value !== "object" || value === null) {
-    return value;
-  }
-
-  if (path.has(value)) {
-    return "[Circular]";
-  }
-
-  path.add(value);
-
-  try {
-    if (Array.isArray(value)) {
-      return normalizeArrayValue(value, path);
-    }
-
-    if (isPlainObject(value)) {
-      const keys = enumerableOwnKeys(value);
-
-      if (keys === undefined) {
-        return UNAVAILABLE_PLACEHOLDER;
-      }
-
-      return Object.fromEntries(
-        keys
-          .sort(compareStrings)
-          .map((key) => [key, normalizePlainObjectProperty(value, key, path)]),
-      );
-    }
-
-    return objectTag(value);
-  } finally {
-    path.delete(value);
-  }
-}
-
-function normalizeArrayValue(
-  value: readonly unknown[],
-  path: WeakSet<object>,
-): unknown {
-  const length = arrayLength(value);
-
-  if (length === undefined) {
-    return UNAVAILABLE_PLACEHOLDER;
-  }
-
-  return Array.from({ length }, (_item, index) =>
-    normalizeArrayProperty(value, index, path),
-  );
-}
-
-function arrayLength(value: readonly unknown[]): number | undefined {
-  const descriptor = ownPropertyDescriptor(
-    value as unknown as Record<string, unknown>,
-    "length",
-  );
-
-  return descriptor !== undefined &&
-    "value" in descriptor &&
-    isNonNegativeInteger(descriptor.value)
-    ? descriptor.value
-    : undefined;
-}
-
-function normalizeArrayProperty(
-  value: readonly unknown[],
-  index: number,
-  path: WeakSet<object>,
-): unknown {
-  const descriptor = ownPropertyDescriptor(
-    value as unknown as Record<string, unknown>,
-    String(index),
-  );
-
-  if (descriptor === undefined) {
-    return undefined;
-  }
-
-  if (!("value" in descriptor)) {
-    return ACCESSOR_PLACEHOLDER;
-  }
-
-  return normalizeSortValue(descriptor.value, path);
-}
-
-function normalizePlainObjectProperty(
-  value: Record<string, unknown>,
-  key: string,
-  path: WeakSet<object>,
-): unknown {
-  const descriptor = ownPropertyDescriptor(value, key);
-
-  if (descriptor === undefined) {
-    return undefined;
-  }
-
-  if (!("value" in descriptor)) {
-    return ACCESSOR_PLACEHOLDER;
-  }
-
-  return normalizeSortValue(descriptor.value, path);
+  return normalizeRuntimeValue(target);
 }
 
 function annotationTargetKind(target: AnnotationTargetCandidate): unknown {
@@ -534,7 +425,7 @@ function cloneEngineTargetCandidate(target: unknown): EngineTarget | undefined {
 }
 
 function cloneTargetPathCandidate(path: unknown): readonly number[] | undefined {
-  if (!Array.isArray(path)) {
+  if (!isArray(path)) {
     return undefined;
   }
 
@@ -557,17 +448,6 @@ function cloneTargetPathCandidate(path: unknown): readonly number[] | undefined 
   }
 
   return clonedPath;
-}
-
-function arrayDataProperty(value: readonly unknown[], index: number): unknown {
-  const descriptor = ownPropertyDescriptor(
-    value as unknown as Record<string, unknown>,
-    String(index),
-  );
-
-  return descriptor !== undefined && "value" in descriptor
-    ? descriptor.value
-    : undefined;
 }
 
 function cloneSourceRangeCandidate(range: unknown): SourceRange | undefined {
@@ -629,7 +509,7 @@ function cloneSourcePositionCandidate(
 function isAnnotationTargetCandidate(
   target: unknown,
 ): target is AnnotationTargetCandidate {
-  return typeof target === "object" && target !== null && !Array.isArray(target);
+  return typeof target === "object" && target !== null && !isArray(target);
 }
 
 function isPositiveInteger(value: unknown): value is number {
@@ -687,60 +567,4 @@ function sourceOffsetsAreContained(
     container.start.offset <= target.start.offset &&
     target.end.offset <= container.end.offset
   );
-}
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    return false;
-  }
-
-  const prototype = objectPrototype(value);
-
-  return prototype === Object.prototype || prototype === null;
-}
-
-function ownDataProperty(
-  value: Record<string, unknown>,
-  key: string,
-): unknown {
-  const descriptor = ownPropertyDescriptor(value, key);
-
-  return descriptor !== undefined && "value" in descriptor
-    ? descriptor.value
-    : undefined;
-}
-
-function ownPropertyDescriptor(
-  value: Record<string, unknown>,
-  key: string,
-): PropertyDescriptor | undefined {
-  try {
-    return Object.getOwnPropertyDescriptor(value, key);
-  } catch {
-    return undefined;
-  }
-}
-
-function enumerableOwnKeys(value: Record<string, unknown>): string[] | undefined {
-  try {
-    return Object.keys(value);
-  } catch {
-    return undefined;
-  }
-}
-
-function objectPrototype(value: object): object | null | undefined {
-  try {
-    return Object.getPrototypeOf(value);
-  } catch {
-    return undefined;
-  }
-}
-
-function objectTag(value: object): string {
-  try {
-    return Object.prototype.toString.call(value);
-  } catch {
-    return UNAVAILABLE_PLACEHOLDER;
-  }
 }
