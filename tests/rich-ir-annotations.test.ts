@@ -234,6 +234,14 @@ describe("1.0 Rich IR annotation target validation", () => {
     const accessorKindTarget = throwingAccessorTarget("kind");
     const accessorNodeTarget = throwingAccessorTarget("target", "node");
     const accessorSourceTarget = throwingAccessorTarget("range", "source");
+    const proxyTarget = new Proxy(
+      { kind: "block" },
+      {
+        getOwnPropertyDescriptor() {
+          throw new Error("Expected descriptor trap not to escape validation.");
+        },
+      },
+    );
 
     const result = validateAnnotations(document, [
       malformedAnnotation("annotation:bigint-target", {
@@ -250,10 +258,11 @@ describe("1.0 Rich IR annotation target validation", () => {
       malformedAnnotation("annotation:accessor-kind-target", accessorKindTarget),
       malformedAnnotation("annotation:accessor-node-target", accessorNodeTarget),
       malformedAnnotation("annotation:accessor-source-target", accessorSourceTarget),
+      malformedAnnotation("annotation:proxy-target", proxyTarget),
     ]);
 
     expect(result.valid).toBe(false);
-    expect(result.diagnostics).toHaveLength(7);
+    expect(result.diagnostics).toHaveLength(8);
     expect(result.diagnostics).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -297,6 +306,9 @@ describe("1.0 Rich IR annotation target validation", () => {
       expect.objectContaining({
         target: { kind: "source", range: "[Accessor]" },
       }),
+      expect.objectContaining({
+        target: "[Unavailable]",
+      }),
     ]);
     expect(parsed.diagnostics).toEqual(
       expect.arrayContaining([
@@ -327,6 +339,10 @@ describe("1.0 Rich IR annotation target validation", () => {
         expect.objectContaining({
           code: "annotation.target.invalidRange",
           target: { kind: "source", range: "[Accessor]" },
+        }),
+        expect.objectContaining({
+          code: "annotation.target.invalidKind",
+          target: "[Unavailable]",
         }),
       ]),
     );

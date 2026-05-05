@@ -19,6 +19,9 @@ interface SortableTargetDiagnostic {
   order: number;
 }
 
+const ACCESSOR_PLACEHOLDER = "[Accessor]";
+const UNAVAILABLE_PLACEHOLDER = "[Unavailable]";
+
 export function annotationTargetDiagnostics(
   document: EngineDocument,
   annotations: readonly EngineAnnotation[],
@@ -293,7 +296,9 @@ function targetSortKey(target: unknown): string {
 
     return serialized ?? String(target);
   } catch {
-    return Object.prototype.toString.call(target);
+    return typeof target === "object" && target !== null
+      ? objectTag(target)
+      : String(target);
   }
 }
 
@@ -330,14 +335,20 @@ function normalizeSortValue(value: unknown, path: WeakSet<object>): unknown {
     }
 
     if (isPlainObject(value)) {
+      const keys = enumerableOwnKeys(value);
+
+      if (keys === undefined) {
+        return UNAVAILABLE_PLACEHOLDER;
+      }
+
       return Object.fromEntries(
-        Object.keys(value)
-          .sort()
+        keys
+          .sort(compareStrings)
           .map((key) => [key, normalizePlainObjectProperty(value, key, path)]),
       );
     }
 
-    return Object.prototype.toString.call(value);
+    return objectTag(value);
   } finally {
     path.delete(value);
   }
@@ -355,7 +366,7 @@ function normalizePlainObjectProperty(
   }
 
   if (!("value" in descriptor)) {
-    return "[Accessor]";
+    return ACCESSOR_PLACEHOLDER;
   }
 
   return normalizeSortValue(descriptor.value, path);
@@ -593,7 +604,7 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
     return false;
   }
 
-  const prototype = Object.getPrototypeOf(value);
+  const prototype = objectPrototype(value);
 
   return prototype === Object.prototype || prototype === null;
 }
@@ -613,5 +624,33 @@ function ownPropertyDescriptor(
   value: Record<string, unknown>,
   key: string,
 ): PropertyDescriptor | undefined {
-  return Object.getOwnPropertyDescriptor(value, key);
+  try {
+    return Object.getOwnPropertyDescriptor(value, key);
+  } catch {
+    return undefined;
+  }
+}
+
+function enumerableOwnKeys(value: Record<string, unknown>): string[] | undefined {
+  try {
+    return Object.keys(value);
+  } catch {
+    return undefined;
+  }
+}
+
+function objectPrototype(value: object): object | null | undefined {
+  try {
+    return Object.getPrototypeOf(value);
+  } catch {
+    return undefined;
+  }
+}
+
+function objectTag(value: object): string {
+  try {
+    return Object.prototype.toString.call(value);
+  } catch {
+    return UNAVAILABLE_PLACEHOLDER;
+  }
 }
