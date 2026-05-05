@@ -224,6 +224,13 @@ describe("1.0 Rich IR annotation target validation", () => {
     const circularTarget: Record<string, unknown> = { kind: "block" };
     circularTarget.self = circularTarget;
     const sharedTargetValue = { value: "shared" };
+    const accessorTarget = { kind: "block" };
+    Object.defineProperty(accessorTarget, "bad", {
+      enumerable: true,
+      get() {
+        throw new Error("Expected target normalization not to invoke getters.");
+      },
+    });
 
     const result = validateAnnotations(document, [
       malformedAnnotation("annotation:bigint-target", {
@@ -236,11 +243,13 @@ describe("1.0 Rich IR annotation target validation", () => {
         a: sharedTargetValue,
         b: sharedTargetValue,
       }),
+      malformedAnnotation("annotation:accessor-target", accessorTarget),
     ]);
 
     expect(result).toMatchObject({
       valid: false,
       diagnostics: [
+        { code: "annotation.target.invalidKind", severity: "error" },
         { code: "annotation.target.invalidKind", severity: "error" },
         { code: "annotation.target.invalidKind", severity: "error" },
         { code: "annotation.target.invalidKind", severity: "error" },
@@ -265,6 +274,9 @@ describe("1.0 Rich IR annotation target validation", () => {
           kind: "block",
         },
       }),
+      expect.objectContaining({
+        target: { bad: "[Accessor]", kind: "block" },
+      }),
     ]);
     expect(parsed.diagnostics).toEqual(
       expect.arrayContaining([
@@ -280,6 +292,9 @@ describe("1.0 Rich IR annotation target validation", () => {
             b: { value: "shared" },
             kind: "block",
           },
+        }),
+        expect.objectContaining({
+          target: { bad: "[Accessor]", kind: "block" },
         }),
       ]),
     );

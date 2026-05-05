@@ -327,7 +327,7 @@ function normalizeSortValue(value: unknown, path: WeakSet<object>): unknown {
       return Object.fromEntries(
         Object.keys(value)
           .sort()
-          .map((key) => [key, normalizeSortValue(value[key], path)]),
+          .map((key) => [key, normalizePlainObjectProperty(value, key, path)]),
       );
     }
 
@@ -335,6 +335,24 @@ function normalizeSortValue(value: unknown, path: WeakSet<object>): unknown {
   } finally {
     path.delete(value);
   }
+}
+
+function normalizePlainObjectProperty(
+  value: Record<string, unknown>,
+  key: string,
+  path: WeakSet<object>,
+): unknown {
+  const descriptor = Object.getOwnPropertyDescriptor(value, key);
+
+  if (descriptor === undefined) {
+    return undefined;
+  }
+
+  if (!("value" in descriptor)) {
+    return "[Accessor]";
+  }
+
+  return normalizeSortValue(descriptor.value, path);
 }
 
 export function cloneAnnotationTarget(
