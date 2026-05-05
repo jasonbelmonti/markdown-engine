@@ -3,7 +3,10 @@ import type {
   EngineAnnotation,
   EngineDocument,
 } from "./document.js";
-import { annotationTargetDiagnostics } from "./annotation-target-validation.js";
+import {
+  annotationTargetDiagnostics,
+  cloneAnnotationTarget,
+} from "./annotation-target-validation.js";
 
 export type ValidateAnnotationsFunction = (
   document: EngineDocument,
@@ -18,7 +21,16 @@ export const validateAnnotations: ValidateAnnotationsFunction = (
 
   return {
     valid: diagnostics.length === 0,
-    annotations: annotations.map((annotation) => ({ ...annotation })),
+    annotations: annotations.map((annotation) => cloneAnnotation(annotation)),
     diagnostics,
   };
 };
+
+function cloneAnnotation<TPayload>(
+  annotation: EngineAnnotation<TPayload>,
+): EngineAnnotation<TPayload> {
+  return {
+    ...annotation,
+    target: cloneAnnotationTarget(annotation.target),
+  };
+}

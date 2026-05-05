@@ -96,7 +96,7 @@ export interface EngineCompatibilityGate {
 }
 
 export interface EngineTargetDiagnostic extends MarkdownDiagnostic {
-  target?: EngineAnnotationTarget;
+  target?: unknown;
 }
 
 export interface EngineDocument {
