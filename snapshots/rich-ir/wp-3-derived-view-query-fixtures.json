@@ -1,0 +1,1098 @@
+{
+  "fixture": "fixtures/rich-ir/queries.md",
+  "sections": [
+    {
+      "targetId": "section:node:0:heading",
+      "headingTargetId": "node:0:heading",
+      "depth": 1,
+      "title": "Query Mission",
+      "bodyTargetIds": [
+        "node:1:paragraph"
+      ],
+      "childSectionTargetIds": [
+        "section:node:2:heading",
+        "section:node:8:heading"
+      ]
+    },
+    {
+      "targetId": "section:node:2:heading",
+      "headingTargetId": "node:2:heading",
+      "parentSectionTargetId": "section:node:0:heading",
+      "depth": 2,
+      "title": "Phase Alpha",
+      "bodyTargetIds": [
+        "node:3:paragraph"
+      ],
+      "childSectionTargetIds": [
+        "section:node:4:heading"
+      ]
+    },
+    {
+      "targetId": "section:node:4:heading",
+      "headingTargetId": "node:4:heading",
+      "parentSectionTargetId": "section:node:2:heading",
+      "depth": 3,
+      "title": "Phase Alpha Details",
+      "bodyTargetIds": [
+        "node:5:paragraph",
+        "node:6:table",
+        "node:7:list"
+      ],
+      "childSectionTargetIds": []
+    },
+    {
+      "targetId": "section:node:8:heading",
+      "headingTargetId": "node:8:heading",
+      "parentSectionTargetId": "section:node:0:heading",
+      "depth": 2,
+      "title": "Phase Bravo",
+      "bodyTargetIds": [
+        "node:9:paragraph"
+      ],
+      "childSectionTargetIds": []
+    }
+  ],
+  "textSpans": [
+    {
+      "targetId": "node:0:heading",
+      "nodeType": "heading",
+      "text": "Query Mission",
+      "sourceRange": {
+        "start": {
+          "line": 7,
+          "column": 1,
+          "offset": 75
+        },
+        "end": {
+          "line": 7,
+          "column": 16,
+          "offset": 90
+        }
+      }
+    },
+    {
+      "targetId": "node:0.0:text",
+      "nodeType": "text",
+      "text": "Query Mission",
+      "sourceRange": {
+        "start": {
+          "line": 7,
+          "column": 3,
+          "offset": 77
+        },
+        "end": {
+          "line": 7,
+          "column": 16,
+          "offset": 90
+        }
+      }
+    },
+    {
+      "targetId": "node:1:paragraph",
+      "nodeType": "paragraph",
+      "text": "Intro overview text before the nested sections.",
+      "sourceRange": {
+        "start": {
+          "line": 9,
+          "column": 1,
+          "offset": 92
+        },
+        "end": {
+          "line": 9,
+          "column": 91,
+          "offset": 182
+        }
+      }
+    },
+    {
+      "targetId": "node:1.0:text",
+      "nodeType": "text",
+      "text": "Intro ",
+      "sourceRange": {
+        "start": {
+          "line": 9,
+          "column": 1,
+          "offset": 92
+        },
+        "end": {
+          "line": 9,
+          "column": 7,
+          "offset": 98
+        }
+      }
+    },
+    {
+      "targetId": "node:1.1:link",
+      "nodeType": "link",
+      "text": "overview",
+      "sourceRange": {
+        "start": {
+          "line": 9,
+          "column": 7,
+          "offset": 98
+        },
+        "end": {
+          "line": 9,
+          "column": 58,
+          "offset": 149
+        }
+      }
+    },
+    {
+      "targetId": "node:1.1.0:text",
+      "nodeType": "text",
+      "text": "overview",
+      "sourceRange": {
+        "start": {
+          "line": 9,
+          "column": 8,
+          "offset": 99
+        },
+        "end": {
+          "line": 9,
+          "column": 16,
+          "offset": 107
+        }
+      }
+    },
+    {
+      "targetId": "node:1.2:text",
+      "nodeType": "text",
+      "text": " text before the nested sections.",
+      "sourceRange": {
+        "start": {
+          "line": 9,
+          "column": 58,
+          "offset": 149
+        },
+        "end": {
+          "line": 9,
+          "column": 91,
+          "offset": 182
+        }
+      }
+    },
+    {
+      "targetId": "node:2:heading",
+      "nodeType": "heading",
+      "text": "Phase Alpha",
+      "sourceRange": {
+        "start": {
+          "line": 11,
+          "column": 1,
+          "offset": 184
+        },
+        "end": {
+          "line": 11,
+          "column": 15,
+          "offset": 198
+        }
+      }
+    },
+    {
+      "targetId": "node:2.0:text",
+      "nodeType": "text",
+      "text": "Phase Alpha",
+      "sourceRange": {
+        "start": {
+          "line": 11,
+          "column": 4,
+          "offset": 187
+        },
+        "end": {
+          "line": 11,
+          "column": 15,
+          "offset": 198
+        }
+      }
+    },
+    {
+      "targetId": "node:3:paragraph",
+      "nodeType": "paragraph",
+      "text": "Paragraph with inline code, source span text, and relative link.",
+      "sourceRange": {
+        "start": {
+          "line": 13,
+          "column": 1,
+          "offset": 200
+        },
+        "end": {
+          "line": 13,
+          "column": 87,
+          "offset": 286
+        }
+      }
+    },
+    {
+      "targetId": "node:3.0:text",
+      "nodeType": "text",
+      "text": "Paragraph with ",
+      "sourceRange": {
+        "start": {
+          "line": 13,
+          "column": 1,
+          "offset": 200
+        },
+        "end": {
+          "line": 13,
+          "column": 16,
+          "offset": 215
+        }
+      }
+    },
+    {
+      "targetId": "node:3.1:inlineCode",
+      "nodeType": "inlineCode",
+      "text": "inline code",
+      "sourceRange": {
+        "start": {
+          "line": 13,
+          "column": 16,
+          "offset": 215
+        },
+        "end": {
+          "line": 13,
+          "column": 29,
+          "offset": 228
+        }
+      }
+    },
+    {
+      "targetId": "node:3.2:text",
+      "nodeType": "text",
+      "text": ", source span text, and ",
+      "sourceRange": {
+        "start": {
+          "line": 13,
+          "column": 29,
+          "offset": 228
+        },
+        "end": {
+          "line": 13,
+          "column": 53,
+          "offset": 252
+        }
+      }
+    },
+    {
+      "targetId": "node:3.3:link",
+      "nodeType": "link",
+      "text": "relative link",
+      "sourceRange": {
+        "start": {
+          "line": 13,
+          "column": 53,
+          "offset": 252
+        },
+        "end": {
+          "line": 13,
+          "column": 86,
+          "offset": 285
+        }
+      }
+    },
+    {
+      "targetId": "node:3.3.0:text",
+      "nodeType": "text",
+      "text": "relative link",
+      "sourceRange": {
+        "start": {
+          "line": 13,
+          "column": 54,
+          "offset": 253
+        },
+        "end": {
+          "line": 13,
+          "column": 67,
+          "offset": 266
+        }
+      }
+    },
+    {
+      "targetId": "node:3.4:text",
+      "nodeType": "text",
+      "text": ".",
+      "sourceRange": {
+        "start": {
+          "line": 13,
+          "column": 86,
+          "offset": 285
+        },
+        "end": {
+          "line": 13,
+          "column": 87,
+          "offset": 286
+        }
+      }
+    },
+    {
+      "targetId": "node:4:heading",
+      "nodeType": "heading",
+      "text": "Phase Alpha Details",
+      "sourceRange": {
+        "start": {
+          "line": 15,
+          "column": 1,
+          "offset": 288
+        },
+        "end": {
+          "line": 15,
+          "column": 24,
+          "offset": 311
+        }
+      }
+    },
+    {
+      "targetId": "node:4.0:text",
+      "nodeType": "text",
+      "text": "Phase Alpha Details",
+      "sourceRange": {
+        "start": {
+          "line": 15,
+          "column": 5,
+          "offset": 292
+        },
+        "end": {
+          "line": 15,
+          "column": 24,
+          "offset": 311
+        }
+      }
+    },
+    {
+      "targetId": "node:5:paragraph",
+      "nodeType": "paragraph",
+      "text": "Detail text before the table.",
+      "sourceRange": {
+        "start": {
+          "line": 17,
+          "column": 1,
+          "offset": 313
+        },
+        "end": {
+          "line": 17,
+          "column": 30,
+          "offset": 342
+        }
+      }
+    },
+    {
+      "targetId": "node:5.0:text",
+      "nodeType": "text",
+      "text": "Detail text before the table.",
+      "sourceRange": {
+        "start": {
+          "line": 17,
+          "column": 1,
+          "offset": 313
+        },
+        "end": {
+          "line": 17,
+          "column": 30,
+          "offset": 342
+        }
+      }
+    },
+    {
+      "targetId": "node:6.0.0.0:text",
+      "nodeType": "text",
+      "text": "Step",
+      "sourceRange": {
+        "start": {
+          "line": 19,
+          "column": 3,
+          "offset": 346
+        },
+        "end": {
+          "line": 19,
+          "column": 7,
+          "offset": 350
+        }
+      }
+    },
+    {
+      "targetId": "node:6.0.1.0:text",
+      "nodeType": "text",
+      "text": "Owner",
+      "sourceRange": {
+        "start": {
+          "line": 19,
+          "column": 10,
+          "offset": 353
+        },
+        "end": {
+          "line": 19,
+          "column": 15,
+          "offset": 358
+        }
+      }
+    },
+    {
+      "targetId": "node:6.0.2.0:text",
+      "nodeType": "text",
+      "text": "State",
+      "sourceRange": {
+        "start": {
+          "line": 19,
+          "column": 18,
+          "offset": 361
+        },
+        "end": {
+          "line": 19,
+          "column": 23,
+          "offset": 366
+        }
+      }
+    },
+    {
+      "targetId": "node:6.1.0.0:text",
+      "nodeType": "text",
+      "text": "Design",
+      "sourceRange": {
+        "start": {
+          "line": 21,
+          "column": 3,
+          "offset": 391
+        },
+        "end": {
+          "line": 21,
+          "column": 9,
+          "offset": 397
+        }
+      }
+    },
+    {
+      "targetId": "node:6.1.1.0:text",
+      "nodeType": "text",
+      "text": "docs",
+      "sourceRange": {
+        "start": {
+          "line": 21,
+          "column": 12,
+          "offset": 400
+        },
+        "end": {
+          "line": 21,
+          "column": 16,
+          "offset": 404
+        }
+      }
+    },
+    {
+      "targetId": "node:6.1.2.0:text",
+      "nodeType": "text",
+      "text": "ready",
+      "sourceRange": {
+        "start": {
+          "line": 21,
+          "column": 19,
+          "offset": 407
+        },
+        "end": {
+          "line": 21,
+          "column": 24,
+          "offset": 412
+        }
+      }
+    },
+    {
+      "targetId": "node:6.2.0.0:text",
+      "nodeType": "text",
+      "text": "Build",
+      "sourceRange": {
+        "start": {
+          "line": 22,
+          "column": 3,
+          "offset": 417
+        },
+        "end": {
+          "line": 22,
+          "column": 8,
+          "offset": 422
+        }
+      }
+    },
+    {
+      "targetId": "node:6.2.1.0:text",
+      "nodeType": "text",
+      "text": "engine",
+      "sourceRange": {
+        "start": {
+          "line": 22,
+          "column": 11,
+          "offset": 425
+        },
+        "end": {
+          "line": 22,
+          "column": 17,
+          "offset": 431
+        }
+      }
+    },
+    {
+      "targetId": "node:6.2.2.0:text",
+      "nodeType": "text",
+      "text": "blocked",
+      "sourceRange": {
+        "start": {
+          "line": 22,
+          "column": 20,
+          "offset": 434
+        },
+        "end": {
+          "line": 22,
+          "column": 27,
+          "offset": 441
+        }
+      }
+    },
+    {
+      "targetId": "node:7.0.0:paragraph",
+      "nodeType": "paragraph",
+      "text": "Ordered parent item",
+      "sourceRange": {
+        "start": {
+          "line": 24,
+          "column": 4,
+          "offset": 448
+        },
+        "end": {
+          "line": 24,
+          "column": 23,
+          "offset": 467
+        }
+      }
+    },
+    {
+      "targetId": "node:7.0.0.0:text",
+      "nodeType": "text",
+      "text": "Ordered parent item",
+      "sourceRange": {
+        "start": {
+          "line": 24,
+          "column": 4,
+          "offset": 448
+        },
+        "end": {
+          "line": 24,
+          "column": 23,
+          "offset": 467
+        }
+      }
+    },
+    {
+      "targetId": "node:7.1.0:paragraph",
+      "nodeType": "paragraph",
+      "text": "Ordered follow-up item",
+      "sourceRange": {
+        "start": {
+          "line": 25,
+          "column": 4,
+          "offset": 471
+        },
+        "end": {
+          "line": 25,
+          "column": 26,
+          "offset": 493
+        }
+      }
+    },
+    {
+      "targetId": "node:7.1.0.0:text",
+      "nodeType": "text",
+      "text": "Ordered follow-up item",
+      "sourceRange": {
+        "start": {
+          "line": 25,
+          "column": 4,
+          "offset": 471
+        },
+        "end": {
+          "line": 25,
+          "column": 26,
+          "offset": 493
+        }
+      }
+    },
+    {
+      "targetId": "node:7.1.1.0.0:paragraph",
+      "nodeType": "paragraph",
+      "text": "Nested done task",
+      "sourceRange": {
+        "start": {
+          "line": 26,
+          "column": 10,
+          "offset": 503
+        },
+        "end": {
+          "line": 26,
+          "column": 26,
+          "offset": 519
+        }
+      }
+    },
+    {
+      "targetId": "node:7.1.1.0.0.0:text",
+      "nodeType": "text",
+      "text": "Nested done task",
+      "sourceRange": {
+        "start": {
+          "line": 26,
+          "column": 10,
+          "offset": 503
+        },
+        "end": {
+          "line": 26,
+          "column": 26,
+          "offset": 519
+        }
+      }
+    },
+    {
+      "targetId": "node:7.1.1.1.0:paragraph",
+      "nodeType": "paragraph",
+      "text": "Nested pending task",
+      "sourceRange": {
+        "start": {
+          "line": 27,
+          "column": 10,
+          "offset": 529
+        },
+        "end": {
+          "line": 27,
+          "column": 29,
+          "offset": 548
+        }
+      }
+    },
+    {
+      "targetId": "node:7.1.1.1.0.0:text",
+      "nodeType": "text",
+      "text": "Nested pending task",
+      "sourceRange": {
+        "start": {
+          "line": 27,
+          "column": 10,
+          "offset": 529
+        },
+        "end": {
+          "line": 27,
+          "column": 29,
+          "offset": 548
+        }
+      }
+    },
+    {
+      "targetId": "node:8:heading",
+      "nodeType": "heading",
+      "text": "Phase Bravo",
+      "sourceRange": {
+        "start": {
+          "line": 29,
+          "column": 1,
+          "offset": 550
+        },
+        "end": {
+          "line": 29,
+          "column": 15,
+          "offset": 564
+        }
+      }
+    },
+    {
+      "targetId": "node:8.0:text",
+      "nodeType": "text",
+      "text": "Phase Bravo",
+      "sourceRange": {
+        "start": {
+          "line": 29,
+          "column": 4,
+          "offset": 553
+        },
+        "end": {
+          "line": 29,
+          "column": 15,
+          "offset": 564
+        }
+      }
+    },
+    {
+      "targetId": "node:9:paragraph",
+      "nodeType": "paragraph",
+      "text": "Final paragraph after the nested Alpha section.",
+      "sourceRange": {
+        "start": {
+          "line": 31,
+          "column": 1,
+          "offset": 566
+        },
+        "end": {
+          "line": 31,
+          "column": 48,
+          "offset": 613
+        }
+      }
+    },
+    {
+      "targetId": "node:9.0:text",
+      "nodeType": "text",
+      "text": "Final paragraph after the nested Alpha section.",
+      "sourceRange": {
+        "start": {
+          "line": 31,
+          "column": 1,
+          "offset": 566
+        },
+        "end": {
+          "line": 31,
+          "column": 48,
+          "offset": 613
+        }
+      }
+    }
+  ],
+  "tables": [
+    {
+      "targetId": "node:6:table",
+      "cells": [
+        {
+          "targetId": "node:6.0.0:tableCell",
+          "text": "Step",
+          "rowIndex": 0,
+          "columnIndex": 0,
+          "header": true,
+          "sourceRange": {
+            "start": {
+              "line": 19,
+              "column": 1,
+              "offset": 344
+            },
+            "end": {
+              "line": 19,
+              "column": 8,
+              "offset": 351
+            }
+          }
+        },
+        {
+          "targetId": "node:6.0.1:tableCell",
+          "text": "Owner",
+          "rowIndex": 0,
+          "columnIndex": 1,
+          "header": true,
+          "sourceRange": {
+            "start": {
+              "line": 19,
+              "column": 8,
+              "offset": 351
+            },
+            "end": {
+              "line": 19,
+              "column": 16,
+              "offset": 359
+            }
+          }
+        },
+        {
+          "targetId": "node:6.0.2:tableCell",
+          "text": "State",
+          "rowIndex": 0,
+          "columnIndex": 2,
+          "header": true,
+          "sourceRange": {
+            "start": {
+              "line": 19,
+              "column": 16,
+              "offset": 359
+            },
+            "end": {
+              "line": 19,
+              "column": 25,
+              "offset": 368
+            }
+          }
+        },
+        {
+          "targetId": "node:6.1.0:tableCell",
+          "text": "Design",
+          "rowIndex": 1,
+          "columnIndex": 0,
+          "header": false,
+          "sourceRange": {
+            "start": {
+              "line": 21,
+              "column": 1,
+              "offset": 389
+            },
+            "end": {
+              "line": 21,
+              "column": 10,
+              "offset": 398
+            }
+          }
+        },
+        {
+          "targetId": "node:6.1.1:tableCell",
+          "text": "docs",
+          "rowIndex": 1,
+          "columnIndex": 1,
+          "header": false,
+          "sourceRange": {
+            "start": {
+              "line": 21,
+              "column": 10,
+              "offset": 398
+            },
+            "end": {
+              "line": 21,
+              "column": 17,
+              "offset": 405
+            }
+          }
+        },
+        {
+          "targetId": "node:6.1.2:tableCell",
+          "text": "ready",
+          "rowIndex": 1,
+          "columnIndex": 2,
+          "header": false,
+          "sourceRange": {
+            "start": {
+              "line": 21,
+              "column": 17,
+              "offset": 405
+            },
+            "end": {
+              "line": 21,
+              "column": 26,
+              "offset": 414
+            }
+          }
+        },
+        {
+          "targetId": "node:6.2.0:tableCell",
+          "text": "Build",
+          "rowIndex": 2,
+          "columnIndex": 0,
+          "header": false,
+          "sourceRange": {
+            "start": {
+              "line": 22,
+              "column": 1,
+              "offset": 415
+            },
+            "end": {
+              "line": 22,
+              "column": 9,
+              "offset": 423
+            }
+          }
+        },
+        {
+          "targetId": "node:6.2.1:tableCell",
+          "text": "engine",
+          "rowIndex": 2,
+          "columnIndex": 1,
+          "header": false,
+          "sourceRange": {
+            "start": {
+              "line": 22,
+              "column": 9,
+              "offset": 423
+            },
+            "end": {
+              "line": 22,
+              "column": 18,
+              "offset": 432
+            }
+          }
+        },
+        {
+          "targetId": "node:6.2.2:tableCell",
+          "text": "blocked",
+          "rowIndex": 2,
+          "columnIndex": 2,
+          "header": false,
+          "sourceRange": {
+            "start": {
+              "line": 22,
+              "column": 18,
+              "offset": 432
+            },
+            "end": {
+              "line": 22,
+              "column": 29,
+              "offset": 443
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "lists": [
+    {
+      "targetId": "node:7:list",
+      "ordered": true,
+      "start": 1,
+      "items": [
+        {
+          "targetId": "node:7.0:listItem",
+          "itemIndex": 0,
+          "depth": 0,
+          "sourceRange": {
+            "start": {
+              "line": 24,
+              "column": 1,
+              "offset": 445
+            },
+            "end": {
+              "line": 24,
+              "column": 23,
+              "offset": 467
+            }
+          }
+        },
+        {
+          "targetId": "node:7.1:listItem",
+          "itemIndex": 1,
+          "depth": 0,
+          "sourceRange": {
+            "start": {
+              "line": 25,
+              "column": 1,
+              "offset": 468
+            },
+            "end": {
+              "line": 27,
+              "column": 29,
+              "offset": 548
+            }
+          }
+        }
+      ]
+    },
+    {
+      "targetId": "node:7.1.1:list",
+      "ordered": false,
+      "items": [
+        {
+          "targetId": "node:7.1.1.0:listItem",
+          "itemIndex": 0,
+          "depth": 1,
+          "checked": true,
+          "sourceRange": {
+            "start": {
+              "line": 26,
+              "column": 4,
+              "offset": 497
+            },
+            "end": {
+              "line": 26,
+              "column": 26,
+              "offset": 519
+            }
+          }
+        },
+        {
+          "targetId": "node:7.1.1.1:listItem",
+          "itemIndex": 1,
+          "depth": 1,
+          "checked": false,
+          "sourceRange": {
+            "start": {
+              "line": 27,
+              "column": 4,
+              "offset": 523
+            },
+            "end": {
+              "line": 27,
+              "column": 29,
+              "offset": 548
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "links": [
+    {
+      "targetId": "node:1.1:link",
+      "url": "https://example.com/overview",
+      "text": "overview",
+      "title": "Overview",
+      "sourceRange": {
+        "start": {
+          "line": 9,
+          "column": 7,
+          "offset": 98
+        },
+        "end": {
+          "line": 9,
+          "column": 58,
+          "offset": 149
+        }
+      }
+    },
+    {
+      "targetId": "node:3.3:link",
+      "url": "./phase-alpha.md",
+      "text": "relative link",
+      "sourceRange": {
+        "start": {
+          "line": 13,
+          "column": 53,
+          "offset": 252
+        },
+        "end": {
+          "line": 13,
+          "column": 86,
+          "offset": 285
+        }
+      }
+    }
+  ],
+  "queryResults": {
+    "phaseAlphaChildren": [
+      "Phase Alpha Details"
+    ],
+    "paragraphSpansWithSourceText": [
+      "Paragraph with inline code, source span text, and relative link."
+    ],
+    "orderedListTargets": [
+      "node:7:list"
+    ],
+    "relativeLinkTargets": [
+      "node:3.3:link"
+    ],
+    "sectionSourceSlice": {
+      "range": {
+        "start": {
+          "line": 15,
+          "column": 1,
+          "offset": 288
+        },
+        "end": {
+          "line": 15,
+          "column": 24,
+          "offset": 311
+        }
+      },
+      "text": "### Phase Alpha Details"
+    },
+    "relativeLinkSourceSlice": {
+      "range": {
+        "start": {
+          "line": 13,
+          "column": 53,
+          "offset": 252
+        },
+        "end": {
+          "line": 13,
+          "column": 86,
+          "offset": 285
+        }
+      },
+      "text": "[relative link](./phase-alpha.md)"
+    }
+  }
+}
