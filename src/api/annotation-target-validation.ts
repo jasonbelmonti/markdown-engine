@@ -192,7 +192,7 @@ function sortableDiagnostic(
   return {
     diagnostic: {
       ...diagnostic,
-      target: serializableTarget(diagnostic.target),
+      target: cloneDiagnosticTarget(diagnostic.target),
     },
     order,
   };
@@ -341,22 +341,46 @@ export function cloneAnnotationTarget(
   target: EngineAnnotationTarget,
 ): EngineAnnotationTarget {
   if (isAnnotationTargetCandidate(target)) {
-    if (target.kind === "node" && isNodeTarget(target.target)) {
-      return {
-        kind: "node",
-        target: cloneEngineTarget(target.target),
-      };
-    }
+    const clonedTarget = cloneKnownAnnotationTarget(target);
 
-    if (target.kind === "source" && isSourceRange(target.range)) {
-      return {
-        kind: "source",
-        range: cloneSourceRange(target.range),
-      };
+    if (clonedTarget !== undefined) {
+      return clonedTarget;
     }
   }
 
   return serializableTarget(target) as EngineAnnotationTarget;
+}
+
+function cloneDiagnosticTarget(target: unknown): unknown {
+  if (isAnnotationTargetCandidate(target)) {
+    const clonedTarget = cloneKnownAnnotationTarget(target);
+
+    if (clonedTarget !== undefined) {
+      return clonedTarget;
+    }
+  }
+
+  return serializableTarget(target);
+}
+
+function cloneKnownAnnotationTarget(
+  target: AnnotationTargetCandidate,
+): EngineAnnotationTarget | undefined {
+  if (target.kind === "node" && isNodeTarget(target.target)) {
+    return {
+      kind: "node",
+      target: cloneEngineTarget(target.target),
+    };
+  }
+
+  if (target.kind === "source" && isSourceRange(target.range)) {
+    return {
+      kind: "source",
+      range: cloneSourceRange(target.range),
+    };
+  }
+
+  return undefined;
 }
 
 function cloneEngineTarget(target: EngineTarget): EngineTarget {

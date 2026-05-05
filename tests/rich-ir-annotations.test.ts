@@ -289,6 +289,7 @@ describe("1.0 Rich IR annotation target validation", () => {
     const document = normalizeDraftFixture();
     const unsafeSourceRange = rangeWithExtraFields(7, 1, 77, 7, 3, 79);
     const unsafeNodeRange = rangeWithExtraFields(9, 1, 90, 9, 6, 95);
+    const unsafeOutOfBoundsRange = rangeWithExtraFields(1, 1, 0, 1, 8, 7);
     const unknownNodeTarget = {
       kind: "node",
       id: "node:missing:unsafe",
@@ -302,6 +303,9 @@ describe("1.0 Rich IR annotation target validation", () => {
       nodeAnnotation("annotation:unsafe-node-range", unknownNodeTarget, {
         callerOwnsMeaning: true,
       }),
+      sourceAnnotation("annotation:unsafe-out-of-bounds", unsafeOutOfBoundsRange, {
+        callerOwnsMeaning: true,
+      }),
     ]);
 
     const serialized = serialize(result, { pretty: true });
@@ -312,10 +316,27 @@ describe("1.0 Rich IR annotation target validation", () => {
     expect(parsed.annotations[1].target.target.sourceRange).toEqual(
       range(9, 1, 90, 9, 6, 95),
     );
+    expect(parsed.annotations[2].target.range).toEqual(range(1, 1, 0, 1, 8, 7));
     expect(parsed.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "annotation.target.outOfBounds",
+        sourceRange: range(1, 1, 0, 1, 8, 7),
+        target: {
+          kind: "source",
+          range: range(1, 1, 0, 1, 8, 7),
+        },
+      }),
       expect.objectContaining({
         code: "annotation.target.unknown",
         sourceRange: range(9, 1, 90, 9, 6, 95),
+        target: {
+          kind: "node",
+          target: {
+            kind: "node",
+            id: "node:missing:unsafe",
+            sourceRange: range(9, 1, 90, 9, 6, 95),
+          },
+        },
       }),
     ]);
   });
