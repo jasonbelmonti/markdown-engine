@@ -69,11 +69,13 @@ function diagnosticsForAnnotation(
     ];
   }
 
-  if (target.kind === "node") {
+  const kind = annotationTargetKind(target);
+
+  if (kind === "node") {
     return nodeTargetDiagnostics(target, validTargetIds, order);
   }
 
-  if (target.kind === "source") {
+  if (kind === "source") {
     return sourceTargetDiagnostics(target, documentSourceRange, order);
   }
 
@@ -95,7 +97,9 @@ function nodeTargetDiagnostics(
   validTargetIds: ReadonlySet<string>,
   order: number,
 ): SortableTargetDiagnostic[] {
-  if (!isNodeTarget(target.target)) {
+  const nodeTarget = annotationTargetValue(target);
+
+  if (!isNodeTarget(nodeTarget)) {
     return [
       sortableDiagnostic(
         {
@@ -109,7 +113,7 @@ function nodeTargetDiagnostics(
     ];
   }
 
-  if (validTargetIds.has(target.target.id)) {
+  if (validTargetIds.has(nodeTarget.id)) {
     return [];
   }
 
@@ -117,10 +121,10 @@ function nodeTargetDiagnostics(
     sortableDiagnostic(
       {
         code: "annotation.target.unknown",
-        message: `Annotation target '${target.target.id}' does not exist in the document.`,
+        message: `Annotation target '${nodeTarget.id}' does not exist in the document.`,
         severity: "error",
-        ...(target.target.sourceRange !== undefined
-          ? { sourceRange: cloneSourceRange(target.target.sourceRange) }
+        ...(nodeTarget.sourceRange !== undefined
+          ? { sourceRange: cloneSourceRange(nodeTarget.sourceRange) }
           : {}),
         target,
       },
@@ -134,7 +138,9 @@ function sourceTargetDiagnostics(
   documentSourceRange: SourceRange | undefined,
   order: number,
 ): SortableTargetDiagnostic[] {
-  if (!isSourceRange(target.range)) {
+  const range = annotationTargetRange(target);
+
+  if (!isSourceRange(range)) {
     return [
       sortableDiagnostic(
         {
@@ -148,14 +154,14 @@ function sourceTargetDiagnostics(
     ];
   }
 
-  if (sourceRangeIsInvalid(target.range)) {
+  if (sourceRangeIsInvalid(range)) {
     return [
       sortableDiagnostic(
         {
           code: "annotation.target.invalidRange",
           message: "Annotation source target range ends before it starts.",
           severity: "error",
-          sourceRange: cloneSourceRange(target.range),
+          sourceRange: cloneSourceRange(range),
           target,
         },
         order,
@@ -165,7 +171,7 @@ function sourceTargetDiagnostics(
 
   if (
     documentSourceRange !== undefined &&
-    !sourceRangeContains(documentSourceRange, target.range)
+    !sourceRangeContains(documentSourceRange, range)
   ) {
     return [
       sortableDiagnostic(
@@ -174,7 +180,7 @@ function sourceTargetDiagnostics(
           message:
             "Annotation source target range must be contained by the document source range.",
           severity: "error",
-          sourceRange: cloneSourceRange(target.range),
+          sourceRange: cloneSourceRange(range),
           target,
         },
         order,
@@ -342,7 +348,7 @@ function normalizePlainObjectProperty(
   key: string,
   path: WeakSet<object>,
 ): unknown {
-  const descriptor = Object.getOwnPropertyDescriptor(value, key);
+  const descriptor = ownPropertyDescriptor(value, key);
 
   if (descriptor === undefined) {
     return undefined;
@@ -353,6 +359,18 @@ function normalizePlainObjectProperty(
   }
 
   return normalizeSortValue(descriptor.value, path);
+}
+
+function annotationTargetKind(target: AnnotationTargetCandidate): unknown {
+  return ownDataProperty(target, "kind");
+}
+
+function annotationTargetValue(target: AnnotationTargetCandidate): unknown {
+  return ownDataProperty(target, "target");
+}
+
+function annotationTargetRange(target: AnnotationTargetCandidate): unknown {
+  return ownDataProperty(target, "range");
 }
 
 export function cloneAnnotationTarget(
@@ -384,17 +402,31 @@ function cloneDiagnosticTarget(target: unknown): unknown {
 function cloneKnownAnnotationTarget(
   target: AnnotationTargetCandidate,
 ): EngineAnnotationTarget | undefined {
-  if (target.kind === "node" && isNodeTarget(target.target)) {
+  const kind = annotationTargetKind(target);
+
+  if (kind === "node") {
+    const nodeTarget = annotationTargetValue(target);
+
+    if (!isNodeTarget(nodeTarget)) {
+      return undefined;
+    }
+
     return {
       kind: "node",
-      target: cloneEngineTarget(target.target),
+      target: cloneEngineTarget(nodeTarget),
     };
   }
 
-  if (target.kind === "source" && isSourceRange(target.range)) {
+  if (kind === "source") {
+    const range = annotationTargetRange(target);
+
+    if (!isSourceRange(range)) {
+      return undefined;
+    }
+
     return {
       kind: "source",
-      range: cloneSourceRange(target.range),
+      range: cloneSourceRange(range),
     };
   }
 
@@ -439,19 +471,25 @@ function isNodeTarget(target: unknown): target is EngineTarget {
     return false;
   }
 
-  if (target.kind !== "node" || typeof target.id !== "string") {
+  const kind = ownDataProperty(target, "kind");
+  const id = ownDataProperty(target, "id");
+  const path = ownDataProperty(target, "path");
+  const nodeType = ownDataProperty(target, "nodeType");
+  const sourceRange = ownDataProperty(target, "sourceRange");
+
+  if (kind !== "node" || typeof id !== "string") {
     return false;
   }
 
-  if (target.path !== undefined && !isTargetPath(target.path)) {
+  if (path !== undefined && !isTargetPath(path)) {
     return false;
   }
 
-  if (target.nodeType !== undefined && typeof target.nodeType !== "string") {
+  if (nodeType !== undefined && typeof nodeType !== "string") {
     return false;
   }
 
-  return target.sourceRange === undefined || isSourceRange(target.sourceRange);
+  return sourceRange === undefined || isSourceRange(sourceRange);
 }
 
 function isTargetPath(path: unknown): path is readonly number[] {
@@ -467,19 +505,29 @@ function isTargetPath(path: unknown): path is readonly number[] {
 }
 
 function isSourceRange(range: unknown): range is SourceRange {
+  if (!isPlainObject(range)) {
+    return false;
+  }
+
   return (
-    isPlainObject(range) &&
-    isSourcePosition(range.start) &&
-    isSourcePosition(range.end)
+    isSourcePosition(ownDataProperty(range, "start")) &&
+    isSourcePosition(ownDataProperty(range, "end"))
   );
 }
 
 function isSourcePosition(position: unknown): position is SourcePosition {
+  if (!isPlainObject(position)) {
+    return false;
+  }
+
+  const line = ownDataProperty(position, "line");
+  const column = ownDataProperty(position, "column");
+  const offset = ownDataProperty(position, "offset");
+
   return (
-    isPlainObject(position) &&
-    isPositiveInteger(position.line) &&
-    isPositiveInteger(position.column) &&
-    (position.offset === undefined || isNonNegativeInteger(position.offset))
+    isPositiveInteger(line) &&
+    isPositiveInteger(column) &&
+    (offset === undefined || isNonNegativeInteger(offset))
   );
 }
 
@@ -548,4 +596,22 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   const prototype = Object.getPrototypeOf(value);
 
   return prototype === Object.prototype || prototype === null;
+}
+
+function ownDataProperty(
+  value: Record<string, unknown>,
+  key: string,
+): unknown {
+  const descriptor = ownPropertyDescriptor(value, key);
+
+  return descriptor !== undefined && "value" in descriptor
+    ? descriptor.value
+    : undefined;
+}
+
+function ownPropertyDescriptor(
+  value: Record<string, unknown>,
+  key: string,
+): PropertyDescriptor | undefined {
+  return Object.getOwnPropertyDescriptor(value, key);
 }

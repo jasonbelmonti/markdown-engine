@@ -231,6 +231,9 @@ describe("1.0 Rich IR annotation target validation", () => {
         throw new Error("Expected target normalization not to invoke getters.");
       },
     });
+    const accessorKindTarget = throwingAccessorTarget("kind");
+    const accessorNodeTarget = throwingAccessorTarget("target", "node");
+    const accessorSourceTarget = throwingAccessorTarget("range", "source");
 
     const result = validateAnnotations(document, [
       malformedAnnotation("annotation:bigint-target", {
@@ -244,17 +247,25 @@ describe("1.0 Rich IR annotation target validation", () => {
         b: sharedTargetValue,
       }),
       malformedAnnotation("annotation:accessor-target", accessorTarget),
+      malformedAnnotation("annotation:accessor-kind-target", accessorKindTarget),
+      malformedAnnotation("annotation:accessor-node-target", accessorNodeTarget),
+      malformedAnnotation("annotation:accessor-source-target", accessorSourceTarget),
     ]);
 
-    expect(result).toMatchObject({
-      valid: false,
-      diagnostics: [
-        { code: "annotation.target.invalidKind", severity: "error" },
-        { code: "annotation.target.invalidKind", severity: "error" },
-        { code: "annotation.target.invalidKind", severity: "error" },
-        { code: "annotation.target.invalidKind", severity: "error" },
-      ],
-    });
+    expect(result.valid).toBe(false);
+    expect(result.diagnostics).toHaveLength(7);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "annotation.target.invalidKind",
+          severity: "error",
+        }),
+        expect.objectContaining({
+          code: "annotation.target.invalidRange",
+          severity: "error",
+        }),
+      ]),
+    );
 
     const serialized = serialize(result, { pretty: true });
     const parsed = JSON.parse(serialized);
@@ -277,6 +288,15 @@ describe("1.0 Rich IR annotation target validation", () => {
       expect.objectContaining({
         target: { bad: "[Accessor]", kind: "block" },
       }),
+      expect.objectContaining({
+        target: { kind: "[Accessor]" },
+      }),
+      expect.objectContaining({
+        target: { kind: "node", target: "[Accessor]" },
+      }),
+      expect.objectContaining({
+        target: { kind: "source", range: "[Accessor]" },
+      }),
     ]);
     expect(parsed.diagnostics).toEqual(
       expect.arrayContaining([
@@ -295,6 +315,18 @@ describe("1.0 Rich IR annotation target validation", () => {
         }),
         expect.objectContaining({
           target: { bad: "[Accessor]", kind: "block" },
+        }),
+        expect.objectContaining({
+          code: "annotation.target.invalidKind",
+          target: { kind: "[Accessor]" },
+        }),
+        expect.objectContaining({
+          code: "annotation.target.invalidKind",
+          target: { kind: "node", target: "[Accessor]" },
+        }),
+        expect.objectContaining({
+          code: "annotation.target.invalidRange",
+          target: { kind: "source", range: "[Accessor]" },
         }),
       ]),
     );
@@ -451,6 +483,26 @@ function malformedAnnotation(id: string, target: unknown): EngineAnnotation {
     target,
     payload: { callerOwnsMeaning: true },
   } as EngineAnnotation;
+}
+
+function throwingAccessorTarget(
+  property: string,
+  kind?: "node" | "source",
+): Record<string, unknown> {
+  const target: Record<string, unknown> = {};
+
+  if (kind !== undefined) {
+    target.kind = kind;
+  }
+
+  Object.defineProperty(target, property, {
+    enumerable: true,
+    get() {
+      throw new Error(`Expected ${property} getter not to be invoked.`);
+    },
+  });
+
+  return target;
 }
 
 function diagnosticSummary(result: AnnotationValidationResult) {
