@@ -355,6 +355,9 @@ describe("1.0 Rich IR annotation target validation", () => {
       ...paragraphTarget,
       path: unavailableArrayLengthTarget("target path"),
     };
+    const unavailablePathDescriptorTarget = unavailablePathDescriptorEngineTarget(
+      paragraphTarget.id,
+    );
 
     const result = validateAnnotations(document, [
       nodeAnnotation("annotation:oversized-path", validOversizedPathTarget, {
@@ -366,6 +369,13 @@ describe("1.0 Rich IR annotation target validation", () => {
       nodeAnnotation(
         "annotation:descriptor-unavailable-path",
         descriptorUnavailablePathTarget,
+        {
+          callerOwnsMeaning: true,
+        },
+      ),
+      nodeAnnotation(
+        "annotation:unavailable-path-descriptor",
+        unavailablePathDescriptorTarget,
         {
           callerOwnsMeaning: true,
         },
@@ -1192,6 +1202,38 @@ function unavailableArrayLengthTarget(label: string): readonly number[] {
       return Reflect.getOwnPropertyDescriptor(target, property);
     },
   });
+}
+
+function unavailablePathDescriptorEngineTarget(id: string): EngineTarget {
+  return new Proxy(
+    {},
+    {
+      get() {
+        throw new Error("Expected target getter not to escape validation.");
+      },
+      getOwnPropertyDescriptor(_target, property) {
+        if (property === "kind") {
+          return { configurable: true, enumerable: true, value: "node" };
+        }
+
+        if (property === "id") {
+          return { configurable: true, enumerable: true, value: id };
+        }
+
+        if (property === "nodeType") {
+          return { configurable: true, enumerable: true, value: "paragraph" };
+        }
+
+        if (property === "path") {
+          throw new Error(
+            "Expected path descriptor failure not to escape validation.",
+          );
+        }
+
+        return undefined;
+      },
+    },
+  ) as EngineTarget;
 }
 
 function revokedProxy(): object {

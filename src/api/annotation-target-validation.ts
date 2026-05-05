@@ -480,7 +480,7 @@ function cloneEngineTargetCandidate(target: unknown): EngineTarget | undefined {
     sourceRange !== undefined ? cloneSourceRangeCandidate(sourceRange) : undefined;
 
   if (
-    optionalDataPropertyIsInvalid(pathProperty) ||
+    pathProperty.kind === "accessor" ||
     optionalDataPropertyIsInvalid(nodeTypeProperty) ||
     optionalDataPropertyIsInvalid(sourceRangeProperty) ||
     pathClone?.kind === "invalid" ||
