@@ -259,6 +259,86 @@ describe("1.0 Rich IR annotation target validation", () => {
     );
   });
 
+  it("semantically validates optional node target source ranges", () => {
+    const document = normalizeDraftFixture();
+    const documentTarget = document.target ?? missing();
+    const documentSourceRange = document.sourceRange ?? missing();
+    const documentEndOffset = documentSourceRange.end.offset ?? missing();
+    const reversedNodeSourceRange = {
+      start: documentSourceRange.end,
+      end: documentSourceRange.start,
+    };
+    const partialOffsetOutOfBoundsNodeSourceRange = {
+      start: {
+        line: documentSourceRange.start.line,
+        column: documentSourceRange.start.column,
+        offset: documentEndOffset + 1,
+      },
+      end: {
+        line: documentSourceRange.end.line,
+        column: documentSourceRange.end.column,
+      },
+    };
+    const partialOffsetInBoundsNodeSourceRange = {
+      start: {
+        line: documentSourceRange.start.line,
+        column: documentSourceRange.start.column,
+        offset: documentSourceRange.start.offset ?? 0,
+      },
+      end: {
+        line: documentSourceRange.end.line,
+        column: documentSourceRange.end.column,
+      },
+    };
+    const reversedNodeTarget = {
+      ...documentTarget,
+      sourceRange: reversedNodeSourceRange,
+    };
+    const outOfBoundsNodeTarget = {
+      ...documentTarget,
+      sourceRange: partialOffsetOutOfBoundsNodeSourceRange,
+    };
+    const inBoundsNodeTarget = {
+      ...documentTarget,
+      sourceRange: partialOffsetInBoundsNodeSourceRange,
+    };
+
+    const result = validateAnnotations(document, [
+      nodeAnnotation("annotation:reversed-node-source-range", reversedNodeTarget, {
+        callerOwnsMeaning: true,
+      }),
+      nodeAnnotation("annotation:out-of-bounds-node-source-range", outOfBoundsNodeTarget, {
+        callerOwnsMeaning: true,
+      }),
+      nodeAnnotation("annotation:in-bounds-node-source-range", inBoundsNodeTarget, {
+        callerOwnsMeaning: true,
+      }),
+    ]);
+
+    expect(result.valid).toBe(false);
+    expect(result.diagnostics).toHaveLength(2);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "annotation.target.invalidRange",
+          sourceRange: reversedNodeSourceRange,
+          target: {
+            kind: "node",
+            target: reversedNodeTarget,
+          },
+        }),
+        expect.objectContaining({
+          code: "annotation.target.outOfBounds",
+          sourceRange: partialOffsetOutOfBoundsNodeSourceRange,
+          target: {
+            kind: "node",
+            target: outOfBoundsNodeTarget,
+          },
+        }),
+      ]),
+    );
+  });
+
   it("sorts same-position diagnostics with offsets before diagnostics without offsets", () => {
     const document = normalizeDraftFixture();
     const knownOffsetTarget = {

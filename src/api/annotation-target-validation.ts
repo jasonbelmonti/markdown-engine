@@ -89,7 +89,7 @@ function diagnosticsForAnnotation(
   const kind = annotationTargetKind(target);
 
   if (kind === "node") {
-    return nodeTargetDiagnostics(target, validTargetIds, order);
+    return nodeTargetDiagnostics(target, validTargetIds, documentSourceRange, order);
   }
 
   if (kind === "source") {
@@ -112,6 +112,7 @@ function diagnosticsForAnnotation(
 function nodeTargetDiagnostics(
   target: AnnotationTargetCandidate,
   validTargetIds: ReadonlySet<string>,
+  documentSourceRange: SourceRange | undefined,
   order: number,
 ): SortableTargetDiagnostic[] {
   const nodeTarget = cloneEngineTargetCandidate(annotationTargetValue(target));
@@ -128,6 +129,17 @@ function nodeTargetDiagnostics(
         order,
       ),
     ];
+  }
+
+  const sourceRangeDiagnostic = nodeTargetSourceRangeDiagnostic(
+    target,
+    nodeTarget,
+    documentSourceRange,
+    order,
+  );
+
+  if (sourceRangeDiagnostic !== undefined) {
+    return [sourceRangeDiagnostic];
   }
 
   if (validTargetIds.has(nodeTarget.id)) {
@@ -148,6 +160,49 @@ function nodeTargetDiagnostics(
       order,
     ),
   ];
+}
+
+function nodeTargetSourceRangeDiagnostic(
+  target: AnnotationTargetCandidate,
+  nodeTarget: EngineTarget,
+  documentSourceRange: SourceRange | undefined,
+  order: number,
+): SortableTargetDiagnostic | undefined {
+  if (nodeTarget.sourceRange === undefined) {
+    return undefined;
+  }
+
+  if (sourceRangeIsInvalid(nodeTarget.sourceRange)) {
+    return sortableDiagnostic(
+      {
+        code: "annotation.target.invalidRange",
+        message: "Annotation node target source range ends before it starts.",
+        severity: "error",
+        sourceRange: cloneSourceRange(nodeTarget.sourceRange),
+        target,
+      },
+      order,
+    );
+  }
+
+  if (
+    documentSourceRange !== undefined &&
+    !sourceRangeContains(documentSourceRange, nodeTarget.sourceRange)
+  ) {
+    return sortableDiagnostic(
+      {
+        code: "annotation.target.outOfBounds",
+        message:
+          "Annotation node target source range must be contained by the document source range.",
+        severity: "error",
+        sourceRange: cloneSourceRange(nodeTarget.sourceRange),
+        target,
+      },
+      order,
+    );
+  }
+
+  return undefined;
 }
 
 function sourceTargetDiagnostics(
