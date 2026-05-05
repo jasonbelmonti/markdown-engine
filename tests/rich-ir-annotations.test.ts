@@ -162,27 +162,27 @@ describe("1.0 Rich IR annotation target validation", () => {
       {
         code: "annotation.target.invalidKind",
         sourceStart: undefined,
-        targetKey: "node:1:paragraph",
+        targetKey: undefined,
       },
       {
         code: "annotation.target.invalidKind",
         sourceStart: undefined,
-        targetKey: "node:z",
+        targetKey: undefined,
       },
       {
         code: "annotation.target.invalidKind",
         sourceStart: undefined,
-        targetKey: "node:ä",
+        targetKey: undefined,
       },
       {
         code: "annotation.target.invalidKind",
         sourceStart: undefined,
-        targetKey: "block",
+        targetKey: undefined,
       },
       {
         code: "annotation.target.invalidRange",
         sourceStart: undefined,
-        targetKey: "source",
+        targetKey: undefined,
       },
     ]);
   });
@@ -543,132 +543,38 @@ describe("1.0 Rich IR annotation target validation", () => {
     const parsed = JSON.parse(serialized);
 
     expect(serialized).toEqual(serialize(result, { pretty: true }));
-    expect(parsed.annotations).toEqual([
-      expect.objectContaining({
-        target: { kind: "block", value: "1" },
-      }),
-      expect.objectContaining({
-        target: { kind: "block", self: "[Circular]" },
-      }),
-      expect.objectContaining({
-        target: {
-          a: { value: "shared" },
-          b: { value: "shared" },
-          kind: "block",
-        },
-      }),
-      expect.objectContaining({
-        target: { bad: "[Accessor]", kind: "block" },
-      }),
-      expect.objectContaining({
-        target: { kind: "[Accessor]" },
-      }),
-      expect.objectContaining({
-        target: { kind: "node", target: "[Accessor]" },
-      }),
-      expect.objectContaining({
-        target: { kind: "source", range: "[Accessor]" },
-      }),
-      expect.objectContaining({
-        target: ["[Accessor]"],
-      }),
-      expect.objectContaining({
-        target: {
-          kind: "node",
-          target: {
-            id: "node:accessor-path",
-            kind: "node",
-            path: ["[Accessor]"],
-          },
-        },
-      }),
-      expect.objectContaining({
-        target: {
-          kind: "node",
-          target: {
-            id: paragraphTarget.id,
-            kind: "node",
-            path: ["[Accessor]"],
-          },
-        },
-      }),
-      expect.objectContaining({
-        target: [1],
-      }),
-      expect.objectContaining({
-        target: "[Unavailable]",
-      }),
-      expect.objectContaining({
-        target: "[Unavailable]",
-      }),
-      expect.objectContaining({
-        target: "[Unavailable]",
-      }),
-      expect.objectContaining({
-        target: "[Function]",
-      }),
-      expect.objectContaining({
-        target: "[Function]",
-      }),
-      expect.objectContaining({
-        target: "[Unavailable]",
-      }),
+    expect(parsed.annotations.map((annotation) => annotation.target)).toEqual([
+      "[Unavailable]",
+      "[Unavailable]",
+      "[Unavailable]",
+      "[Unavailable]",
+      "[Unavailable]",
+      "[Unavailable]",
+      "[Unavailable]",
+      ["[Accessor]"],
+      "[Unavailable]",
+      "[Unavailable]",
+      [1],
+      "[Unavailable]",
+      "[Unavailable]",
+      "[Unavailable]",
+      "[Function]",
+      "[Function]",
+      "[Unavailable]",
     ]);
     expect(parsed.diagnostics).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          target: { kind: "block", value: "1" },
-        }),
-        expect.objectContaining({
-          target: { kind: "block", self: "[Circular]" },
-        }),
-        expect.objectContaining({
-          target: {
-            a: { value: "shared" },
-            b: { value: "shared" },
-            kind: "block",
-          },
-        }),
-        expect.objectContaining({
-          target: { bad: "[Accessor]", kind: "block" },
-        }),
-        expect.objectContaining({
           code: "annotation.target.invalidKind",
-          target: { kind: "[Accessor]" },
-        }),
-        expect.objectContaining({
-          code: "annotation.target.invalidKind",
-          target: { kind: "node", target: "[Accessor]" },
+          target: "[Unavailable]",
         }),
         expect.objectContaining({
           code: "annotation.target.invalidRange",
-          target: { kind: "source", range: "[Accessor]" },
+          target: "[Unavailable]",
         }),
         expect.objectContaining({
           code: "annotation.target.invalidKind",
           target: ["[Accessor]"],
-        }),
-        expect.objectContaining({
-          code: "annotation.target.invalidKind",
-          target: {
-            kind: "node",
-            target: {
-              id: "node:accessor-path",
-              kind: "node",
-              path: ["[Accessor]"],
-            },
-          },
-        }),
-        expect.objectContaining({
-          code: "annotation.target.invalidKind",
-          target: {
-            kind: "node",
-            target: {
-              id: paragraphTarget.id,
-              kind: "node",
-              path: ["[Accessor]"],
-            },
-          },
         }),
         expect.objectContaining({
           code: "annotation.target.invalidKind",
@@ -753,7 +659,8 @@ describe("1.0 Rich IR annotation target validation", () => {
         target: "[Unavailable]",
       }),
     ]);
-    expect(wideProxy.descriptorReads()).toBeLessThan(5_000);
+    expect(wideProxy.ownKeyReads()).toBe(0);
+    expect(wideProxy.descriptorReads()).toBeLessThan(20);
     expect(serialized.length).toBeLessThan(1_000);
   });
 
@@ -780,37 +687,6 @@ describe("1.0 Rich IR annotation target validation", () => {
   it("rejects accessor-backed optional target fields", () => {
     const document = normalizeDraftFixture();
     const paragraphTarget = requireTarget(firstNode(document, "paragraph"));
-    const expectedPathTarget = {
-      kind: "node",
-      target: {
-        id: paragraphTarget.id,
-        kind: "node",
-        path: "[Accessor]",
-      },
-    };
-    const expectedNodeTypeTarget = {
-      kind: "node",
-      target: {
-        id: paragraphTarget.id,
-        kind: "node",
-        nodeType: "[Accessor]",
-      },
-    };
-    const expectedSourceRangeTarget = {
-      kind: "node",
-      target: {
-        id: paragraphTarget.id,
-        kind: "node",
-        sourceRange: "[Accessor]",
-      },
-    };
-    const expectedSourceOffsetTarget = {
-      kind: "source",
-      range: {
-        end: { line: 7, column: 3, offset: 79 },
-        start: { line: 7, column: 1, offset: "[Accessor]" },
-      },
-    };
 
     const result = validateAnnotations(document, [
       malformedAnnotation("annotation:accessor-path", {
@@ -839,29 +715,21 @@ describe("1.0 Rich IR annotation target validation", () => {
 
     expect(result.valid).toBe(false);
     expect(result.diagnostics).toHaveLength(4);
-    expect(parsed.annotations).toEqual([
-      expect.objectContaining({ target: expectedPathTarget }),
-      expect.objectContaining({ target: expectedNodeTypeTarget }),
-      expect.objectContaining({ target: expectedSourceRangeTarget }),
-      expect.objectContaining({ target: expectedSourceOffsetTarget }),
+    expect(parsed.annotations.map((annotation) => annotation.target)).toEqual([
+      "[Unavailable]",
+      "[Unavailable]",
+      "[Unavailable]",
+      "[Unavailable]",
     ]);
     expect(parsed.diagnostics).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           code: "annotation.target.invalidKind",
-          target: expectedPathTarget,
-        }),
-        expect.objectContaining({
-          code: "annotation.target.invalidKind",
-          target: expectedNodeTypeTarget,
-        }),
-        expect.objectContaining({
-          code: "annotation.target.invalidKind",
-          target: expectedSourceRangeTarget,
+          target: "[Unavailable]",
         }),
         expect.objectContaining({
           code: "annotation.target.invalidRange",
-          target: expectedSourceOffsetTarget,
+          target: "[Unavailable]",
         }),
       ]),
     );
@@ -1168,9 +1036,11 @@ function wideObjectTarget(propertyCount: number): Record<string, unknown> {
 
 function wideProxyObjectTarget(propertyCount: number): {
   descriptorReads: () => number;
+  ownKeyReads: () => number;
   target: Record<string, unknown>;
 } {
   let descriptorReadCount = 0;
+  let ownKeyReadCount = 0;
   const keys = Array.from({ length: propertyCount }, (_, index) => `wide:${index}`);
   const target = new Proxy(
     {},
@@ -1191,6 +1061,7 @@ function wideProxyObjectTarget(propertyCount: number): {
         return Object.prototype;
       },
       ownKeys() {
+        ownKeyReadCount += 1;
         return ["kind", ...keys];
       },
     },
@@ -1198,6 +1069,7 @@ function wideProxyObjectTarget(propertyCount: number): {
 
   return {
     descriptorReads: () => descriptorReadCount,
+    ownKeyReads: () => ownKeyReadCount,
     target,
   };
 }

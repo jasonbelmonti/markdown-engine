@@ -2,7 +2,6 @@ export const ACCESSOR_PLACEHOLDER = "[Accessor]";
 export const FUNCTION_PLACEHOLDER = "[Function]";
 export const UNAVAILABLE_PLACEHOLDER = "[Unavailable]";
 export const MAX_NORMALIZED_ARRAY_LENGTH = 1_024;
-export const MAX_NORMALIZED_OBJECT_KEYS = 1_024;
 export const MAX_NORMALIZED_DEPTH = 64;
 export const MAX_NORMALIZED_WORK = 2_048;
 
@@ -16,11 +15,6 @@ interface NormalizeRuntimeContext {
   cache: WeakMap<object, unknown>;
   path: WeakSet<object>;
   remainingWork: number;
-}
-
-interface EnumerableRuntimeProperty {
-  key: string;
-  property: OwnRuntimeProperty;
 }
 
 export function normalizeRuntimeValue(
@@ -67,8 +61,6 @@ export function normalizeRuntimeValue(
 
     if (isArray(value)) {
       normalized = normalizeArrayValue(value, context, depth);
-    } else if (isPlainObject(value)) {
-      normalized = normalizePlainObjectValue(value, context, depth);
     } else {
       normalized = UNAVAILABLE_PLACEHOLDER;
     }
@@ -204,51 +196,6 @@ function normalizeArrayProperty(
   return normalizeRuntimeValue(property.value, context, depth - 1);
 }
 
-function normalizePlainObjectValue(
-  value: Record<string, unknown>,
-  context: NormalizeRuntimeContext,
-  depth: number,
-): unknown {
-  if (!reserveNormalizationWork(context, 1)) {
-    return UNAVAILABLE_PLACEHOLDER;
-  }
-
-  const properties = boundedEnumerableOwnProperties(value, context);
-
-  if (properties === undefined) {
-    return UNAVAILABLE_PLACEHOLDER;
-  }
-
-  return Object.fromEntries(
-    properties
-      .sort((left, right) => compareStrings(left.key, right.key))
-      .map(({ key, property }) => [
-        key,
-        normalizePlainObjectProperty(property, context, depth),
-      ]),
-  );
-}
-
-function normalizePlainObjectProperty(
-  property: OwnRuntimeProperty,
-  context: NormalizeRuntimeContext,
-  depth: number,
-): unknown {
-  if (property.kind === "missing") {
-    return undefined;
-  }
-
-  if (property.kind === "accessor") {
-    return ACCESSOR_PLACEHOLDER;
-  }
-
-  if (property.kind === "unavailable") {
-    return UNAVAILABLE_PLACEHOLDER;
-  }
-
-  return normalizeRuntimeValue(property.value, context, depth - 1);
-}
-
 function cloneNormalizedRuntimeValue(
   value: unknown,
   context: NormalizeRuntimeContext,
@@ -275,27 +222,7 @@ function cloneNormalizedRuntimeValue(
     );
   }
 
-  const keys = Object.keys(value);
-
-  if (
-    keys.length > MAX_NORMALIZED_OBJECT_KEYS ||
-    !reserveNormalizationWork(context, keys.length + 1)
-  ) {
-    return UNAVAILABLE_PLACEHOLDER;
-  }
-
-  return Object.fromEntries(
-    keys
-      .sort(compareStrings)
-      .map((key) => [
-        key,
-        cloneNormalizedRuntimeValue(
-          (value as Record<string, unknown>)[key],
-          context,
-          depth - 1,
-        ),
-      ]),
-  );
+  return UNAVAILABLE_PLACEHOLDER;
 }
 
 function createNormalizeRuntimeContext(): NormalizeRuntimeContext {
@@ -319,37 +246,6 @@ function reserveNormalizationWork(
   return true;
 }
 
-function boundedEnumerableOwnProperties(
-  value: Record<string, unknown>,
-  context: NormalizeRuntimeContext,
-): EnumerableRuntimeProperty[] | undefined {
-  const properties: EnumerableRuntimeProperty[] = [];
-
-  try {
-    for (const key in value) {
-      if (!reserveNormalizationWork(context, 1)) {
-        return undefined;
-      }
-
-      const property = ownRuntimeProperty(value, key);
-
-      if (property.kind === "missing") {
-        continue;
-      }
-
-      properties.push({ key, property });
-
-      if (properties.length > MAX_NORMALIZED_OBJECT_KEYS) {
-        return undefined;
-      }
-    }
-  } catch {
-    return undefined;
-  }
-
-  return properties;
-}
-
 function objectPrototype(value: object): object | null | undefined {
   try {
     return Object.getPrototypeOf(value);
@@ -360,16 +256,4 @@ function objectPrototype(value: object): object | null | undefined {
 
 function isNonNegativeInteger(value: unknown): value is number {
   return typeof value === "number" && Number.isInteger(value) && value >= 0;
-}
-
-function compareStrings(left: string, right: string): number {
-  if (left < right) {
-    return -1;
-  }
-
-  if (left > right) {
-    return 1;
-  }
-
-  return 0;
 }
