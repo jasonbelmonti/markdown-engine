@@ -207,6 +207,29 @@ describe("1.0 Rich IR annotation target validation", () => {
         { code: "annotation.target.invalidKind", severity: "error" },
       ],
     });
+
+    const serialized = serialize(result, { pretty: true });
+    const parsed = JSON.parse(serialized);
+
+    expect(serialized).toEqual(serialize(result, { pretty: true }));
+    expect(parsed.annotations).toEqual([
+      expect.objectContaining({
+        target: { kind: "block", value: "1" },
+      }),
+      expect.objectContaining({
+        target: { kind: "block", self: "[Circular]" },
+      }),
+    ]);
+    expect(parsed.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          target: { kind: "block", value: "1" },
+        }),
+        expect.objectContaining({
+          target: { kind: "block", self: "[Circular]" },
+        }),
+      ]),
+    );
   });
 
   it("serializes annotation validation results in stable key order", () => {

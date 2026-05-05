@@ -198,7 +198,13 @@ function sortableDiagnostic(
   diagnostic: EngineTargetDiagnostic,
   order: number,
 ): SortableTargetDiagnostic {
-  return { diagnostic, order };
+  return {
+    diagnostic: {
+      ...diagnostic,
+      target: serializableTarget(diagnostic.target),
+    },
+    order,
+  };
 }
 
 function compareSortableDiagnostics(
@@ -280,6 +286,10 @@ function targetSortKey(target: unknown): string {
   }
 }
 
+function serializableTarget(target: unknown): unknown {
+  return normalizeSortValue(target, new WeakSet());
+}
+
 function normalizeSortValue(value: unknown, seen: WeakSet<object>): unknown {
   if (typeof value === "bigint") {
     return value.toString();
@@ -335,7 +345,7 @@ function cloneAnnotationTarget(target: EngineAnnotationTarget): EngineAnnotation
     }
   }
 
-  return target;
+  return serializableTarget(target) as EngineAnnotationTarget;
 }
 
 function cloneEngineTarget(target: EngineTarget): EngineTarget {
