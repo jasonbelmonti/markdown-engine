@@ -77,24 +77,30 @@ const dependencySections = [
   "peerDependencies",
   "optionalDependencies",
 ];
-const annotationSemanticPatterns = [
-  { label: "SpecTrace", pattern: /\bSpecTrace\b/ },
+const annotationSemanticTerms = [
+  { label: "SpecTrace", phrases: [["spec", "trace"]] },
   {
     label: "markdown-profile",
-    pattern: /(?:^|[^\w])markdown[-_]profile(?:$|[^\w])/i,
+    phrases: [["markdown", "profile"]],
   },
   {
     label: "markdown-runtime",
-    pattern: /(?:^|[^\w])markdown[-_]runtime(?:$|[^\w])/i,
+    phrases: [["markdown", "runtime"]],
   },
-  { label: "MCP", pattern: /(?:^|[^\w])MCP(?:$|[^\w])/i },
-  { label: "LLM", pattern: /(?:^|[^\w])LLM(?:$|[^\w])/i },
-  { label: "entity registry", pattern: /\bentity(?:Registry|Registries)\b/i },
-  { label: "entity ID", pattern: /\bentity(?:Id|ID)\b/ },
-  { label: "issue key", pattern: /\bissueKey\b/ },
-  { label: "profile ID", pattern: /\bprofileId\b/ },
-  { label: "relationship type", pattern: /\brelationshipType\b/ },
-  { label: "semantic evaluator", pattern: /\bsemanticEvaluator\b/ },
+  { label: "MCP", phrases: [["mcp"], ["model", "context", "protocol"]] },
+  { label: "LLM", phrases: [["llm"], ["large", "language", "model"]] },
+  {
+    label: "entity registry",
+    phrases: [
+      ["entity", "registry"],
+      ["entity", "registries"],
+    ],
+  },
+  { label: "entity ID", phrases: [["entity", "id"]] },
+  { label: "issue key", phrases: [["issue", "key"]] },
+  { label: "profile ID", phrases: [["profile", "id"]] },
+  { label: "relationship type", phrases: [["relationship", "type"]] },
+  { label: "semantic evaluator", phrases: [["semantic", "evaluator"]] },
 ];
 
 if (isMain(process.argv[1])) {
@@ -161,22 +167,95 @@ export function scanAnnotationSemanticLeakage(repoRoot = defaultRepoRoot) {
 
 export function inspectAnnotationSemanticLeakage(sources) {
   return sources.flatMap(({ filePath, content }) => {
+    const words = semanticWordsInContent(content);
     const matches = [];
 
-    for (const { label, pattern } of annotationSemanticPatterns) {
-      const match = pattern.exec(content);
+    for (const { label, phrases } of annotationSemanticTerms) {
+      const match = phrases
+        .map((phrase) => findPhrase(content, words, phrase))
+        .find((phraseMatch) => phraseMatch !== undefined);
 
-      if (match !== null) {
+      if (match !== undefined) {
         matches.push({
           filePath,
           label,
-          term: match[0],
+          term: match.term,
         });
       }
     }
 
     return matches;
   });
+}
+
+function semanticWordsInContent(content) {
+  return Array.from(content.matchAll(/[A-Za-z_$][\w$-]*/g)).flatMap(
+    (match, tokenIndex) => {
+      const start = match.index ?? 0;
+      const end = start + match[0].length;
+
+      return semanticWords(match[0]).map((word) => ({
+        end,
+        raw: match[0],
+        start,
+        tokenIndex,
+        word,
+      }));
+    },
+  );
+}
+
+function findPhrase(content, words, phrase) {
+  for (let index = 0; index < words.length; index += 1) {
+    const phraseMatches = phrase.every(
+      (word, phraseIndex) => words[index + phraseIndex]?.word === word,
+    );
+
+    if (phraseMatches) {
+      const matchedWords = words.slice(index, index + phrase.length);
+      if (!hasOnlyPhraseSeparators(content, matchedWords)) {
+        continue;
+      }
+
+      return {
+        term: uniqueConsecutive(
+          matchedWords.map(({ raw, tokenIndex }) => ({ raw, tokenIndex })),
+        )
+          .map(({ raw }) => raw)
+          .join(" "),
+      };
+    }
+  }
+
+  return undefined;
+}
+
+function hasOnlyPhraseSeparators(content, words) {
+  return words.every((word, index) => {
+    const previousWord = words[index - 1];
+    if (previousWord === undefined || previousWord.tokenIndex === word.tokenIndex) {
+      return true;
+    }
+
+    return /^\s+$/.test(content.slice(previousWord.end, word.start));
+  });
+}
+
+function uniqueConsecutive(entries) {
+  return entries.filter(
+    (entry, index) =>
+      index === 0 || entry.tokenIndex !== entries[index - 1].tokenIndex,
+  );
+}
+
+function semanticWords(token) {
+  return token
+    .replace(/[_-]+/g, " ")
+    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2")
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .split(/[^A-Za-z0-9]+/)
+    .map((word) => word.toLowerCase())
+    .filter(Boolean);
 }
 
 export function inspectDependencies(dependencies) {

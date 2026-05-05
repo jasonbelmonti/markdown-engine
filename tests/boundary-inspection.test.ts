@@ -144,7 +144,16 @@ describe("WP-5 boundary dependency audit", () => {
     const matches = inspectAnnotationSemanticLeakage([
       {
         filePath: "src/api/annotations.ts",
-        content: "const profileId = entityRegistry.lookup(issueKey);",
+        content: [
+          "type ProfileId = string;",
+          "interface IssueKey {}",
+          "type EntityID = string;",
+          "const relationship_type = 'blocks';",
+          "class SemanticEvaluator {",
+          "  run() { return 'done'; }",
+          "}",
+          "const registry = EntityRegistries.open(markdown_profile);",
+        ].join("\n"),
       },
     ]);
 
@@ -153,7 +162,111 @@ describe("WP-5 boundary dependency audit", () => {
         expect.objectContaining({ label: "profile ID" }),
         expect.objectContaining({ label: "entity registry" }),
         expect.objectContaining({ label: "issue key" }),
+        expect.objectContaining({ label: "entity ID" }),
+        expect.objectContaining({ label: "relationship type" }),
+        expect.objectContaining({ label: "semantic evaluator" }),
+        expect.objectContaining({ label: "markdown-profile" }),
       ]),
     );
+  });
+
+  it("flags each MCP and LLM identifier form independently", () => {
+    const cases = [
+      {
+        content: "const mcpClient = createClient();",
+        label: "MCP",
+        term: "mcpClient",
+      },
+      { content: "class MCPClient {}", label: "MCP", term: "MCPClient" },
+      {
+        content: "const llmProvider = createProvider();",
+        label: "LLM",
+        term: "llmProvider",
+      },
+      { content: "class LLMProvider {}", label: "LLM", term: "LLMProvider" },
+      {
+        content: "const protocol = new ModelContextProtocolClient();",
+        label: "MCP",
+        term: "ModelContextProtocolClient",
+      },
+      {
+        content: "const model = new LargeLanguageModelProvider();",
+        label: "LLM",
+        term: "LargeLanguageModelProvider",
+      },
+    ];
+
+    for (const { content, label, term } of cases) {
+      const matches = inspectAnnotationSemanticLeakage([
+        { filePath: `src/api/${term}.ts`, content },
+      ]);
+
+      expect(matches).toEqual([
+        expect.objectContaining({
+          label,
+          term,
+        }),
+      ]);
+    }
+  });
+
+  it("flags annotation semantic phrases across separate words", () => {
+    const cases = [
+      {
+        content: 'const note = "model context protocol client";',
+        label: "MCP",
+        term: "model context protocol",
+      },
+      {
+        content: 'const note = "large language model provider";',
+        label: "LLM",
+        term: "large language model",
+      },
+      {
+        content: 'const note = "profile ID policy";',
+        label: "profile ID",
+        term: "profile ID",
+      },
+      {
+        content: "// entity registry lookup",
+        label: "entity registry",
+        term: "entity registry",
+      },
+    ];
+
+    for (const { content, label, term } of cases) {
+      const matches = inspectAnnotationSemanticLeakage([
+        { filePath: `src/api/${label}.ts`, content },
+      ]);
+
+      expect(matches).toEqual([
+        expect.objectContaining({
+          label,
+          term,
+        }),
+      ]);
+    }
+  });
+
+  it("does not flag unrelated identifiers that only contain acronym letters", () => {
+    const matches = inspectAnnotationSemanticLeakage([
+      {
+        filePath: "src/api/renderer.ts",
+        content: "const shellMode = true; const promptCompiler = shellMode;",
+      },
+    ]);
+
+    expect(matches).toEqual([]);
+  });
+
+  it("does not treat separated code identifiers as semantic phrases", () => {
+    const matches = inspectAnnotationSemanticLeakage([
+      {
+        filePath: "src/api/annotations.ts",
+        content: "const entity = registry; const model = context.protocol;",
+      },
+    ]);
+
+    expect(matches).toEqual([]);
   });
 });
