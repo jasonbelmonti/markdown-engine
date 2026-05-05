@@ -248,6 +248,69 @@ describe("WP-5 boundary dependency audit", () => {
     }
   });
 
+  it("flags plural profile, issue, and entity semantic forms", () => {
+    const cases = [
+      {
+        content: "const profileIds = [];",
+        label: "profile ID",
+        term: "profileIds",
+      },
+      {
+        content: "type ProfileIDs = string[];",
+        label: "profile ID",
+        term: "ProfileIDs",
+      },
+      {
+        content: 'const note = "profile IDs policy";',
+        label: "profile ID",
+        term: "profile IDs",
+      },
+      {
+        content: "const issueKeys = [];",
+        label: "issue key",
+        term: "issueKeys",
+      },
+      {
+        content: "interface IssueKeys {}",
+        label: "issue key",
+        term: "IssueKeys",
+      },
+      {
+        content: 'const note = "issue keys policy";',
+        label: "issue key",
+        term: "issue keys",
+      },
+      {
+        content: "const entityIds = [];",
+        label: "entity ID",
+        term: "entityIds",
+      },
+      {
+        content: "type EntityIDs = string[];",
+        label: "entity ID",
+        term: "EntityIDs",
+      },
+      {
+        content: 'const note = "entity IDs policy";',
+        label: "entity ID",
+        term: "entity IDs",
+      },
+    ];
+
+    for (const { content, label, term } of cases) {
+      const matches = inspectAnnotationSemanticLeakage([
+        { filePath: `src/api/${term}.ts`, content },
+      ]);
+
+      expect(matches).toEqual([
+        expect.objectContaining({
+          label,
+          term,
+        }),
+      ]);
+    }
+  });
+
   it("does not flag unrelated identifiers that only contain acronym letters", () => {
     const matches = inspectAnnotationSemanticLeakage([
       {
