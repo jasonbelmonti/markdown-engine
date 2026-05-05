@@ -339,6 +339,55 @@ describe("1.0 Rich IR annotation target validation", () => {
     );
   });
 
+  it("accepts known node targets with unavailable paths without serializing path", () => {
+    const document = normalizeDraftFixture();
+    const paragraphTarget = requireTarget(firstNode(document, "paragraph"));
+    const oversizedPath = Array.from({ length: 1_025 }, (_, index) => index);
+    const validOversizedPathTarget = {
+      ...paragraphTarget,
+      path: oversizedPath,
+    };
+    const unavailablePathTarget = {
+      ...paragraphTarget,
+      path: hugeSparseArrayTarget("target path") as readonly number[],
+    };
+    const descriptorUnavailablePathTarget = {
+      ...paragraphTarget,
+      path: unavailableArrayLengthTarget("target path"),
+    };
+
+    const result = validateAnnotations(document, [
+      nodeAnnotation("annotation:oversized-path", validOversizedPathTarget, {
+        callerOwnsMeaning: true,
+      }),
+      nodeAnnotation("annotation:unavailable-path", unavailablePathTarget, {
+        callerOwnsMeaning: true,
+      }),
+      nodeAnnotation(
+        "annotation:descriptor-unavailable-path",
+        descriptorUnavailablePathTarget,
+        {
+          callerOwnsMeaning: true,
+        },
+      ),
+    ]);
+
+    expect(result.valid).toBe(true);
+    expect(result.diagnostics).toEqual([]);
+
+    for (const annotation of result.annotations) {
+      if (annotation.target.kind !== "node") {
+        missing();
+      }
+
+      expect(annotation.target.target).toMatchObject({
+        id: paragraphTarget.id,
+        kind: "node",
+      });
+      expect(annotation.target.target).not.toHaveProperty("path");
+    }
+  });
+
   it("sorts same-position diagnostics with offsets before diagnostics without offsets", () => {
     const document = normalizeDraftFixture();
     const knownOffsetTarget = {
@@ -432,14 +481,6 @@ describe("1.0 Rich IR annotation target validation", () => {
     const functionTarget = throwingFunctionTarget("function target");
     const proxyFunctionTarget = proxiedFunctionTarget("function proxy target");
     const hugeArrayTarget = hugeSparseArrayTarget("array target");
-    const hugePathTarget = {
-      kind: "node",
-      target: {
-        kind: "node",
-        id: paragraphTarget.id,
-        path: hugeSparseArrayTarget("target path"),
-      },
-    };
 
     const result = validateAnnotations(document, [
       malformedAnnotation("annotation:bigint-target", {
@@ -469,13 +510,12 @@ describe("1.0 Rich IR annotation target validation", () => {
       malformedAnnotation("annotation:function-target", functionTarget),
       malformedAnnotation("annotation:function-proxy-target", proxyFunctionTarget),
       malformedAnnotation("annotation:huge-array-target", hugeArrayTarget),
-      malformedAnnotation("annotation:huge-path-target", hugePathTarget),
     ]);
 
     expect(result.valid).toBe(false);
     expect(readableAccessorPathReads).toBe(0);
     expect(nonPlainTagReads).toBe(0);
-    expect(result.diagnostics).toHaveLength(18);
+    expect(result.diagnostics).toHaveLength(17);
     expect(result.diagnostics).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -563,16 +603,6 @@ describe("1.0 Rich IR annotation target validation", () => {
       expect.objectContaining({
         target: "[Unavailable]",
       }),
-      expect.objectContaining({
-        target: {
-          kind: "node",
-          target: {
-            id: paragraphTarget.id,
-            kind: "node",
-            path: "[Unavailable]",
-          },
-        },
-      }),
     ]);
     expect(parsed.diagnostics).toEqual(
       expect.arrayContaining([
@@ -641,17 +671,6 @@ describe("1.0 Rich IR annotation target validation", () => {
         expect.objectContaining({
           code: "annotation.target.invalidKind",
           target: "[Unavailable]",
-        }),
-        expect.objectContaining({
-          code: "annotation.target.invalidKind",
-          target: {
-            kind: "node",
-            target: {
-              id: paragraphTarget.id,
-              kind: "node",
-              path: "[Unavailable]",
-            },
-          },
         }),
       ]),
     );
@@ -1156,6 +1175,23 @@ function hugeSparseArrayTarget(label: string): unknown[] {
   });
 
   return target;
+}
+
+function unavailableArrayLengthTarget(label: string): readonly number[] {
+  return new Proxy([], {
+    get() {
+      throw new Error(`Expected ${label} getter not to escape validation.`);
+    },
+    getOwnPropertyDescriptor(target, property) {
+      if (property === "length") {
+        throw new Error(
+          `Expected ${label} length descriptor failure not to escape validation.`,
+        );
+      }
+
+      return Reflect.getOwnPropertyDescriptor(target, property);
+    },
+  });
 }
 
 function revokedProxy(): object {

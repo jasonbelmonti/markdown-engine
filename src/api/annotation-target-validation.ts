@@ -9,7 +9,6 @@ import type {
 } from "./document.js";
 import { documentQueries } from "./document-queries.js";
 import {
-  arrayDataProperty,
   arrayLength,
   FUNCTION_PLACEHOLDER,
   isArray,
@@ -26,6 +25,11 @@ type AnnotationTargetCandidate = {
   range?: unknown;
   target?: unknown;
 };
+
+type TargetPathClone =
+  | { kind: "cloned"; path: readonly number[] }
+  | { kind: "invalid" }
+  | { kind: "unavailable" };
 
 interface SortableTargetDiagnostic {
   diagnostic: EngineTargetDiagnostic;
@@ -471,7 +475,7 @@ function cloneEngineTargetCandidate(target: unknown): EngineTarget | undefined {
     return undefined;
   }
 
-  const clonedPath = path !== undefined ? cloneTargetPathCandidate(path) : undefined;
+  const pathClone = path !== undefined ? cloneTargetPathCandidate(path) : undefined;
   const clonedSourceRange =
     sourceRange !== undefined ? cloneSourceRangeCandidate(sourceRange) : undefined;
 
@@ -479,7 +483,7 @@ function cloneEngineTargetCandidate(target: unknown): EngineTarget | undefined {
     optionalDataPropertyIsInvalid(pathProperty) ||
     optionalDataPropertyIsInvalid(nodeTypeProperty) ||
     optionalDataPropertyIsInvalid(sourceRangeProperty) ||
-    (path !== undefined && clonedPath === undefined) ||
+    pathClone?.kind === "invalid" ||
     (nodeType !== undefined && typeof nodeType !== "string") ||
     (sourceRange !== undefined && clonedSourceRange === undefined)
   ) {
@@ -489,36 +493,51 @@ function cloneEngineTargetCandidate(target: unknown): EngineTarget | undefined {
   return {
     kind,
     id,
-    ...(clonedPath !== undefined ? { path: clonedPath } : {}),
+    ...(pathClone?.kind === "cloned" ? { path: pathClone.path } : {}),
     ...(typeof nodeType === "string" ? { nodeType } : {}),
     ...(clonedSourceRange !== undefined ? { sourceRange: clonedSourceRange } : {}),
   };
 }
 
-function cloneTargetPathCandidate(path: unknown): readonly number[] | undefined {
+function cloneTargetPathCandidate(path: unknown): TargetPathClone {
   if (!isArray(path)) {
-    return undefined;
+    return { kind: "invalid" };
   }
 
   const length = arrayLength(path);
 
-  if (length === undefined || length > MAX_NORMALIZED_ARRAY_LENGTH) {
-    return undefined;
+  if (length === undefined) {
+    return { kind: "unavailable" };
+  }
+
+  if (length > MAX_NORMALIZED_ARRAY_LENGTH) {
+    return { kind: "unavailable" };
   }
 
   const clonedPath: number[] = [];
 
   for (let index = 0; index < length; index += 1) {
-    const segment = arrayDataProperty(path, index);
+    const segmentProperty = ownRuntimeProperty(
+      path as unknown as Record<string, unknown>,
+      String(index),
+    );
 
-    if (!isNonNegativeInteger(segment)) {
-      return undefined;
+    if (segmentProperty.kind === "unavailable") {
+      return { kind: "unavailable" };
     }
 
-    clonedPath.push(segment);
+    if (segmentProperty.kind !== "data") {
+      return { kind: "invalid" };
+    }
+
+    if (!isNonNegativeInteger(segmentProperty.value)) {
+      return { kind: "invalid" };
+    }
+
+    clonedPath.push(segmentProperty.value);
   }
 
-  return clonedPath;
+  return { kind: "cloned", path: clonedPath };
 }
 
 function cloneSourceRangeCandidate(range: unknown): SourceRange | undefined {
