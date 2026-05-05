@@ -191,6 +191,18 @@ describe("1.0 Rich IR annotation target validation", () => {
     const document = normalizeDraftFixture();
     const circularTarget: Record<string, unknown> = { kind: "block" };
     circularTarget.self = circularTarget;
+    const throwingGetterTarget = {
+      kind: "block",
+      get bad() {
+        throw new Error("getter exploded");
+      },
+    };
+    const throwingKindTarget = {
+      get kind() {
+        throw new Error("kind exploded");
+      },
+    };
+    const sharedChild = { value: "shared" };
 
     const result = validateAnnotations(document, [
       malformedAnnotation("annotation:bigint-target", {
@@ -198,11 +210,21 @@ describe("1.0 Rich IR annotation target validation", () => {
         value: BigInt(1),
       }),
       malformedAnnotation("annotation:circular-target", circularTarget),
+      malformedAnnotation("annotation:getter-target", throwingGetterTarget),
+      malformedAnnotation("annotation:getter-kind-target", throwingKindTarget),
+      malformedAnnotation("annotation:dag-target", {
+        kind: "block",
+        a: sharedChild,
+        b: sharedChild,
+      }),
     ]);
 
     expect(result).toMatchObject({
       valid: false,
       diagnostics: [
+        { code: "annotation.target.invalidKind", severity: "error" },
+        { code: "annotation.target.invalidKind", severity: "error" },
+        { code: "annotation.target.invalidKind", severity: "error" },
         { code: "annotation.target.invalidKind", severity: "error" },
         { code: "annotation.target.invalidKind", severity: "error" },
       ],
@@ -219,6 +241,19 @@ describe("1.0 Rich IR annotation target validation", () => {
       expect.objectContaining({
         target: { kind: "block", self: "[Circular]" },
       }),
+      expect.objectContaining({
+        target: { bad: "[Unserializable]", kind: "block" },
+      }),
+      expect.objectContaining({
+        target: { kind: "[Unserializable]" },
+      }),
+      expect.objectContaining({
+        target: {
+          a: { value: "shared" },
+          b: { value: "shared" },
+          kind: "block",
+        },
+      }),
     ]);
     expect(parsed.diagnostics).toEqual(
       expect.arrayContaining([
@@ -228,7 +263,50 @@ describe("1.0 Rich IR annotation target validation", () => {
         expect.objectContaining({
           target: { kind: "block", self: "[Circular]" },
         }),
+        expect.objectContaining({
+          target: { bad: "[Unserializable]", kind: "block" },
+        }),
+        expect.objectContaining({
+          target: { kind: "[Unserializable]" },
+        }),
+        expect.objectContaining({
+          target: {
+            a: { value: "shared" },
+            b: { value: "shared" },
+            kind: "block",
+          },
+        }),
       ]),
+    );
+  });
+
+  it("serializes accepted source ranges without preserving non-contract fields", () => {
+    const document = normalizeDraftFixture();
+    const paragraph = firstNode(document, "paragraph");
+    const paragraphRange = requireSourceRange(paragraph);
+    const unsafeRange = {
+      start: { ...paragraphRange.start, unsafe: BigInt(1) },
+      end: { ...paragraphRange.end },
+    } as SourceRange;
+
+    const result = validateAnnotations(document, [
+      sourceAnnotation("annotation:unsafe-source-extra", unsafeRange, {
+        callerOwnsMeaning: true,
+      }),
+    ]);
+
+    expect(result).toMatchObject({
+      valid: true,
+      diagnostics: [],
+    });
+
+    const parsed = JSON.parse(serialize(result, { pretty: true }));
+
+    expect(parsed.annotations[0].target.range.start).toEqual(
+      paragraphRange.start,
+    );
+    expect(parsed.annotations[0].target.range.start).not.toHaveProperty(
+      "unsafe",
     );
   });
 

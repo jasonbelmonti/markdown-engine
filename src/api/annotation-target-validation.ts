@@ -19,6 +19,8 @@ interface SortableTargetDiagnostic {
   order: number;
 }
 
+const unreadableProperty = Symbol("unreadableProperty");
+
 export function annotationTargetDiagnostics(
   document: EngineDocument,
   annotations: readonly EngineAnnotation[],
@@ -78,11 +80,13 @@ function diagnosticsForAnnotation(
     ];
   }
 
-  if (target.kind === "node") {
+  const kind = readProperty(target, "kind");
+
+  if (kind === "node") {
     return nodeTargetDiagnostics(target, validTargetIds, order);
   }
 
-  if (target.kind === "source") {
+  if (kind === "source") {
     return sourceTargetDiagnostics(target, documentSourceRange, order);
   }
 
@@ -104,7 +108,9 @@ function nodeTargetDiagnostics(
   validTargetIds: ReadonlySet<string>,
   order: number,
 ): SortableTargetDiagnostic[] {
-  if (!isNodeTarget(target.target)) {
+  const nodeTarget = readProperty(target, "target");
+
+  if (!isNodeTarget(nodeTarget)) {
     return [
       sortableDiagnostic(
         {
@@ -118,18 +124,36 @@ function nodeTargetDiagnostics(
     ];
   }
 
-  if (validTargetIds.has(target.target.id)) {
+  const targetId = readProperty(nodeTarget, "id");
+
+  if (typeof targetId !== "string") {
+    return [
+      sortableDiagnostic(
+        {
+          code: "annotation.target.invalidKind",
+          message: "Annotation node target must reference an engine node target.",
+          severity: "error",
+          target,
+        },
+        order,
+      ),
+    ];
+  }
+
+  if (validTargetIds.has(targetId)) {
     return [];
   }
+
+  const sourceRange = readProperty(nodeTarget, "sourceRange");
 
   return [
     sortableDiagnostic(
       {
         code: "annotation.target.unknown",
-        message: `Annotation target '${target.target.id}' does not exist in the document.`,
+        message: `Annotation target '${targetId}' does not exist in the document.`,
         severity: "error",
-        ...(target.target.sourceRange !== undefined
-          ? { sourceRange: cloneSourceRange(target.target.sourceRange) }
+        ...(isSourceRange(sourceRange)
+          ? { sourceRange: cloneSourceRange(sourceRange) }
           : {}),
         target,
       },
@@ -143,7 +167,9 @@ function sourceTargetDiagnostics(
   documentSourceRange: SourceRange | undefined,
   order: number,
 ): SortableTargetDiagnostic[] {
-  if (!isSourceRange(target.range)) {
+  const targetRange = readProperty(target, "range");
+
+  if (!isSourceRange(targetRange)) {
     return [
       sortableDiagnostic(
         {
@@ -157,14 +183,16 @@ function sourceTargetDiagnostics(
     ];
   }
 
-  if (sourceRangeIsInvalid(target.range)) {
+  const range = cloneSourceRange(targetRange);
+
+  if (sourceRangeIsInvalid(range)) {
     return [
       sortableDiagnostic(
         {
           code: "annotation.target.invalidRange",
           message: "Annotation source target range ends before it starts.",
           severity: "error",
-          sourceRange: cloneSourceRange(target.range),
+          sourceRange: range,
           target,
         },
         order,
@@ -174,7 +202,7 @@ function sourceTargetDiagnostics(
 
   if (
     documentSourceRange !== undefined &&
-    !sourceRangeContains(documentSourceRange, target.range)
+    !sourceRangeContains(documentSourceRange, range)
   ) {
     return [
       sortableDiagnostic(
@@ -183,7 +211,7 @@ function sourceTargetDiagnostics(
           message:
             "Annotation source target range must be contained by the document source range.",
           severity: "error",
-          sourceRange: cloneSourceRange(target.range),
+          sourceRange: range,
           target,
         },
         order,
@@ -277,20 +305,26 @@ function compareStrings(left: string, right: string): number {
 }
 
 function targetSortKey(target: unknown): string {
-  try {
-    const serialized = JSON.stringify(normalizeSortValue(target, new WeakSet()));
+  const serializedTarget = serializableTarget(target);
 
-    return serialized ?? String(target);
+  try {
+    const serialized = JSON.stringify(serializedTarget);
+
+    return serialized ?? String(serializedTarget);
   } catch {
-    return Object.prototype.toString.call(target);
+    return objectTag(target);
   }
 }
 
 function serializableTarget(target: unknown): unknown {
-  return normalizeSortValue(target, new WeakSet());
+  try {
+    return normalizeSortValue(target, new WeakSet());
+  } catch {
+    return objectTag(target);
+  }
 }
 
-function normalizeSortValue(value: unknown, seen: WeakSet<object>): unknown {
+function normalizeSortValue(value: unknown, path: WeakSet<object>): unknown {
   if (typeof value === "bigint") {
     return value.toString();
   }
@@ -307,40 +341,60 @@ function normalizeSortValue(value: unknown, seen: WeakSet<object>): unknown {
     return value;
   }
 
-  if (seen.has(value)) {
+  if (path.has(value)) {
     return "[Circular]";
   }
 
-  seen.add(value);
+  path.add(value);
 
-  if (Array.isArray(value)) {
-    return value.map((item) => normalizeSortValue(item, seen));
+  try {
+    if (Array.isArray(value)) {
+      return value.map((item) => normalizeSortValue(item, path));
+    }
+
+    if (isPlainObject(value)) {
+      return Object.fromEntries(
+        Object.keys(value)
+          .sort()
+          .map((key) => [key, normalizePropertyValue(value, key, path)]),
+      );
+    }
+
+    return objectTag(value);
+  } finally {
+    path.delete(value);
   }
+}
 
-  if (isPlainObject(value)) {
-    return Object.fromEntries(
-      Object.keys(value)
-        .sort()
-        .map((key) => [key, normalizeSortValue(value[key], seen)]),
-    );
+function normalizePropertyValue(
+  value: Record<string, unknown>,
+  key: string,
+  path: WeakSet<object>,
+): unknown {
+  try {
+    return normalizeSortValue(value[key], path);
+  } catch {
+    return "[Unserializable]";
   }
-
-  return Object.prototype.toString.call(value);
 }
 
 function cloneAnnotationTarget(target: EngineAnnotationTarget): EngineAnnotationTarget {
   if (isAnnotationTargetCandidate(target)) {
-    if (target.kind === "node" && isNodeTarget(target.target)) {
+    const kind = readProperty(target, "kind");
+    const nodeTarget = readProperty(target, "target");
+    const range = readProperty(target, "range");
+
+    if (kind === "node" && isNodeTarget(nodeTarget)) {
       return {
         kind: "node",
-        target: cloneEngineTarget(target.target),
+        target: cloneEngineTarget(nodeTarget),
       };
     }
 
-    if (target.kind === "source" && isSourceRange(target.range)) {
+    if (kind === "source" && isSourceRange(range)) {
       return {
         kind: "source",
-        range: cloneSourceRange(target.range),
+        range: cloneSourceRange(range),
       };
     }
   }
@@ -349,21 +403,45 @@ function cloneAnnotationTarget(target: EngineAnnotationTarget): EngineAnnotation
 }
 
 function cloneEngineTarget(target: EngineTarget): EngineTarget {
+  const id = readProperty(target, "id");
+  const path = readProperty(target, "path");
+  const nodeType = readProperty(target, "nodeType");
+  const sourceRange = readProperty(target, "sourceRange");
+
   return {
-    kind: target.kind,
-    id: target.id,
-    ...(target.path !== undefined ? { path: [...target.path] } : {}),
-    ...(target.nodeType !== undefined ? { nodeType: target.nodeType } : {}),
-    ...(target.sourceRange !== undefined
-      ? { sourceRange: cloneSourceRange(target.sourceRange) }
+    kind: "node",
+    id: typeof id === "string" ? id : "",
+    ...(isTargetPath(path) ? { path: [...path] } : {}),
+    ...(typeof nodeType === "string" ? { nodeType } : {}),
+    ...(isSourceRange(sourceRange)
+      ? { sourceRange: cloneSourceRange(sourceRange) }
       : {}),
   };
 }
 
 function cloneSourceRange(sourceRange: SourceRange): SourceRange {
+  const start = readProperty(sourceRange, "start");
+  const end = readProperty(sourceRange, "end");
+
   return {
-    start: { ...sourceRange.start },
-    end: { ...sourceRange.end },
+    start: isSourcePosition(start)
+      ? cloneSourcePosition(start)
+      : { line: 1, column: 1 },
+    end: isSourcePosition(end)
+      ? cloneSourcePosition(end)
+      : { line: 1, column: 1 },
+  };
+}
+
+function cloneSourcePosition(position: SourcePosition): SourcePosition {
+  const line = readProperty(position, "line");
+  const column = readProperty(position, "column");
+  const offset = readProperty(position, "offset");
+
+  return {
+    line: isPositiveInteger(line) ? line : 1,
+    column: isPositiveInteger(column) ? column : 1,
+    ...(isNonNegativeInteger(offset) ? { offset } : {}),
   };
 }
 
@@ -378,56 +456,98 @@ function isNodeTarget(target: unknown): target is EngineTarget {
     return false;
   }
 
-  if (target.kind !== "node" || typeof target.id !== "string") {
+  const kind = readProperty(target, "kind");
+  const id = readProperty(target, "id");
+  const path = readProperty(target, "path");
+  const nodeType = readProperty(target, "nodeType");
+  const sourceRange = readProperty(target, "sourceRange");
+
+  if (kind !== "node" || typeof id !== "string") {
     return false;
   }
 
-  if (target.path !== undefined && !isTargetPath(target.path)) {
+  if (path !== undefined && !isTargetPath(path)) {
     return false;
   }
 
-  if (target.nodeType !== undefined && typeof target.nodeType !== "string") {
+  if (nodeType !== undefined && typeof nodeType !== "string") {
     return false;
   }
 
-  return target.sourceRange === undefined || isSourceRange(target.sourceRange);
+  return sourceRange === undefined || isSourceRange(sourceRange);
 }
 
 function isTargetPath(path: unknown): path is readonly number[] {
-  return (
-    Array.isArray(path) &&
-    path.every(
-      (segment) =>
-        typeof segment === "number" &&
-        Number.isInteger(segment) &&
-        segment >= 0,
-    )
-  );
+  try {
+    return (
+      Array.isArray(path) &&
+      path.every(
+        (segment) =>
+          typeof segment === "number" &&
+          Number.isInteger(segment) &&
+          segment >= 0,
+      )
+    );
+  } catch {
+    return false;
+  }
 }
 
 function isSourceRange(range: unknown): range is SourceRange {
+  if (!isPlainObject(range)) {
+    return false;
+  }
+
   return (
-    isPlainObject(range) &&
-    isSourcePosition(range.start) &&
-    isSourcePosition(range.end)
+    isSourcePosition(readProperty(range, "start")) &&
+    isSourcePosition(readProperty(range, "end"))
   );
 }
 
 function isSourcePosition(position: unknown): position is SourcePosition {
+  if (!isPlainObject(position)) {
+    return false;
+  }
+
+  const line = readProperty(position, "line");
+  const column = readProperty(position, "column");
+  const offset = readProperty(position, "offset");
+
   return (
-    isPlainObject(position) &&
-    isPositiveInteger(position.line) &&
-    isPositiveInteger(position.column) &&
-    (position.offset === undefined || isNonNegativeInteger(position.offset))
+    isPositiveInteger(line) &&
+    isPositiveInteger(column) &&
+    (offset === undefined || isNonNegativeInteger(offset))
   );
 }
 
+function readProperty(value: object, key: string): unknown {
+  try {
+    return (value as Record<string, unknown>)[key];
+  } catch {
+    return unreadableProperty;
+  }
+}
+
+function isUnreadableProperty(value: unknown): value is typeof unreadableProperty {
+  return value === unreadableProperty;
+}
+
 function isPositiveInteger(value: unknown): value is number {
-  return typeof value === "number" && Number.isInteger(value) && value >= 1;
+  return (
+    !isUnreadableProperty(value) &&
+    typeof value === "number" &&
+    Number.isInteger(value) &&
+    value >= 1
+  );
 }
 
 function isNonNegativeInteger(value: unknown): value is number {
-  return typeof value === "number" && Number.isInteger(value) && value >= 0;
+  return (
+    !isUnreadableProperty(value) &&
+    typeof value === "number" &&
+    Number.isInteger(value) &&
+    value >= 0
+  );
 }
 
 function sourceRangeIsInvalid(range: SourceRange): boolean {
@@ -484,7 +604,21 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
     return false;
   }
 
-  const prototype = Object.getPrototypeOf(value);
+  let prototype: unknown;
+
+  try {
+    prototype = Object.getPrototypeOf(value);
+  } catch {
+    return false;
+  }
 
   return prototype === Object.prototype || prototype === null;
+}
+
+function objectTag(value: unknown): string {
+  try {
+    return Object.prototype.toString.call(value);
+  } catch {
+    return "[Unserializable]";
+  }
 }
