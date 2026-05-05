@@ -4,6 +4,7 @@ export const UNAVAILABLE_PLACEHOLDER = "[Unavailable]";
 export const MAX_NORMALIZED_ARRAY_LENGTH = 1_024;
 export const MAX_NORMALIZED_OBJECT_KEYS = 1_024;
 export const MAX_NORMALIZED_DEPTH = 64;
+export const MAX_NORMALIZED_WORK = 2_048;
 
 export type OwnRuntimeProperty =
   | { kind: "accessor" }
@@ -11,9 +12,15 @@ export type OwnRuntimeProperty =
   | { kind: "missing" }
   | { kind: "unavailable" };
 
+interface NormalizeRuntimeContext {
+  cache: WeakMap<object, unknown>;
+  path: WeakSet<object>;
+  remainingWork: number;
+}
+
 export function normalizeRuntimeValue(
   value: unknown,
-  path = new WeakSet<object>(),
+  context = createNormalizeRuntimeContext(),
   depth = MAX_NORMALIZED_DEPTH,
 ): unknown {
   if (typeof value === "bigint") {
@@ -36,7 +43,7 @@ export function normalizeRuntimeValue(
     return value;
   }
 
-  if (path.has(value)) {
+  if (context.path.has(value)) {
     return "[Circular]";
   }
 
@@ -44,36 +51,28 @@ export function normalizeRuntimeValue(
     return UNAVAILABLE_PLACEHOLDER;
   }
 
-  path.add(value);
+  if (context.cache.has(value)) {
+    return cloneNormalizedRuntimeValue(context.cache.get(value), context, depth);
+  }
+
+  context.path.add(value);
 
   try {
+    let normalized: unknown;
+
     if (isArray(value)) {
-      return normalizeArrayValue(value, path, depth);
+      normalized = normalizeArrayValue(value, context, depth);
+    } else if (isPlainObject(value)) {
+      normalized = normalizePlainObjectValue(value, context, depth);
+    } else {
+      normalized = UNAVAILABLE_PLACEHOLDER;
     }
 
-    if (isPlainObject(value)) {
-      const keys = enumerableOwnKeys(value);
+    context.cache.set(value, normalized);
 
-      if (
-        keys === undefined ||
-        keys.length > MAX_NORMALIZED_OBJECT_KEYS
-      ) {
-        return UNAVAILABLE_PLACEHOLDER;
-      }
-
-      return Object.fromEntries(
-        keys
-          .sort(compareStrings)
-          .map((key) => [
-            key,
-            normalizePlainObjectProperty(value, key, path, depth),
-          ]),
-      );
-    }
-
-    return UNAVAILABLE_PLACEHOLDER;
+    return normalized;
   } finally {
-    path.delete(value);
+    context.path.delete(value);
   }
 }
 
@@ -152,7 +151,7 @@ export function ownRuntimeProperty(
 
 function normalizeArrayValue(
   value: readonly unknown[],
-  path: WeakSet<object>,
+  context: NormalizeRuntimeContext,
   depth: number,
 ): unknown {
   const length = arrayLength(value);
@@ -161,10 +160,14 @@ function normalizeArrayValue(
     return UNAVAILABLE_PLACEHOLDER;
   }
 
+  if (!reserveNormalizationWork(context, length + 1)) {
+    return UNAVAILABLE_PLACEHOLDER;
+  }
+
   const normalized: unknown[] = [];
 
   for (let index = 0; index < length; index += 1) {
-    normalized.push(normalizeArrayProperty(value, index, path, depth));
+    normalized.push(normalizeArrayProperty(value, index, context, depth));
   }
 
   return normalized;
@@ -173,7 +176,7 @@ function normalizeArrayValue(
 function normalizeArrayProperty(
   value: readonly unknown[],
   index: number,
-  path: WeakSet<object>,
+  context: NormalizeRuntimeContext,
   depth: number,
 ): unknown {
   const property = ownRuntimeProperty(
@@ -193,13 +196,38 @@ function normalizeArrayProperty(
     return UNAVAILABLE_PLACEHOLDER;
   }
 
-  return normalizeRuntimeValue(property.value, path, depth - 1);
+  return normalizeRuntimeValue(property.value, context, depth - 1);
+}
+
+function normalizePlainObjectValue(
+  value: Record<string, unknown>,
+  context: NormalizeRuntimeContext,
+  depth: number,
+): unknown {
+  const keys = enumerableOwnKeys(value);
+
+  if (keys === undefined || keys.length > MAX_NORMALIZED_OBJECT_KEYS) {
+    return UNAVAILABLE_PLACEHOLDER;
+  }
+
+  if (!reserveNormalizationWork(context, keys.length + 1)) {
+    return UNAVAILABLE_PLACEHOLDER;
+  }
+
+  return Object.fromEntries(
+    keys
+      .sort(compareStrings)
+      .map((key) => [
+        key,
+        normalizePlainObjectProperty(value, key, context, depth),
+      ]),
+  );
 }
 
 function normalizePlainObjectProperty(
   value: Record<string, unknown>,
   key: string,
-  path: WeakSet<object>,
+  context: NormalizeRuntimeContext,
   depth: number,
 ): unknown {
   const property = ownRuntimeProperty(value, key);
@@ -216,7 +244,77 @@ function normalizePlainObjectProperty(
     return UNAVAILABLE_PLACEHOLDER;
   }
 
-  return normalizeRuntimeValue(property.value, path, depth - 1);
+  return normalizeRuntimeValue(property.value, context, depth - 1);
+}
+
+function cloneNormalizedRuntimeValue(
+  value: unknown,
+  context: NormalizeRuntimeContext,
+  depth: number,
+): unknown {
+  if (typeof value !== "object" || value === null) {
+    return value;
+  }
+
+  if (depth <= 0) {
+    return UNAVAILABLE_PLACEHOLDER;
+  }
+
+  if (Array.isArray(value)) {
+    if (
+      value.length > MAX_NORMALIZED_ARRAY_LENGTH ||
+      !reserveNormalizationWork(context, value.length + 1)
+    ) {
+      return UNAVAILABLE_PLACEHOLDER;
+    }
+
+    return value.map((item) =>
+      cloneNormalizedRuntimeValue(item, context, depth - 1),
+    );
+  }
+
+  const keys = Object.keys(value);
+
+  if (
+    keys.length > MAX_NORMALIZED_OBJECT_KEYS ||
+    !reserveNormalizationWork(context, keys.length + 1)
+  ) {
+    return UNAVAILABLE_PLACEHOLDER;
+  }
+
+  return Object.fromEntries(
+    keys
+      .sort(compareStrings)
+      .map((key) => [
+        key,
+        cloneNormalizedRuntimeValue(
+          (value as Record<string, unknown>)[key],
+          context,
+          depth - 1,
+        ),
+      ]),
+  );
+}
+
+function createNormalizeRuntimeContext(): NormalizeRuntimeContext {
+  return {
+    cache: new WeakMap<object, unknown>(),
+    path: new WeakSet<object>(),
+    remainingWork: MAX_NORMALIZED_WORK,
+  };
+}
+
+function reserveNormalizationWork(
+  context: NormalizeRuntimeContext,
+  amount: number,
+): boolean {
+  if (context.remainingWork < amount) {
+    return false;
+  }
+
+  context.remainingWork -= amount;
+
+  return true;
 }
 
 function enumerableOwnKeys(value: Record<string, unknown>): string[] | undefined {

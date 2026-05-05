@@ -730,6 +730,26 @@ describe("1.0 Rich IR annotation target validation", () => {
     expect(serialized).not.toContain("wide:1999");
   });
 
+  it("bounds normalization work for shared malformed target graphs", () => {
+    const document = normalizeDraftFixture();
+    const result = validateAnnotations(document, [
+      malformedAnnotation("annotation:shared-fanout", sharedFanoutTarget(16, 5)),
+    ]);
+
+    const serialized = serialize(result, { pretty: true });
+    const parsed = JSON.parse(serialized);
+
+    expect(result.valid).toBe(false);
+    expect(result.diagnostics).toHaveLength(1);
+    expect(parsed.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "annotation.target.invalidKind",
+      }),
+    ]);
+    expect(serialized).toContain("[Unavailable]");
+    expect(serialized.length).toBeLessThan(200_000);
+  });
+
   it("rejects accessor-backed optional target fields", () => {
     const document = normalizeDraftFixture();
     const paragraphTarget = requireTarget(firstNode(document, "paragraph"));
@@ -1114,6 +1134,22 @@ function wideObjectTarget(propertyCount: number): Record<string, unknown> {
 
   for (let index = 0; index < propertyCount; index += 1) {
     target[`wide:${index}`] = index;
+  }
+
+  return target;
+}
+
+function sharedFanoutTarget(width: number, depth: number): Record<string, unknown> {
+  let target: Record<string, unknown> = { kind: "block", leaf: true };
+
+  for (let level = 0; level < depth; level += 1) {
+    const parent: Record<string, unknown> = { kind: "block" };
+
+    for (let index = 0; index < width; index += 1) {
+      parent[`fanout:${level}:${index}`] = target;
+    }
+
+    target = parent;
   }
 
   return target;
