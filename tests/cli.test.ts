@@ -15,7 +15,7 @@ describe("CLI", () => {
     );
   });
 
-  it("accepts --file and writes normalized Markdown JSON", async () => {
+  it("accepts --file and writes 1.0 draft rich IR JSON by default", async () => {
     const cwd = await makeTempDir();
     await writeFile(
       join(cwd, "mission.md"),
@@ -29,24 +29,24 @@ owner: docs
 Body text.
 `,
     );
-    const stdout = createTextOutput();
-    const stderr = createTextOutput();
-
-    const exitCode = await runCli({
+    const { exitCode, stderr, stdout } = await runCliWithOutput({
       args: ["--file", "mission.md"],
       cwd,
-      stderr,
-      stdout,
     });
 
     expect(exitCode).toBe(0);
     expect(stderr.text()).toBe("");
-    expect(JSON.parse(stdout.text())).toMatchObject({
+    const result = JSON.parse(stdout.text());
+
+    expect(result).toMatchObject({
       diagnostics: [],
       document: {
         kind: "markdown-document",
         path: "mission.md",
-        version: "0.0.0",
+        version: "1.0.0-draft",
+        compatibility: {
+          mode: "default",
+        },
         frontmatter: {
           title: "Mission Brief",
           owner: "docs",
@@ -63,19 +63,30 @@ Body text.
         ],
       },
     });
+    expect(result.document.target).toMatchObject({
+      kind: "node",
+      nodeType: "document",
+    });
+    expect(result.document.children[0].target).toMatchObject({
+      kind: "node",
+      nodeType: "heading",
+    });
+    expect(result.document.sections).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          depth: 1,
+          title: "Mission Brief",
+        }),
+      ]),
+    );
   });
 
   it("accepts --path as a single-file target", async () => {
     const cwd = await makeTempDir();
     await writeFile(join(cwd, "notes.md"), "# Notes\n");
-    const stdout = createTextOutput();
-    const stderr = createTextOutput();
-
-    const exitCode = await runCli({
+    const { exitCode, stderr, stdout } = await runCliWithOutput({
       args: ["--path=notes.md"],
       cwd,
-      stderr,
-      stdout,
     });
 
     expect(exitCode).toBe(0);
@@ -83,41 +94,110 @@ Body text.
     expect(JSON.parse(stdout.text())).toMatchObject({
       document: {
         path: "notes.md",
-        version: "0.0.0",
+        version: "1.0.0-draft",
+        target: {
+          kind: "node",
+          nodeType: "document",
+        },
         children: [{ type: "heading", text: "Notes" }],
+        sections: expect.arrayContaining([
+          expect.objectContaining({
+            title: "Notes",
+          }),
+        ]),
       },
     });
   });
 
-  it("rejects a 1.0 draft document-version selector until a CLI cutover", async () => {
-    const stdout = createTextOutput();
-    const stderr = createTextOutput();
-
-    const exitCode = await runCli({
-      args: ["--document-version", "1.0.0-draft", "--file", "notes.md"],
-      cwd: "/",
-      stderr,
-      stdout,
+  it("accepts an explicit legacy document-version selector", async () => {
+    const cwd = await makeTempDir();
+    await writeFile(join(cwd, "legacy.md"), "# Legacy\n");
+    const { exitCode, stderr, stdout } = await runCliWithOutput({
+      args: ["--document-version", "0.0.0", "--file", "legacy.md"],
+      cwd,
     });
 
-    expect(exitCode).toBe(2);
-    expect(stdout.text()).toBe("");
-    expect(stderr.text()).toContain("Unknown argument: --document-version");
-    expect(stderr.text()).toContain("Usage: markdown-engine");
+    expect(exitCode).toBe(0);
+    expect(stderr.text()).toBe("");
+    const result = JSON.parse(stdout.text());
+
+    expect(result).toMatchObject({
+      diagnostics: [],
+      document: {
+        kind: "markdown-document",
+        path: "legacy.md",
+        version: "0.0.0",
+        children: [{ type: "heading", text: "Legacy" }],
+      },
+    });
+    expect(result.document).not.toHaveProperty("compatibility");
+    expect(result.document).not.toHaveProperty("target");
+    expect(result.document).not.toHaveProperty("sections");
+    expect(result.document.children[0]).not.toHaveProperty("target");
+  });
+
+  it.each([
+    {
+      args: ["--document-version", "1.0.0", "--file", "notes.md"],
+      message: "Invalid document version: 1.0.0.",
+    },
+    {
+      args: ["--document-version", "--file", "notes.md"],
+      message: "Missing value for --document-version.",
+    },
+    {
+      args: [
+        "--document-version",
+        "0.0.0",
+        "--document-version",
+        "1.0.0-draft",
+        "--file",
+        "notes.md",
+      ],
+      message: "Expected at most one --document-version selector.",
+    },
+  ])(
+    "rejects invalid document-version selector input: $message",
+    async ({ args, message }) => {
+      const { exitCode, stderr, stdout } = await runCliWithOutput({
+        args,
+        cwd: "/",
+      });
+
+      expect(exitCode).toBe(2);
+      expect(stdout.text()).toBe("");
+      expect(stderr.text()).toContain(message);
+      expect(stderr.text()).toContain("Usage: markdown-engine");
+    },
+  );
+
+  it("accepts an explicit 1.0 draft document-version selector", async () => {
+    const cwd = await makeTempDir();
+    await writeFile(join(cwd, "notes.md"), "# Notes\n");
+    const { exitCode, stderr, stdout } = await runCliWithOutput({
+      args: ["--document-version=1.0.0-draft", "--file", "notes.md"],
+      cwd,
+    });
+
+    expect(exitCode).toBe(0);
+    expect(stderr.text()).toBe("");
+    expect(JSON.parse(stdout.text())).toMatchObject({
+      document: {
+        version: "1.0.0-draft",
+        compatibility: {
+          mode: "default",
+        },
+      },
+    });
   });
 
   it("rejects directory targets instead of traversing them", async () => {
     const cwd = await makeTempDir();
     await mkdir(join(cwd, "docs"));
     await writeFile(join(cwd, "docs", "nested.md"), "# Nested\n");
-    const stdout = createTextOutput();
-    const stderr = createTextOutput();
-
-    const exitCode = await runCli({
+    const { exitCode, stderr, stdout } = await runCliWithOutput({
       args: ["--path", "docs"],
       cwd,
-      stderr,
-      stdout,
     });
 
     expect(exitCode).toBe(1);
@@ -153,4 +233,23 @@ function createTextOutput(): TextOutput & { text(): string } {
       return true;
     },
   };
+}
+
+async function runCliWithOutput(input: {
+  args: string[];
+  cwd: string;
+}): Promise<{
+  exitCode: number;
+  stderr: TextOutput & { text(): string };
+  stdout: TextOutput & { text(): string };
+}> {
+  const stdout = createTextOutput();
+  const stderr = createTextOutput();
+  const exitCode = await runCli({
+    ...input,
+    stderr,
+    stdout,
+  });
+
+  return { exitCode, stderr, stdout };
 }

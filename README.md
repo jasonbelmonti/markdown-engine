@@ -106,15 +106,34 @@ The package binary accepts `--file` or `--path` as aliases for a single file:
 markdown-engine --path fixtures/representative.md
 ```
 
+By default, CLI output uses the 1.0 draft rich IR contract:
+
+```json
+{
+  "document": {
+    "version": "1.0.0-draft",
+    "target": { "kind": "node", "nodeType": "document" },
+    "sections": []
+  }
+}
+```
+
+Use `--document-version 0.0.0` when a caller still needs the legacy
+`0.1.0`-compatible document shape without rich derived views:
+
+```sh
+markdown-engine --document-version 0.0.0 --file fixtures/representative.md
+```
+
+Supported selector values are `1.0.0-draft` and `0.0.0`. Missing, invalid, or
+repeated `--document-version` selectors exit with code `2` and usage text.
 Directory traversal is not supported by this CLI slice.
 
-The CLI has not yet gained a `documentVersion: "1.0.0-draft"` selector. Treat
-the package API and [Public API contract](docs/contracts/api.md) as the
-authoritative 1.0 rich IR contract surface until a later CLI cutover records a
-new decision. BEL-951 classifies the current CLI behavior as unchanged and
-compatible for the `0.1.0` package line: `--file` and `--path` still emit the
-legacy normalized document shape with `version: "0.0.0"`, and no migration is
-required for current CLI users.
+BEL-952 classifies the default CLI output change as breaking for consumers that
+parse CLI JSON without selecting `--document-version 0.0.0`. Migration is to
+either consume the rich IR fields (`target`, `sections`, `textSpans`, `tables`,
+`lists`, and `links`) or pin the explicit legacy selector until the downstream
+consumer is ready.
 
 Contract references:
 

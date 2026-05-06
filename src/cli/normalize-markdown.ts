@@ -1,6 +1,12 @@
-import { normalize, parse, type NormalizeResult } from "../api/contracts.js";
+import {
+  normalize,
+  parse,
+  type EngineDocumentVersion,
+  type NormalizeResult,
+} from "../api/contracts.js";
 
 export interface NormalizeMarkdownInput {
+  documentVersion: EngineDocumentVersion;
   markdown: string;
   path: string;
 }
@@ -12,5 +18,7 @@ export function normalizeMarkdown(
     path: input.path,
   });
 
-  return normalize(parseResult.parsed);
+  return normalize(parseResult.parsed, {
+    documentVersion: input.documentVersion,
+  });
 }
