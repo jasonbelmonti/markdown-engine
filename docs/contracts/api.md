@@ -255,6 +255,22 @@ include deterministic derived structural views:
   zero-based by list nesting depth.
 - `links`: link views with normalized text, URL, optional title, and source
   range when available.
+- `annotations`: caller-owned annotations when callers attach validated
+  annotation results to the document.
+
+Annotations use an explicit address-mode wrapper:
+
+```ts
+type EngineAnnotationTarget =
+  | { kind: "node"; nodeTarget: EngineNodeTarget }
+  | { kind: "source"; sourceRange: SourceRange };
+```
+
+For node annotations, `kind: "node"` identifies the annotation addressing mode.
+The annotated Markdown node type remains `nodeTarget.nodeType`, such as
+`"heading"` or `"paragraph"`. For source annotations, `sourceRange` contains
+the exact caller-provided range. Annotation `payload` values remain opaque and
+caller-owned; the engine validates only target shape and target existence.
 
 `documentQueries` exposes deterministic helper methods over this public IR:
 

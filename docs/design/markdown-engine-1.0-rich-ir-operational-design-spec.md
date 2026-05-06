@@ -116,7 +116,7 @@ Section status: Complete
 Public naming and API continuity constraint: `rich IR` is the initiative and
 workstream label, not a public TypeScript namespace, API prefix, or module
 boundary. The 1.0 contract shall evolve the existing `markdown-engine` public
-vocabulary: `EngineDocument`, `EngineNode`, `EngineTarget`, query helpers,
+vocabulary: `EngineDocument`, `EngineNode`, `EngineNodeTarget`, query helpers,
 annotation helpers, `parse`, `normalize`, `validate`, and `serialize`. Public
 exports shall not introduce `RichIr*`, `richIr`, `queryRichIr`,
 `serializeRichIr`, `validateRichIr*`, or a separate `rich-ir` public module
@@ -283,7 +283,7 @@ interface EngineDocument {
 }
 
 interface EngineNode {
-  target: EngineTarget;
+  target: EngineNodeTarget;
   type: string;
   text?: string;
   sourceText?: string;
@@ -292,7 +292,7 @@ interface EngineNode {
   children?: EngineNode[];
 }
 
-interface EngineTarget {
+interface EngineNodeTarget {
   id: string;
   documentPath?: string;
   nodePath: readonly number[];
@@ -300,30 +300,30 @@ interface EngineTarget {
 }
 
 interface EngineSection {
-  target: EngineTarget;
-  headingTarget: EngineTarget;
+  target: EngineNodeTarget;
+  headingTarget: EngineNodeTarget;
   depth: number;
   title: string;
-  bodyTargets: readonly EngineTarget[];
+  bodyTargets: readonly EngineNodeTarget[];
   childSections: readonly EngineSection[];
   sourceRange?: SourceRange;
 }
 
 interface EngineTextSpan {
-  target: EngineTarget;
+  target: EngineNodeTarget;
   text: string;
   sourceRange?: SourceRange;
-  ancestorTargets: readonly EngineTarget[];
+  ancestorTargets: readonly EngineNodeTarget[];
 }
 
 interface EngineTable {
-  target: EngineTarget;
+  target: EngineNodeTarget;
   rows: readonly EngineTableRow[];
   sourceRange?: SourceRange;
 }
 
 interface EngineTableRow {
-  target: EngineTarget;
+  target: EngineNodeTarget;
   rowIndex: number;
   isHeader: boolean;
   cells: readonly EngineTableCell[];
@@ -331,7 +331,7 @@ interface EngineTableRow {
 }
 
 interface EngineTableCell {
-  target: EngineTarget;
+  target: EngineNodeTarget;
   rowIndex: number;
   columnIndex: number;
   isHeader: boolean;
@@ -342,7 +342,7 @@ interface EngineTableCell {
 }
 
 interface EngineList {
-  target: EngineTarget;
+  target: EngineNodeTarget;
   ordered: boolean;
   start?: number;
   depth: number;
@@ -351,20 +351,20 @@ interface EngineList {
 }
 
 interface EngineListItem {
-  target: EngineTarget;
-  listTarget: EngineTarget;
+  target: EngineNodeTarget;
+  listTarget: EngineNodeTarget;
   itemIndex: number;
   depth: number;
   checked?: boolean;
   text: string;
-  bodyTargets: readonly EngineTarget[];
-  childListTargets: readonly EngineTarget[];
+  bodyTargets: readonly EngineNodeTarget[];
+  childListTargets: readonly EngineNodeTarget[];
   sourceRange?: SourceRange;
   sourceText?: string;
 }
 
 interface EngineLink {
-  target: EngineTarget;
+  target: EngineNodeTarget;
   url: string;
   title?: string;
   text: string;
@@ -372,10 +372,14 @@ interface EngineLink {
 }
 
 interface EngineAnnotation {
-  target: EngineTarget | SourceRange;
-  kind: string;
-  data: Record<string, unknown>;
+  id: string;
+  target: EngineAnnotationTarget;
+  payload: unknown;
 }
+
+type EngineAnnotationTarget =
+  | { kind: "node"; nodeTarget: EngineNodeTarget }
+  | { kind: "source"; sourceRange: SourceRange };
 
 interface EngineTableQueryResult {
   tables: readonly EngineTable[];
@@ -389,7 +393,7 @@ interface EngineListQueryResult {
 }
 
 interface EngineSourceSliceResult {
-  target: EngineTarget | SourceRange;
+  target: EngineNodeTarget | SourceRange;
   text?: string;
   sourceRange?: SourceRange;
   diagnostics: readonly MarkdownDiagnostic[];

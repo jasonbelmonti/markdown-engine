@@ -2,10 +2,10 @@ import type { MarkdownDiagnostic, SourceRange } from "./diagnostics.js";
 
 export type EngineDocumentVersion = "0.0.0" | "1.0.0-draft";
 
-export type EngineTargetKind = "node" | "source";
+export type EngineNodeTargetKind = "node";
 
-export interface EngineTarget {
-  kind: EngineTargetKind;
+export interface EngineNodeTarget {
+  kind: EngineNodeTargetKind;
   id: string;
   path?: readonly number[];
   nodeType?: string;
@@ -21,30 +21,30 @@ export interface EngineNode {
   type: string;
   text?: string;
   attributes?: Record<string, unknown>;
-  target?: EngineTarget;
+  target?: EngineNodeTarget;
   sourceRange?: SourceRange;
   source?: EngineSourceSlice;
   children?: EngineNode[];
 }
 
 export interface EngineSection {
-  target: EngineTarget;
-  headingTarget: EngineTarget;
-  parentSection?: EngineTarget;
+  target: EngineNodeTarget;
+  headingTarget: EngineNodeTarget;
+  parentSection?: EngineNodeTarget;
   depth: number;
   title: string;
-  bodyTargets: readonly EngineTarget[];
-  childSections: readonly EngineTarget[];
+  bodyTargets: readonly EngineNodeTarget[];
+  childSections: readonly EngineNodeTarget[];
 }
 
 export interface EngineTextSpan {
-  target: EngineTarget;
+  target: EngineNodeTarget;
   text: string;
   sourceRange?: SourceRange;
 }
 
 export interface EngineTableCell {
-  target: EngineTarget;
+  target: EngineNodeTarget;
   text: string;
   rowIndex: number;
   columnIndex: number;
@@ -53,12 +53,12 @@ export interface EngineTableCell {
 }
 
 export interface EngineTable {
-  target: EngineTarget;
+  target: EngineNodeTarget;
   cells: readonly EngineTableCell[];
 }
 
 export interface EngineListItem {
-  target: EngineTarget;
+  target: EngineNodeTarget;
   itemIndex: number;
   depth: number;
   checked?: boolean;
@@ -66,14 +66,14 @@ export interface EngineListItem {
 }
 
 export interface EngineList {
-  target: EngineTarget;
+  target: EngineNodeTarget;
   ordered: boolean;
   start?: number;
   items: readonly EngineListItem[];
 }
 
 export interface EngineLink {
-  target: EngineTarget;
+  target: EngineNodeTarget;
   url: string;
   text: string;
   title?: string;
@@ -81,8 +81,8 @@ export interface EngineLink {
 }
 
 export type EngineAnnotationTarget =
-  | { kind: "node"; target: EngineTarget }
-  | { kind: "source"; range: SourceRange };
+  | { kind: "node"; nodeTarget: EngineNodeTarget }
+  | { kind: "source"; sourceRange: SourceRange };
 
 export interface EngineAnnotation<TPayload = unknown> {
   id: string;
@@ -104,7 +104,7 @@ export interface EngineDocument {
   version: EngineDocumentVersion;
   path?: string;
   frontmatter?: unknown;
-  target?: EngineTarget;
+  target?: EngineNodeTarget;
   children: EngineNode[];
   sourceRange?: SourceRange;
   sections?: readonly EngineSection[];
@@ -167,7 +167,7 @@ export interface EngineDocumentQueries {
   links(document: EngineDocument, query?: EngineLinkQuery): readonly EngineLink[];
   sourceSlice(
     document: EngineDocument,
-    target: EngineTarget,
+    target: EngineNodeTarget,
   ): EngineSourceSlice | undefined;
 }
 

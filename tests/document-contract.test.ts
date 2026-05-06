@@ -8,7 +8,7 @@ import {
   type EngineCompatibilityGate,
   type EngineDocument,
   type EngineDocumentQueries,
-  type EngineTarget,
+  type EngineNodeTarget,
   type SerializableEngineResult,
 } from "@jasonbelmonti/markdown-engine";
 
@@ -53,21 +53,21 @@ const rootTarget = {
   path: [],
   nodeType: "root",
   sourceRange,
-} satisfies EngineTarget;
+} satisfies EngineNodeTarget;
 const paragraphTarget = {
   kind: "node",
   id: "node:paragraph:0",
   path: [0],
   nodeType: "paragraph",
   sourceRange,
-} satisfies EngineTarget;
+} satisfies EngineNodeTarget;
 const compatibility = {
   mode: "default",
   reason: "BEL-934 public contract skeleton",
 } satisfies EngineCompatibilityGate;
 const annotation = {
   id: "annotation:1",
-  target: { kind: "node", target: paragraphTarget },
+  target: { kind: "node", nodeTarget: paragraphTarget },
   payload: { ownedByCaller: true },
 } satisfies EngineAnnotation<{ ownedByCaller: boolean }>;
 const document = {

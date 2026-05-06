@@ -9,7 +9,7 @@ import {
   validateAnnotations,
   type EngineAnnotation,
   type EngineDocument,
-  type EngineTarget,
+  type EngineNodeTarget,
   type SourceRange,
 } from "@jasonbelmonti/markdown-engine";
 
@@ -274,7 +274,7 @@ function firstParagraph(document: EngineDocument) {
   return paragraph ?? missingTarget();
 }
 
-function annotationFor(target: EngineTarget | undefined): EngineAnnotation {
+function annotationFor(target: EngineNodeTarget | undefined): EngineAnnotation {
   if (target === undefined) {
     return missingTarget();
   }
@@ -283,7 +283,7 @@ function annotationFor(target: EngineTarget | undefined): EngineAnnotation {
     id: "annotation:mission-paragraph",
     target: {
       kind: "node",
-      target,
+      nodeTarget: target,
     },
     payload: {
       ownedByCaller: true,
@@ -301,7 +301,7 @@ function sourceAnnotationFor(range: SourceRange | undefined): EngineAnnotation {
     id: "annotation:source-range",
     target: {
       kind: "source",
-      range,
+      sourceRange: range,
     },
     payload: {
       ownedByCaller: true,
@@ -310,7 +310,7 @@ function sourceAnnotationFor(range: SourceRange | undefined): EngineAnnotation {
   };
 }
 
-function missingNodeTarget(): EngineTarget {
+function missingNodeTarget(): EngineNodeTarget {
   return {
     kind: "node",
     id: "node:missing",
@@ -319,7 +319,7 @@ function missingNodeTarget(): EngineTarget {
   };
 }
 
-function malformedNodeAnnotation(target: EngineTarget | undefined): EngineAnnotation {
+function malformedNodeAnnotation(target: EngineNodeTarget | undefined): EngineAnnotation {
   if (target === undefined) {
     return missingTarget();
   }
@@ -328,7 +328,7 @@ function malformedNodeAnnotation(target: EngineTarget | undefined): EngineAnnota
     id: "annotation:malformed-node-target",
     target: {
       kind: "node",
-      target: {
+      nodeTarget: {
         ...target,
         kind: "source",
       },

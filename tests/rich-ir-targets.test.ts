@@ -8,7 +8,7 @@ import {
   parse,
   type EngineDocument,
   type EngineNode,
-  type EngineTarget,
+  type EngineNodeTarget,
   type ParsedMarkdown,
   type SourceRange,
 } from "@jasonbelmonti/markdown-engine";
@@ -306,7 +306,7 @@ function requireNode(document: EngineDocument, targetId: string): EngineNode {
   return node;
 }
 
-function requireTarget(node: EngineNode): EngineTarget {
+function requireTarget(node: EngineNode): EngineNodeTarget {
   if (node.target === undefined) {
     throw new Error(`Expected ${node.type} node target to be present.`);
   }

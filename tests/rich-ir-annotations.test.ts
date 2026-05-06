@@ -11,7 +11,7 @@ import {
   type EngineAnnotation,
   type EngineDocument,
   type EngineNode,
-  type EngineTarget,
+  type EngineNodeTarget,
   type SourceRange,
 } from "@jasonbelmonti/markdown-engine";
 
@@ -98,7 +98,7 @@ describe("1.0 Rich IR annotation target validation", () => {
       }),
       malformedAnnotation("annotation:bad-node-target", {
         kind: "node",
-        target: {
+        nodeTarget: {
           ...paragraphTarget,
           path: [-1],
         },
@@ -108,7 +108,7 @@ describe("1.0 Rich IR annotation target validation", () => {
       }),
       malformedAnnotation("annotation:non-ascii-target-a", {
         kind: "node",
-        target: {
+        nodeTarget: {
           kind: "node",
           id: "node:ä",
           path: [-1],
@@ -116,7 +116,7 @@ describe("1.0 Rich IR annotation target validation", () => {
       }),
       malformedAnnotation("annotation:non-ascii-target-z", {
         kind: "node",
-        target: {
+        nodeTarget: {
           kind: "node",
           id: "node:z",
           path: [-1],
@@ -248,12 +248,12 @@ describe("1.0 Rich IR annotation target validation", () => {
         expect.objectContaining({
           code: "annotation.target.outOfBounds",
           sourceRange: partialStartOffsetOutOfBounds,
-          target: { kind: "source", range: partialStartOffsetOutOfBounds },
+          target: { kind: "source", sourceRange: partialStartOffsetOutOfBounds },
         }),
         expect.objectContaining({
           code: "annotation.target.outOfBounds",
           sourceRange: partialEndOffsetOutOfBounds,
-          target: { kind: "source", range: partialEndOffsetOutOfBounds },
+          target: { kind: "source", sourceRange: partialEndOffsetOutOfBounds },
         }),
       ]),
     );
@@ -324,7 +324,7 @@ describe("1.0 Rich IR annotation target validation", () => {
           sourceRange: reversedNodeSourceRange,
           target: {
             kind: "node",
-            target: reversedNodeTarget,
+            nodeTarget: reversedNodeTarget,
           },
         }),
         expect.objectContaining({
@@ -332,7 +332,7 @@ describe("1.0 Rich IR annotation target validation", () => {
           sourceRange: partialOffsetOutOfBoundsNodeSourceRange,
           target: {
             kind: "node",
-            target: outOfBoundsNodeTarget,
+            nodeTarget: outOfBoundsNodeTarget,
           },
         }),
       ]),
@@ -390,11 +390,11 @@ describe("1.0 Rich IR annotation target validation", () => {
         missing();
       }
 
-      expect(annotation.target.target).toMatchObject({
+      expect(annotation.target.nodeTarget).toMatchObject({
         id: paragraphTarget.id,
         kind: "node",
       });
-      expect(annotation.target.target).not.toHaveProperty("path");
+      expect(annotation.target.nodeTarget).not.toHaveProperty("path");
     }
   });
 
@@ -404,12 +404,12 @@ describe("1.0 Rich IR annotation target validation", () => {
       kind: "node",
       id: "node:z:missing",
       sourceRange: range(9, 1, 90, 9, 6, 95),
-    } satisfies EngineTarget;
+    } satisfies EngineNodeTarget;
     const missingOffsetTarget = {
       kind: "node",
       id: "node:a:missing",
       sourceRange: rangeWithoutOffsets(9, 1, 9, 6),
-    } satisfies EngineTarget;
+    } satisfies EngineNodeTarget;
     const annotations = [
       nodeAnnotation("annotation:missing-offset", missingOffsetTarget, {
         callerOwnsMeaning: true,
@@ -446,12 +446,12 @@ describe("1.0 Rich IR annotation target validation", () => {
       },
     });
     const accessorKindTarget = throwingAccessorTarget("kind");
-    const accessorNodeTarget = throwingAccessorTarget("target", "node");
-    const accessorSourceTarget = throwingAccessorTarget("range", "source");
+    const accessorNodeTarget = throwingAccessorTarget("nodeTarget", "node");
+    const accessorSourceTarget = throwingAccessorTarget("sourceRange", "source");
     const accessorArrayTarget = throwingArrayTarget("array target");
     const accessorPathTarget = {
       kind: "node",
-      target: {
+      nodeTarget: {
         kind: "node",
         id: "node:accessor-path",
         path: throwingArrayTarget("target path"),
@@ -459,7 +459,7 @@ describe("1.0 Rich IR annotation target validation", () => {
     };
     const readableAccessorPathTarget = {
       kind: "node",
-      target: {
+      nodeTarget: {
         kind: "node",
         id: paragraphTarget.id,
         path: readableAccessorArrayTarget(0, () => {
@@ -691,15 +691,15 @@ describe("1.0 Rich IR annotation target validation", () => {
     const result = validateAnnotations(document, [
       malformedAnnotation("annotation:accessor-path", {
         kind: "node",
-        target: accessorBackedEngineTarget(paragraphTarget.id, "path"),
+        nodeTarget: accessorBackedEngineTarget(paragraphTarget.id, "path"),
       }),
       malformedAnnotation("annotation:accessor-node-type", {
         kind: "node",
-        target: accessorBackedEngineTarget(paragraphTarget.id, "nodeType"),
+        nodeTarget: accessorBackedEngineTarget(paragraphTarget.id, "nodeType"),
       }),
       malformedAnnotation("annotation:accessor-source-range", {
         kind: "node",
-        target: accessorBackedEngineTarget(paragraphTarget.id, "sourceRange"),
+        nodeTarget: accessorBackedEngineTarget(paragraphTarget.id, "sourceRange"),
       }),
       sourceAnnotation(
         "annotation:accessor-offset",
@@ -744,7 +744,7 @@ describe("1.0 Rich IR annotation target validation", () => {
       kind: "node",
       id: "node:missing:unsafe",
       sourceRange: unsafeNodeRange,
-    } satisfies EngineTarget;
+    } satisfies EngineNodeTarget;
 
     const result = validateAnnotations(document, [
       sourceAnnotation("annotation:unsafe-source-range", unsafeSourceRange, {
@@ -762,18 +762,18 @@ describe("1.0 Rich IR annotation target validation", () => {
     const parsed = JSON.parse(serialized);
 
     expect(result.valid).toBe(false);
-    expect(parsed.annotations[0].target.range).toEqual(range(7, 1, 77, 7, 3, 79));
-    expect(parsed.annotations[1].target.target.sourceRange).toEqual(
+    expect(parsed.annotations[0].target.sourceRange).toEqual(range(7, 1, 77, 7, 3, 79));
+    expect(parsed.annotations[1].target.nodeTarget.sourceRange).toEqual(
       range(9, 1, 90, 9, 6, 95),
     );
-    expect(parsed.annotations[2].target.range).toEqual(range(1, 1, 0, 1, 8, 7));
+    expect(parsed.annotations[2].target.sourceRange).toEqual(range(1, 1, 0, 1, 8, 7));
     expect(parsed.diagnostics).toEqual([
       expect.objectContaining({
         code: "annotation.target.outOfBounds",
         sourceRange: range(1, 1, 0, 1, 8, 7),
         target: {
           kind: "source",
-          range: range(1, 1, 0, 1, 8, 7),
+          sourceRange: range(1, 1, 0, 1, 8, 7),
         },
       }),
       expect.objectContaining({
@@ -781,7 +781,7 @@ describe("1.0 Rich IR annotation target validation", () => {
         sourceRange: range(9, 1, 90, 9, 6, 95),
         target: {
           kind: "node",
-          target: {
+          nodeTarget: {
             kind: "node",
             id: "node:missing:unsafe",
             sourceRange: range(9, 1, 90, 9, 6, 95),
@@ -829,7 +829,7 @@ describe("1.0 Rich IR annotation target validation", () => {
       ),
       malformedAnnotation("annotation:proxy-node-target", {
         kind: "node",
-        target: proxyNodeTarget,
+        nodeTarget: proxyNodeTarget,
       }),
     ]);
 
@@ -838,15 +838,15 @@ describe("1.0 Rich IR annotation target validation", () => {
     expect(result.valid).toBe(false);
     expect(parsed.annotations).toEqual([
       expect.objectContaining({
-        target: { kind: "source", range: range(7, 1, 77, 7, 3, 79) },
+        target: { kind: "source", sourceRange: range(7, 1, 77, 7, 3, 79) },
       }),
       expect.objectContaining({
-        target: { kind: "source", range: range(8, 1, 88, 8, 4, 91) },
+        target: { kind: "source", sourceRange: range(8, 1, 88, 8, 4, 91) },
       }),
       expect.objectContaining({
         target: {
           kind: "node",
-          target: {
+          nodeTarget: {
             kind: "node",
             id: "node:missing:proxy",
             sourceRange: range(9, 1, 90, 9, 6, 95),
@@ -860,7 +860,7 @@ describe("1.0 Rich IR annotation target validation", () => {
         sourceRange: range(9, 1, 90, 9, 6, 95),
         target: {
           kind: "node",
-          target: {
+          nodeTarget: {
             kind: "node",
             id: "node:missing:proxy",
             sourceRange: range(9, 1, 90, 9, 6, 95),
@@ -931,14 +931,14 @@ function normalizeDraftFixture(): EngineDocument {
 
 function nodeAnnotation<TPayload>(
   id: string,
-  target: EngineTarget,
+  nodeTarget: EngineNodeTarget,
   payload: TPayload,
 ): EngineAnnotation<TPayload> {
   return {
     id,
     target: {
       kind: "node",
-      target,
+      nodeTarget,
     },
     payload,
   };
@@ -946,14 +946,14 @@ function nodeAnnotation<TPayload>(
 
 function sourceAnnotation<TPayload>(
   id: string,
-  range: SourceRange,
+  sourceRange: SourceRange,
   payload: TPayload,
 ): EngineAnnotation<TPayload> {
   return {
     id,
     target: {
       kind: "source",
-      range,
+      sourceRange,
     },
     payload,
   };
@@ -1093,7 +1093,7 @@ function sharedFanoutTarget(width: number, depth: number): Record<string, unknow
 function accessorBackedEngineTarget(
   id: string,
   property: "nodeType" | "path" | "sourceRange",
-): EngineTarget {
+): EngineNodeTarget {
   const target: Record<string, unknown> = { kind: "node", id };
 
   Object.defineProperty(target, property, {
@@ -1103,7 +1103,7 @@ function accessorBackedEngineTarget(
     },
   });
 
-  return target as unknown as EngineTarget;
+  return target as unknown as EngineNodeTarget;
 }
 
 function accessorBackedSourcePosition(
@@ -1175,7 +1175,7 @@ function unavailableArrayLengthTarget(label: string): readonly number[] {
   });
 }
 
-function unavailablePathDescriptorEngineTarget(id: string): EngineTarget {
+function unavailablePathDescriptorEngineTarget(id: string): EngineNodeTarget {
   return new Proxy(
     {},
     {
@@ -1204,7 +1204,7 @@ function unavailablePathDescriptorEngineTarget(id: string): EngineTarget {
         return undefined;
       },
     },
-  ) as EngineTarget;
+  ) as EngineNodeTarget;
 }
 
 function revokedProxy(): object {
@@ -1275,11 +1275,11 @@ function targetKey(target: unknown): string | undefined {
     return String(target.kind);
   }
 
-  if (!("target" in target)) {
+  if (!("nodeTarget" in target)) {
     return "node";
   }
 
-  const nodeTarget = target.target;
+  const nodeTarget = target.nodeTarget;
 
   if (
     typeof nodeTarget === "object" &&
@@ -1297,7 +1297,7 @@ function firstNode(document: EngineDocument, type: string): EngineNode {
   return documentQueries.nodes(document, { type })[0] ?? missing();
 }
 
-function requireTarget(node: EngineNode): EngineTarget {
+function requireTarget(node: EngineNode): EngineNodeTarget {
   return node.target ?? missing();
 }
 
