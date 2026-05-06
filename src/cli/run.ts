@@ -1,5 +1,6 @@
 import { serialize } from "../api/contracts.js";
 import { cliUsage, parseCliArgs } from "./args.js";
+import { compatibilityModeForDocumentVersion } from "./document-version.js";
 import { readMarkdownFile } from "./files.js";
 import { normalizeMarkdown } from "./normalize-markdown.js";
 
@@ -30,11 +31,19 @@ export async function runCli(input: RunCliInput): Promise<number> {
   try {
     const markdown = await readMarkdownFile(argsResult.targetPath, input.cwd);
     const normalizeResult = normalizeMarkdown({
+      documentVersion: argsResult.documentVersion,
       markdown,
       path: argsResult.targetPath,
     });
 
-    input.stdout.write(`${serialize(normalizeResult, { pretty: true })}\n`);
+    input.stdout.write(
+      `${serialize(normalizeResult, {
+        compatibilityMode: compatibilityModeForDocumentVersion(
+          argsResult.documentVersion,
+        ),
+        pretty: true,
+      })}\n`,
+    );
     return 0;
   } catch (error) {
     input.stderr.write(`${errorMessage(error)}\n`);

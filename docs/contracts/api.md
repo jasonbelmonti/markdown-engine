@@ -454,16 +454,33 @@ consumers to:
 
 ### CLI Impact
 
-The local CLI currently runs parse and normalization for one Markdown file and
-writes pretty JSON. BEL-951 classifies the CLI impact as unchanged and
-compatible for current CLI consumers: `--file` and `--path` continue to emit the
-legacy normalized document shape with `version: "0.0.0"`, directory traversal
-remains unsupported, and no `documentVersion: "1.0.0-draft"` selector is
-available.
+The local CLI runs parse and normalization for one Markdown file and writes
+pretty JSON. BEL-952 changes the CLI default output to the 1.0 draft rich IR
+contract: `--file` and `--path` emit a normalized result whose
+`document.version` is `"1.0.0-draft"` and whose document includes derived rich
+IR views such as `target`, `sections`, `textSpans`, `tables`, `lists`, and
+`links` when present.
 
-Until a later CLI cutover records a new decision, use the package API for the
-1.0 draft rich IR contract. CLI users do not need a migration for BEL-951; API
-consumers migrating to rich IR should use the `documentVersion` and
+Legacy CLI output remains explicit:
+
+```sh
+markdown-engine --document-version 0.0.0 --file mission.md
+```
+
+The supported CLI selector values are:
+
+- `--document-version 1.0.0-draft`: 1.0 draft rich IR output, also the default
+  when the selector is omitted.
+- `--document-version 0.0.0`: retained `0.1.0`-compatible normalized document
+  output without rich derived views.
+
+Missing, invalid, or repeated `--document-version` selectors exit with code `2`
+and usage text. Directory traversal remains unsupported.
+
+Semver classification: this is a breaking CLI output-shape change for consumers
+that parse default CLI JSON. Migration is to either consume the rich IR fields or
+pin `--document-version 0.0.0` until the downstream consumer is ready. API
+consumers migrating to rich IR should continue to use the `documentVersion` and
 `compatibilityMode` selectors documented above.
 
 ### Non-Goals And Limits
