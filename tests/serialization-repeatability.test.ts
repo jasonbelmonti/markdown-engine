@@ -13,6 +13,12 @@ const expectedRepeatabilityCaseNames = [
   "validate:representative-pass:pretty",
   "validate:wp-4-diagnostics:compact",
   "validate:wp-4-diagnostics:pretty",
+  "rich-ir:document:compact",
+  "rich-ir:document:pretty",
+  "rich-ir:annotated-document:compact",
+  "rich-ir:annotated-document:pretty",
+  "rich-ir:annotation-diagnostics:compact",
+  "rich-ir:annotation-diagnostics:pretty",
 ] as const;
 
 describe("WP-5 deterministic serialization repeatability", () => {
@@ -61,19 +67,32 @@ describe("WP-5 deterministic serialization repeatability", () => {
     );
 
     await expect(
-      casesByName.get("parse:representative:pretty"),
+      jsonCase(casesByName, "parse:representative:pretty"),
     ).toMatchFileSnapshot(
       join(snapshotRoot, "serialization/wp-5-parse-representative.json"),
     );
     await expect(
-      casesByName.get("normalize:representative:pretty"),
+      jsonCase(casesByName, "normalize:representative:pretty"),
     ).toMatchFileSnapshot(
       join(snapshotRoot, "serialization/wp-5-normalize-representative.json"),
     );
     await expect(
-      casesByName.get("validate:wp-4-diagnostics:pretty"),
+      jsonCase(casesByName, "validate:wp-4-diagnostics:pretty"),
     ).toMatchFileSnapshot(
       join(snapshotRoot, "serialization/wp-5-validation-diagnostics.json"),
     );
   });
 });
+
+function jsonCase(
+  casesByName: ReadonlyMap<string, string>,
+  name: string,
+): string {
+  const json = casesByName.get(name);
+
+  if (json === undefined) {
+    throw new Error(`Missing repeatability case: ${name}`);
+  }
+
+  return json;
+}

@@ -2,6 +2,8 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
+import { buildRichIrRepeatabilityOutputs } from "./rich-ir-repeatability-cases.mjs";
+
 const representativePath = "fixtures/representative.md";
 const diagnosticsPath = "fixtures/rules/wp-4-diagnostics.md";
 
@@ -77,29 +79,23 @@ export function buildSerializedCases(repoRoot, engine) {
   );
 
   return [
-    ...serializedFormatCases(serialize, "parse:representative", representativeParse),
-    ...serializedFormatCases(
-      serialize,
-      "normalize:representative",
-      representativeNormalize,
-    ),
-    ...serializedFormatCases(
-      serialize,
-      "validate:representative-pass",
-      passingValidation,
-    ),
-    ...serializedFormatCases(
-      serialize,
-      "validate:wp-4-diagnostics",
-      diagnosticsValidation,
-    ),
-  ];
+    { name: "parse:representative", result: representativeParse },
+    { name: "normalize:representative", result: representativeNormalize },
+    { name: "validate:representative-pass", result: passingValidation },
+    { name: "validate:wp-4-diagnostics", result: diagnosticsValidation },
+    ...buildRichIrRepeatabilityOutputs(repoRoot, engine),
+  ].flatMap(({ name, result, options }) =>
+    serializedFormatCases(serialize, name, result, options),
+  );
 }
 
-function serializedFormatCases(serialize, name, result) {
+function serializedFormatCases(serialize, name, result, options = {}) {
   return [
-    serializedCase(serialize, `${name}:compact`, result),
-    serializedCase(serialize, `${name}:pretty`, result, { pretty: true }),
+    serializedCase(serialize, `${name}:compact`, result, options),
+    serializedCase(serialize, `${name}:pretty`, result, {
+      ...options,
+      pretty: true,
+    }),
   ];
 }
 
