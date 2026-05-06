@@ -75,7 +75,7 @@ function nodeAnnotation(id, target) {
     id,
     target: {
       kind: "node",
-      target,
+      nodeTarget: target,
     },
     payload: {
       ownedByCaller: true,
@@ -89,7 +89,7 @@ function sourceAnnotation(id, range) {
     id,
     target: {
       kind: "source",
-      range,
+      sourceRange: range,
     },
     payload: {
       ownedByCaller: true,

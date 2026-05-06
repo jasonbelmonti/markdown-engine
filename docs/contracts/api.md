@@ -1,7 +1,7 @@
 # Public API Contract
 
-Status: Initial contract for `BEL-884 / WP-2`; release metadata updated by `BEL-928`
-Last updated: 2026-05-01
+Status: Published `0.1.0` contract plus BEL-950 1.0 draft rich IR contract notes
+Last updated: 2026-05-06
 
 This document defines the public `@jasonbelmonti/markdown-engine` package
 contract for the published `0.1.0` release. The stable public surface is the
@@ -11,12 +11,14 @@ modules or raw parser output. The planned 1.0 rich IR contract is tracked in
 
 ## Exported Surface
 
-The package root exports the API functions and types from `src/api/**`:
+The package root exports the API functions, helpers, and types from `src/api/**`:
 
 - `parse(markdown, options?)`
 - `normalize(parsed, options?)`
 - `validate(document, config?, options?)`
 - `serialize(result, options?)`
+- `documentQueries`
+- `validateAnnotations(document, annotations)`
 
 The package root also exports the public result, document, diagnostic, config,
 and function types declared in `src/api/**`.
@@ -66,8 +68,15 @@ Signature:
 normalize(parsed: ParsedMarkdown, options?: NormalizeOptions): NormalizeResult
 ```
 
+`NormalizeOptions.documentVersion` selects the document contract version. The
+published `0.1.0`-compatible path is `"0.0.0"`. The BEL-950 1.0 implementation
+lane uses `"1.0.0-draft"` until final 1.0 release approval promotes the
+contract.
+
 `NormalizeOptions.preserveSourceLocations` defaults to `true`. When set to
-`false`, source ranges are omitted from the normalized document.
+`false`, source ranges and source slices are omitted from the normalized
+document, but deterministic node target IDs are still generated for the 1.0
+draft path.
 
 `NormalizeResult` contains:
 
@@ -199,7 +208,12 @@ Signature:
 
 ```ts
 serialize(
-  result: ParseResult | NormalizeResult | ValidationResult,
+  result:
+    | ParseResult
+    | NormalizeResult
+    | ValidationResult
+    | EngineDocument
+    | AnnotationValidationResult,
   options?: SerializeOptions,
 ): string
 ```
@@ -207,6 +221,17 @@ serialize(
 `SerializeOptions.pretty` controls two-space JSON formatting. Serialization
 normalizes plain object key order, recursively normalizes arrays and objects,
 and omits `undefined` properties.
+
+`SerializeOptions.compatibilityMode` is optional. When provided, it verifies
+document-bearing public results before serialization:
+
+- `compatibilityMode: "default"` expects document version `"1.0.0-draft"`.
+- `compatibilityMode: "legacy-0.1"` expects document version `"0.0.0"`.
+
+Mismatched document-bearing results throw `EngineCompatibilityError` with code
+`engine.compatibility.versionMismatch`, `requestedMode`, `expectedVersion`, and
+`actualVersion`. Results that do not contain an `EngineDocument`, such as the
+current `ValidationResult`, are not rejected by the compatibility check.
 
 The serializer is intended for stable JSON review evidence and downstream
 contract checks. It does not accept arbitrary class instances as a public data
@@ -236,27 +261,138 @@ will expand through implementation work packages. Code nodes may include a
 `kind` attribute of `fenced` or `indented`; `codeFences.*` rules apply only to
 code nodes with `kind: "fenced"`. Raw parser node objects are not public.
 
-### 1.0 Draft Structural Views And Query Helpers
+## 1.0 Draft Contract
 
-When callers normalize with `documentVersion: "1.0.0-draft"`, the document may
-include deterministic derived structural views:
+The BEL-950 implementation state documents the 1.0 default contract as
+`documentVersion: "1.0.0-draft"`. This is the source-grounded 1.0 lane contract
+until the release cutover changes the public version string to final
+`"1.0.0"` or records a different release decision.
 
-- `target`: a deterministic document or node target for identical input and
-  options.
-- `sections`: heading-derived sections with heading target, optional parent
-  section, child section targets, and body node targets.
-- `textSpans`: normalized text-bearing node spans with target and source range
-  when source locations are preserved.
-- `tables`: table views whose cells expose normalized text, zero-based
-  `rowIndex`, zero-based `columnIndex`, and `header` state. The header row is
-  row index `0`; body rows continue at `1`, `2`, and so on.
-- `lists`: list views with `ordered`, optional `start`, and item coordinates.
-  `itemIndex` is zero-based within its immediate list container, and `depth` is
-  zero-based by list nesting depth.
-- `links`: link views with normalized text, URL, optional title, and source
-  range when available.
-- `annotations`: caller-owned annotations when callers attach validated
-  annotation results to the document.
+Callers select the 1.0 draft contract with:
+
+```ts
+const parsed = parse(markdown, { path: "mission.md" });
+const document = normalize(parsed.parsed, {
+  documentVersion: "1.0.0-draft",
+}).document;
+
+const sections = documentQueries.sections(document);
+const serialized = serialize(document, { compatibilityMode: "default" });
+```
+
+The retained `0.1.0`-compatible path remains explicit:
+
+```ts
+const legacyDocument = normalize(parsed.parsed, {
+  documentVersion: "0.0.0",
+}).document;
+
+const serializedLegacy = serialize(legacyDocument, {
+  compatibilityMode: "legacy-0.1",
+});
+```
+
+### 1.0 Draft Document Fields
+
+When callers normalize with `documentVersion: "1.0.0-draft"`, the document
+includes deterministic derived structural views:
+
+- `kind`: `"markdown-document"`.
+- `version`: `"1.0.0-draft"`.
+- `path`: optional caller-supplied path from parse or normalized document input.
+- `frontmatter`: JSON-safe parsed frontmatter value when present.
+- `target`: the document-level `EngineNodeTarget`.
+- `children`: normalized `EngineNode[]`; each node has `target` in the 1.0 draft
+  path.
+- `sourceRange`: optional document source range when source locations are
+  preserved.
+- `compatibility`: `{ mode: "default", reason: "1.0 draft document contract" }`.
+- `sections`: heading-derived `EngineSection[]`.
+- `textSpans`: text-bearing `EngineTextSpan[]`.
+- `tables`: `EngineTable[]` with flattened table-cell coordinates.
+- `lists`: `EngineList[]` with list item coordinates.
+- `links`: `EngineLink[]`.
+- `annotations`: optional caller-owned annotations if a caller attaches a
+  validated annotation result to the document.
+
+`EngineNode` keeps the `0.1.0` fields `type`, optional `text`, optional
+`attributes`, optional `sourceRange`, and optional `children`. In the 1.0 draft
+path it may also include:
+
+- `target`: deterministic `EngineNodeTarget`.
+- `source`: `{ range, text }` when source locations are preserved and parser
+  offsets are usable.
+
+### Target Contract And Stability Limits
+
+`EngineNodeTarget` contains:
+
+- `kind`: currently `"node"`.
+- `id`: deterministic target ID, such as `node:1.1:link` or
+  `section:node:0:heading`.
+- `path`: optional zero-based structural path through `children`.
+- `nodeType`: optional engine-owned node type, such as `"document"`,
+  `"heading"`, `"paragraph"`, `"link"`, or `"section"`.
+- `sourceRange`: optional cloned source range when source locations are
+  preserved.
+
+Target IDs are deterministic for identical Markdown input, parser behavior,
+normalization options, package version, and runtime version. They are not a
+promise of stability across arbitrary content edits, parser upgrades, or final
+1.0 contract promotion. They do not expose raw mdast nodes or raw parser
+position objects.
+
+`SourceRange` contains `start` and `end` positions. Each position has `line`,
+`column`, and optional `offset`. Source slices are produced only when usable
+offsets are available and contained by the document source.
+
+### Structural Views
+
+`sections` contains heading-derived `EngineSection` records:
+
+- `target`: section target whose ID is derived from the heading target.
+- `headingTarget`: target for the owning heading node.
+- `parentSection`: optional parent section target.
+- `depth`: heading depth.
+- `title`: normalized heading text.
+- `bodyTargets`: node targets owned by the section body.
+- `childSections`: child section targets.
+
+`textSpans` contains `EngineTextSpan` records with `target`, `text`, and
+optional `sourceRange`.
+
+`tables` contains `EngineTable` records with `target` and flattened `cells`.
+Each `EngineTableCell` exposes `target`, normalized `text`, zero-based
+`rowIndex`, zero-based `columnIndex`, `header`, and optional `sourceRange`. The
+GFM header row is row index `0`; body rows continue at `1`, `2`, and so on.
+
+`lists` contains `EngineList` records with `target`, `ordered`, optional
+`start`, and `items`. Each `EngineListItem` exposes `target`, zero-based
+`itemIndex` within its immediate list container, zero-based `depth`, optional
+`checked`, and optional `sourceRange`.
+
+`links` contains `EngineLink` records with `target`, `url`, normalized `text`,
+optional `title`, and optional `sourceRange`.
+
+### Query Helpers
+
+`documentQueries` exposes deterministic helper methods over this public IR:
+
+- `nodes(document, query?)` filters recursive nodes by node type or target ID.
+- `sections(document, query?)` filters sections by target ID, heading target
+  ID, parent section target ID, title, or depth.
+- `textSpans(document, query?)` filters spans by target ID, node type, exact
+  text, or included text.
+- `tables(document, query?)` filters table views by target ID.
+- `lists(document, query?)` filters list views by target ID, ordered state, or
+  item depth.
+- `links(document, query?)` filters link views by target ID, URL, or text.
+- `sourceSlice(document, target)` returns the precomputed source slice for node
+  targets when parser offsets are available. For section targets, it returns
+  the source slice for the owning heading target. It returns `undefined` instead
+  of guessing when offsets are absent, unsupported, or out of bounds.
+
+### Annotation Contract
 
 Annotations use an explicit address-mode wrapper:
 
@@ -272,24 +408,73 @@ The annotated Markdown node type remains `nodeTarget.nodeType`, such as
 the exact caller-provided range. Annotation `payload` values remain opaque and
 caller-owned; the engine validates only target shape and target existence.
 
-`documentQueries` exposes deterministic helper methods over this public IR:
+`validateAnnotations(document, annotations)` returns:
 
-- `nodes(document, query?)` filters recursive nodes by node type or target ID.
-- `sections(document, query?)` filters sections by target ID, heading target
-  ID, parent section target ID, title, or depth.
-- `textSpans(document, query?)` filters spans by target ID, node type, exact
-  text, or included text.
-- `tables(document, query?)` filters table views by target ID.
-- `lists(document, query?)` filters list views by target ID, ordered state, or
-  item depth.
-- `links(document, query?)` filters link views by target ID, URL, or text.
-- `sourceSlice(document, target)` returns the precomputed source slice for node
-  targets when parser offsets are available. For section targets, it returns
-  the source slice for the owning heading target. It does not guess slices when
-  offsets are absent or unsupported.
+- `valid`: `true` when all annotation targets are accepted.
+- `annotations`: cloned annotations with target data preserved.
+- `diagnostics`: deterministic `EngineTargetDiagnostic[]`.
+
+The annotation validator accepts document node targets and section targets. For
+source targets, it verifies start/end shape and ordering. When the normalized
+document has `sourceRange`, source targets must be contained by that document
+range; when `sourceRange` is absent, the validator cannot prove source-target
+bounds and does not synthesize a document range. It rejects malformed target
+wrappers, malformed node targets, unknown node targets, invalid source range
+ordering, and source ranges proven out of bounds. It does not interpret,
+normalize, validate, or serialize caller payload semantics beyond normal public
+serialization behavior.
+
+### Compatibility And Migration
+
+The current package version remains `0.1.0`. Before final 1.0 publication, the
+1.0 contract is selected with `normalize(..., { documentVersion:
+"1.0.0-draft" })` and checked at serialization with `compatibilityMode:
+"default"`.
+
+The retained compatibility selector is `compatibilityMode: "legacy-0.1"`,
+which accepts document-bearing public results with `version: "0.0.0"`. This is
+the documented 0.1.x-compatible behavior gate. Consumers should not infer
+compatibility from the absence of rich IR fields.
+
+Migration from the `0.1.0` document shape to the 1.0 draft shape requires
+consumers to:
+
+- request `documentVersion: "1.0.0-draft"` during normalization while the
+  package is still in the implementation lane;
+- read `target`, `sections`, `textSpans`, `tables`, `lists`, `links`, and
+  `source` from the normalized document instead of re-deriving them from raw
+  Markdown;
+- use `documentQueries` for structural access rather than depending on internal
+  traversal helpers;
+- use `validateAnnotations` for caller-owned node and source annotations;
+- serialize document-bearing rich IR outputs with `compatibilityMode:
+  "default"` in gates that must reject legacy document versions;
+- use `compatibilityMode: "legacy-0.1"` only for retained 0.1.x-compatible
+  parse or normalize outputs.
+
+### CLI Impact
+
+The local CLI currently runs parse and normalization for one Markdown file and
+writes pretty JSON. BEL-950 does not add a CLI flag for
+`documentVersion: "1.0.0-draft"` and does not change directory traversal. Until
+a later CLI cutover records a new decision, CLI output follows the existing
+normalization path and should not be treated as the complete 1.0 rich IR
+contract surface.
+
+### Non-Goals And Limits
 
 Structural views are derived from engine-owned document nodes, targets, and
 source metadata. They do not expose raw parser AST fields as public contract.
+
+The package boundary remains domain-neutral. The 1.0 draft contract does not
+implement SpecTrace entities, profile compiler behavior, runtime lenses, MCP
+transport, agent adapters, semantic or LLM evaluation, arbitrary rule plugins,
+network services, persistence, file watching, graph storage, rendering,
+sanitization, fetching, or raw HTML execution.
+
+Source text and raw HTML remain inert strings. The engine does not promise
+source slices when parser offsets are missing or unusable, and it does not
+promise node target stability across arbitrary edits.
 
 ## Diagnostic Contract
 
