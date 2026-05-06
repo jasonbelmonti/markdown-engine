@@ -1,3 +1,7 @@
+import {
+  assertCompatibleResultVersion,
+  type EngineCompatibilityMode,
+} from "./compatibility.js";
 import type { SerializableEngineResult } from "./document.js";
 import type { NormalizeResult } from "./normalize.js";
 import type { ParseResult } from "./parse.js";
@@ -10,8 +14,14 @@ export type SerializableMarkdownEngineResult =
   | ValidationResult
   | SerializableEngineResult;
 
+export {
+  EngineCompatibilityError,
+  type EngineCompatibilityMode,
+} from "./compatibility.js";
+
 export interface SerializeOptions {
   pretty?: boolean;
+  compatibilityMode?: EngineCompatibilityMode;
 }
 
 export type SerializeFunction = (
@@ -20,6 +30,10 @@ export type SerializeFunction = (
 ) => string;
 
 export const serialize: SerializeFunction = (result, options = {}) => {
+  if (options.compatibilityMode !== undefined) {
+    assertCompatibleResultVersion(result, options.compatibilityMode);
+  }
+
   const serialized = JSON.stringify(
     normalizeSerializableValue(result),
     null,
