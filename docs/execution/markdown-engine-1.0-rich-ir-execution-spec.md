@@ -46,12 +46,12 @@ Section status: Complete
 | SRC-3 | `docs/design/markdown-engine-operational-design-spec.md` and `RUNTIME_ARCHITECTURE.md` | Existing package boundary and architecture authority. | Keep `markdown-engine` a deterministic local TypeScript package that excludes profile, runtime, MCP, agent adapters, semantic evaluation, network services, and persistent storage. |
 | SRC-4 | User request to generate an execution spec from `SRC-1`. | Execution planning request. | Produce an implementation-ready execution plan before coding starts. |
 
-In scope: 1.0 public TypeScript types and API entry points, rich `EngineDocument` shape, deterministic `EngineTarget` generation, source range and source slice behavior, heading-derived section tree, text spans, table row/cell coordinates, list metadata, link views, query helpers, caller-owned annotation target validation, compatibility selectors or namespaces for 0.1.x behavior where retained, deterministic serialization, CLI output compatibility if affected, fixtures, snapshots, repeatability tests, boundary audits, API contract docs, migration notes, downstream SpecTrace-style exercise, release containment, and handoff evidence.
+In scope: 1.0 public TypeScript types and API entry points, rich `EngineDocument` shape, deterministic `EngineNodeTarget` generation, source range and source slice behavior, heading-derived section tree, text spans, table row/cell coordinates, list metadata, link views, query helpers, caller-owned annotation target validation, compatibility selectors or namespaces for 0.1.x behavior where retained, deterministic serialization, CLI output compatibility if affected, fixtures, snapshots, repeatability tests, boundary audits, API contract docs, migration notes, downstream SpecTrace-style exercise, release containment, and handoff evidence.
 
 Public naming boundary: `rich IR` is an execution workstream label only. Public
 TypeScript symbols, package-root exports, and source modules shall use
 engine/document vocabulary such as `EngineDocument`, `EngineNode`,
-`EngineTarget`, query helpers, annotation helpers, `parse`, `normalize`,
+`EngineNodeTarget`, query helpers, annotation helpers, `parse`, `normalize`,
 `validate`, and `serialize`. Do not introduce public `RichIr*`, `richIr`,
 `queryRichIr`, `serializeRichIr`, `validateRichIr*`, or a separate public
 `rich-ir` module without a `DEV-*` deviation and project-owner approval. The
@@ -300,7 +300,7 @@ Agent ownership boundary:
 
 - Agent editable paths: `src/ir/**` target/source files, `src/parser/**` and `src/frontmatter/**` only for source position propagation, target/source fixtures and snapshots.
 - Agent read-only paths: public API files unless coordination is approved, rules/config modules, docs outside target/source contract sections.
-- Required coordination before editing: target ID format, `EngineTarget`, `SourceRange`, source-slice result shape, parser adapter result type.
+- Required coordination before editing: target ID format, `EngineNodeTarget`, `SourceRange`, source-slice result shape, parser adapter result type.
 
 Validation command: `npm run test:rich-ir:targets`
 
@@ -667,7 +667,7 @@ Section status: Complete
 | Change | Impact | Compatibility | Reversibility | Validation |
 | --- | --- | --- | --- | --- |
 | 1.0 `EngineDocument` shape | Adds public sections, spans, tables, lists, links, targets, and source references to the canonical 1.0 contract. | 1.0 root API uses the evolved document shape; any 0.1.x-compatible path is explicit and documented. | Reversible before 1.0 release; semver-controlled after release. | VAL-1 / VAL-3 / VAL-8 |
-| `EngineTarget` and target ID semantics | Adds public anchors for diagnostics, annotations, query results, and reports. | Deterministic for identical input/options only; no arbitrary edit-stability promise. | Reversible before 1.0 release; semver-controlled after release. | VAL-2 / VAL-6 / VAL-8 |
+| `EngineNodeTarget` and target ID semantics | Adds public anchors for diagnostics, annotations, query results, and reports. | Deterministic for identical input/options only; no arbitrary edit-stability promise. | Reversible before 1.0 release; semver-controlled after release. | VAL-2 / VAL-6 / VAL-8 |
 | Source ranges and source slices | Exposes source-grounded text where parser offsets exist. | Missing offsets produce diagnostics or omitted slices, not guessed text. | Reversible before 1.0 release; semver-controlled after release. | VAL-2 / VAL-7 |
 | Section, text span, table, list, and link views | Adds derived public structural views. | Coordinate and membership semantics are documented before release. | Reversible before 1.0 release; semver-controlled after release. | VAL-3 / VAL-8 |
 | Query helper API | Adds public traversal helpers over 1.0 IR. | Helper names and result shapes are frozen by `MS-2` before merge and `MS-3` before release. | Reversible before 1.0 release; semver-controlled after release. | VAL-3 / VAL-8 |

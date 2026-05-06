@@ -2,7 +2,7 @@ import type { SourceRange } from "../api/diagnostics.js";
 import type {
   EngineNode,
   EngineSourceSlice,
-  EngineTarget,
+  EngineNodeTarget,
 } from "../api/document.js";
 import { cloneSourceRange, sourceOffsetBounds } from "./source-ranges.js";
 
@@ -34,7 +34,7 @@ export function targetFor(
   nodeType: string,
   path: readonly number[],
   sourceRange: SourceRange | undefined,
-): EngineTarget {
+): EngineNodeTarget {
   const idPath = path.length === 0 ? "root" : path.join(".");
 
   return {
@@ -48,7 +48,7 @@ export function targetFor(
   };
 }
 
-export function requireNodeTarget(node: EngineNode): EngineTarget {
+export function requireNodeTarget(node: EngineNode): EngineNodeTarget {
   if (node.target === undefined) {
     throw new Error(`Expected ${node.type} node to have a target.`);
   }

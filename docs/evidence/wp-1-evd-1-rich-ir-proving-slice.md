@@ -55,7 +55,7 @@ BEL-935 and extends it with:
   document shape free of 1.0 target, section, and annotation fields.
 
 Public API naming remains in the engine/document vocabulary:
-`validateAnnotations`, `documentQueries`, `EngineDocument`, `EngineTarget`, and
+`validateAnnotations`, `documentQueries`, `EngineDocument`, `EngineNodeTarget`, and
 `serialize`. No public `RichIr*`, `richIr`, `queryRichIr`,
 `serializeRichIr`, `validateRichIr*`, or `src/api/rich-ir.ts` surface was added.
 

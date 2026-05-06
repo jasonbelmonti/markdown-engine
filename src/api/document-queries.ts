@@ -12,7 +12,7 @@ import type {
   EngineSourceSlice,
   EngineTable,
   EngineTableQuery,
-  EngineTarget,
+  EngineNodeTarget,
   EngineTextSpan,
   EngineTextSpanQuery,
 } from "./document.js";
@@ -144,7 +144,7 @@ function links(
 
 function sourceSlice(
   document: EngineDocument,
-  target: EngineTarget,
+  target: EngineNodeTarget,
 ): EngineSourceSlice | undefined {
   if (target.kind !== "node") {
     return undefined;

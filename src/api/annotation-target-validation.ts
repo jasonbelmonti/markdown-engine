@@ -4,7 +4,7 @@ import type {
   EngineAnnotation,
   EngineAnnotationTarget,
   EngineDocument,
-  EngineTarget,
+  EngineNodeTarget,
   EngineTargetDiagnostic,
 } from "./document.js";
 import { documentQueries } from "./document-queries.js";
@@ -22,8 +22,8 @@ import {
 
 type AnnotationTargetCandidate = {
   kind?: unknown;
-  range?: unknown;
-  target?: unknown;
+  nodeTarget?: unknown;
+  sourceRange?: unknown;
 };
 
 type TargetPathClone =
@@ -119,7 +119,7 @@ function nodeTargetDiagnostics(
   documentSourceRange: SourceRange | undefined,
   order: number,
 ): SortableTargetDiagnostic[] {
-  const nodeTarget = cloneEngineTargetCandidate(annotationTargetValue(target));
+  const nodeTarget = cloneEngineTargetCandidate(annotationNodeTarget(target));
 
   if (nodeTarget === undefined) {
     return [
@@ -168,7 +168,7 @@ function nodeTargetDiagnostics(
 
 function nodeTargetSourceRangeDiagnostic(
   target: AnnotationTargetCandidate,
-  nodeTarget: EngineTarget,
+  nodeTarget: EngineNodeTarget,
   documentSourceRange: SourceRange | undefined,
   order: number,
 ): SortableTargetDiagnostic | undefined {
@@ -214,7 +214,7 @@ function sourceTargetDiagnostics(
   documentSourceRange: SourceRange | undefined,
   order: number,
 ): SortableTargetDiagnostic[] {
-  const range = cloneSourceRangeCandidate(annotationTargetRange(target));
+  const range = cloneSourceRangeCandidate(annotationSourceRange(target));
 
   if (range === undefined) {
     return [
@@ -389,12 +389,12 @@ function annotationTargetKind(target: AnnotationTargetCandidate): unknown {
   return ownDataProperty(target, "kind");
 }
 
-function annotationTargetValue(target: AnnotationTargetCandidate): unknown {
-  return ownDataProperty(target, "target");
+function annotationNodeTarget(target: AnnotationTargetCandidate): unknown {
+  return ownDataProperty(target, "nodeTarget");
 }
 
-function annotationTargetRange(target: AnnotationTargetCandidate): unknown {
-  return ownDataProperty(target, "range");
+function annotationSourceRange(target: AnnotationTargetCandidate): unknown {
+  return ownDataProperty(target, "sourceRange");
 }
 
 export function cloneAnnotationTarget(
@@ -429,7 +429,7 @@ function cloneKnownAnnotationTarget(
   const kind = annotationTargetKind(target);
 
   if (kind === "node") {
-    const nodeTarget = cloneEngineTargetCandidate(annotationTargetValue(target));
+    const nodeTarget = cloneEngineTargetCandidate(annotationNodeTarget(target));
 
     if (nodeTarget === undefined) {
       return undefined;
@@ -437,27 +437,27 @@ function cloneKnownAnnotationTarget(
 
     return {
       kind: "node",
-      target: nodeTarget,
+      nodeTarget,
     };
   }
 
   if (kind === "source") {
-    const range = cloneSourceRangeCandidate(annotationTargetRange(target));
+    const sourceRange = cloneSourceRangeCandidate(annotationSourceRange(target));
 
-    if (range === undefined) {
+    if (sourceRange === undefined) {
       return undefined;
     }
 
     return {
       kind: "source",
-      range,
+      sourceRange,
     };
   }
 
   return undefined;
 }
 
-function cloneEngineTargetCandidate(target: unknown): EngineTarget | undefined {
+function cloneEngineTargetCandidate(target: unknown): EngineNodeTarget | undefined {
   if (!isPlainObject(target)) {
     return undefined;
   }

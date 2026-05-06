@@ -1,18 +1,18 @@
 import type {
   EngineNode,
   EngineSection,
-  EngineTarget,
+  EngineNodeTarget,
 } from "../api/document.js";
 import { requireNodeTarget } from "./document-targets.js";
 
 interface MutableSection {
-  target: EngineTarget;
-  headingTarget: EngineTarget;
-  parentSection?: EngineTarget;
+  target: EngineNodeTarget;
+  headingTarget: EngineNodeTarget;
+  parentSection?: EngineNodeTarget;
   depth: number;
   title: string;
-  bodyTargets: EngineTarget[];
-  childSections: EngineTarget[];
+  bodyTargets: EngineNodeTarget[];
+  childSections: EngineNodeTarget[];
 }
 
 export function buildSections(
