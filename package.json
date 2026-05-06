@@ -52,7 +52,7 @@
     "test:rich-ir:targets": "npm run build && vitest run tests/rich-ir-targets.test.ts \"--exclude=.worktrees/**\"",
     "test:rich-ir:queries": "npm run build && vitest run tests/rich-ir-queries.test.ts \"--exclude=.worktrees/**\"",
     "test:rich-ir:annotations": "npm run build && vitest run tests/rich-ir-annotations.test.ts \"--exclude=.worktrees/**\"",
-    "test:rich-ir:compat": "node scripts/gate-placeholder.mjs test:rich-ir:compat",
+    "test:rich-ir:compat": "npm run build && vitest run tests/rich-ir-compat.test.ts \"--exclude=.worktrees/**\"",
     "test:rich-ir:repeatability": "node scripts/gate-placeholder.mjs test:rich-ir:repeatability",
     "test:rich-ir:downstream": "node scripts/gate-placeholder.mjs test:rich-ir:downstream",
     "audit:rich-ir-boundary": "node scripts/check-boundaries.mjs",
