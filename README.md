@@ -111,7 +111,10 @@ Directory traversal is not supported by this CLI slice.
 The CLI has not yet gained a `documentVersion: "1.0.0-draft"` selector. Treat
 the package API and [Public API contract](docs/contracts/api.md) as the
 authoritative 1.0 rich IR contract surface until a later CLI cutover records a
-new decision.
+new decision. BEL-951 classifies the current CLI behavior as unchanged and
+compatible for the `0.1.0` package line: `--file` and `--path` still emit the
+legacy normalized document shape with `version: "0.0.0"`, and no migration is
+required for current CLI users.
 
 Contract references:
 
@@ -136,6 +139,7 @@ npm publish --dry-run --access public
 Validation records include:
 
 - [EVD-6 rich IR contract docs](docs/evidence/wp-5-evd-6-rich-ir-contract.md)
+- [EVD-8 compatibility and CLI impact](docs/evidence/wp-5-evd-8-compatibility-cli-impact.md)
 - [EVD-7 release readiness](docs/evidence/wp-6-evd-7-release-readiness.md)
 - [EVD-9 merge readiness](docs/evidence/wp-6-evd-9-merge-readiness.md)
 - [EVD-10 rollback containment](docs/evidence/wp-6-evd-10-rollback-containment.md)

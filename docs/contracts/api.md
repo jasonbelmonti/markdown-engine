@@ -455,11 +455,16 @@ consumers to:
 ### CLI Impact
 
 The local CLI currently runs parse and normalization for one Markdown file and
-writes pretty JSON. BEL-950 does not add a CLI flag for
-`documentVersion: "1.0.0-draft"` and does not change directory traversal. Until
-a later CLI cutover records a new decision, CLI output follows the existing
-normalization path and should not be treated as the complete 1.0 rich IR
-contract surface.
+writes pretty JSON. BEL-951 classifies the CLI impact as unchanged and
+compatible for current CLI consumers: `--file` and `--path` continue to emit the
+legacy normalized document shape with `version: "0.0.0"`, directory traversal
+remains unsupported, and no `documentVersion: "1.0.0-draft"` selector is
+available.
+
+Until a later CLI cutover records a new decision, use the package API for the
+1.0 draft rich IR contract. CLI users do not need a migration for BEL-951; API
+consumers migrating to rich IR should use the `documentVersion` and
+`compatibilityMode` selectors documented above.
 
 ### Non-Goals And Limits
 
