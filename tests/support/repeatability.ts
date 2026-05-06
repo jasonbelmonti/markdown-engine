@@ -1,10 +1,12 @@
 import { fileURLToPath } from "node:url";
 
 import {
+  documentQueries,
   normalize,
   parse,
   serialize,
   validate,
+  validateAnnotations,
 } from "@jasonbelmonti/markdown-engine";
 
 import { buildSerializedCases } from "../../scripts/repeatability-cases.mjs";
@@ -20,9 +22,11 @@ export interface SerializedRepeatabilityCase {
 
 export function serializedRepeatabilityCases(): SerializedRepeatabilityCase[] {
   return buildSerializedCases(repoRoot, {
+    documentQueries,
     normalize,
     parse,
     serialize,
     validate,
+    validateAnnotations,
   }) as SerializedRepeatabilityCase[];
 }
