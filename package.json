@@ -56,7 +56,7 @@
     "test:rich-ir:repeatability": "npm run build && vitest run tests/rich-ir-repeatability.test.ts \"--exclude=.worktrees/**\"",
     "test:rich-ir:downstream": "node scripts/gate-placeholder.mjs test:rich-ir:downstream",
     "audit:rich-ir-boundary": "node scripts/check-boundaries.mjs",
-    "docs:rich-ir-contract": "node scripts/gate-placeholder.mjs docs:rich-ir-contract",
+    "docs:rich-ir-contract": "node scripts/check-rich-ir-contract-docs.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "npm run build && vitest run \"--exclude=.worktrees/**\"",
     "test:snapshots": "npm run build && vitest run tests/parser-fixtures.test.ts tests/rules.test.ts tests/serialization-repeatability.test.ts \"--exclude=.worktrees/**\""

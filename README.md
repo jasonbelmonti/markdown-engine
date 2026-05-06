@@ -38,6 +38,8 @@ The package root exports:
 - `normalize(parsed, options?)`
 - `validate(document, config?, options?)`
 - `serialize(result, options?)`
+- `documentQueries`
+- `validateAnnotations(document, annotations)`
 
 Example:
 
@@ -78,6 +80,13 @@ console.log(validationResult.valid);
 console.log(serialize(validationResult, { pretty: true }));
 ```
 
+The 1.0 implementation lane exposes the rich IR draft contract through
+`normalize(parsed, { documentVersion: "1.0.0-draft" })`. That path adds
+deterministic targets, structural views, source slices, query helpers, and
+caller-owned annotation target validation. The retained `0.1.0`-compatible
+document path remains selectable as `documentVersion: "0.0.0"` and
+serialization gates can require it with `compatibilityMode: "legacy-0.1"`.
+
 ## CLI
 
 The package includes a minimal local CLI for experimenting with one Markdown
@@ -99,6 +108,11 @@ markdown-engine --path fixtures/representative.md
 
 Directory traversal is not supported by this CLI slice.
 
+The CLI has not yet gained a `documentVersion: "1.0.0-draft"` selector. Treat
+the package API and [Public API contract](docs/contracts/api.md) as the
+authoritative 1.0 rich IR contract surface until a later CLI cutover records a
+new decision.
+
 Contract references:
 
 - [Public API contract](docs/contracts/api.md)
@@ -113,13 +127,15 @@ Contract references:
 Run the release-readiness gates from the repository root:
 
 ```sh
+npm run docs:rich-ir-contract
 npm run release:verify
 npm pack --dry-run
 npm publish --dry-run --access public
 ```
 
-The WP-6 validation record is:
+Validation records include:
 
+- [EVD-6 rich IR contract docs](docs/evidence/wp-5-evd-6-rich-ir-contract.md)
 - [EVD-7 release readiness](docs/evidence/wp-6-evd-7-release-readiness.md)
 - [EVD-9 merge readiness](docs/evidence/wp-6-evd-9-merge-readiness.md)
 - [EVD-10 rollback containment](docs/evidence/wp-6-evd-10-rollback-containment.md)

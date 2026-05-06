@@ -406,6 +406,20 @@ tables, table rows, table cells, lists, list items, links, annotations, and
 source-slice query results. `VAL-7` shall freeze the released names and
 migration notes before 1.0 approval.
 
+BEL-950 implementation status as of 2026-05-06: the current source-grounded
+draft contract is documented in `docs/contracts/api.md` and uses
+`documentVersion: "1.0.0-draft"`. The implemented `EngineNodeTarget` shape is
+`{ kind: "node"; id; path?; nodeType?; sourceRange? }`. Source text is exposed
+as `EngineNode.source: { range, text }`, not `sourceText`. Tables currently
+expose flattened `cells` with `header` instead of a row object layer; lists
+expose item-level `depth` and do not expose `bodyTargets` or
+`childListTargets`. `documentQueries.sourceSlice(document, target)` returns an
+`EngineSourceSlice | undefined`; annotation target validation emits diagnostics.
+The retained 0.1.x compatibility selector is `compatibilityMode: "legacy-0.1"`,
+and the 1.0 draft selector is `compatibilityMode: "default"`. Final release
+approval still needs to decide whether these draft names are promoted as-is or
+revised before the public `"1.0.0"` contract.
+
 Naming rule for this shape: use engine/document vocabulary for public symbols.
 The implementation may use `rich IR` as an execution-program phrase in docs,
 scripts, and evidence, but public TypeScript declarations and package-root API
