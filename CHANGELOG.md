@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Added the 1.0 rich IR downstream exercise gate and WP-6 release-readiness
+  evidence for the implementation lane.
+
 ## 0.1.0 - 2026-05-01
 
 Initial public release for `@jasonbelmonti/markdown-engine`.
