@@ -7,6 +7,15 @@ import { parseCliArgs } from "../src/cli/args.js";
 import { runCli, type TextOutput } from "../src/cli/run.js";
 
 const tempDirs: string[] = [];
+const missionBriefMarkdown = `---
+title: Mission Brief
+owner: docs
+---
+
+# Mission Brief
+
+Body text.
+`;
 
 describe("CLI", () => {
   afterEach(async () => {
@@ -17,18 +26,7 @@ describe("CLI", () => {
 
   it("accepts --file and writes 1.0 draft rich IR JSON by default", async () => {
     const cwd = await makeTempDir();
-    await writeFile(
-      join(cwd, "mission.md"),
-      `---
-title: Mission Brief
-owner: docs
----
-
-# Mission Brief
-
-Body text.
-`,
-    );
+    await writeFile(join(cwd, "mission.md"), missionBriefMarkdown);
     const { exitCode, stderr, stdout } = await runCliWithOutput({
       args: ["--file", "mission.md"],
       cwd,
@@ -38,47 +36,7 @@ Body text.
     expect(stderr.text()).toBe("");
     const result = JSON.parse(stdout.text());
 
-    expect(result).toMatchObject({
-      diagnostics: [],
-      document: {
-        kind: "markdown-document",
-        path: "mission.md",
-        version: "1.0.0-draft",
-        compatibility: {
-          mode: "default",
-        },
-        frontmatter: {
-          title: "Mission Brief",
-          owner: "docs",
-        },
-        children: [
-          {
-            type: "heading",
-            text: "Mission Brief",
-          },
-          {
-            type: "paragraph",
-            text: "Body text.",
-          },
-        ],
-      },
-    });
-    expect(result.document.target).toMatchObject({
-      kind: "node",
-      nodeType: "document",
-    });
-    expect(result.document.children[0].target).toMatchObject({
-      kind: "node",
-      nodeType: "heading",
-    });
-    expect(result.document.sections).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          depth: 1,
-          title: "Mission Brief",
-        }),
-      ]),
-    );
+    expectMissionBriefRichIrOutput(result);
   });
 
   it("accepts --path as a single-file target", async () => {
@@ -171,24 +129,19 @@ Body text.
     },
   );
 
-  it("accepts an explicit 1.0 draft document-version selector", async () => {
+  it("accepts an explicit 1.0 draft document-version selector as rich IR output", async () => {
     const cwd = await makeTempDir();
-    await writeFile(join(cwd, "notes.md"), "# Notes\n");
+    await writeFile(join(cwd, "mission.md"), missionBriefMarkdown);
     const { exitCode, stderr, stdout } = await runCliWithOutput({
-      args: ["--document-version=1.0.0-draft", "--file", "notes.md"],
+      args: ["--document-version=1.0.0-draft", "--file", "mission.md"],
       cwd,
     });
 
     expect(exitCode).toBe(0);
     expect(stderr.text()).toBe("");
-    expect(JSON.parse(stdout.text())).toMatchObject({
-      document: {
-        version: "1.0.0-draft",
-        compatibility: {
-          mode: "default",
-        },
-      },
-    });
+    const result = JSON.parse(stdout.text());
+
+    expectMissionBriefRichIrOutput(result);
   });
 
   it("rejects directory targets instead of traversing them", async () => {
@@ -221,6 +174,52 @@ async function makeTempDir(): Promise<string> {
   const dir = await mkdtemp(join(tmpdir(), "markdown-engine-cli-"));
   tempDirs.push(dir);
   return dir;
+}
+
+function expectMissionBriefRichIrOutput(result: unknown): void {
+  expect(result).toMatchObject({
+    diagnostics: [],
+    document: {
+      kind: "markdown-document",
+      path: "mission.md",
+      version: "1.0.0-draft",
+      compatibility: {
+        mode: "default",
+      },
+      frontmatter: {
+        title: "Mission Brief",
+        owner: "docs",
+      },
+      children: [
+        {
+          type: "heading",
+          text: "Mission Brief",
+          target: {
+            kind: "node",
+            nodeType: "heading",
+          },
+        },
+        {
+          type: "paragraph",
+          text: "Body text.",
+        },
+      ],
+    },
+  });
+  expect(result).toMatchObject({
+    document: {
+      target: {
+        kind: "node",
+        nodeType: "document",
+      },
+      sections: expect.arrayContaining([
+        expect.objectContaining({
+          depth: 1,
+          title: "Mission Brief",
+        }),
+      ]),
+    },
+  });
 }
 
 function createTextOutput(): TextOutput & { text(): string } {
