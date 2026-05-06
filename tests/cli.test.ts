@@ -46,6 +46,7 @@ Body text.
       document: {
         kind: "markdown-document",
         path: "mission.md",
+        version: "0.0.0",
         frontmatter: {
           title: "Mission Brief",
           owner: "docs",
@@ -82,9 +83,27 @@ Body text.
     expect(JSON.parse(stdout.text())).toMatchObject({
       document: {
         path: "notes.md",
+        version: "0.0.0",
         children: [{ type: "heading", text: "Notes" }],
       },
     });
+  });
+
+  it("rejects a 1.0 draft document-version selector until a CLI cutover", async () => {
+    const stdout = createTextOutput();
+    const stderr = createTextOutput();
+
+    const exitCode = await runCli({
+      args: ["--document-version", "1.0.0-draft", "--file", "notes.md"],
+      cwd: "/",
+      stderr,
+      stdout,
+    });
+
+    expect(exitCode).toBe(2);
+    expect(stdout.text()).toBe("");
+    expect(stderr.text()).toContain("Unknown argument: --document-version");
+    expect(stderr.text()).toContain("Usage: markdown-engine");
   });
 
   it("rejects directory targets instead of traversing them", async () => {
