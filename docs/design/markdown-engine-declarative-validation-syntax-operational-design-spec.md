@@ -197,7 +197,7 @@ External service expectations: The package has no network availability service l
 | ACC-6 | Validate a duplicate `REQ-*` ID in a table cell. | The result contains deterministic duplicate-ID diagnostics with source ranges for duplicate occurrences where available. | REQ-5 / REQ-6 / FUNC-4 |
 | ACC-7 | Validate the same document and profile 10 times. | Serialized validation output is byte-for-byte identical across all runs. | REQ-7 / FUNC-6 |
 | ACC-8 | Review contract documentation before release. | Docs define syntax versioning, examples, selector vocabulary, assertion vocabulary, diagnostics, CLI behavior, and non-goals. | REQ-9 / FUNC-6 |
-| ACC-9 | Run CLI validation with `--format json` on a failing document. | The CLI emits JSON diagnostics and exits non-zero for error-severity findings. | REQ-10 / FUNC-5 |
+| ACC-9 | Run CLI validation with `--format json` on an invalid profile and on a failing document. | The CLI emits the documented profile-stage JSON shape for invalid profiles, emits the documented validation-result JSON shape for parsed profiles, and exits non-zero for error-severity findings. | REQ-2 / REQ-10 / FUNC-1 / FUNC-5 |
 | ACC-10 | Run an operational-design-spec fixture profile. | The generic declarative syntax validates structural ODS requirements without hard-coded ODS semantics in core engine code. | REQ-4 / REQ-5 / REQ-8 / FUNC-3 |
 
 Section status: Complete
@@ -317,6 +317,13 @@ First-version public API and schema contract:
 type DeclarativeValidationSeverity = "error" | "warning" | "info";
 type DeclarativeOutputFormat = "json";
 type DeclarativeSectionOrder = "none" | "strict";
+type JsonSafeValue =
+  | null
+  | boolean
+  | number
+  | string
+  | readonly JsonSafeValue[]
+  | { readonly [key: string]: JsonSafeValue };
 
 interface ValidationProfile {
   syntaxVersion: "markdown-engine.validation@v1";
@@ -416,7 +423,7 @@ interface DeclarativeIdSource {
 
 interface DeclarativeValidationApi {
   parseValidationProfile(
-    input: string | unknown,
+    input: string | JsonSafeValue,
     options?: { path?: string },
   ): DeclarativeProfileParseResult;
   validateWithProfile(
@@ -429,6 +436,19 @@ interface DeclarativeValidationApi {
 interface DeclarativeProfileParseResult {
   profile?: ValidationProfile;
   diagnostics: readonly MarkdownDiagnostic[];
+}
+
+type DeclarativeValidationCliJsonResult =
+  | DeclarativeValidationResult
+  | DeclarativeValidationConfigErrorResult;
+
+interface DeclarativeValidationConfigErrorResult {
+  valid: false;
+  stage: "profile";
+  diagnostics: readonly MarkdownDiagnostic[];
+  ruleResults: readonly [];
+  profile?: undefined;
+  evidence?: undefined;
 }
 
 interface DeclarativeValidationOptions {
@@ -514,7 +534,7 @@ First-version diagnostic inventory:
 | `profile.validation.referenceMissing` | Rule severity | A reference assertion finds an ID token that is absent from a required target section. |
 | `profile.validation.duplicateId` | Rule severity | An ID uniqueness assertion finds repeated IDs. |
 
-First-version CLI contract: declarative validation is exposed as `markdown-engine validate --file <markdown-file> --profile <profile-file> [--format json]`. The only first-version output format is `json`; unsupported `--format` values exit with code `2` and usage text. JSON output is the stable serialized `DeclarativeValidationResult` shape above, using deterministic key order. Error-severity config or validation diagnostics exit with code `1`; CLI usage and local file read errors exit with code `2`; successful validation exits with code `0`. The existing parse/normalize CLI path remains available for rich IR output and is not replaced by this command.
+First-version CLI contract: declarative validation is exposed as `markdown-engine validate --file <markdown-file> --profile <profile-file> [--format json]`. The only first-version output format is `json`; unsupported `--format` values exit with code `2` and usage text. JSON output is the stable serialized `DeclarativeValidationCliJsonResult` union above, using deterministic key order. Profile parse, shape, syntax-version, unsupported-key, unsupported-selector, unsupported-assertion, and incompatible selector/assertion failures emit `DeclarativeValidationConfigErrorResult` with `stage: "profile"`, `valid: false`, config or compile diagnostics, empty `ruleResults`, no `profile`, and no `evidence`; the CLI does not parse or validate the Markdown file after a profile-stage failure. A successfully parsed and compiled profile emits `DeclarativeValidationResult` whether document validation passes or fails. Error-severity config or validation diagnostics exit with code `1`; CLI usage and local file read errors exit with code `2`; successful validation exits with code `0`. The existing parse/normalize CLI path remains available for rich IR output and is not replaced by this command.
 
 | Change | Type | Compatibility impact | Reversibility | Mitigation |
 | --- | --- | --- | --- | --- |
@@ -581,7 +601,7 @@ Section status: Complete
 | VAL-7 | Review | Contract docs cover syntax versioning, selectors, assertions, diagnostics, result shape, examples, CLI behavior, compatibility, and non-goals. | REQ-9 / FUNC-6 / TECH-10 |
 | VAL-8 | Boundary audit | No arbitrary JavaScript, user-supplied regular expression compilation, plugin loading, network call, LLM call, file watching, persistence, or profile-specific core semantic behavior appears in declarative validation execution; a `^(a+)+$` profile fixture is rejected as unsupported config. | REQ-3 / REQ-8 / FUNC-2 / TECH-3 / TECH-9 |
 | VAL-9 | Downstream exercise | An operational-design-spec structural profile validates required headings, tables, IDs, text constraints, and traceability without hard-coded ODS engine semantics. | REQ-4 / REQ-5 / REQ-8 / FUNC-3 / TECH-4 / TECH-5 / TECH-9 |
-| VAL-10 | Test | CLI validation reads caller-specified local files, emits selected output format, and sets exit code from error-severity diagnostics. | REQ-10 / FUNC-5 / TECH-8 / TECH-10 |
+| VAL-10 | Test | CLI validation reads caller-specified local files, emits the selected output format, emits the profile-stage JSON shape for profile parse or compile failures, emits the validation-result JSON shape after profile compilation succeeds, and sets exit code from error-severity diagnostics. | REQ-2 / REQ-10 / FUNC-1 / FUNC-5 / TECH-8 / TECH-10 |
 
 | Behavior or requirement | Mechanisms | Verification |
 | --- | --- | --- |
@@ -675,6 +695,7 @@ Section status: Complete
 | SM-4 | Major | Resolved | 14 / 17 | External review found that reference assertions did not define ID extraction, token matching, target section cardinality, case behavior, or source targeting. | Define ID-token grammar, source ID collection, `mustAppearIn` section matching, at-least-one cardinality, case sensitivity, self-reference handling, and missing-reference diagnostic targets. | Codex |
 | CR-4 | Major | Resolved | 14 / 17 | Consensus review found remaining public-contract gaps in selector/assertion compatibility, diagnostic-code precedence, evidence hash semantics, and table predicate matching. | Add a selector/assertion compatibility matrix, deterministic diagnostic precedence, canonical SHA-256 evidence hash semantics, table predicate matching rules, and verification coverage. | Codex |
 | CR-5 | Minor | Resolved | 0 / 6 / 18 | Follow-up review found that the executive summary referenced the wrong `RISK-*` ID for compatibility ambiguity and that diagnostic actionability referenced unsupported link-scheme evidence outside the v1 assertion vocabulary. | Align the executive-summary top risk with `RISK-4`, expand the `RISK-4` ledger row, and replace unsupported link-scheme evidence with v1 diagnostic cases. | Codex |
+| CR-6 | Major | Resolved | 10 / 14 / 17 | Consensus review found that CLI JSON output for profile parse or config failures could not satisfy the required `DeclarativeValidationResult` shape because no parsed profile exists yet. | Define the `DeclarativeValidationCliJsonResult` union, add an explicit profile-stage config-error result shape, state when each CLI JSON shape is emitted, and add acceptance and verification coverage. | Codex |
 
 Semantic scores:
 
