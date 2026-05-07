@@ -190,6 +190,46 @@ describe("1.0 Rich IR target/source substrate", () => {
       ),
     ).toBe(undefined);
   });
+
+  it("does not synthesize source slices for non-integer or reversed offsets", () => {
+    const nonIntegerRange = range(1, 1, 0.5, 1, 6, 5);
+    const reversedRange = range(2, 1, 6, 2, 6, 5);
+    const document = normalizeInvalidOffsetFixture(
+      nonIntegerRange,
+      reversedRange,
+    );
+
+    const nonIntegerParagraph = requireNode(document, "node:0:paragraph");
+
+    expect(nonIntegerParagraph.target).toEqual({
+      kind: "node",
+      id: "node:0:paragraph",
+      path: [0],
+      nodeType: "paragraph",
+      sourceRange: nonIntegerRange,
+    });
+    expect(nonIntegerParagraph.source).toBeUndefined();
+    expect(
+      documentQueries.sourceSlice(
+        document,
+        requireTarget(nonIntegerParagraph),
+      ),
+    ).toBe(undefined);
+
+    const reversedParagraph = requireNode(document, "node:1:paragraph");
+
+    expect(reversedParagraph.target).toEqual({
+      kind: "node",
+      id: "node:1:paragraph",
+      path: [1],
+      nodeType: "paragraph",
+      sourceRange: reversedRange,
+    });
+    expect(reversedParagraph.source).toBeUndefined();
+    expect(
+      documentQueries.sourceSlice(document, requireTarget(reversedParagraph)),
+    ).toBe(undefined);
+  });
 });
 
 function normalizeDraftFixture(
@@ -285,6 +325,35 @@ function normalizeUnsupportedSourceFixture(): {
     missingOffsetRange,
     outOfBoundsRange,
   };
+}
+
+function normalizeInvalidOffsetFixture(
+  nonIntegerRange: SourceRange,
+  reversedRange: SourceRange,
+): EngineDocument {
+  const parsed = {
+    markdown: "Alpha\nBravo",
+    body: "Alpha\nBravo",
+    document: {
+      kind: "markdown-document",
+      version: "0.0.0",
+      children: [
+        {
+          type: "paragraph",
+          text: "Alpha",
+          sourceRange: nonIntegerRange,
+        },
+        {
+          type: "paragraph",
+          text: "Bravo",
+          sourceRange: reversedRange,
+        },
+      ],
+    },
+    diagnostics: [],
+  } satisfies ParsedMarkdown;
+
+  return normalize(parsed, { documentVersion: "1.0.0-draft" }).document;
 }
 
 function unsupportedSourceEvidence(document: EngineDocument) {
