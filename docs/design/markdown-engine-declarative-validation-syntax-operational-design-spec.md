@@ -30,7 +30,7 @@ Top risks or unknowns:
 
 - RISK-1: The syntax could expand into a scripting language and violate the deterministic engine boundary.
 - RISK-2: The selector and assertion vocabulary could be too narrow to prove real profile value.
-- RISK-3: New config and diagnostic contracts could create ambiguous compatibility expectations before the 1.0 package boundary is finalized.
+- RISK-4: Syntax versioning, document versioning, result shape, and diagnostic code contracts could create ambiguous compatibility expectations before the 1.0 package boundary is finalized.
 
 Section status: Complete
 
@@ -119,7 +119,7 @@ Section status: Complete
 | --- | --- | --- | --- | --- |
 | Structural profile coverage | 0 declarative profile syntax modules and 0 traceability rules as of 2026-05-07. | One operational-design-spec fixture validates required headings, table columns, ID uniqueness, text rules, and traceability without custom TypeScript profile code. | First profile exercise review | OBJ-1 / OBJ-2 / REQ-4 / REQ-5 |
 | Boundary preservation | Existing boundary audit excludes profile/runtime/MCP/LLM behavior from core. | Boundary audit reports no scripts, plugins, network calls, LLM calls, user-supplied regular expression compilation, or profile-specific semantics in declarative validation execution. | Implementation review | OBJ-3 / REQ-8 |
-| Diagnostic actionability | Current fixed rules emit source ranges only for some node-backed failures. | Representative fixtures show source ranges for duplicate ID, invalid table cell, unsupported link scheme, and unresolved reference where offsets exist. | Diagnostic fixture review | OBJ-4 / REQ-6 |
+| Diagnostic actionability | Current fixed rules emit source ranges only for some node-backed failures. | Representative fixtures show source ranges for missing table columns, duplicate IDs, missing references, empty selections, and invalid table cells where offsets exist. | Diagnostic fixture review | OBJ-4 / REQ-6 |
 | Deterministic evidence | Existing engine has repeatability scripts and snapshots for parse/normalize/validation. | Ten repeated declarative validations produce identical serialized results and evidence packets. | Release readiness review | OBJ-4 / REQ-7 |
 | Contract readiness | API docs currently list fixed validation rule families only. | Contract docs define syntax version, rule plan behavior, selector vocabulary, assertion vocabulary, diagnostic codes, CLI usage, and non-goals. | Contract review | REQ-9 / REQ-10 |
 
@@ -446,7 +446,9 @@ interface DeclarativeValidationResult extends ValidationResult {
 }
 
 interface DeclarativeValidationEvidence {
+  /** SHA-256 of the canonical serialized EngineDocument validation input. */
   inputHash: string;
+  /** SHA-256 of the canonical resolved ValidationProfile after defaults. */
   profileHash: string;
   engineVersion: string;
   runtimeVersion: string;
@@ -461,14 +463,37 @@ Schema closure and validation rules:
 - Profile `documentVersion` is optional and defaults to `1.0.0-draft` before compilation. Declarative validation requires a normalized `EngineDocument` whose `version` equals the resolved profile `documentVersion`; mismatch emits `profile.config.documentVersionMismatch` and does not evaluate rules.
 - Rule keys are exactly `id`, `severity`, `select`, and `assert`.
 - Rule `severity` is optional and defaults to `error` before compilation and evaluation. Unsupported severity values produce `profile.config.invalidShape` diagnostics.
-- Selector and assertion objects are closed; unsupported keys produce `profile.config.unsupportedKey` diagnostics and stop compilation.
+- Selector objects, known assertion objects, and nested config objects are closed; unsupported keys produce `profile.config.unsupportedKey` diagnostics and stop compilation.
 - `assert` contains at least one supported assertion member. Multiple assertion members in one rule are evaluated in stable object-key order after unsupported-key validation.
+- Unknown first-level assertion members under `assert` produce `profile.compile.unsupportedAssertion` diagnostics. Unsupported `select.target` values produce `profile.compile.unsupportedSelector` diagnostics. Supported selectors combined with incompatible supported assertions produce `profile.compile.incompatibleSelectorAssertion` diagnostics. These three compile diagnostics take precedence over `profile.config.invalidShape` for selector and assertion vocabulary errors.
+- `profile.config.invalidShape` covers missing required fields, wrong primitive/container types, empty required arrays, invalid scalar values such as unsupported `severity` or `order`, table predicates with neither `equals` nor `includes`, and empty required strings.
 - First-version matching is limited to exact string equality, substring inclusion, prefix selection, and exact occurrence counts. Regex-like keys such as `matches`, `pattern`, `regex`, and `regexp` are not part of the v1 vocabulary; their presence produces `profile.config.unsupportedKey` diagnostics and stops compilation.
 - String comparisons use deterministic Unicode code point comparison over normalized `EngineDocument` text. Heading, section, header, column, `equals`, and frontmatter field names match exactly. `includes`, `contains`, `containsExactlyOne`, `excludes`, and `textOccurrenceCount.text` use non-overlapping literal substring matching. `containsExactlyOne` requires exactly one non-overlapping occurrence per selected target, or per selected cell when `column` is set.
+- Table row predicates use the named `column` in the candidate row. `column` and each supplied `equals` or `includes` value must be non-empty strings. At least one of `equals` or `includes` is required. When both are present, the predicate matches only when both tests pass; evaluation order is `equals` and then `includes`. A missing predicate column makes that row fail the predicate rather than emitting a diagnostic. `where` filters `tableRow` selector results. `rowWhere` filters candidate rows before a `tableCell` selector selects its required `column`. If filtering removes every candidate target, the rule follows the empty selector behavior below.
 - ID assertions collect ID tokens from the selected target text, or from the specified table `column` when `column` is set. `prefix: REQ` matches complete tokens that start with `REQ-`; the default ID token grammar is `[A-Za-z][A-Za-z0-9]*-[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*`. `ids.caseSensitive` defaults to `true`; when `false`, prefix filtering and ID uniqueness comparison are case-insensitive, while emitted diagnostics preserve original text.
 - `references.idsFrom` collects source IDs using the same ID-token rules. When `idsFrom.column` is set, only cells in that column within the optional `idsFrom.section` contribute source IDs; other references in the same section do not create additional source IDs.
 - `references.mustAppearIn` values are exact section titles. For each source ID and each listed target section, the target section body must contain at least one complete ID-token occurrence equal to that source ID. Matching is case-sensitive. If a source section is also a target section, the source occurrence itself does not satisfy the reference requirement. A missing reference diagnostic targets the source ID location when available, otherwise the target section heading, and never fabricates a source range.
 - Empty selector result behavior is assertion-specific: required-section and required-frontmatter assertions evaluate against the document, while table, ID, reference, text, and occurrence assertions fail with `profile.validation.emptySelection` unless explicitly documented otherwise.
+
+Selector/assertion compatibility:
+
+| Assertion | Compatible selector targets | Additional compatibility rules |
+| --- | --- | --- |
+| `sectionsRequired` | `document` | Evaluates the document section tree. Any other selector target produces `profile.compile.incompatibleSelectorAssertion`. |
+| `sectionOrder` | `document` | Evaluates the document section tree. Any other selector target produces `profile.compile.incompatibleSelectorAssertion`. |
+| `tableColumnsRequired` | `table` | Evaluates each selected table. Any other selector target produces `profile.compile.incompatibleSelectorAssertion`. |
+| `ids` without `column` | `document`, `section`, `heading`, `table`, `tableRow`, `tableCell`, `textSpan`, `link`, `list` | Collects ID tokens from selected target text. `frontmatter` is incompatible. |
+| `ids` with `column` | `table`, `tableRow` | Collects ID tokens from the named column in selected tables or rows. Any non-table selector, including `tableCell`, produces `profile.compile.incompatibleSelectorAssertion`. |
+| `references` | `document` | `idsFrom` and `mustAppearIn` define source and target sections. Any other selector target produces `profile.compile.incompatibleSelectorAssertion`. |
+| `text` without `column` | `document`, `section`, `heading`, `table`, `tableRow`, `tableCell`, `textSpan`, `link`, `list` | Evaluates literal text predicates against selected target text. `frontmatter` is incompatible. |
+| `text` with `column` | `table`, `tableRow` | Evaluates literal text predicates against the named column in selected tables or rows. Any non-table selector, including `tableCell`, produces `profile.compile.incompatibleSelectorAssertion`. |
+| `textOccurrenceCount` without `column` | `document`, `section`, `heading`, `table`, `tableRow`, `tableCell`, `textSpan`, `link`, `list` | Counts non-overlapping literal occurrences in selected target text. `frontmatter` is incompatible. |
+| `textOccurrenceCount` with `column` | `table`, `tableRow` | Counts non-overlapping literal occurrences in the named column in selected tables or rows. Any non-table selector, including `tableCell`, produces `profile.compile.incompatibleSelectorAssertion`. |
+| `frontmatterRequired` | `document`, `frontmatter` | Evaluates document frontmatter fields. If the selector is `frontmatter`, its optional `field` filter must be omitted; otherwise the pair produces `profile.compile.incompatibleSelectorAssertion`. |
+
+When one rule contains multiple assertion members, every assertion member must be compatible with the selector. Compilation stops before evaluation when any member is incompatible.
+
+Evidence hash contract: `inputHash` and `profileHash` are lowercase hexadecimal SHA-256 digests over UTF-8 bytes. `inputHash` hashes the stable JSON serialization of the `EngineDocument` supplied to `validateWithProfile`; the name refers to the validation input after parsing and normalization, not raw Markdown bytes. `profileHash` hashes the stable JSON serialization of the resolved `ValidationProfile` after applying `documentVersion` and rule `severity` defaults. Both serializations use the same deterministic object-key ordering and `undefined` omission rules as the public `serialize` API. Raw Markdown bytes, raw YAML bytes, YAML comments, and caller file paths are not part of the first-version evidence hash contract. `DeclarativeValidationOptions.includeEvidence` controls whether evidence is emitted and is not included in either hash. `DeclarativeValidationOptions.path` is accepted for API symmetry but has no first-version effect on diagnostics, result fields, or evidence hashes; any future path-bearing result behavior requires an explicit contract update.
 
 Compiled rule-plan records are internal implementation details. They are not exported from the package root, are not serialized in public results, and carry no semver stability guarantee. Public compatibility applies only to the authoring profile syntax, public API function names and result shapes, CLI flags and output formats, diagnostic codes, and documented evidence fields.
 
@@ -478,11 +503,12 @@ First-version diagnostic inventory:
 | --- | --- | --- |
 | `profile.config.invalidYaml` | `error` | YAML text cannot be parsed into a JSON-safe profile value. |
 | `profile.config.unsupportedSyntaxVersion` | `error` | `syntaxVersion` is missing or is not `markdown-engine.validation@v1`. |
-| `profile.config.invalidShape` | `error` | A required field has the wrong type, an empty required array, or an invalid enum value. |
+| `profile.config.invalidShape` | `error` | A required field is missing, a field has the wrong type, a required array or string is empty, an invalid scalar value is supplied, or a table predicate omits both `equals` and `includes`. |
 | `profile.config.documentVersionMismatch` | `error` | The resolved profile `documentVersion` does not equal the supplied `EngineDocument.version`. |
-| `profile.config.unsupportedKey` | `error` | A closed profile, rule, selector, assertion, or nested object contains an unknown key, including unsupported regex-like keys such as `matches`, `pattern`, `regex`, or `regexp`. |
-| `profile.compile.unsupportedSelector` | `error` | A selector target is not one of the first-version supported targets. |
-| `profile.compile.unsupportedAssertion` | `error` | An assertion member is not one of the first-version supported assertions. |
+| `profile.config.unsupportedKey` | `error` | A closed profile, rule, selector, known assertion object, or nested object contains an unknown key, including unsupported regex-like keys such as `matches`, `pattern`, `regex`, or `regexp`. |
+| `profile.compile.unsupportedSelector` | `error` | `select.target` is not one of the first-version supported targets. |
+| `profile.compile.unsupportedAssertion` | `error` | A first-level member of `assert` is not one of the first-version supported assertions. |
+| `profile.compile.incompatibleSelectorAssertion` | `error` | A supported selector target is paired with a supported assertion member or column option that the compatibility matrix does not allow. |
 | `profile.validation.emptySelection` | Rule severity | A rule cannot evaluate because its selector matches no applicable target. |
 | `profile.validation.assertionFailed` | Rule severity | A supported assertion evaluates and fails. |
 | `profile.validation.referenceMissing` | Rule severity | A reference assertion finds an ID token that is absent from a required target section. |
@@ -534,11 +560,11 @@ Section status: Complete
 | CLI validation test output | Log | Show CLI exit codes and formats. | CI user and implementer |
 | Contract documentation checklist | Audit | Show syntax, results, diagnostics, examples, and non-goals are documented. | Downstream consumers |
 
-Rollout plan: Implement the syntax behind the explicit syntax version `markdown-engine.validation@v1` and the CLI contract `markdown-engine validate --file <markdown-file> --profile <profile-file> [--format json]` with `json` as the only first-version output format. Add parser, compiler, evaluator, diagnostic, repeatability, CLI, regex-rejection, reference-semantics, and boundary tests before documenting the syntax as stable. Keep existing fixed rule families intact. Require project-owner approval before changing public syntax names, API function names, CLI flags, or CLI defaults from this specification.
+Rollout plan: Implement the syntax behind the explicit syntax version `markdown-engine.validation@v1` and the CLI contract `markdown-engine validate --file <markdown-file> --profile <profile-file> [--format json]` with `json` as the only first-version output format. Add parser, compiler, evaluator, diagnostic, repeatability, evidence-hash, selector/assertion compatibility, table-predicate, CLI, regex-rejection, reference-semantics, and boundary tests before documenting the syntax as stable. Keep existing fixed rule families intact. Require project-owner approval before changing public syntax names, API function names, CLI flags, or CLI defaults from this specification.
 
 Rollback or containment plan: Trigger rollback if unsupported syntax is evaluated, user-supplied regular expressions are compiled, arbitrary code execution appears, profile-specific semantics enter core engine code, deterministic output fails, or downstream review rejects the vocabulary as unusable. The rollback action is to withhold release and revert declarative validation changes on the implementation branch; containment limit is package source and documentation because no persistent user data exists.
 
-Operator actions: Run targeted profile parser tests, declarative validation tests, regex-rejection tests, reference-semantics tests, CLI tests, repeatability proof, boundary audit, typecheck, package build, and contract documentation check before requesting release approval.
+Operator actions: Run targeted profile parser tests, declarative validation tests, selector/assertion compatibility tests, table-predicate tests, evidence-hash repeatability tests, regex-rejection tests, reference-semantics tests, CLI tests, repeatability proof, boundary audit, typecheck, package build, and contract documentation check before requesting release approval.
 
 Section status: Complete
 
@@ -547,11 +573,11 @@ Section status: Complete
 | ID | Verification method | What is verified | Related IDs |
 | --- | --- | --- | --- |
 | VAL-1 | Test | Valid YAML-compatible profile input parses into the public profile model. | REQ-1 / FUNC-1 / TECH-1 / TECH-2 |
-| VAL-2 | Test | Invalid syntax, unsupported keys, unsupported versions, regex-like keys, and unsafe declarations produce config diagnostics and no compiled rule plan. | REQ-2 / REQ-8 / FUNC-1 / TECH-1 / TECH-2 / TECH-3 |
+| VAL-2 | Test | Invalid syntax, unsupported keys, unsupported versions, unsupported selector targets, unsupported assertion members, incompatible selector/assertion pairs, invalid table predicates, regex-like keys, and unsafe declarations produce the documented config or compile diagnostics and no compiled rule plan. | REQ-2 / REQ-8 / FUNC-1 / TECH-1 / TECH-2 / TECH-3 |
 | VAL-3 | Test | Supported declarations compile into closed data-only rule-plan records over public `EngineDocument` fields. | REQ-3 / REQ-4 / FUNC-2 / TECH-3 / TECH-4 |
-| VAL-4 | Test / Snapshot | Section, table, ID-token, reference, literal-text, and frontmatter assertions evaluate with the documented matching, cardinality, and source-targeting semantics against representative rich IR fixtures. | REQ-4 / REQ-5 / FUNC-3 / TECH-4 / TECH-5 |
-| VAL-5 | Test / Snapshot | Validation failures emit deterministic diagnostics with source ranges when available and no fabricated locations when unavailable. | REQ-6 / FUNC-4 / TECH-6 |
-| VAL-6 | Test | Ten repeated validations produce byte-for-byte identical serialized result and evidence output. | REQ-7 / FUNC-6 / TECH-7 |
+| VAL-4 | Test / Snapshot | Section, table, table-predicate, ID-token, reference, literal-text, and frontmatter assertions evaluate with the documented matching, cardinality, and source-targeting semantics against representative rich IR fixtures. | REQ-4 / REQ-5 / FUNC-3 / TECH-4 / TECH-5 |
+| VAL-5 | Test / Snapshot | Missing table column, duplicate ID, missing reference, empty selection, and invalid table-cell failures emit deterministic diagnostics with source ranges when available and no fabricated locations when unavailable. | REQ-6 / FUNC-4 / TECH-6 |
+| VAL-6 | Test | Ten repeated validations produce byte-for-byte identical serialized result and evidence output, including stable SHA-256 `inputHash` and `profileHash` values from the documented canonical inputs. | REQ-7 / FUNC-6 / TECH-7 |
 | VAL-7 | Review | Contract docs cover syntax versioning, selectors, assertions, diagnostics, result shape, examples, CLI behavior, compatibility, and non-goals. | REQ-9 / FUNC-6 / TECH-10 |
 | VAL-8 | Boundary audit | No arbitrary JavaScript, user-supplied regular expression compilation, plugin loading, network call, LLM call, file watching, persistence, or profile-specific core semantic behavior appears in declarative validation execution; a `^(a+)+$` profile fixture is rejected as unsupported config. | REQ-3 / REQ-8 / FUNC-2 / TECH-3 / TECH-9 |
 | VAL-9 | Downstream exercise | An operational-design-spec structural profile validates required headings, tables, IDs, text constraints, and traceability without hard-coded ODS engine semantics. | REQ-4 / REQ-5 / REQ-8 / FUNC-3 / TECH-4 / TECH-5 / TECH-9 |
@@ -594,7 +620,7 @@ Section status: Complete
 | RISK-1 | Declarative syntax may drift into a general scripting or plugin language. | Medium | High | Enforce `CON-1`, `CON-2`, `REQ-8`, `TECH-3`, and `VAL-8`. |
 | RISK-2 | The first selector/assertion vocabulary may be too narrow for real profile needs. | Medium | Medium | Prove value with `VAL-9` before release and keep unsupported assertions explicit. |
 | RISK-3 | Diagnostics may be less source-specific than users expect for missing or cross-section failures. | Medium | Medium | Document source-targeting limits and validate nearest-target behavior in `VAL-5`. |
-| RISK-4 | Syntax versioning may create confusion with document versioning. | Medium | Medium | Use separate `syntaxVersion` and `documentVersion` fields and cover them in `VAL-7`. |
+| RISK-4 | Syntax versioning, document versioning, result shape, and diagnostic code compatibility may create ambiguous implementation or migration expectations. | Medium | Medium | Use separate `syntaxVersion` and `documentVersion` fields, deterministic diagnostic precedence, documented evidence hashes, and contract review coverage in `VAL-7`. |
 | RISK-5 | Engine core may absorb profile-specific vocabulary during examples and tests. | Low | High | Keep examples generic where possible and require boundary audit in `VAL-8`. |
 | RISK-6 | Regex-like matching could re-enter the v1 vocabulary and create denial-of-service risk through catastrophic backtracking. | Low | High | Keep `matches`, `pattern`, `regex`, and `regexp` unsupported in v1, reject them through `VAL-2`, and audit for regular expression compilation in `VAL-8`. |
 
@@ -647,6 +673,8 @@ Section status: Complete
 | CR-3 | Major | Resolved | 14 / 16 | Review found that optional `documentVersion` had no default or mismatch behavior, and that first-version CLI promised text and SARIF without defining their contracts. | Default omitted `documentVersion` to `1.0.0-draft`, add document-version mismatch diagnostics, and narrow first-version CLI output to stable JSON only. | Codex |
 | SM-3 | Major | Resolved | 14 / 15 / 17 | External review found that regex-like `matches` and `pattern` fields were unbounded and could undermine deterministic local validation through catastrophic backtracking. | Remove regex-like fields from the v1 schema, define them as unsupported keys, add acceptance and verification coverage for rejection, and audit that declarative validation performs no user-supplied regular expression compilation. | Codex |
 | SM-4 | Major | Resolved | 14 / 17 | External review found that reference assertions did not define ID extraction, token matching, target section cardinality, case behavior, or source targeting. | Define ID-token grammar, source ID collection, `mustAppearIn` section matching, at-least-one cardinality, case sensitivity, self-reference handling, and missing-reference diagnostic targets. | Codex |
+| CR-4 | Major | Resolved | 14 / 17 | Consensus review found remaining public-contract gaps in selector/assertion compatibility, diagnostic-code precedence, evidence hash semantics, and table predicate matching. | Add a selector/assertion compatibility matrix, deterministic diagnostic precedence, canonical SHA-256 evidence hash semantics, table predicate matching rules, and verification coverage. | Codex |
+| CR-5 | Minor | Resolved | 0 / 6 / 18 | Follow-up review found that the executive summary referenced the wrong `RISK-*` ID for compatibility ambiguity and that diagnostic actionability referenced unsupported link-scheme evidence outside the v1 assertion vocabulary. | Align the executive-summary top risk with `RISK-4`, expand the `RISK-4` ledger row, and replace unsupported link-scheme evidence with v1 diagnostic cases. | Codex |
 
 Semantic scores:
 
@@ -656,6 +684,6 @@ Semantic scores:
 | Requirement quality | 3 | Requirements are atomic, deterministic, and bounded by explicit non-goals. |
 | Functional adequacy | 3 | Layer 2 covers parse, compile, evaluate, diagnostics, CLI, and evidence flows. |
 | Technical feasibility | 3 | Mechanisms build on existing parser, normalizer, rich IR queries, diagnostics, and serialization. |
-| Non-functional adequacy | 3 | Determinism, inert data handling, compatibility, regex rejection, and boundary control are explicit. |
+| Non-functional adequacy | 3 | Determinism, inert data handling, compatibility, diagnostic precedence, evidence hash semantics, regex rejection, and boundary control are explicit. |
 | Operational safety | 3 | The package remains local and stateless with clear rollback and containment triggers. |
-| Verification adequacy | 3 | Verification targets syntax parsing, unsupported declarations including regex-like keys, reference semantics, closed compilation, source diagnostics, repeatability, boundary audit, downstream exercise, and CLI behavior. |
+| Verification adequacy | 3 | Verification targets syntax parsing, unsupported declarations including regex-like keys, selector/assertion compatibility, table predicates, reference semantics, closed compilation, source diagnostics, evidence hashes, repeatability, boundary audit, downstream exercise, and CLI behavior. |
