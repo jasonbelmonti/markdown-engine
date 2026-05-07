@@ -12,11 +12,15 @@ serialization.
 - `snapshots/diagnostics/**`: frontmatter and rule diagnostic output.
 - `snapshots/cmark-gfm/**`: selected comparison output from the `cmark-gfm`
   oracle used by parser fixture tests.
+- `snapshots/rich-ir/**`: durable target/source, derived-view, and query
+  evidence for representative rich IR fixtures.
 - `snapshots/serialization/**`: stable serialized JSON for parse, normalize,
   and validation results.
 
-The tests resolve snapshot paths through `snapshotRoot` in
-`tests/support/parser-fixture-support.ts` and assert them with Vitest
+Parser, rule, and serialization tests resolve snapshot paths through
+`snapshotRoot` in `tests/support/parser-fixture-support.ts`. Rich IR target and
+query tests resolve their durable snapshot paths directly under
+`snapshots/rich-ir/**`. All snapshot-backed tests assert the files with Vitest
 `toMatchFileSnapshot`.
 
 ## Operating Rules
@@ -72,6 +76,12 @@ Update rule diagnostic snapshots:
 npm run snapshots:update:rules
 ```
 
+Update rich IR target/source and derived-view/query snapshots:
+
+```sh
+npm run snapshots:update:rich-ir
+```
+
 Update serialization snapshots and run the adjacent boundary proof:
 
 ```sh
@@ -97,6 +107,9 @@ output behavior.
   `docs/contracts/**`.
 - Confirm source-location changes are expected, especially for diagnostics and
   raw HTML representation.
+- Confirm rich IR target/source and query snapshot diffs preserve documented
+  target stability limits, source-slice absence behavior, public view fields,
+  and deterministic ordering.
 - Confirm serialized JSON remains deterministic with
   `npm run build && node scripts/prove-repeatability.mjs --runs 10` or
   `npm run release:verify`.
