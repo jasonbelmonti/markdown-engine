@@ -143,7 +143,7 @@ Trust or control boundaries: Markdown input and validation profile data cross fr
 | Profile syntax parser | `markdown-engine` | YAML parser dependency and package consumers | YAML-compatible profile text or object value | Parsed profile model or config diagnostics |
 | Rule compiler | `markdown-engine` | Internal validation pipeline | Parsed profile model and syntax version | Internal closed compiled rule plan or compile diagnostics |
 | Rule evaluator | `markdown-engine` | Declarative validation API and CLI | Compiled rule plan and `EngineDocument` | Deterministic diagnostics and per-rule results |
-| CLI validation command | `markdown-engine` | CI jobs, agents, local users | Markdown file path, profile config path, output format | Exit code, JSON/text/SARIF-compatible output |
+| CLI validation command | `markdown-engine` | CI jobs, agents, local users | Markdown file path, profile config path, output format | Exit code and stable JSON validation output |
 | Serialization and evidence output | `markdown-engine` | CI, review automation, agents | Validation result and options | Stable JSON evidence output |
 
 Section status: Complete
@@ -314,11 +314,12 @@ First-version public API and schema contract:
 
 ```ts
 type DeclarativeValidationSeverity = "error" | "warning" | "info";
-type DeclarativeOutputFormat = "json" | "text" | "sarif";
+type DeclarativeOutputFormat = "json";
 type DeclarativeSectionOrder = "none" | "strict";
 
 interface ValidationProfile {
   syntaxVersion: "markdown-engine.validation@v1";
+  /** Defaults to "1.0.0-draft" when omitted. */
   documentVersion?: EngineDocumentVersion;
   rules: readonly DeclarativeValidationRule[];
 }
@@ -440,7 +441,7 @@ interface DeclarativeValidationOptions {
 interface DeclarativeValidationResult extends ValidationResult {
   profile: {
     syntaxVersion: "markdown-engine.validation@v1";
-    documentVersion?: EngineDocumentVersion;
+    documentVersion: EngineDocumentVersion;
     ruleCount: number;
   };
   evidence?: DeclarativeValidationEvidence;
@@ -459,6 +460,7 @@ interface DeclarativeValidationEvidence {
 Schema closure and validation rules:
 
 - Top-level profile keys are exactly `syntaxVersion`, `documentVersion`, and `rules`.
+- Profile `documentVersion` is optional and defaults to `1.0.0-draft` before compilation. Declarative validation requires a normalized `EngineDocument` whose `version` equals the resolved profile `documentVersion`; mismatch emits `profile.config.documentVersionMismatch` and does not evaluate rules.
 - Rule keys are exactly `id`, `severity`, `select`, and `assert`.
 - Rule `severity` is optional and defaults to `error` before compilation and evaluation. Unsupported severity values produce `profile.config.invalidShape` diagnostics.
 - Selector and assertion objects are closed; unsupported keys produce `profile.config.unsupportedKey` diagnostics and stop compilation.
@@ -475,6 +477,7 @@ First-version diagnostic inventory:
 | `profile.config.invalidYaml` | `error` | YAML text cannot be parsed into a JSON-safe profile value. |
 | `profile.config.unsupportedSyntaxVersion` | `error` | `syntaxVersion` is missing or is not `markdown-engine.validation@v1`. |
 | `profile.config.invalidShape` | `error` | A required field has the wrong type, an empty required array, or an invalid enum value. |
+| `profile.config.documentVersionMismatch` | `error` | The resolved profile `documentVersion` does not equal the supplied `EngineDocument.version`. |
 | `profile.config.unsupportedKey` | `error` | A closed profile, rule, selector, assertion, or nested object contains an unknown key. |
 | `profile.compile.unsupportedSelector` | `error` | A selector target is not one of the first-version supported targets. |
 | `profile.compile.unsupportedAssertion` | `error` | An assertion member is not one of the first-version supported assertions. |
@@ -483,14 +486,14 @@ First-version diagnostic inventory:
 | `profile.validation.referenceMissing` | Rule severity | A reference assertion finds an ID that is not present in a required target section. |
 | `profile.validation.duplicateId` | Rule severity | An ID uniqueness assertion finds repeated IDs. |
 
-First-version CLI contract: declarative validation is exposed as `markdown-engine validate --file <markdown-file> --profile <profile-file> --format <json|text|sarif>`. The default format is `json`. Error-severity config or validation diagnostics exit with code `1`; CLI usage and local file read errors exit with code `2`; successful validation exits with code `0`. The existing parse/normalize CLI path remains available for rich IR output and is not replaced by this command.
+First-version CLI contract: declarative validation is exposed as `markdown-engine validate --file <markdown-file> --profile <profile-file> [--format json]`. The only first-version output format is `json`; unsupported `--format` values exit with code `2` and usage text. JSON output is the stable serialized `DeclarativeValidationResult` shape above, using deterministic key order. Error-severity config or validation diagnostics exit with code `1`; CLI usage and local file read errors exit with code `2`; successful validation exits with code `0`. The existing parse/normalize CLI path remains available for rich IR output and is not replaced by this command.
 
 | Change | Type | Compatibility impact | Reversibility | Mitigation |
 | --- | --- | --- | --- | --- |
 | Declarative validation syntax | Config | Creates a durable author-facing syntax version and examples. | Reversible before release; semver-controlled after release | Add explicit `syntaxVersion`, contract docs, fixture snapshots, and unsupported-syntax diagnostics. |
 | Compiled rule-plan model | Internal schema | Remains private implementation detail with no public compatibility promise. | Reversible before release and refactorable after release if public behavior is unchanged | Do not export compiled plan types, do not serialize plans, and test public behavior rather than internal record layout. |
 | Validation result evidence shape | Schema | Extends validation output for profile metadata and deterministic evidence. | Reversible before release; semver-controlled after release | Document result fields and serialize with stable key order. |
-| CLI validation command | API / CLI | Adds new command behavior and exit codes. | Reversible before release; semver-controlled after release | Add CLI usage docs, tests, and compatibility notes. |
+| CLI validation command | API / CLI | Adds new command behavior, JSON output, and exit codes. | Reversible before release; semver-controlled after release | Add CLI usage docs, tests, and compatibility notes. |
 | Diagnostic codes | Schema | Adds new machine-readable diagnostic codes for profile and rule failures. | Reversible before release; semver-controlled after release | Maintain diagnostic inventory and snapshot tests. |
 
 Section status: Complete
@@ -529,7 +532,7 @@ Section status: Complete
 | CLI validation test output | Log | Show CLI exit codes and formats. | CI user and implementer |
 | Contract documentation checklist | Audit | Show syntax, results, diagnostics, examples, and non-goals are documented. | Downstream consumers |
 
-Rollout plan: Implement the syntax behind the explicit syntax version `markdown-engine.validation@v1` and the CLI contract `markdown-engine validate --file <markdown-file> --profile <profile-file> --format <json|text|sarif>` with `json` as the default format. Add parser, compiler, evaluator, diagnostic, repeatability, CLI, and boundary tests before documenting the syntax as stable. Keep existing fixed rule families intact. Require project-owner approval before changing public syntax names, API function names, CLI flags, or CLI defaults from this specification.
+Rollout plan: Implement the syntax behind the explicit syntax version `markdown-engine.validation@v1` and the CLI contract `markdown-engine validate --file <markdown-file> --profile <profile-file> [--format json]` with `json` as the only first-version output format. Add parser, compiler, evaluator, diagnostic, repeatability, CLI, and boundary tests before documenting the syntax as stable. Keep existing fixed rule families intact. Require project-owner approval before changing public syntax names, API function names, CLI flags, or CLI defaults from this specification.
 
 Rollback or containment plan: Trigger rollback if unsupported syntax is evaluated, arbitrary code execution appears, profile-specific semantics enter core engine code, deterministic output fails, or downstream review rejects the vocabulary as unusable. The rollback action is to withhold release and revert declarative validation changes on the implementation branch; containment limit is package source and documentation because no persistent user data exists.
 
@@ -637,6 +640,7 @@ Section status: Complete
 | TR-1 | Major | Resolved | 11 / 17 | The initial draft omitted CLI and evidence behavior from one traceability path. | Add `REQ-10`, `FUNC-5`, `FUNC-6`, `ACC-9`, `VAL-10`, and corresponding mechanism mappings. | Codex |
 | CR-1 | Major | Resolved | 14 / 16 | Consensus review found that the R2 contract left selector/assertion schemas, compiled plan visibility, evidence/result shape, diagnostic inventory, and CLI/API defaults unresolved. | Define the first-version closed schema, declare compiled plans internal, define result/evidence fields, define diagnostic codes, fix CLI/API contracts, and make public names/defaults explicit. | Codex |
 | CR-2 | Major | Resolved | 14 | Consensus review found that the first-version YAML example violated the closed selector/assertion schema and that omitted rule severity had no defined behavior. | Align the YAML example with the target-discriminated table selector and `references` assertion, and define omitted severity as defaulting to `error`. | Codex |
+| CR-3 | Major | Resolved | 14 / 16 | Review found that optional `documentVersion` had no default or mismatch behavior, and that first-version CLI promised text and SARIF without defining their contracts. | Default omitted `documentVersion` to `1.0.0-draft`, add document-version mismatch diagnostics, and narrow first-version CLI output to stable JSON only. | Codex |
 
 Semantic scores:
 
