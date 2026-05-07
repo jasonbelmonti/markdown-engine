@@ -800,10 +800,16 @@ Milestone approval gate: `MS-1`, `MS-2`, and `MS-3` are fully specified with ver
 
 Completion gate: Completion requires all `WP-*` items complete, all pre-merge `VAL-*` evidence present, `MS-1` and `MS-2` approved, blocking reviews resolved, no open blocking `Q-*`, no unapproved `DEV-*`, and no unapproved `WVR-*`.
 
-Release gate: Release, tag, or package publication requires `MS-3` approval, `VAL-6` through `VAL-10` evidence, downstream consumer review, release containment notes, semver classification, and a clean release verification result.
+Release gate: Release, tag, or package publication requires `MS-3` approval, `VAL-6` through `VAL-10` evidence, downstream consumer review, release containment notes, semver classification, clean release verification, BEL-956 publication-audit completion, and a separate explicit publish decision.
 
 Handoff record: Handoff shall include links to `EVD-1` through `EVD-10`, final public API and migration docs, package command results, downstream exercise notes, boundary audit, release/rollback decision, unresolved non-blocking follow-ups, and any approved deviations or waivers.
 
-Final readiness state: Ready for implementation start, not release-ready. Rationale: `DEP-1` entry approval is recorded, so `WP-1` may begin; release, tag, publication, and completion claims remain blocked until `MS-3` approval.
+Final readiness state: MS-3 decision recorded by BEL-944 as withhold pending
+BEL-956 publication-audit completion. Rationale: the release candidate passes
+downstream and release-verification gates, but the public package remains
+`@jasonbelmonti/markdown-engine@0.1.0`; no 1.0 tag, publication, or release
+completion claim is authorized until BEL-956 records a publish-ready
+recommendation and a future explicit release decision promotes the draft rich IR
+contract to a final 1.0 package release.
 
 Section status: Complete
