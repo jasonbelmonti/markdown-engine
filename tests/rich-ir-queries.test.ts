@@ -91,6 +91,9 @@ describe("1.0 Rich IR structural views and query helpers", () => {
     const firstParagraph = paragraphs[0] ?? missing();
     const orderedList = lists[0] ?? missing();
     const nestedTaskList = lists[1] ?? missing();
+    const exactParagraphSpan = documentQueries.textSpans(document, {
+      text: "Detail text before the table.",
+    })[0] ?? missing();
     const relativeLink = links[1] ?? missing();
 
     expect(paragraphs).toHaveLength(8);
@@ -111,6 +114,12 @@ describe("1.0 Rich IR structural views and query helpers", () => {
         text: "Paragraph with inline code, source span text, and relative link.",
       }),
     ]);
+    expect(
+      documentQueries.textSpans(document, {
+        targetId: exactParagraphSpan.target.id,
+        text: "Detail text before the table.",
+      }),
+    ).toEqual([exactParagraphSpan]);
 
     expect(tableCells).toContainEqual(
       expect.objectContaining({
@@ -154,6 +163,12 @@ describe("1.0 Rich IR structural views and query helpers", () => {
     expect(documentQueries.lists(document, { ordered: true })).toEqual([
       orderedList,
     ]);
+    expect(
+      documentQueries.lists(document, {
+        targetId: nestedTaskList.target.id,
+        depth: 1,
+      }),
+    ).toEqual([nestedTaskList]);
 
     expect(linkSummary(links)).toEqual([
       {
@@ -170,6 +185,12 @@ describe("1.0 Rich IR structural views and query helpers", () => {
     expect(documentQueries.links(document, { url: "./phase-alpha.md" })).toEqual(
       [relativeLink],
     );
+    expect(
+      documentQueries.links(document, {
+        targetId: relativeLink.target.id,
+        text: "relative link",
+      }),
+    ).toEqual([relativeLink]);
     expect(documentQueries.sourceSlice(document, relativeLink.target))
       .toMatchObject({
         text: "[relative link](./phase-alpha.md)",
@@ -231,6 +252,36 @@ function queryEvidence() {
         relativeLink === undefined
           ? undefined
           : documentQueries.sourceSlice(document, relativeLink.target),
+      sectionTargetsByTargetId: documentQueries
+        .sections(document, {
+          targetId: details.target.id,
+        })
+        .map((section) => section.target.id),
+      textSpanTargetsByExactText: documentQueries
+        .textSpans(document, {
+          text: "Detail text before the table.",
+        })
+        .map((span) => span.target.id),
+      tableTargetsByTargetId: documentQueries
+        .tables(document, {
+          targetId: documentQueries.tables(document)[0]?.target.id ?? missing(),
+        })
+        .map((table) => table.target.id),
+      nestedListTargetsByTargetIdAndDepth: documentQueries
+        .lists(document, {
+          targetId: documentQueries.lists(document)[1]?.target.id ?? missing(),
+          depth: 1,
+        })
+        .map((list) => list.target.id),
+      relativeLinkTargetsByTargetIdAndText:
+        relativeLink === undefined
+          ? []
+          : documentQueries
+              .links(document, {
+                targetId: relativeLink.target.id,
+                text: "relative link",
+              })
+              .map((link) => link.target.id),
     },
   };
 }

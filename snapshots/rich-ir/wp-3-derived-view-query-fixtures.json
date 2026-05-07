@@ -1093,6 +1093,22 @@
         }
       },
       "text": "[relative link](./phase-alpha.md)"
-    }
+    },
+    "sectionTargetsByTargetId": [
+      "section:node:4:heading"
+    ],
+    "textSpanTargetsByExactText": [
+      "node:5:paragraph",
+      "node:5.0:text"
+    ],
+    "tableTargetsByTargetId": [
+      "node:6:table"
+    ],
+    "nestedListTargetsByTargetIdAndDepth": [
+      "node:7.1.1:list"
+    ],
+    "relativeLinkTargetsByTargetIdAndText": [
+      "node:3.3:link"
+    ]
   }
 }
