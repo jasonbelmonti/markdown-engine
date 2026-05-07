@@ -10,7 +10,7 @@
 | Execution level justification | The work introduces durable author-facing validation syntax, public API and CLI behavior, validation result shape, diagnostic codes, evidence hashes, contract documentation, and release controls. It does not qualify for `E1` because another implementer or agent must be able to execute public contract and package changes from this artifact. It does not trigger `E3` because execution remains local and stateless, with no authentication, authorization, secret handling, live customer data, irreversible storage, safety control, financial control, network service, or constrained rollback. |
 | Author(s) | Codex |
 | Executor(s) | Markdown-engine implementer or assigned coding agents |
-| Reviewers | Project owner, implementation reviewer, downstream profile/runtime consumer, boundary/security reviewer |
+| Reviewers | Project owner, implementation reviewer, downstream profile/runtime consumer, boundary/security reviewer, CI/docs quality-gate reviewer |
 | Decision owner | Project owner |
 | Target branch, release, or milestone | Declarative validation syntax implementation branch after design and execution-spec approval |
 | Last updated | 2026-05-07 |
@@ -83,7 +83,7 @@ Section status: Complete
 | Markdown-engine implementer | Executes work packages, maintains package boundaries, records evidence, and escalates blockers or deviations. | Execute |
 | Implementation reviewer | Reviews source changes, tests, fixtures, snapshots, diagnostics, public contracts, package boundaries, and traceability. | Review |
 | Downstream profile/runtime consumer | Reviews whether the syntax supports downstream profile compilation and operational-design-spec structural checks without core semantic leakage. | Review |
-| Boundary/security reviewer | Confirms validation profiles remain inert data and execution excludes scripts, regex compilation, plugins, network calls, LLM behavior, persistence, and profile-specific semantics. | Consult |
+| Boundary/security reviewer | Confirms validation profiles remain inert data and execution excludes scripts, regex compilation, plugins, network calls, LLM behavior, persistence, and profile-specific semantics. | Review |
 | CI/docs quality-gate user | Confirms CLI output, exit codes, and JSON result shape are usable in automated validation jobs. | Inform |
 
 Decision points:
