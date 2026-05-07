@@ -474,8 +474,11 @@ The supported CLI selector values are:
 - `--document-version 0.0.0`: retained `0.1.0`-compatible normalized document
   output without rich derived views.
 
-Missing, invalid, or repeated `--document-version` selectors exit with code `2`
-and usage text. Directory traversal remains unsupported.
+The selector accepts spaced or assignment-form syntax, such as
+`--document-version 0.0.0` or `--document-version=0.0.0`. Missing, invalid, or
+repeated `--document-version` selectors exit with code `2` and usage text; an
+empty assignment-form selector is treated as missing. Directory traversal
+remains unsupported.
 
 Semver classification: this is a breaking CLI output-shape change for consumers
 that parse default CLI JSON. Migration is to either consume the rich IR fields or

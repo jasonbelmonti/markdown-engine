@@ -100,13 +100,31 @@ describe("CLI", () => {
       message: "Invalid document version: 1.0.0.",
     },
     {
+      args: ["--document-version=1.0.0", "--file", "notes.md"],
+      message: "Invalid document version: 1.0.0.",
+    },
+    {
       args: ["--document-version", "--file", "notes.md"],
+      message: "Missing value for --document-version.",
+    },
+    {
+      args: ["--document-version=", "--file", "notes.md"],
       message: "Missing value for --document-version.",
     },
     {
       args: [
         "--document-version",
         "0.0.0",
+        "--document-version",
+        "1.0.0-draft",
+        "--file",
+        "notes.md",
+      ],
+      message: "Expected at most one --document-version selector.",
+    },
+    {
+      args: [
+        "--document-version=0.0.0",
         "--document-version",
         "1.0.0-draft",
         "--file",
@@ -128,6 +146,18 @@ describe("CLI", () => {
       expect(stderr.text()).toContain("Usage: markdown-engine");
     },
   );
+
+  it("reports unreadable file targets without partial JSON output", async () => {
+    const cwd = await makeTempDir();
+    const { exitCode, stderr, stdout } = await runCliWithOutput({
+      args: ["--file", "missing.md"],
+      cwd,
+    });
+
+    expect(exitCode).toBe(1);
+    expect(stdout.text()).toBe("");
+    expect(stderr.text()).toContain('Unable to read "missing.md"');
+  });
 
   it("accepts an explicit 1.0 draft document-version selector as rich IR output", async () => {
     const cwd = await makeTempDir();

@@ -125,9 +125,12 @@ Use `--document-version 0.0.0` when a caller still needs the legacy
 markdown-engine --document-version 0.0.0 --file fixtures/representative.md
 ```
 
-Supported selector values are `1.0.0-draft` and `0.0.0`. Missing, invalid, or
-repeated `--document-version` selectors exit with code `2` and usage text.
-Directory traversal is not supported by this CLI slice.
+The selector accepts spaced or assignment-form syntax, such as
+`--document-version 0.0.0` or `--document-version=0.0.0`. Supported selector
+values are `1.0.0-draft` and `0.0.0`. Missing, invalid, or repeated
+`--document-version` selectors exit with code `2` and usage text; an empty
+assignment-form selector is treated as missing. Directory traversal is not
+supported by this CLI slice.
 
 BEL-952 classifies the default CLI output change as breaking for consumers that
 parse CLI JSON without selecting `--document-version 0.0.0`. Migration is to

@@ -45,8 +45,9 @@ The CLI now accepts `--document-version` with these values:
   `target` and `sections`.
 - `0.0.0`: explicit legacy output without rich derived views.
 
-Missing, invalid, or repeated `--document-version` selectors exit with code `2`
-and usage text.
+The selector accepts spaced or assignment-form syntax. Missing, invalid, or repeated
+`--document-version` selectors exit with code `2` and usage text; an empty
+assignment-form selector is treated as missing.
 
 Semver classification: breaking CLI output-shape change for consumers that
 parse default CLI JSON. Existing CLI users that require the legacy shape must
