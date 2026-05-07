@@ -191,12 +191,12 @@ Owns:
 
 - Files/directories: `src/index.ts`, public API modules under `src/api/**`, contract docs under `docs/contracts/**`.
 - Concepts: exported API names, exported TypeScript types, public result shape, semver classification, CLI-facing public contract.
-- Runtime responsibilities: Orchestrate profile parse, validation, and serialization through internal packages.
+- Runtime responsibilities: Orchestrate profile parse, validation, evidence assembly, and serialization through internal packages without importing CLI runtime entry points.
 
 Does not own:
 
 - Explicitly excluded behavior: profile parser internals, selector traversal internals, assertion semantics, evidence fixture generation, downstream profile semantics.
-- Responsibilities delegated elsewhere: parsing/schema to `PKG-2`, compiler/selectors to `PKG-3`, assertions/diagnostics to `PKG-4`, CLI/evidence to `PKG-5`, fixtures/audits to `PKG-6`.
+- Responsibilities delegated elsewhere: parsing/schema to `PKG-2`, compiler/selectors to `PKG-3`, assertions/diagnostics to `PKG-4`, lower-level evidence helpers and CLI runtime to `PKG-5`, fixtures/audits to `PKG-6`.
 
 Public interface:
 
@@ -207,13 +207,13 @@ Public interface:
 
 Allowed dependencies:
 
-- May import: public internal entry points from `PKG-2` through `PKG-5`, existing `src/api/**` document/result types, diagnostics, serializer helpers.
+- May import: public internal entry points from `PKG-2` through `PKG-4`, lower-level evidence/hash helpers from `PKG-5`, existing `src/api/**` document/result types, diagnostics, serializer helpers.
 - May call: deterministic engine helpers with explicit inputs.
 - May read configuration from: function arguments and explicit options only.
 
 Forbidden dependencies:
 
-- Must not import: raw parser AST types as public exports, downstream `markdown-profile`, runtime, MCP, agent, LLM, network, database, UI, or profile-specific modules.
+- Must not import: CLI runtime modules under `src/cli/**` or `src/declarative-validation/cli/**`, raw parser AST types as public exports, downstream `markdown-profile`, runtime, MCP, agent, LLM, network, database, UI, or profile-specific modules.
 - Must not call: network services, shell commands, dynamic plugins, LLM APIs, file traversal outside caller-provided CLI inputs.
 - Must not know about: operational-design-spec semantics, AGENTS.md/TASK.md semantics, downstream profile IDs, entity registries, or issue-key policies.
 
@@ -441,19 +441,19 @@ Does not own:
 Public interface:
 
 - Exported types: evidence and CLI JSON result types through `PKG-1`.
-- Exported functions/classes/components: internal evidence builder and CLI run functions.
+- Exported functions/classes/components: lower-level evidence builder consumed by API and CLI adapters; CLI run functions consumed only by CLI entry points.
 - Events/messages/contracts: stable JSON result union and exit codes.
 - CLI/API surface: `markdown-engine validate --file <markdown-file> --profile <profile-file> [--format json]`.
 
 Allowed dependencies:
 
-- May import: public API functions, parser/normalizer, validator, serializer, diagnostics, Node CLI/file modules already approved for CLI code.
+- May import: CLI adapters may import package-root public API functions, parser/normalizer, validator, serializer, diagnostics, and Node CLI/file modules already approved for CLI code; evidence helpers may import only deterministic hash, diagnostics, type, and serializer helpers below the public API boundary.
 - May call: local file reads for explicit `--file` and `--profile` paths only, package-local deterministic hash and serializer helpers.
 - May read configuration from: CLI arguments and explicit validation options only.
 
 Forbidden dependencies:
 
-- Must not import: parser AST internals, downstream profile/runtime/MCP/agent modules, network clients, LLM SDKs.
+- Must not import: evidence helpers must not import package-root public API functions or CLI runtime modules; CLI adapters must not be imported by package-root API modules; all `PKG-5` modules must not import parser AST internals, downstream profile/runtime/MCP/agent modules, network clients, or LLM SDKs.
 - Must not call: file discovery, directory traversal, network services, shell commands, nondeterministic timestamp generation for serialized evidence.
 - Must not know about: downstream profile semantics or operational-design-spec-specific behavior.
 
@@ -466,7 +466,7 @@ State boundary:
 
 Agent ownership boundary:
 
-- Agent editable paths: `src/cli/**`, `src/declarative-validation/evidence/**`, `src/declarative-validation/cli/**`, `src/serialize/**` only if evidence serialization requires shared helpers, `tests/declarative-validation-cli.test.ts`, `tests/declarative-validation-repeatability.test.ts`, `docs/contracts/**`, `docs/evidence/wp-5-evd-6-declarative-validation-repeatability.md`, `docs/evidence/wp-5-evd-7-declarative-validation-contract-review.md`.
+- Agent editable paths: `src/cli/**`, `src/declarative-validation/evidence/**`, `src/declarative-validation/cli/**`, `src/serialize/**` only if evidence serialization requires shared helpers, `tests/declarative-validation-cli.test.ts`, `tests/declarative-validation-repeatability.test.ts`, `docs/contracts/**`, `docs/evidence/wp-5-evd-6-declarative-validation-repeatability.md`, `docs/evidence/wp-5-evd-7-declarative-validation-contract-review.md`. Keep evidence helpers below the API/CLI boundary and keep CLI adapters out of package-root API imports.
 - Agent read-only paths: `src/declarative-validation/profile/**`, `src/declarative-validation/compiler/**`, `src/declarative-validation/selectors/**`, `src/declarative-validation/assertions/**` unless coordinated.
 - Required coordination before editing: CLI command names, exit codes, JSON field ordering, evidence hash inputs, serializer behavior.
 
@@ -536,8 +536,8 @@ Promotion blockers: Human milestone approval remains required; automated evidenc
 
 Dependency direction rules:
 
-- Allowed direction: `PKG-1` orchestrates `PKG-2` through `PKG-5`; `PKG-3` consumes parsed profiles from `PKG-2` and public rich IR helpers; `PKG-4` consumes compiled plans from `PKG-3`; `PKG-5` consumes public API and serializer helpers; `PKG-6` consumes public APIs and assigned test helpers.
-- Prohibited imports: production modules must not import `tests/**`, `fixtures/**`, `snapshots/**`, or `docs/evidence/**`; profile parser must not import evaluator internals; selector resolver must not import raw parser AST; assertion evaluator must not import downstream profile/runtime/MCP/agent modules.
+- Allowed direction: `PKG-1` orchestrates `PKG-2` through `PKG-4` and lower-level evidence helpers from `PKG-5`; `PKG-3` consumes parsed profiles from `PKG-2` and public rich IR helpers; `PKG-4` consumes compiled plans from `PKG-3`; `PKG-5` CLI adapters consume package-root public APIs and lower-level evidence/serializer helpers; `PKG-5` evidence helpers consume deterministic hash, diagnostics, type, and serializer helpers only; `PKG-6` consumes public APIs and assigned test helpers.
+- Prohibited imports: production modules must not import `tests/**`, `fixtures/**`, `snapshots/**`, or `docs/evidence/**`; package-root API modules must not import CLI adapters; `PKG-5` evidence helpers must not import package-root public APIs or CLI runtime modules; profile parser must not import evaluator internals; selector resolver must not import raw parser AST; assertion evaluator must not import downstream profile/runtime/MCP/agent modules.
 - Allowed cross-boundary communication: typed function calls, public internal entry points, diagnostic records, JSON-safe values, public result objects.
 - Disallowed cross-boundary communication: private deep imports, copied shared types, global mutable state, environment-variable side channels, executable profile hooks, profile-specific identifiers, raw parser AST public exposure.
 
