@@ -26,7 +26,7 @@ describe("1.0 Rich IR proving path", () => {
 
     expect(document).toMatchObject({
       kind: "markdown-document",
-      version: "1.0.0-draft",
+      version: "1.0.0",
       path: fixturePath,
       target: {
         kind: "node",
@@ -224,7 +224,7 @@ describe("1.0 Rich IR proving path", () => {
       serialize(annotatedDocument, { pretty: true }),
     );
     expect(JSON.parse(serializedDocument)).toMatchObject({
-      version: "1.0.0-draft",
+      version: "1.0.0",
       annotations: [
         {
           id: "annotation:mission-paragraph",
@@ -253,7 +253,7 @@ describe("1.0 Rich IR proving path", () => {
 
 function normalizeDraftFixture(): EngineDocument {
   return normalize(parse(fixture, { path: fixturePath }).parsed, {
-    documentVersion: "1.0.0-draft",
+    documentVersion: "1.0.0",
   }).document;
 }
 

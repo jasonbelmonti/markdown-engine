@@ -1,6 +1,6 @@
 import type { MarkdownDiagnostic, SourceRange } from "./diagnostics.js";
 
-export type EngineDocumentVersion = "0.0.0" | "1.0.0-draft";
+export type EngineDocumentVersion = "0.0.0" | "1.0.0";
 
 export type EngineNodeTargetKind = "node";
 

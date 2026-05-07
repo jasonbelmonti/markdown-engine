@@ -24,7 +24,7 @@ describe("CLI", () => {
     );
   });
 
-  it("accepts --file and writes 1.0 draft rich IR JSON by default", async () => {
+  it("accepts --file and writes 1.0 rich IR JSON by default", async () => {
     const cwd = await makeTempDir();
     await writeFile(join(cwd, "mission.md"), missionBriefMarkdown);
     const { exitCode, stderr, stdout } = await runCliWithOutput({
@@ -52,7 +52,7 @@ describe("CLI", () => {
     expect(JSON.parse(stdout.text())).toMatchObject({
       document: {
         path: "notes.md",
-        version: "1.0.0-draft",
+        version: "1.0.0",
         target: {
           kind: "node",
           nodeType: "document",
@@ -96,12 +96,12 @@ describe("CLI", () => {
 
   it.each([
     {
-      args: ["--document-version", "1.0.0", "--file", "notes.md"],
-      message: "Invalid document version: 1.0.0.",
+      args: ["--document-version", "1.0.0-draft", "--file", "notes.md"],
+      message: "Invalid document version: 1.0.0-draft.",
     },
     {
-      args: ["--document-version=1.0.0", "--file", "notes.md"],
-      message: "Invalid document version: 1.0.0.",
+      args: ["--document-version=1.0.0-draft", "--file", "notes.md"],
+      message: "Invalid document version: 1.0.0-draft.",
     },
     {
       args: ["--document-version", "--file", "notes.md"],
@@ -116,7 +116,7 @@ describe("CLI", () => {
         "--document-version",
         "0.0.0",
         "--document-version",
-        "1.0.0-draft",
+        "1.0.0",
         "--file",
         "notes.md",
       ],
@@ -126,7 +126,7 @@ describe("CLI", () => {
       args: [
         "--document-version=0.0.0",
         "--document-version",
-        "1.0.0-draft",
+        "1.0.0",
         "--file",
         "notes.md",
       ],
@@ -159,11 +159,11 @@ describe("CLI", () => {
     expect(stderr.text()).toContain('Unable to read "missing.md"');
   });
 
-  it("accepts an explicit 1.0 draft document-version selector as rich IR output", async () => {
+  it("accepts an explicit 1.0 document-version selector as rich IR output", async () => {
     const cwd = await makeTempDir();
     await writeFile(join(cwd, "mission.md"), missionBriefMarkdown);
     const { exitCode, stderr, stdout } = await runCliWithOutput({
-      args: ["--document-version=1.0.0-draft", "--file", "mission.md"],
+      args: ["--document-version=1.0.0", "--file", "mission.md"],
       cwd,
     });
 
@@ -212,7 +212,7 @@ function expectMissionBriefRichIrOutput(result: unknown): void {
     document: {
       kind: "markdown-document",
       path: "mission.md",
-      version: "1.0.0-draft",
+      version: "1.0.0",
       compatibility: {
         mode: "default",
       },

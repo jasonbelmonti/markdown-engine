@@ -5,14 +5,14 @@ import { buildSections } from "./document-sections.js";
 import { collectTables } from "./document-table-views.js";
 import {
   targetFor,
-  type DraftViewBuildOptions,
+  type DocumentViewBuildOptions,
   withNodeMetadata,
 } from "./document-targets.js";
 import { collectTextSpans } from "./document-text-spans.js";
 
-export function buildDraftDocumentViews(
+export function buildDocumentViews(
   document: EngineDocument,
-  options: DraftViewBuildOptions,
+  options: DocumentViewBuildOptions,
 ): EngineDocument {
   const children = document.children.map((node, index) =>
     withNodeMetadata(node, [index], options),
@@ -20,12 +20,12 @@ export function buildDraftDocumentViews(
 
   return {
     ...document,
-    version: "1.0.0-draft",
+    version: "1.0.0",
     target: targetFor("document", [], document.sourceRange),
     children,
     compatibility: {
       mode: "default",
-      reason: "1.0 draft document contract",
+      reason: "1.0 document contract",
     },
     sections: buildSections(children),
     textSpans: collectTextSpans(children),

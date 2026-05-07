@@ -10,8 +10,8 @@ const checks = [
   {
     file: "docs/contracts/api.md",
     headings: [
-      "## 1.0 Draft Contract",
-      "### 1.0 Draft Document Fields",
+      "## 1.0 Contract",
+      "### 1.0 Document Fields",
       "### Target Contract And Stability Limits",
       "### Structural Views",
       "### Query Helpers",
@@ -21,7 +21,7 @@ const checks = [
       "### Non-Goals And Limits",
     ],
     phrases: [
-      'documentVersion: "1.0.0-draft"',
+      'documentVersion: "1.0.0"',
       'compatibilityMode: "default"',
       'compatibilityMode: "legacy-0.1"',
       "EngineNodeTarget",
@@ -46,7 +46,7 @@ const checks = [
     phrases: [
       "documentQueries",
       "validateAnnotations",
-      'documentVersion: "1.0.0-draft"',
+      'documentVersion: "1.0.0"',
       "--document-version 0.0.0",
       "breaking for consumers that",
       "1.0 release lane",
@@ -60,7 +60,7 @@ const checks = [
     headings: ["## 14. Data, Schemas, and Compatibility"],
     phrases: [
       "BEL-950 implementation status as of 2026-05-06",
-      'documentVersion: "1.0.0-draft"',
+      'documentVersion: "1.0.0"',
       "EngineSourceSlice | undefined",
       'compatibilityMode: "legacy-0.1"',
     ],
@@ -97,7 +97,7 @@ const checks = [
     phrases: [
       "BEL-955",
       "BEL-952",
-      'version: "1.0.0-draft"',
+      'version: "1.0.0"',
       'version: "0.0.0"',
       "--document-version",
       "Missing, invalid, or repeated",

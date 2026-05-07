@@ -236,7 +236,7 @@ function normalizeDraftFixture(
   options: { preserveSourceLocations?: boolean } = {},
 ): EngineDocument {
   return normalize(parse(fixture, { path: fixturePath }).parsed, {
-    documentVersion: "1.0.0-draft",
+    documentVersion: "1.0.0",
     ...options,
   }).document;
 }
@@ -321,7 +321,7 @@ function normalizeUnsupportedSourceFixture(): {
   } satisfies ParsedMarkdown;
 
   return {
-    document: normalize(parsed, { documentVersion: "1.0.0-draft" }).document,
+    document: normalize(parsed, { documentVersion: "1.0.0" }).document,
     missingOffsetRange,
     outOfBoundsRange,
   };
@@ -353,7 +353,7 @@ function normalizeInvalidOffsetFixture(
     diagnostics: [],
   } satisfies ParsedMarkdown;
 
-  return normalize(parsed, { documentVersion: "1.0.0-draft" }).document;
+  return normalize(parsed, { documentVersion: "1.0.0" }).document;
 }
 
 function unsupportedSourceEvidence(document: EngineDocument) {

@@ -3,13 +3,9 @@
 Deterministic Markdown parsing and validation engine package for downstream
 profile and runtime work.
 
-Current published release:
+Current package release:
 
 - package name: `@jasonbelmonti/markdown-engine`
-- version: `0.1.0`
-
-Next release target:
-
 - version: `1.0.0`
 - release focus: feature-complete rich IR, structural query helpers, source
   targeting, table/list models, annotations, and deterministic serialization
@@ -80,8 +76,8 @@ console.log(validationResult.valid);
 console.log(serialize(validationResult, { pretty: true }));
 ```
 
-The 1.0 implementation lane exposes the rich IR draft contract through
-`normalize(parsed, { documentVersion: "1.0.0-draft" })`. That path adds
+The 1.0 release exposes the rich IR contract through
+`normalize(parsed, { documentVersion: "1.0.0" })`. That path adds
 deterministic targets, structural views, source slices, query helpers, and
 caller-owned annotation target validation. The retained `0.1.0`-compatible
 document path remains selectable as `documentVersion: "0.0.0"` and
@@ -106,12 +102,12 @@ The package binary accepts `--file` or `--path` as aliases for a single file:
 markdown-engine --path fixtures/representative.md
 ```
 
-By default, CLI output uses the 1.0 draft rich IR contract:
+By default, CLI output uses the 1.0 rich IR contract:
 
 ```json
 {
   "document": {
-    "version": "1.0.0-draft",
+    "version": "1.0.0",
     "target": { "kind": "node", "nodeType": "document" },
     "sections": []
   }
@@ -127,7 +123,7 @@ markdown-engine --document-version 0.0.0 --file fixtures/representative.md
 
 The selector accepts spaced or assignment-form syntax, such as
 `--document-version 0.0.0` or `--document-version=0.0.0`. Supported selector
-values are `1.0.0-draft` and `0.0.0`. Missing, invalid, or repeated
+values are `1.0.0` and `0.0.0`. Missing, invalid, or repeated
 `--document-version` selectors exit with code `2` and usage text; an empty
 assignment-form selector is treated as missing. Directory traversal is not
 supported by this CLI slice.
@@ -184,13 +180,10 @@ Do not tag or publish the 1.0 release until approval is recorded with:
 - downstream profile/runtime consumer confirmation
 - complete evidence links from EVD-1 through EVD-11
 
-Current MS-3 decision: BEL-944 withholds the actual 1.0 tag and package
-publication until the BEL-956 publication audit is complete. The release
-candidate validation and handoff evidence are recorded, but
-`@jasonbelmonti/markdown-engine@0.1.0` remains the latest published package. A
-future explicit release decision may promote the draft rich IR contract to a
-final 1.0 package release only after BEL-956 records a publish-ready
-recommendation.
+Current release decision: BEL-965 promotes the package metadata and public rich
+IR document contract to `1.0.0` after BEL-956 child audit tracks completed and
+the release gates passed. The `v1.0.0` git tag must point only at a commit that
+passes the validation commands above.
 
 When 1.0 is approved, publish the package as:
 

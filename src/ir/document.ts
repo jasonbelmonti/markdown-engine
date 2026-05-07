@@ -2,7 +2,7 @@ import type { EngineDocument, EngineNode } from "../api/document.js";
 import type { NormalizeOptions } from "../api/normalize.js";
 import type { ParsedMarkdown } from "../api/parse.js";
 import { hasOwnProperty, isPlainRecord } from "../internal/plain-record.js";
-import { buildDraftDocumentViews } from "./document-derived-views.js";
+import { buildDocumentViews } from "./document-derived-views.js";
 import { cloneSourceRange } from "./source-ranges.js";
 
 export function normalizeParsedMarkdown(
@@ -29,8 +29,8 @@ export function normalizeParsedMarkdown(
     ),
   };
 
-  if (version === "1.0.0-draft") {
-    return buildDraftDocumentViews(normalizedDocument, {
+  if (version === "1.0.0") {
+    return buildDocumentViews(normalizedDocument, {
       preserveSourceLocations,
       source: parsed.markdown,
     });

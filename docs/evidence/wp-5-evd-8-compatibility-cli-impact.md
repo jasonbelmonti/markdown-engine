@@ -15,20 +15,19 @@ commands, and remaining release risks.
 BEL-952 changes only the CLI policy layer. BEL-955 records the documentation,
 evidence, and review-readiness gate for that cutover. Parser, source, query,
 annotation, serializer internals, and package root API signatures remain
-unchanged. The source-grounded 1.0 rich IR contract remains `documentVersion:
-"1.0.0-draft"` checked with `compatibilityMode: "default"` until final 1.0
-release approval records the release version.
+unchanged. BEL-965 promotes the source-grounded 1.0 rich IR contract to
+`documentVersion: "1.0.0"` checked with `compatibilityMode: "default"`.
 
 ## Compatibility Behavior
 
-- Current package version remains `0.1.0`.
-- Default CLI document output is now `version: "1.0.0-draft"`.
+- BEL-965 release cutover promotes the package version to `1.0.0`.
+- Default CLI document output is now `version: "1.0.0"`.
 - Retained legacy CLI document output remains explicit as `version: "0.0.0"`.
 - Legacy document-bearing outputs remain checkable through
   `compatibilityMode: "legacy-0.1"`.
-- The 1.0 draft rich IR path is selected with `documentVersion:
-  "1.0.0-draft"` in the API and is the default CLI document version.
-- Document-bearing 1.0 draft serialization remains checked with
+- The 1.0 rich IR path is selected with `documentVersion:
+  "1.0.0"` in the API and is the default CLI document version.
+- Document-bearing 1.0 serialization remains checked with
   `compatibilityMode: "default"`.
 
 ## CLI Decision
@@ -41,7 +40,7 @@ path, and writes pretty JSON. Directory traversal remains unsupported.
 
 The CLI now accepts `--document-version` with these values:
 
-- `1.0.0-draft`: default CLI output, containing rich IR fields such as
+- `1.0.0`: default CLI output, containing rich IR fields such as
   `target` and `sections`.
 - `0.0.0`: explicit legacy output without rich derived views.
 
@@ -58,7 +57,7 @@ to the 1.0 release lane, not a `0.1.x` patch.
 ## Migration Notes
 
 Consumers ready for rich IR should remove legacy shape assumptions and read the
-1.0 draft fields from the default CLI output: `target`, `sections`,
+1.0 fields from the default CLI output: `target`, `sections`,
 `textSpans`, `tables`, `lists`, `links`, and node-level `target` or `source`
 where present.
 
@@ -119,7 +118,7 @@ Latest BEL-955 validation from
 
 - The CLI remains a minimal local tool and is not yet a full workflow surface:
   it still processes one file only and does not traverse directories.
-- The `1.0.0-draft` document version remains an implementation-lane contract
+- The `1.0.0` document version remains an implementation-lane contract
   until final 1.0 release approval records the final version string and release
   decision.
 - Downstream CLI consumers that parse JSON by shape must update their fixtures
@@ -134,6 +133,6 @@ Latest BEL-955 validation from
 
 ## Conclusion
 
-BEL-952 makes 1.0 draft rich IR the default CLI output and preserves legacy CLI
+BEL-952 makes 1.0 rich IR the default CLI output and preserves legacy CLI
 output through `--document-version 0.0.0`. The change is breaking for default
 CLI JSON consumers and has an explicit migration path.

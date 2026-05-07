@@ -18,15 +18,15 @@ behaviors as complete 1.0 release behavior.
 
 ## Reviewed documents
 
-- `docs/contracts/api.md`: public package API, 1.0 draft document fields,
+- `docs/contracts/api.md`: public package API, 1.0 document fields,
   `EngineNodeTarget`, structural views, source-slice behavior, query helpers,
   annotation target validation, compatibility selectors, migration guidance,
   CLI impact, and non-goals.
-- `README.md`: package entry points, 1.0 draft selector summary, CLI limitation,
+- `README.md`: package entry points, 1.0 selector summary, CLI limitation,
   and validation gate reference.
 - `docs/design/markdown-engine-1.0-rich-ir-operational-design-spec.md`:
   implementation-status note reconciling the provisional design shape with the
-  current source-grounded draft contract.
+  current source-grounded contract.
 - `scripts/check-rich-ir-contract-docs.mjs`: docs gate that fails if required
   headings and contract phrases disappear.
 - `scripts/rich-ir-repeatability-cases.mjs`: repeatability fixture generator
@@ -56,26 +56,28 @@ Recorded result:
 
 ## Compatibility classification
 
-- Current package version remains `0.1.0`.
-- The source-grounded 1.0 draft contract is selected with
-  `normalize(parsed, { documentVersion: "1.0.0-draft" })`.
-- The 1.0 draft serialization gate is `serialize(result, { compatibilityMode:
-  "default" })`; document-bearing results must carry version `"1.0.0-draft"`.
+- BEL-965 release cutover promotes the package version to `1.0.0`.
+- The source-grounded 1.0 contract is selected with
+  `normalize(parsed, { documentVersion: "1.0.0" })`.
+- The 1.0 serialization gate is `serialize(result, { compatibilityMode:
+  "default" })`; document-bearing results must carry version `"1.0.0"`.
 - Retained 0.1.x-compatible document-bearing results use version `"0.0.0"` and
   are checked with `compatibilityMode: "legacy-0.1"`.
 - Mismatched document-bearing compatibility requests throw
   `EngineCompatibilityError` with code
   `engine.compatibility.versionMismatch`.
-- Before final 1.0 release approval, the draft version string, flattened table
-  shape, list item shape, and CLI selector remain implementation-lane contract
-  details rather than final published 1.0 guarantees.
+- BEL-965 promotes the document version string to final `1.0.0`; flattened
+  table cells, list item coordinates, and the CLI selector are part of the 1.0
+  release contract.
 
 ## Remaining non-goals and limitations
 
 - BEL-950 does not change parser, source, query, annotation, serializer, CLI, or
   validation internals.
-- BEL-950 does not promote `"1.0.0-draft"` to final `"1.0.0"`.
-- BEL-950 does not add a CLI flag for `documentVersion: "1.0.0-draft"`.
+- BEL-950 did not promote the document version string; BEL-965 records the
+  release cutover to final `"1.0.0"`.
+- BEL-950 did not add a CLI flag for final `documentVersion: "1.0.0"`; the
+  final selector is recorded by the BEL-965 release cutover.
 - Source text and raw HTML remain inert strings; the engine does not render,
   sanitize, fetch, execute, persist, or watch content.
 - Source slices remain unavailable when parser offsets are absent, unsupported,
@@ -94,6 +96,6 @@ Recorded result:
 ## Conclusion
 
 VAL-7 / EVD-6 passes for BEL-950. The docs gate is now a real repository
-command, the contract docs identify the current 1.0 draft and retained 0.1.x
+command, the contract docs identify the current 1.0 and retained 0.1.x
 compatibility selectors, and the adjacent compatibility, repeatability,
 typecheck, and whitespace checks pass in the worktree.
