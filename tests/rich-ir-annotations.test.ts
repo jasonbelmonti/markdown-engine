@@ -26,32 +26,52 @@ describe("1.0 Rich IR annotation target validation", () => {
     const document = normalizeDraftFixture();
     const paragraph = firstNode(document, "paragraph");
     const section = documentQueries.sections(document)[0] ?? missing();
+    const paragraphTarget = requireTarget(paragraph);
+    const sectionTarget = section.target;
+    const paragraphSourceRange = requireSourceRange(paragraph);
     const payload = {
       callerOwnsMeaning: true,
       reviewSignal: "go",
       nested: { stable: true },
     };
     const annotations = [
-      nodeAnnotation("annotation:node", requireTarget(paragraph), payload),
-      nodeAnnotation("annotation:section", section.target, {
+      nodeAnnotation("annotation:node", paragraphTarget, payload),
+      nodeAnnotation("annotation:section", sectionTarget, {
         callerOwnsMeaning: true,
         reviewSignal: "section",
       }),
-      sourceAnnotation("annotation:source", requireSourceRange(paragraph), {
+      sourceAnnotation("annotation:source", paragraphSourceRange, {
         callerOwnsMeaning: true,
         reviewSignal: "source",
       }),
     ];
+    const originalAnnotations = JSON.parse(JSON.stringify(annotations));
 
     const result = validateAnnotations(document, annotations);
+    const nodeResultTarget = result.annotations[0]?.target;
+    const sectionResultTarget = result.annotations[1]?.target;
+    const sourceResultTarget = result.annotations[2]?.target;
+
+    if (
+      nodeResultTarget?.kind !== "node" ||
+      sectionResultTarget?.kind !== "node" ||
+      sourceResultTarget?.kind !== "source"
+    ) {
+      missing();
+    }
 
     expect(result).toEqual({
       valid: true,
       annotations,
       diagnostics: [],
     });
+    expect(annotations).toEqual(originalAnnotations);
     expect(result.annotations).not.toBe(annotations);
     expect(result.annotations[0]).not.toBe(annotations[0]);
+    expect(nodeResultTarget).not.toBe(annotations[0]?.target);
+    expect(nodeResultTarget.nodeTarget).not.toBe(paragraphTarget);
+    expect(sectionResultTarget.nodeTarget).not.toBe(sectionTarget);
+    expect(sourceResultTarget.sourceRange).not.toBe(paragraphSourceRange);
     expect(result.annotations[0]?.payload).toEqual(payload);
   });
 
