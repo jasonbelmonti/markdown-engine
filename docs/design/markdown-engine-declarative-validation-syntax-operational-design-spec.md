@@ -61,7 +61,7 @@ Section status: Complete
 | OBJ-3 | Preserve `markdown-engine` as a deterministic local substrate with no arbitrary code execution, semantic judgment, or profile-specific meaning in core validation. | Boundary review |
 | OBJ-4 | Produce stable diagnostics and evidence packets that are suitable for CI, review automation, and coding-agent consumption. | CLI/API acceptance review |
 | NG-1 | This effort will not implement operational-design-spec, AGENTS.md, TASK.md, or any other profile semantics in core engine code. | Implementation review |
-| NG-2 | This effort will not introduce arbitrary JavaScript, expression evaluation, plugins, network calls, file watching, persistence, or LLM-backed checks. | Boundary review |
+| NG-2 | This effort will not introduce arbitrary JavaScript, expression evaluation, user-supplied regular expressions, plugins, network calls, file watching, persistence, or LLM-backed checks. | Boundary review |
 | NG-3 | This effort will not replace the existing typed API or remove the current fixed rule families. | Compatibility review |
 | NG-4 | This effort will not decide runtime lens generation, MCP transport, agent adapters, or semantic review scoring. | Downstream package review |
 
@@ -86,7 +86,7 @@ Section status: Complete
 | ID | Type | Statement | Source or rationale | Validation or resolution plan |
 | --- | --- | --- | --- | --- |
 | CON-1 | Invariant | The declarative syntax remains a closed deterministic vocabulary over public `EngineDocument` data. | `RUNTIME_ARCHITECTURE.md` defines deterministic validation as the engine boundary. | Validate with unsupported-key tests, boundary audit, and syntax schema tests in `VAL-2` and `VAL-8`. |
-| CON-2 | Constraint | The syntax does not execute arbitrary code, import plugins, call networks, read additional files, invoke LLMs, or evaluate semantic quality. | Prevents trust-boundary and product-scope drift. | Verify with implementation inspection and negative tests in `VAL-8`. |
+| CON-2 | Constraint | The syntax does not execute arbitrary code, compile user-supplied regular expressions, import plugins, call networks, read additional files, invoke LLMs, or evaluate semantic quality. | Prevents trust-boundary, performance, and product-scope drift. | Verify with implementation inspection and negative tests in `VAL-8`. |
 | CON-3 | Constraint | Profile-specific concepts remain in downstream packages or caller-owned rule IDs, not in core rule semantics. | Existing rich IR design excludes SpecTrace/profile/runtime semantics. | Verify no profile-specific identifiers or hard-coded operational-design-spec logic enters engine modules in `VAL-8`. |
 | CON-4 | Invariant | Validation diagnostics use existing `MarkdownDiagnostic` severity and source-range conventions where possible. | API contract already defines diagnostic shape. | Validate source-targeted fixtures in `VAL-5`. |
 | CON-5 | Constraint | Public syntax, result, and diagnostic changes require semver classification before release. | Config syntax becomes a durable author-facing contract. | Verify contract docs and migration notes in `VAL-7`. |
@@ -107,7 +107,7 @@ Section status: Complete
 | REQ-5 | Functional | Must | The system shall support assertions for required sections, section order, required table columns, ID uniqueness, reference definition, text containment, exact text occurrence count, and frontmatter required fields. | These primitives cover the first target class of deterministic profile checks. | VAL-4 / VAL-9 |
 | REQ-6 | Functional | Must | The system shall emit source-targeted diagnostics for validation failures when source ranges are available. | CI, editors, and agents need actionable locations. | VAL-5 |
 | REQ-7 | Reliability | Must | The system shall produce byte-for-byte identical serialized validation results for identical input, profile, options, package version, and runtime version. | Declarative validation must remain suitable for evidence snapshots. | VAL-6 |
-| REQ-8 | Security | Must | The system shall treat validation profiles as inert data without executing scripts, expressions, imports, plugins, or network calls. | Declarative syntax must not create a new execution boundary. | VAL-8 |
+| REQ-8 | Security | Must | The system shall treat validation profiles as inert data without executing scripts, expressions, user-supplied regular expressions, imports, plugins, or network calls. | Declarative syntax must not create a new execution or denial-of-service boundary. | VAL-8 |
 | REQ-9 | Compatibility | Must | The system shall document syntax versioning, compatibility behavior, result shape, diagnostic codes, and migration limits before release. | Durable profiles need a contract rather than source-code inference. | VAL-7 |
 | REQ-10 | Operability | Must | The system shall expose declarative validation through both public API and CLI entry points. | Library consumers and CI users need the same validation semantics. | VAL-10 |
 
@@ -177,7 +177,7 @@ States and transitions: The engine remains stateless across calls. Each validati
 | Fault-3 | Selector matches no nodes. | The rule returns a deterministic failure, warning, or empty-selection result according to the assertion contract. | REQ-4 / REQ-6 / FUNC-3 |
 | Fault-4 | Source range is unavailable for a failed assertion. | The diagnostic omits source range and does not fabricate a location. | REQ-6 / FUNC-4 |
 | Fault-5 | CLI cannot read the profile file. | The CLI exits with an operational error and does not emit a validation pass. | REQ-10 / FUNC-5 |
-| Misuse-1 | A profile attempts to include script text, imports, plugin references, or network URLs as executable behavior. | The engine treats the values as unsupported config and does not execute them. | REQ-2 / REQ-8 / FUNC-1 |
+| Misuse-1 | A profile attempts to include script text, imports, plugin references, regular expression patterns, or network URLs as executable behavior. | The engine treats the values as unsupported config and does not execute or compile them. | REQ-2 / REQ-8 / FUNC-1 |
 | Misuse-2 | A profile author attempts to encode semantic approval quality as deterministic syntax. | The engine rejects unsupported semantic assertions and leaves semantic review to downstream systems. | REQ-2 / REQ-8 / FUNC-2 |
 | Misuse-3 | A downstream package tries to add operational-design-spec-specific rule semantics to core engine execution. | Boundary review blocks the change and keeps the meaning in a downstream profile package. | REQ-8 / REQ-9 / FUNC-2 |
 
@@ -190,7 +190,7 @@ External service expectations: The package has no network availability service l
 | ID | Acceptance case | Expected result | Covers |
 | --- | --- | --- | --- |
 | ACC-1 | Parse a valid YAML profile with 3 rules using section, table, and ID assertions. | The API returns a parsed profile model with no diagnostics. | REQ-1 / FUNC-1 |
-| ACC-2 | Parse a profile containing `script`, `plugin`, or unknown assertion keys. | The API returns config diagnostics and no executable behavior. | REQ-2 / REQ-8 / FUNC-1 / FUNC-2 |
+| ACC-2 | Parse a profile containing `script`, `plugin`, regex-like `matches` or `pattern` keys, or unknown assertion keys. | The API returns config diagnostics and no executable behavior. | REQ-2 / REQ-8 / FUNC-1 / FUNC-2 |
 | ACC-3 | Compile a profile containing only supported selectors and assertions. | Internal inspection or test evidence shows a closed rule plan with no raw function callbacks or external handles. | REQ-3 / FUNC-2 |
 | ACC-4 | Validate a document missing a required section. | The result contains an error diagnostic for the missing section. | REQ-4 / REQ-5 / FUNC-3 |
 | ACC-5 | Validate a table whose required column is missing. | The result contains an error diagnostic targeted to the nearest table source range. | REQ-5 / REQ-6 / FUNC-4 |
@@ -368,7 +368,6 @@ interface DeclarativeTableCellPredicate {
   column: string;
   equals?: string;
   includes?: string;
-  matches?: string;
 }
 
 interface DeclarativeAssertion {
@@ -385,7 +384,6 @@ interface DeclarativeAssertion {
   ids?: {
     column?: string;
     prefix?: string;
-    pattern?: string;
     unique?: boolean;
     caseSensitive?: boolean;
   };
@@ -413,7 +411,6 @@ interface DeclarativeIdSource {
   section?: string;
   column?: string;
   prefix?: string;
-  pattern?: string;
 }
 
 interface DeclarativeValidationApi {
@@ -465,7 +462,7 @@ Schema closure and validation rules:
 - Rule `severity` is optional and defaults to `error` before compilation and evaluation. Unsupported severity values produce `profile.config.invalidShape` diagnostics.
 - Selector and assertion objects are closed; unsupported keys produce `profile.config.unsupportedKey` diagnostics and stop compilation.
 - `assert` contains at least one supported assertion member. Multiple assertion members in one rule are evaluated in stable object-key order after unsupported-key validation.
-- `matches` values are strings compiled as JavaScript regular expressions with no flags for deterministic matching only. They do not execute code and cannot perform imports, file access, network access, or callbacks.
+- First-version matching is limited to exact string equality, substring inclusion, prefix selection, and exact occurrence counts. Regex-like keys such as `matches`, `pattern`, `regex`, and `regexp` are not part of the v1 vocabulary; their presence produces `profile.config.unsupportedKey` diagnostics and stops compilation.
 - Empty selector result behavior is assertion-specific: required-section and required-frontmatter assertions evaluate against the document, while table, ID, reference, text, and occurrence assertions fail with `profile.validation.emptySelection` unless explicitly documented otherwise.
 
 Compiled rule-plan records are internal implementation details. They are not exported from the package root, are not serialized in public results, and carry no semver stability guarantee. Public compatibility applies only to the authoring profile syntax, public API function names and result shapes, CLI flags and output formats, diagnostic codes, and documented evidence fields.
@@ -478,7 +475,7 @@ First-version diagnostic inventory:
 | `profile.config.unsupportedSyntaxVersion` | `error` | `syntaxVersion` is missing or is not `markdown-engine.validation@v1`. |
 | `profile.config.invalidShape` | `error` | A required field has the wrong type, an empty required array, or an invalid enum value. |
 | `profile.config.documentVersionMismatch` | `error` | The resolved profile `documentVersion` does not equal the supplied `EngineDocument.version`. |
-| `profile.config.unsupportedKey` | `error` | A closed profile, rule, selector, assertion, or nested object contains an unknown key. |
+| `profile.config.unsupportedKey` | `error` | A closed profile, rule, selector, assertion, or nested object contains an unknown key, including unsupported regex-like keys such as `matches`, `pattern`, `regex`, or `regexp`. |
 | `profile.compile.unsupportedSelector` | `error` | A selector target is not one of the first-version supported targets. |
 | `profile.compile.unsupportedAssertion` | `error` | An assertion member is not one of the first-version supported assertions. |
 | `profile.validation.emptySelection` | Rule severity | A rule cannot evaluate because its selector matches no applicable target. |
@@ -500,7 +497,7 @@ Section status: Complete
 
 ## 15. Control Logic and Non-Functional Controls
 
-Control logic summary: Each validation run parses the profile, validates syntax version and schema, compiles supported rules into data-only rule-plan records, resolves selectors against a normalized `EngineDocument`, evaluates assertions in document order, builds diagnostics with deterministic ordering, and serializes results with stable key order.
+Control logic summary: Each validation run parses the profile, validates syntax version and schema, rejects unsupported executable or regex-like declarations, compiles supported rules into data-only rule-plan records, resolves selectors against a normalized `EngineDocument`, evaluates assertions in document order, builds diagnostics with deterministic ordering, and serializes results with stable key order.
 
 Concurrency and ordering model: The engine remains invocation-local. Rule evaluation follows profile rule order, selector matches follow document order, diagnostics sort by source range when present and then by rule ID, diagnostic code, message, and stable target ID. No shared mutable state is used.
 
@@ -515,7 +512,7 @@ Failure recovery model: Invalid profile syntax, unsupported keys, compilation fa
 | REQ-5 | TECH-5 | Assertions remain deterministic structural predicates. |
 | REQ-6 | TECH-6 | Diagnostic targeting uses available source ranges and targets. |
 | REQ-7 | TECH-7 | Serialization and stable ordering protect repeatability. |
-| REQ-8 | TECH-3 / TECH-9 | Boundary audit and closed compiler prevent executable config. |
+| REQ-8 | TECH-3 / TECH-9 | Boundary audit and closed compiler prevent executable config and user-supplied regular expression compilation. |
 | REQ-9 | TECH-10 | Contract docs define compatibility and syntax behavior. |
 | REQ-10 | TECH-8 / TECH-10 | CLI and docs expose validation for CI users. |
 
@@ -532,9 +529,9 @@ Section status: Complete
 | CLI validation test output | Log | Show CLI exit codes and formats. | CI user and implementer |
 | Contract documentation checklist | Audit | Show syntax, results, diagnostics, examples, and non-goals are documented. | Downstream consumers |
 
-Rollout plan: Implement the syntax behind the explicit syntax version `markdown-engine.validation@v1` and the CLI contract `markdown-engine validate --file <markdown-file> --profile <profile-file> [--format json]` with `json` as the only first-version output format. Add parser, compiler, evaluator, diagnostic, repeatability, CLI, and boundary tests before documenting the syntax as stable. Keep existing fixed rule families intact. Require project-owner approval before changing public syntax names, API function names, CLI flags, or CLI defaults from this specification.
+Rollout plan: Implement the syntax behind the explicit syntax version `markdown-engine.validation@v1` and the CLI contract `markdown-engine validate --file <markdown-file> --profile <profile-file> [--format json]` with `json` as the only first-version output format. Add parser, compiler, evaluator, diagnostic, repeatability, CLI, regex-rejection, and boundary tests before documenting the syntax as stable. Keep existing fixed rule families intact. Require project-owner approval before changing public syntax names, API function names, CLI flags, or CLI defaults from this specification.
 
-Rollback or containment plan: Trigger rollback if unsupported syntax is evaluated, arbitrary code execution appears, profile-specific semantics enter core engine code, deterministic output fails, or downstream review rejects the vocabulary as unusable. The rollback action is to withhold release and revert declarative validation changes on the implementation branch; containment limit is package source and documentation because no persistent user data exists.
+Rollback or containment plan: Trigger rollback if unsupported syntax is evaluated, user-supplied regular expressions are compiled, arbitrary code execution appears, profile-specific semantics enter core engine code, deterministic output fails, or downstream review rejects the vocabulary as unusable. The rollback action is to withhold release and revert declarative validation changes on the implementation branch; containment limit is package source and documentation because no persistent user data exists.
 
 Operator actions: Run targeted profile parser tests, declarative validation tests, CLI tests, repeatability proof, boundary audit, typecheck, package build, and contract documentation check before requesting release approval.
 
@@ -545,13 +542,13 @@ Section status: Complete
 | ID | Verification method | What is verified | Related IDs |
 | --- | --- | --- | --- |
 | VAL-1 | Test | Valid YAML-compatible profile input parses into the public profile model. | REQ-1 / FUNC-1 / TECH-1 / TECH-2 |
-| VAL-2 | Test | Invalid syntax, unsupported keys, unsupported versions, and unsafe declarations produce config diagnostics and no compiled rule plan. | REQ-2 / REQ-8 / FUNC-1 / TECH-1 / TECH-2 / TECH-3 |
+| VAL-2 | Test | Invalid syntax, unsupported keys, unsupported versions, regex-like keys, and unsafe declarations produce config diagnostics and no compiled rule plan. | REQ-2 / REQ-8 / FUNC-1 / TECH-1 / TECH-2 / TECH-3 |
 | VAL-3 | Test | Supported declarations compile into closed data-only rule-plan records over public `EngineDocument` fields. | REQ-3 / REQ-4 / FUNC-2 / TECH-3 / TECH-4 |
 | VAL-4 | Test / Snapshot | Section, table, ID, reference, text, and frontmatter assertions evaluate correctly against representative rich IR fixtures. | REQ-4 / REQ-5 / FUNC-3 / TECH-4 / TECH-5 |
 | VAL-5 | Test / Snapshot | Validation failures emit deterministic diagnostics with source ranges when available and no fabricated locations when unavailable. | REQ-6 / FUNC-4 / TECH-6 |
 | VAL-6 | Test | Ten repeated validations produce byte-for-byte identical serialized result and evidence output. | REQ-7 / FUNC-6 / TECH-7 |
 | VAL-7 | Review | Contract docs cover syntax versioning, selectors, assertions, diagnostics, result shape, examples, CLI behavior, compatibility, and non-goals. | REQ-9 / FUNC-6 / TECH-10 |
-| VAL-8 | Boundary audit | No arbitrary JavaScript, plugin loading, network call, LLM call, file watching, persistence, or profile-specific core semantic behavior appears in declarative validation execution. | REQ-3 / REQ-8 / FUNC-2 / TECH-3 / TECH-9 |
+| VAL-8 | Boundary audit | No arbitrary JavaScript, user-supplied regular expression compilation, plugin loading, network call, LLM call, file watching, persistence, or profile-specific core semantic behavior appears in declarative validation execution. | REQ-3 / REQ-8 / FUNC-2 / TECH-3 / TECH-9 |
 | VAL-9 | Downstream exercise | An operational-design-spec structural profile validates required headings, tables, IDs, text constraints, and traceability without hard-coded ODS engine semantics. | REQ-4 / REQ-5 / REQ-8 / FUNC-3 / TECH-4 / TECH-5 / TECH-9 |
 | VAL-10 | Test | CLI validation reads caller-specified local files, emits selected output format, and sets exit code from error-severity diagnostics. | REQ-10 / FUNC-5 / TECH-8 / TECH-10 |
 
@@ -593,6 +590,7 @@ Section status: Complete
 | RISK-3 | Diagnostics may be less source-specific than users expect for missing or cross-section failures. | Medium | Medium | Document source-targeting limits and validate nearest-target behavior in `VAL-5`. |
 | RISK-4 | Syntax versioning may create confusion with document versioning. | Medium | Medium | Use separate `syntaxVersion` and `documentVersion` fields and cover them in `VAL-7`. |
 | RISK-5 | Engine core may absorb profile-specific vocabulary during examples and tests. | Low | High | Keep examples generic where possible and require boundary audit in `VAL-8`. |
+| RISK-6 | Regex-like matching could re-enter the v1 vocabulary and create denial-of-service risk through catastrophic backtracking. | Low | High | Keep `matches`, `pattern`, `regex`, and `regexp` unsupported in v1, reject them through `VAL-2`, and audit for regular expression compilation in `VAL-8`. |
 
 No open questions
 
@@ -641,6 +639,7 @@ Section status: Complete
 | CR-1 | Major | Resolved | 14 / 16 | Consensus review found that the R2 contract left selector/assertion schemas, compiled plan visibility, evidence/result shape, diagnostic inventory, and CLI/API defaults unresolved. | Define the first-version closed schema, declare compiled plans internal, define result/evidence fields, define diagnostic codes, fix CLI/API contracts, and make public names/defaults explicit. | Codex |
 | CR-2 | Major | Resolved | 14 | Consensus review found that the first-version YAML example violated the closed selector/assertion schema and that omitted rule severity had no defined behavior. | Align the YAML example with the target-discriminated table selector and `references` assertion, and define omitted severity as defaulting to `error`. | Codex |
 | CR-3 | Major | Resolved | 14 / 16 | Review found that optional `documentVersion` had no default or mismatch behavior, and that first-version CLI promised text and SARIF without defining their contracts. | Default omitted `documentVersion` to `1.0.0-draft`, add document-version mismatch diagnostics, and narrow first-version CLI output to stable JSON only. | Codex |
+| SM-3 | Major | Resolved | 14 / 15 / 17 | External review found that regex-like `matches` and `pattern` fields were unbounded and could undermine deterministic local validation through catastrophic backtracking. | Remove regex-like fields from the v1 schema, define them as unsupported keys, add acceptance and verification coverage for rejection, and audit that declarative validation performs no user-supplied regular expression compilation. | Codex |
 
 Semantic scores:
 
@@ -650,6 +649,6 @@ Semantic scores:
 | Requirement quality | 3 | Requirements are atomic, deterministic, and bounded by explicit non-goals. |
 | Functional adequacy | 3 | Layer 2 covers parse, compile, evaluate, diagnostics, CLI, and evidence flows. |
 | Technical feasibility | 3 | Mechanisms build on existing parser, normalizer, rich IR queries, diagnostics, and serialization. |
-| Non-functional adequacy | 3 | Determinism, inert data handling, compatibility, and boundary control are explicit. |
+| Non-functional adequacy | 3 | Determinism, inert data handling, compatibility, regex rejection, and boundary control are explicit. |
 | Operational safety | 3 | The package remains local and stateless with clear rollback and containment triggers. |
-| Verification adequacy | 3 | Verification targets syntax parsing, unsupported declarations, closed compilation, source diagnostics, repeatability, boundary audit, downstream exercise, and CLI behavior. |
+| Verification adequacy | 3 | Verification targets syntax parsing, unsupported declarations including regex-like keys, closed compilation, source diagnostics, repeatability, boundary audit, downstream exercise, and CLI behavior. |
