@@ -181,6 +181,14 @@ Do not tag or publish the 1.0 release until approval is recorded with:
 - downstream profile/runtime consumer confirmation
 - complete evidence links from EVD-1 through EVD-11
 
+Current MS-3 decision: BEL-944 withholds the actual 1.0 tag and package
+publication until the BEL-956 publication audit is complete. The release
+candidate validation and handoff evidence are recorded, but
+`@jasonbelmonti/markdown-engine@0.1.0` remains the latest published package. A
+future explicit release decision may promote the draft rich IR contract to a
+final 1.0 package release only after BEL-956 records a publish-ready
+recommendation.
+
 When 1.0 is approved, publish the package as:
 
 ```sh
