@@ -54,7 +54,7 @@ describe("1.0 Rich IR downstream structural exercise", () => {
 
     const annotationResult = validateAnnotations(document, annotations);
 
-    expect(document.version).toBe("1.0.0-draft");
+    expect(document.version).toBe("1.0.0");
     expect(documentQueries.sections(document).map((section) => section.title)).toEqual([
       "SpecTrace Style Exercise",
       "WP-1",
@@ -92,7 +92,7 @@ describe("1.0 Rich IR downstream structural exercise", () => {
 
 function normalizeDraftFixture(): EngineDocument {
   return normalize(parse(fixture, { path: fixturePath }).parsed, {
-    documentVersion: "1.0.0-draft",
+    documentVersion: "1.0.0",
   }).document;
 }
 

@@ -945,7 +945,7 @@ describe("1.0 Rich IR annotation target validation", () => {
 
 function normalizeDraftFixture(): EngineDocument {
   return normalize(parse(fixture, { path: fixturePath }).parsed, {
-    documentVersion: "1.0.0-draft",
+    documentVersion: "1.0.0",
   }).document;
 }
 

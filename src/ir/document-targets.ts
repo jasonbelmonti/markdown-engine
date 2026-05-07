@@ -6,7 +6,7 @@ import type {
 } from "../api/document.js";
 import { cloneSourceRange, sourceOffsetBounds } from "./source-ranges.js";
 
-export interface DraftViewBuildOptions {
+export interface DocumentViewBuildOptions {
   preserveSourceLocations: boolean;
   source: string;
 }
@@ -14,7 +14,7 @@ export interface DraftViewBuildOptions {
 export function withNodeMetadata(
   node: EngineNode,
   path: readonly number[],
-  options: DraftViewBuildOptions,
+  options: DocumentViewBuildOptions,
 ): EngineNode {
   const children = (node.children ?? []).map((child, index) =>
     withNodeMetadata(child, [...path, index], options),
@@ -58,7 +58,7 @@ export function requireNodeTarget(node: EngineNode): EngineNodeTarget {
 
 function sourceSliceForRange(
   sourceRange: SourceRange | undefined,
-  options: DraftViewBuildOptions,
+  options: DocumentViewBuildOptions,
 ): EngineSourceSlice | undefined {
   if (!options.preserveSourceLocations || sourceRange === undefined) {
     return undefined;

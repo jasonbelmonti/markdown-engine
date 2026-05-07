@@ -83,15 +83,15 @@ describe("BEL-948 rich IR compatibility contract gate", () => {
     });
   });
 
-  it("accepts explicit default mode for 1.0 draft document-bearing results", () => {
-    const draftDocument = normalize(parse(markdown, { path: fixturePath }).parsed, {
-      documentVersion: "1.0.0-draft",
+  it("accepts explicit default mode for 1.0 document-bearing results", () => {
+    const releaseDocument = normalize(parse(markdown, { path: fixturePath }).parsed, {
+      documentVersion: "1.0.0",
     }).document;
 
     expect(
-      JSON.parse(serialize(draftDocument, { compatibilityMode: "default" })),
+      JSON.parse(serialize(releaseDocument, { compatibilityMode: "default" })),
     ).toMatchObject({
-      version: "1.0.0-draft",
+      version: "1.0.0",
       compatibility: {
         mode: "default",
       },
@@ -105,23 +105,23 @@ describe("BEL-948 rich IR compatibility contract gate", () => {
       () => serialize(legacyDocument, { compatibilityMode: "default" }),
       {
         requestedMode: "default",
-        expectedVersion: "1.0.0-draft",
+        expectedVersion: "1.0.0",
         actualVersion: "0.0.0",
       },
     );
   });
 
-  it("rejects legacy mode when the document-bearing result is 1.0 draft", () => {
-    const draftNormalizeResult = normalize(parse(markdown).parsed, {
-      documentVersion: "1.0.0-draft",
+  it("rejects legacy mode when the document-bearing result is 1.0", () => {
+    const releaseNormalizeResult = normalize(parse(markdown).parsed, {
+      documentVersion: "1.0.0",
     });
 
     expectCompatibilityError(
-      () => serialize(draftNormalizeResult, { compatibilityMode: "legacy-0.1" }),
+      () => serialize(releaseNormalizeResult, { compatibilityMode: "legacy-0.1" }),
       {
         requestedMode: "legacy-0.1",
         expectedVersion: "0.0.0",
-        actualVersion: "1.0.0-draft",
+        actualVersion: "1.0.0",
       },
     );
   });

@@ -214,7 +214,7 @@ describe("1.0 Rich IR structural views and query helpers", () => {
 
 function normalizeDraftFixture(): EngineDocument {
   return normalize(parse(fixture, { path: fixturePath }).parsed, {
-    documentVersion: "1.0.0-draft",
+    documentVersion: "1.0.0",
   }).document;
 }
 

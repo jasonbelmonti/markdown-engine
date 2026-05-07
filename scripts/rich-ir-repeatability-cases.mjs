@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const richIrPath = "fixtures/rich-ir/proving.md";
-const draftCompatibilityOptions = {
+const richIrCompatibilityOptions = {
   compatibilityMode: "default",
 };
 
@@ -11,7 +11,7 @@ export function buildRichIrRepeatabilityOutputs(repoRoot, engine) {
   const richIrMarkdown = readFileSync(join(repoRoot, richIrPath), "utf8");
   const richIrDocument = normalize(
     parse(richIrMarkdown, { path: richIrPath }).parsed,
-    { documentVersion: "1.0.0-draft" },
+    { documentVersion: "1.0.0" },
   ).document;
   const paragraph = firstNode(documentQueries, richIrDocument, "paragraph");
   const annotationResult = validateAnnotations(richIrDocument, [
@@ -58,12 +58,12 @@ export function buildRichIrRepeatabilityOutputs(repoRoot, engine) {
     {
       name: "rich-ir:document",
       result: richIrDocument,
-      options: draftCompatibilityOptions,
+      options: richIrCompatibilityOptions,
     },
     {
       name: "rich-ir:annotated-document",
       result: annotatedRichIrDocument,
-      options: draftCompatibilityOptions,
+      options: richIrCompatibilityOptions,
     },
     {
       name: "rich-ir:annotation-diagnostics",

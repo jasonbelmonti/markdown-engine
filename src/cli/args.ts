@@ -23,7 +23,7 @@ export type CliArgsResult =
 export const cliUsage = `Usage: markdown-engine [--document-version <version>] (--file <markdown-file> | --path <markdown-file>)
 
 Runs parse and normalization for one Markdown file and writes normalized JSON.
-Defaults to documentVersion "1.0.0-draft"; use "0.0.0" for legacy output.
+Defaults to documentVersion "1.0.0"; use "0.0.0" for legacy output.
 
 Options:
   --file <markdown-file>         Markdown file to process.

@@ -9,20 +9,20 @@ Baseline: `origin/main` at `66c5338`
 ## Scope
 
 This evidence records BEL-943 release-readiness validation, release containment,
-handoff state, and the BEL-944 MS-3 decision for the 1.0 rich IR implementation
-lane.
+handoff state, the BEL-944 MS-3 withhold decision, and the BEL-965 release
+cutover update for the 1.0 rich IR release lane.
 
-BEL-944 records the MS-3 decision as: withhold 1.0 tag and package publication
-until BEL-956 completes the publication audit. The release candidate passes
-validation, but the package remains published only as
-`@jasonbelmonti/markdown-engine@0.1.0`; no `1.0.0` package version, tag, or
-publication is authorized by this decision.
+BEL-944 withheld the 1.0 tag and package publication until BEL-956 child audit
+tracks completed. BEL-965 records the release-cutover update: package metadata
+and the public document contract are promoted to `1.0.0`, the release gates
+must pass from the final commit, and local `v1.0.0` tag creation is authorized
+after that validation. Npm publication remains a separate explicit operation.
 
 ## Evidence Index
 
 | Evidence | Status |
 | --- | --- |
-| EVD-6 | [Rich IR contract docs](wp-5-evd-6-rich-ir-contract.md) are present and document the 1.0 draft contract, compatibility selectors, annotation target shape, source-slice behavior, migration notes, and non-goals. |
+| EVD-6 | [Rich IR contract docs](wp-5-evd-6-rich-ir-contract.md) are present and document the 1.0 contract, compatibility selectors, annotation target shape, source-slice behavior, migration notes, and non-goals. |
 | EVD-7 | [Release readiness](wp-6-evd-7-release-readiness.md) is present as historical package-readiness evidence for the published `0.1.0` lane and remains linked for handoff completeness. |
 | EVD-8 | [Boundary inspection](wp-5-evd-8-boundary-inspection.md) and [compatibility / CLI impact](wp-5-evd-8-compatibility-cli-impact.md) are present. |
 | EVD-9 | [Downstream exercise](wp-6-evd-9-downstream-exercise.md) is present and proves sections, spans, source slices, query helpers, and annotations without semantic leakage. |
@@ -37,22 +37,24 @@ cutover evidence carried by the EVD-8 compatibility / CLI impact record.
 Current package state:
 
 - package name: `@jasonbelmonti/markdown-engine`
-- package version: `0.1.0`
-- 1.0 draft document selector: `documentVersion: "1.0.0-draft"`
+- package version: `1.0.0`
+- 1.0 document selector: `documentVersion: "1.0.0"`
 - retained legacy selector: `documentVersion: "0.0.0"`
-- 1.0 draft serialization gate: `compatibilityMode: "default"`
+- 1.0 serialization gate: `compatibilityMode: "default"`
 - legacy serialization gate: `compatibilityMode: "legacy-0.1"`
-- npm latest version observed during BEL-944: `0.1.0`
-- git tag state observed during BEL-944: `v0.1.0`; no `v1.0.0` tag
-- package tag: no 1.0 tag authorized by BEL-944
-- package publication: no 1.0 publication authorized by BEL-944
-- publication audit gate: Linear `BEL-956`; audit not complete
+- npm latest version observed before final publication: `0.1.0`
+- git tag state before BEL-965 final tag creation: `v0.1.0`; no remote
+  `v1.0.0` tag
+- package tag: BEL-965 authorizes local `v1.0.0` tag creation after the final
+  release cutover commit passes the release gates
+- package publication: npm publication remains a separate explicit operation
+  after the final dry-run passes
+- publication audit gate: Linear `BEL-956`; child audit tracks complete with
+  BEL-965 recording the final tag decision
 
-MS-3 decision for BEL-944: withhold 1.0 tag and publication. The current
-repository state is validated and suitable as review evidence, but the public
-release remains contained until BEL-956 completes the publication audit and a
-future explicit release decision promotes the draft contract to a final package
-version and records a publish decision.
+MS-3 decision update for BEL-965: promote package metadata and the public
+document contract to `1.0.0`, create `v1.0.0` only after validation passes, and
+keep npm publication as a separate explicit operation.
 
 ## Validation Commands
 
@@ -178,10 +180,9 @@ Integrated upstream state:
 
 ## Conclusion
 
-BEL-944 records the MS-3 decision: withhold the 1.0 tag and package
-publication until BEL-956 completes the publication audit. The release
+BEL-965 records the release cutover decision: promote package metadata and the
+public rich IR document contract to `1.0.0`, validate the final commit with the
+release gates, and create `v1.0.0` only after those gates pass. The release
 candidate passes the required downstream exercise and release verification
-gates, and the handoff packet links EVD-6 through EVD-10. The public package
-remains `@jasonbelmonti/markdown-engine@0.1.0` until BEL-956 records a
-publish-ready recommendation and a future explicit release decision promotes
-the draft rich IR contract to a final 1.0 package release.
+gates, and the handoff packet links EVD-6 through EVD-10. Npm publication
+remains a separate explicit operation after publish dry-run validation.

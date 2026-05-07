@@ -68,7 +68,7 @@ describe("BEL-949 rich IR serialization repeatability", () => {
     );
     expect(jsonCase(casesByName, "rich-ir:document:pretty")).toContain("\n");
     expect(richIrDocument).toMatchObject({
-      version: "1.0.0-draft",
+      version: "1.0.0",
       compatibility: {
         mode: "default",
       },

@@ -1,12 +1,12 @@
 # Public API Contract
 
-Status: Published `0.1.0` contract plus BEL-950 1.0 draft rich IR contract notes
-Last updated: 2026-05-06
+Status: 1.0.0 public contract
+Last updated: 2026-05-07
 
 This document defines the public `@jasonbelmonti/markdown-engine` package
-contract for the published `0.1.0` release. The stable public surface is the
-package export from `@jasonbelmonti/markdown-engine`, not internal adapter
-modules or raw parser output. The planned 1.0 rich IR contract is tracked in
+contract for the `1.0.0` release. The stable public surface is the package
+export from `@jasonbelmonti/markdown-engine`, not internal adapter modules or
+raw parser output. The 1.0 rich IR design is tracked in
 `docs/design/markdown-engine-1.0-rich-ir-operational-design-spec.md`.
 
 ## Exported Surface
@@ -69,14 +69,13 @@ normalize(parsed: ParsedMarkdown, options?: NormalizeOptions): NormalizeResult
 ```
 
 `NormalizeOptions.documentVersion` selects the document contract version. The
-published `0.1.0`-compatible path is `"0.0.0"`. The BEL-950 1.0 implementation
-lane uses `"1.0.0-draft"` until final 1.0 release approval promotes the
-contract.
+final 1.0 rich IR path is `"1.0.0"`. The retained `0.1.0`-compatible path is
+`"0.0.0"`.
 
 `NormalizeOptions.preserveSourceLocations` defaults to `true`. When set to
 `false`, source ranges and source slices are omitted from the normalized
 document, but deterministic node target IDs are still generated for the 1.0
-draft path.
+path.
 
 `NormalizeResult` contains:
 
@@ -225,7 +224,7 @@ and omits `undefined` properties.
 `SerializeOptions.compatibilityMode` is optional. When provided, it verifies
 document-bearing public results before serialization:
 
-- `compatibilityMode: "default"` expects document version `"1.0.0-draft"`.
+- `compatibilityMode: "default"` expects document version `"1.0.0"`.
 - `compatibilityMode: "legacy-0.1"` expects document version `"0.0.0"`.
 
 Mismatched document-bearing results throw `EngineCompatibilityError` with code
@@ -261,19 +260,17 @@ will expand through implementation work packages. Code nodes may include a
 `kind` attribute of `fenced` or `indented`; `codeFences.*` rules apply only to
 code nodes with `kind: "fenced"`. Raw parser node objects are not public.
 
-## 1.0 Draft Contract
+## 1.0 Contract
 
-The BEL-950 implementation state documents the 1.0 default contract as
-`documentVersion: "1.0.0-draft"`. This is the source-grounded 1.0 lane contract
-until the release cutover changes the public version string to final
-`"1.0.0"` or records a different release decision.
+The final 1.0 contract is selected as `documentVersion: "1.0.0"` and checked
+with `compatibilityMode: "default"`.
 
-Callers select the 1.0 draft contract with:
+Callers select the 1.0 contract with:
 
 ```ts
 const parsed = parse(markdown, { path: "mission.md" });
 const document = normalize(parsed.parsed, {
-  documentVersion: "1.0.0-draft",
+  documentVersion: "1.0.0",
 }).document;
 
 const sections = documentQueries.sections(document);
@@ -292,21 +289,21 @@ const serializedLegacy = serialize(legacyDocument, {
 });
 ```
 
-### 1.0 Draft Document Fields
+### 1.0 Document Fields
 
-When callers normalize with `documentVersion: "1.0.0-draft"`, the document
+When callers normalize with `documentVersion: "1.0.0"`, the document
 includes deterministic derived structural views:
 
 - `kind`: `"markdown-document"`.
-- `version`: `"1.0.0-draft"`.
+- `version`: `"1.0.0"`.
 - `path`: optional caller-supplied path from parse or normalized document input.
 - `frontmatter`: JSON-safe parsed frontmatter value when present.
 - `target`: the document-level `EngineNodeTarget`.
-- `children`: normalized `EngineNode[]`; each node has `target` in the 1.0 draft
+- `children`: normalized `EngineNode[]`; each node has `target` in the 1.0
   path.
 - `sourceRange`: optional document source range when source locations are
   preserved.
-- `compatibility`: `{ mode: "default", reason: "1.0 draft document contract" }`.
+- `compatibility`: `{ mode: "default", reason: "1.0 document contract" }`.
 - `sections`: heading-derived `EngineSection[]`.
 - `textSpans`: text-bearing `EngineTextSpan[]`.
 - `tables`: `EngineTable[]` with flattened table-cell coordinates.
@@ -316,7 +313,7 @@ includes deterministic derived structural views:
   validated annotation result to the document.
 
 `EngineNode` keeps the `0.1.0` fields `type`, optional `text`, optional
-`attributes`, optional `sourceRange`, and optional `children`. In the 1.0 draft
+`attributes`, optional `sourceRange`, and optional `children`. In the 1.0
 path it may also include:
 
 - `target`: deterministic `EngineNodeTarget`.
@@ -428,21 +425,19 @@ serialization behavior.
 
 ### Compatibility And Migration
 
-The current package version remains `0.1.0`. Before final 1.0 publication, the
-1.0 contract is selected with `normalize(..., { documentVersion:
-"1.0.0-draft" })` and checked at serialization with `compatibilityMode:
-"default"`.
+The current package version is `1.0.0`. The 1.0 contract is selected with
+`normalize(..., { documentVersion: "1.0.0" })` and checked at serialization
+with `compatibilityMode: "default"`.
 
 The retained compatibility selector is `compatibilityMode: "legacy-0.1"`,
 which accepts document-bearing public results with `version: "0.0.0"`. This is
 the documented 0.1.x-compatible behavior gate. Consumers should not infer
 compatibility from the absence of rich IR fields.
 
-Migration from the `0.1.0` document shape to the 1.0 draft shape requires
+Migration from the `0.1.0` document shape to the 1.0 shape requires
 consumers to:
 
-- request `documentVersion: "1.0.0-draft"` during normalization while the
-  package is still in the implementation lane;
+- request `documentVersion: "1.0.0"` during normalization;
 - read `target`, `sections`, `textSpans`, `tables`, `lists`, `links`, and
   `source` from the normalized document instead of re-deriving them from raw
   Markdown;
@@ -457,9 +452,9 @@ consumers to:
 ### CLI Impact
 
 The local CLI runs parse and normalization for one Markdown file and writes
-pretty JSON. BEL-952 changes the CLI default output to the 1.0 draft rich IR
+pretty JSON. BEL-952 changes the CLI default output to the 1.0 rich IR
 contract: `--file` and `--path` emit a normalized result whose
-`document.version` is `"1.0.0-draft"` and whose document includes derived rich
+`document.version` is `"1.0.0"` and whose document includes derived rich
 IR views such as `target`, `sections`, `textSpans`, `tables`, `lists`, and
 `links` when present.
 
@@ -471,7 +466,7 @@ markdown-engine --document-version 0.0.0 --file mission.md
 
 The supported CLI selector values are:
 
-- `--document-version 1.0.0-draft`: 1.0 draft rich IR output, also the default
+- `--document-version 1.0.0`: 1.0 rich IR output, also the default
   when the selector is omitted.
 - `--document-version 0.0.0`: retained `0.1.0`-compatible normalized document
   output without rich derived views.
@@ -494,7 +489,7 @@ is carried in the 1.0 release lane, not as a `0.1.x` patch.
 Structural views are derived from engine-owned document nodes, targets, and
 source metadata. They do not expose raw parser AST fields as public contract.
 
-The package boundary remains domain-neutral. The 1.0 draft contract does not
+The package boundary remains domain-neutral. The 1.0 contract does not
 implement SpecTrace entities, profile compiler behavior, runtime lenses, MCP
 transport, agent adapters, semantic or LLM evaluation, arbitrary rule plugins,
 network services, persistence, file watching, graph storage, rendering,

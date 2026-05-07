@@ -27,7 +27,7 @@ export class EngineCompatibilityError extends Error {
 }
 
 const expectedVersionByCompatibilityMode = {
-  default: "1.0.0-draft",
+  default: "1.0.0",
   "legacy-0.1": "0.0.0",
 } satisfies Record<EngineCompatibilityMode, EngineDocumentVersion>;
 

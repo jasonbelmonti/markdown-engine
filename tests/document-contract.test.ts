@@ -72,7 +72,7 @@ const annotation = {
 } satisfies EngineAnnotation<{ ownedByCaller: boolean }>;
 const document = {
   kind: "markdown-document",
-  version: "1.0.0-draft",
+  version: "1.0.0",
   path: "document.md",
   target: rootTarget,
   children: [
@@ -123,8 +123,8 @@ describe("1.0 document contract skeleton", () => {
     }
   });
 
-  it("types the draft document, targets, queries, annotations, and compatibility gate", () => {
-    expect(document.version).toBe("1.0.0-draft");
+  it("types the 1.0 document, targets, queries, annotations, and compatibility gate", () => {
+    expect(document.version).toBe("1.0.0");
     expect(serializableResult.compatibility).toEqual(compatibility);
     expect(queries.nodes(document)).toHaveLength(1);
     expect(queries.textSpans(document)[0]).toMatchObject({
