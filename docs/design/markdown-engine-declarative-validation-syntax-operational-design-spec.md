@@ -141,7 +141,7 @@ Trust or control boundaries: Markdown input and validation profile data cross fr
 | --- | --- | --- | --- | --- |
 | Declarative validation API | `markdown-engine` | Package consumers and downstream profile compiler | `EngineDocument`, validation profile object, validation options | Validation result, rule results, diagnostics, optional evidence packet |
 | Profile syntax parser | `markdown-engine` | YAML parser dependency and package consumers | YAML-compatible profile text or object value | Parsed profile model or config diagnostics |
-| Rule compiler | `markdown-engine` | Declarative validation API | Parsed profile model and syntax version | Closed compiled rule plan or compile diagnostics |
+| Rule compiler | `markdown-engine` | Internal validation pipeline | Parsed profile model and syntax version | Internal closed compiled rule plan or compile diagnostics |
 | Rule evaluator | `markdown-engine` | Declarative validation API and CLI | Compiled rule plan and `EngineDocument` | Deterministic diagnostics and per-rule results |
 | CLI validation command | `markdown-engine` | CI jobs, agents, local users | Markdown file path, profile config path, output format | Exit code, JSON/text/SARIF-compatible output |
 | Serialization and evidence output | `markdown-engine` | CI, review automation, agents | Validation result and options | Stable JSON evidence output |
@@ -158,7 +158,7 @@ Section status: Complete
 | FLOW-4 | A downstream profile needs operational-design-spec structural checks. | The document uses numbered headings, tables, and ID families. | The profile validates required sections, table columns, ID uniqueness, and traceability through generic selectors and assertions. | REQ-4 / REQ-5 / REQ-9 |
 | FLOW-5 | A validation failure is tied to a table cell or text span. | The normalized document contains source ranges for the selected target. | The diagnostic includes the nearest source range and a stable code. | REQ-6 / REQ-7 |
 | FUNC-1 | Profile parsing is invoked. | The profile input is a YAML string or object value. | The API returns a parsed profile model or config diagnostics. | REQ-1 / REQ-2 |
-| FUNC-2 | Rule compilation is invoked. | Profile parsing completed without error-severity diagnostics. | The API returns a closed compiled rule plan that references public selectors and assertions only. | REQ-3 / REQ-8 |
+| FUNC-2 | Rule compilation is invoked. | Profile parsing completed without error-severity diagnostics. | The engine creates an internal closed compiled rule plan that references public selectors and assertions only, or returns compile diagnostics when compilation fails. | REQ-3 / REQ-8 |
 | FUNC-3 | Declarative validation is invoked. | A compiled rule plan and normalized document are supplied. | The API evaluates supported structural assertions and returns deterministic rule results. | REQ-4 / REQ-5 / REQ-7 |
 | FUNC-4 | Source-targeted diagnostics are requested. | Validation failures occur on source-addressable targets. | Diagnostics include source ranges where available and omit locations rather than guessing. | REQ-6 |
 | FUNC-5 | CLI validation is invoked. | Caller supplies file and profile paths. | The CLI reads local files, runs parse, normalize, compile, validate, and writes selected output format. | REQ-10 |
@@ -191,7 +191,7 @@ External service expectations: The package has no network availability service l
 | --- | --- | --- | --- |
 | ACC-1 | Parse a valid YAML profile with 3 rules using section, table, and ID assertions. | The API returns a parsed profile model with no diagnostics. | REQ-1 / FUNC-1 |
 | ACC-2 | Parse a profile containing `script`, `plugin`, or unknown assertion keys. | The API returns config diagnostics and no executable behavior. | REQ-2 / REQ-8 / FUNC-1 / FUNC-2 |
-| ACC-3 | Compile a profile containing only supported selectors and assertions. | The API returns a closed rule plan with no raw function callbacks or external handles. | REQ-3 / FUNC-2 |
+| ACC-3 | Compile a profile containing only supported selectors and assertions. | Internal inspection or test evidence shows a closed rule plan with no raw function callbacks or external handles. | REQ-3 / FUNC-2 |
 | ACC-4 | Validate a document missing a required section. | The result contains an error diagnostic for the missing section. | REQ-4 / REQ-5 / FUNC-3 |
 | ACC-5 | Validate a table whose required column is missing. | The result contains an error diagnostic targeted to the nearest table source range. | REQ-5 / REQ-6 / FUNC-4 |
 | ACC-6 | Validate a duplicate `REQ-*` ID in a table cell. | The result contains deterministic duplicate-ID diagnostics with source ranges for duplicate occurrences where available. | REQ-5 / REQ-6 / FUNC-4 |
@@ -254,7 +254,7 @@ Section status: Complete
 
 ## 14. Data, Schemas, and Compatibility
 
-Provisional authoring shape:
+First-version authoring shape:
 
 ```yaml
 syntaxVersion: markdown-engine.validation@v1
@@ -310,9 +310,13 @@ rules:
           - 17. Verification Strategy and Behavior-to-Mechanism Traceability
 ```
 
-Provisional public profile model:
+First-version public API and schema contract:
 
 ```ts
+type DeclarativeValidationSeverity = "error" | "warning" | "info";
+type DeclarativeOutputFormat = "json" | "text" | "sarif";
+type DeclarativeSectionOrder = "none" | "strict";
+
 interface ValidationProfile {
   syntaxVersion: "markdown-engine.validation@v1";
   documentVersion?: EngineDocumentVersion;
@@ -321,16 +325,168 @@ interface ValidationProfile {
 
 interface DeclarativeValidationRule {
   id: string;
-  severity?: MarkdownDiagnosticSeverity;
+  severity?: DeclarativeValidationSeverity;
   select: DeclarativeSelector;
   assert: DeclarativeAssertion;
 }
+
+type DeclarativeSelector =
+  | { target: "document" }
+  | { target: "section"; title?: string; depth?: number }
+  | { target: "heading"; text?: string; depth?: number }
+  | {
+      target: "table";
+      section?: string;
+      header?: readonly string[];
+    }
+  | {
+      target: "tableRow";
+      section?: string;
+      tableHeader?: readonly string[];
+      where?: DeclarativeTableCellPredicate;
+    }
+  | {
+      target: "tableCell";
+      section?: string;
+      tableHeader?: readonly string[];
+      column: string;
+      rowWhere?: DeclarativeTableCellPredicate;
+    }
+  | {
+      target: "textSpan";
+      section?: string;
+      nodeType?: EngineNode["type"];
+      textIncludes?: string;
+    }
+  | { target: "link"; section?: string; text?: string; url?: string }
+  | { target: "list"; section?: string; ordered?: boolean; depth?: number }
+  | { target: "frontmatter"; field?: string };
+
+interface DeclarativeTableCellPredicate {
+  column: string;
+  equals?: string;
+  includes?: string;
+  matches?: string;
+}
+
+interface DeclarativeAssertion {
+  sectionsRequired?: {
+    headings: readonly string[];
+    order?: DeclarativeSectionOrder;
+  };
+  sectionOrder?: {
+    headings: readonly string[];
+  };
+  tableColumnsRequired?: {
+    columns: readonly string[];
+  };
+  ids?: {
+    column?: string;
+    prefix?: string;
+    pattern?: string;
+    unique?: boolean;
+    caseSensitive?: boolean;
+  };
+  references?: {
+    idsFrom: DeclarativeIdSource;
+    mustAppearIn: readonly string[];
+  };
+  text?: {
+    column?: string;
+    contains?: string;
+    containsExactlyOne?: string;
+    excludes?: readonly string[];
+  };
+  textOccurrenceCount?: {
+    text: string;
+    count: number;
+    column?: string;
+  };
+  frontmatterRequired?: {
+    fields: readonly string[];
+  };
+}
+
+interface DeclarativeIdSource {
+  section?: string;
+  column?: string;
+  prefix?: string;
+  pattern?: string;
+}
+
+interface DeclarativeValidationApi {
+  parseValidationProfile(
+    input: string | unknown,
+    options?: { path?: string },
+  ): DeclarativeProfileParseResult;
+  validateWithProfile(
+    document: EngineDocument,
+    profile: ValidationProfile,
+    options?: DeclarativeValidationOptions,
+  ): DeclarativeValidationResult;
+}
+
+interface DeclarativeProfileParseResult {
+  profile?: ValidationProfile;
+  diagnostics: readonly MarkdownDiagnostic[];
+}
+
+interface DeclarativeValidationOptions {
+  path?: string;
+  includeEvidence?: boolean;
+}
+
+interface DeclarativeValidationResult extends ValidationResult {
+  profile: {
+    syntaxVersion: "markdown-engine.validation@v1";
+    documentVersion?: EngineDocumentVersion;
+    ruleCount: number;
+  };
+  evidence?: DeclarativeValidationEvidence;
+}
+
+interface DeclarativeValidationEvidence {
+  inputHash: string;
+  profileHash: string;
+  engineVersion: string;
+  runtimeVersion: string;
+  ruleResults: readonly ValidationRuleResult[];
+  diagnostics: readonly MarkdownDiagnostic[];
+}
 ```
+
+Schema closure and validation rules:
+
+- Top-level profile keys are exactly `syntaxVersion`, `documentVersion`, and `rules`.
+- Rule keys are exactly `id`, `severity`, `select`, and `assert`.
+- Selector and assertion objects are closed; unsupported keys produce `profile.config.unsupportedKey` diagnostics and stop compilation.
+- `assert` contains at least one supported assertion member. Multiple assertion members in one rule are evaluated in stable object-key order after unsupported-key validation.
+- `matches` values are strings compiled as JavaScript regular expressions with no flags for deterministic matching only. They do not execute code and cannot perform imports, file access, network access, or callbacks.
+- Empty selector result behavior is assertion-specific: required-section and required-frontmatter assertions evaluate against the document, while table, ID, reference, text, and occurrence assertions fail with `profile.validation.emptySelection` unless explicitly documented otherwise.
+
+Compiled rule-plan records are internal implementation details. They are not exported from the package root, are not serialized in public results, and carry no semver stability guarantee. Public compatibility applies only to the authoring profile syntax, public API function names and result shapes, CLI flags and output formats, diagnostic codes, and documented evidence fields.
+
+First-version diagnostic inventory:
+
+| Code | Severity source | Emitted when |
+| --- | --- | --- |
+| `profile.config.invalidYaml` | `error` | YAML text cannot be parsed into a JSON-safe profile value. |
+| `profile.config.unsupportedSyntaxVersion` | `error` | `syntaxVersion` is missing or is not `markdown-engine.validation@v1`. |
+| `profile.config.invalidShape` | `error` | A required field has the wrong type, an empty required array, or an invalid enum value. |
+| `profile.config.unsupportedKey` | `error` | A closed profile, rule, selector, assertion, or nested object contains an unknown key. |
+| `profile.compile.unsupportedSelector` | `error` | A selector target is not one of the first-version supported targets. |
+| `profile.compile.unsupportedAssertion` | `error` | An assertion member is not one of the first-version supported assertions. |
+| `profile.validation.emptySelection` | Rule severity | A rule cannot evaluate because its selector matches no applicable target. |
+| `profile.validation.assertionFailed` | Rule severity | A supported assertion evaluates and fails. |
+| `profile.validation.referenceMissing` | Rule severity | A reference assertion finds an ID that is not present in a required target section. |
+| `profile.validation.duplicateId` | Rule severity | An ID uniqueness assertion finds repeated IDs. |
+
+First-version CLI contract: declarative validation is exposed as `markdown-engine validate --file <markdown-file> --profile <profile-file> --format <json|text|sarif>`. The default format is `json`. Error-severity config or validation diagnostics exit with code `1`; CLI usage and local file read errors exit with code `2`; successful validation exits with code `0`. The existing parse/normalize CLI path remains available for rich IR output and is not replaced by this command.
 
 | Change | Type | Compatibility impact | Reversibility | Mitigation |
 | --- | --- | --- | --- | --- |
 | Declarative validation syntax | Config | Creates a durable author-facing syntax version and examples. | Reversible before release; semver-controlled after release | Add explicit `syntaxVersion`, contract docs, fixture snapshots, and unsupported-syntax diagnostics. |
-| Compiled rule-plan model | Schema | Adds internal and possibly public inspection surface for compiled profiles. | Reversible before release; semver-controlled if public | Keep rule-plan records data-only and document whether inspection is stable. |
+| Compiled rule-plan model | Internal schema | Remains private implementation detail with no public compatibility promise. | Reversible before release and refactorable after release if public behavior is unchanged | Do not export compiled plan types, do not serialize plans, and test public behavior rather than internal record layout. |
 | Validation result evidence shape | Schema | Extends validation output for profile metadata and deterministic evidence. | Reversible before release; semver-controlled after release | Document result fields and serialize with stable key order. |
 | CLI validation command | API / CLI | Adds new command behavior and exit codes. | Reversible before release; semver-controlled after release | Add CLI usage docs, tests, and compatibility notes. |
 | Diagnostic codes | Schema | Adds new machine-readable diagnostic codes for profile and rule failures. | Reversible before release; semver-controlled after release | Maintain diagnostic inventory and snapshot tests. |
@@ -371,7 +527,7 @@ Section status: Complete
 | CLI validation test output | Log | Show CLI exit codes and formats. | CI user and implementer |
 | Contract documentation checklist | Audit | Show syntax, results, diagnostics, examples, and non-goals are documented. | Downstream consumers |
 
-Rollout plan: Implement the syntax behind an explicit syntax version such as `markdown-engine.validation@v1`. Add parser, compiler, evaluator, diagnostic, repeatability, CLI, and boundary tests before documenting the syntax as stable. Keep existing fixed rule families intact. Require project-owner approval before finalizing public syntax names or CLI defaults.
+Rollout plan: Implement the syntax behind the explicit syntax version `markdown-engine.validation@v1` and the CLI contract `markdown-engine validate --file <markdown-file> --profile <profile-file> --format <json|text|sarif>` with `json` as the default format. Add parser, compiler, evaluator, diagnostic, repeatability, CLI, and boundary tests before documenting the syntax as stable. Keep existing fixed rule families intact. Require project-owner approval before changing public syntax names, API function names, CLI flags, or CLI defaults from this specification.
 
 Rollback or containment plan: Trigger rollback if unsupported syntax is evaluated, arbitrary code execution appears, profile-specific semantics enter core engine code, deterministic output fails, or downstream review rejects the vocabulary as unusable. The rollback action is to withhold release and revert declarative validation changes on the implementation branch; containment limit is package source and documentation because no persistent user data exists.
 
@@ -472,11 +628,12 @@ Section status: Complete
 
 | Finding ID | Severity | Status | Section | Finding | Required action | Owner |
 | --- | --- | --- | --- | --- | --- | --- |
-| ST-1 | Major | Resolved | 14 | The initial draft described the syntax concept but did not include enough provisional schema detail to support implementation review. | Add provisional YAML and TypeScript shapes, explicit syntax versioning, and compatibility impacts. | Codex |
+| ST-1 | Major | Resolved | 14 | The initial draft described the syntax concept but did not include enough first-version schema detail to support implementation review. | Add first-version YAML and TypeScript shapes, explicit syntax versioning, and compatibility impacts. | Codex |
 | ST-2 | Major | Resolved | 17 | The initial draft did not prove that every required behavior mapped to mechanisms and verification. | Add complete `REQ-*` and `FUNC-*` traceability rows in section 17. | Codex |
 | SM-1 | Major | Resolved | 5 / 8 / 13 | The initial draft risked making the syntax too broad because selector and assertion vocabularies were not bounded. | Define a closed first vocabulary and explicit unsupported-syntax behavior. | Codex |
 | SM-2 | Minor | Resolved | 16 | The initial rollout text did not state enough containment triggers for boundary violations. | Add rollback triggers for arbitrary execution, profile-specific semantics, and repeatability failure. | Codex |
 | TR-1 | Major | Resolved | 11 / 17 | The initial draft omitted CLI and evidence behavior from one traceability path. | Add `REQ-10`, `FUNC-5`, `FUNC-6`, `ACC-9`, `VAL-10`, and corresponding mechanism mappings. | Codex |
+| CR-1 | Major | Resolved | 14 / 16 | Consensus review found that the R2 contract left selector/assertion schemas, compiled plan visibility, evidence/result shape, diagnostic inventory, and CLI/API defaults unresolved. | Define the first-version closed schema, declare compiled plans internal, define result/evidence fields, define diagnostic codes, fix CLI/API contracts, and make public names/defaults explicit. | Codex |
 
 Semantic scores:
 
