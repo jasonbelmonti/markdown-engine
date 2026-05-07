@@ -604,7 +604,7 @@ Execution sequence:
 7. Execute `WP-5` after public behavior exists and before merge approval.
 8. Execute `WP-6` after `MS-2` evidence is complete and before release readiness.
 
-Parallelization rules: No parallel source edits before `MS-1`. After `MS-1`, docs and fixtures may proceed in parallel with source work only when editable paths are disjoint and final API names are marked pending `MS-2`. Source implementation remains serialized across `WP-2`, `WP-3`, and `WP-4` unless the project owner approves disjoint editable paths and stable public interfaces.
+Parallelization rules: No parallel source edits before `MS-1`. After `MS-1`, docs and fixtures may proceed in parallel with source work only when editable paths are disjoint and the `SRC-1` public API and CLI names remain unchanged. Source implementation remains serialized across `WP-2`, `WP-3`, and `WP-4` unless the project owner approves disjoint editable paths and stable public interfaces.
 
 Integration points: `MS-1` integrates the proving fixture and minimum public shape; `MS-2` integrates parser/schema, compiler/selectors, assertions/diagnostics, API, CLI, docs, tests, repeatability, and boundary audit before merge; `MS-3` integrates downstream exercise, boundary revalidation, release verification, rollback containment, and handoff.
 
@@ -762,7 +762,7 @@ Risks:
 
 Open questions:
 
-None. Rationale: project-owner approval is represented as blocking `DEP-1`, not an open question. Final public names and any substrate gaps are bounded by `MS-1`, `MS-2`, and `DEV-*` controls.
+None. Rationale: project-owner approval is represented as blocking `DEP-1`, not an open question. Public API and CLI names are fixed by `SRC-1`; `MS-1` and `MS-2` verify implementation evidence against those names, while any proposed name change requires an approved `DEV-*` record before execution continues. Substrate gaps remain bounded by `DEP-2`, `MS-2`, and `DEV-*` controls.
 
 Approved deviations:
 
