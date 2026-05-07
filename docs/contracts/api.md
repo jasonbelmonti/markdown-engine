@@ -343,8 +343,9 @@ promise of stability across arbitrary content edits, parser upgrades, or final
 position objects.
 
 `SourceRange` contains `start` and `end` positions. Each position has `line`,
-`column`, and optional `offset`. Source slices are produced only when usable
-offsets are available and contained by the document source.
+`column`, and optional `offset`. Source slices are produced only when both
+offsets are present, integers, ordered, non-negative, and contained by the
+document source text.
 
 ### Structural Views
 
@@ -388,9 +389,10 @@ optional `title`, and optional `sourceRange`.
   item depth.
 - `links(document, query?)` filters link views by target ID, URL, or text.
 - `sourceSlice(document, target)` returns the precomputed source slice for node
-  targets when parser offsets are available. For section targets, it returns
-  the source slice for the owning heading target. It returns `undefined` instead
-  of guessing when offsets are absent, unsupported, or out of bounds.
+  targets when parser offsets are present, integer, ordered, non-negative, and
+  in bounds. For section targets, it returns the source slice for the owning
+  heading target. It returns `undefined` instead of guessing when offsets are
+  absent, non-integer, reversed, negative, unsupported, or out of bounds.
 
 ### Annotation Contract
 
