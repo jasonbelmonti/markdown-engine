@@ -57,8 +57,8 @@ rich-ir:document:compact: 6986761f7ce164124a97a256dedcb7079dc6c27c4ac9886e448b33
 rich-ir:document:pretty: 635f3f397aeb5971c886f6e7c2d23952f0455e3c5fbc17e9d1dcc52878d40699 (74245 bytes)
 rich-ir:annotated-document:compact: e23936a8bf08d95226ac7ad664cc78abf571410918ce81e1cc2beee1ea65cd03 (29214 bytes)
 rich-ir:annotated-document:pretty: 1886ab3d9256b5abcf07f39f0252fd513d55caa7e34f4e9153127e4248143f96 (75392 bytes)
-rich-ir:annotation-diagnostics:compact: 4da83a14aafe619a0610ad57c2f89d606c684e0081ad9d0e4c0323cbf18ec82b (541 bytes)
-rich-ir:annotation-diagnostics:pretty: 4d2c963eab6b7aff37390f01c04fdddf2775164337fcbd2da9773e6b79d12253 (879 bytes)
+rich-ir:annotation-diagnostics:compact: dcfb71c2bb77ed5abdbbad5cae03965f37a947abc77a92802d8d7c8ba6029973 (4284 bytes)
+rich-ir:annotation-diagnostics:pretty: 4a862de282eb6f559cc24784c87c91714ad5178bd04a04a6d9b69d31659a0890 (7934 bytes)
 ```
 
 ## Covered Inputs
@@ -73,7 +73,8 @@ rich-ir:annotation-diagnostics:pretty: 4d2c963eab6b7aff37390f01c04fdddf277516433
   tables, lists, links, text spans, targets, and source slices
 - Caller-owned node and source annotations validated through
   `validateAnnotations`
-- Annotation diagnostics for a missing node target
+- Annotation diagnostics for out-of-bounds, unknown target, same-position,
+  missing-offset, invalid range, and malformed-target cases
 - Compact and pretty serializer modes for every repeatability case
 
 ## Guarantees
@@ -104,6 +105,16 @@ BEL-958 reran `node scripts/prove-repeatability.mjs --runs 10` from
 annotation digest lines above. The drift maps to later annotation target
 validation and annotation diagnostic source changes after the original BEL-949
 record; no snapshot file changed in this audit.
+
+## BEL-966 Determinism Audit Update
+
+BEL-966 reran `node scripts/prove-repeatability.mjs --runs 10` from
+`origin/main` at `cfa58dc` on 2026-05-07 and expanded the rich IR annotation
+diagnostic case from one missing node target to an eight-diagnostic matrix. The
+matrix covers same-position unknown targets, missing-offset unknown targets,
+source out-of-bounds diagnostics, reversed source ranges, malformed node
+targets, invalid target kinds, and missing source ranges. Only the two
+`rich-ir:annotation-diagnostics` digest lines changed.
 
 ## Conclusion
 

@@ -19,7 +19,35 @@ export function buildRichIrRepeatabilityOutputs(repoRoot, engine) {
     sourceAnnotation("annotation:mission-source", sourceRangeFor(paragraph)),
   ]);
   const annotationDiagnostics = validateAnnotations(richIrDocument, [
-    nodeAnnotation("annotation:missing-paragraph", missingNodeTarget()),
+    sourceAnnotation(
+      "annotation:out-of-bounds-source",
+      rangeWithoutOffsets(1, 1, 1, 8),
+    ),
+    nodeAnnotation("annotation:unknown-a", missingNodeTarget("node:a:missing")),
+    nodeAnnotation("annotation:unknown-z", missingNodeTarget("node:z:missing")),
+    nodeAnnotation(
+      "annotation:unknown-missing-offset",
+      missingNodeTarget("node:missing-offset", rangeWithoutOffsets(9, 1, 9, 6)),
+    ),
+    sourceAnnotation(
+      "annotation:invalid-source-range",
+      sourceRange(10, 4, 200, 9, 1, 180),
+    ),
+    malformedAnnotation("annotation:bad-node-target", {
+      kind: "node",
+      nodeTarget: {
+        kind: "node",
+        id: "node:bad:path",
+        path: [-1],
+      },
+    }),
+    malformedAnnotation("annotation:bad-target-kind", {
+      kind: "block",
+      target: targetFor(paragraph),
+    }),
+    malformedAnnotation("annotation:missing-source-range", {
+      kind: "source",
+    }),
   ]);
   const annotatedRichIrDocument = {
     ...richIrDocument,
@@ -98,11 +126,58 @@ function sourceAnnotation(id, range) {
   };
 }
 
-function missingNodeTarget() {
+function missingNodeTarget(id, range = sourceRange(9, 1, 90, 9, 6, 95)) {
   return {
     kind: "node",
-    id: "node:missing:paragraph",
+    id,
     path: [999],
     nodeType: "paragraph",
+    sourceRange: range,
+  };
+}
+
+function malformedAnnotation(id, target) {
+  return {
+    id,
+    target,
+    payload: {
+      ownedByCaller: true,
+      signal: id,
+    },
+  };
+}
+
+function sourceRange(
+  startLine,
+  startColumn,
+  startOffset,
+  endLine,
+  endColumn,
+  endOffset,
+) {
+  return {
+    start: {
+      line: startLine,
+      column: startColumn,
+      offset: startOffset,
+    },
+    end: {
+      line: endLine,
+      column: endColumn,
+      offset: endOffset,
+    },
+  };
+}
+
+function rangeWithoutOffsets(startLine, startColumn, endLine, endColumn) {
+  return {
+    start: {
+      line: startLine,
+      column: startColumn,
+    },
+    end: {
+      line: endLine,
+      column: endColumn,
+    },
   };
 }
