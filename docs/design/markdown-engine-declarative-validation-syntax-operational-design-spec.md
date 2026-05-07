@@ -276,15 +276,15 @@ rules:
   - id: requirement-table-shape
     severity: error
     select:
+      target: table
       section: 5. Requirements
-      table:
-        header:
-          - ID
-          - Type
-          - Priority
-          - Requirement statement
-          - Rationale
-          - Verification
+      header:
+        - ID
+        - Type
+        - Priority
+        - Requirement statement
+        - Rationale
+        - Verification
     assert:
       ids:
         column: ID
@@ -301,7 +301,7 @@ rules:
     select:
       target: document
     assert:
-      traceability:
+      references:
         idsFrom:
           section: 5. Requirements
           prefix: REQ
@@ -325,6 +325,7 @@ interface ValidationProfile {
 
 interface DeclarativeValidationRule {
   id: string;
+  /** Defaults to "error" when omitted. */
   severity?: DeclarativeValidationSeverity;
   select: DeclarativeSelector;
   assert: DeclarativeAssertion;
@@ -459,6 +460,7 @@ Schema closure and validation rules:
 
 - Top-level profile keys are exactly `syntaxVersion`, `documentVersion`, and `rules`.
 - Rule keys are exactly `id`, `severity`, `select`, and `assert`.
+- Rule `severity` is optional and defaults to `error` before compilation and evaluation. Unsupported severity values produce `profile.config.invalidShape` diagnostics.
 - Selector and assertion objects are closed; unsupported keys produce `profile.config.unsupportedKey` diagnostics and stop compilation.
 - `assert` contains at least one supported assertion member. Multiple assertion members in one rule are evaluated in stable object-key order after unsupported-key validation.
 - `matches` values are strings compiled as JavaScript regular expressions with no flags for deterministic matching only. They do not execute code and cannot perform imports, file access, network access, or callbacks.
@@ -634,6 +636,7 @@ Section status: Complete
 | SM-2 | Minor | Resolved | 16 | The initial rollout text did not state enough containment triggers for boundary violations. | Add rollback triggers for arbitrary execution, profile-specific semantics, and repeatability failure. | Codex |
 | TR-1 | Major | Resolved | 11 / 17 | The initial draft omitted CLI and evidence behavior from one traceability path. | Add `REQ-10`, `FUNC-5`, `FUNC-6`, `ACC-9`, `VAL-10`, and corresponding mechanism mappings. | Codex |
 | CR-1 | Major | Resolved | 14 / 16 | Consensus review found that the R2 contract left selector/assertion schemas, compiled plan visibility, evidence/result shape, diagnostic inventory, and CLI/API defaults unresolved. | Define the first-version closed schema, declare compiled plans internal, define result/evidence fields, define diagnostic codes, fix CLI/API contracts, and make public names/defaults explicit. | Codex |
+| CR-2 | Major | Resolved | 14 | Consensus review found that the first-version YAML example violated the closed selector/assertion schema and that omitted rule severity had no defined behavior. | Align the YAML example with the target-discriminated table selector and `references` assertion, and define omitted severity as defaulting to `error`. | Codex |
 
 Semantic scores:
 
