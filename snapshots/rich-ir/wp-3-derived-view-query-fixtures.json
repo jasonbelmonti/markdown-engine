@@ -1107,8 +1107,9 @@
     "nestedListTargetsByTargetIdAndDepth": [
       "node:7.1.1:list"
     ],
-    "relativeLinkTargetsByTargetIdAndText": [
+    "relativeLinkTargetsByText": [
       "node:3.3:link"
-    ]
+    ],
+    "relativeLinkTargetsByTargetIdAndWrongText": []
   }
 }

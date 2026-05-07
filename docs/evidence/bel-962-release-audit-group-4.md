@@ -70,7 +70,8 @@ under BEL-944/BEL-956. The package remains
   is `snapshots/rich-ir/wp-3-derived-view-query-fixtures.json`.
 - PASS: BEL-962 added focused coverage for the audit gap. Tests now assert exact
   text plus target ID filtering for text spans, target ID plus item-depth
-  filtering for nested lists, and target ID plus text filtering for links
+  filtering for nested lists, and text-only plus wrong-text negative filtering
+  for links
   (`tests/rich-ir-queries.test.ts:94-122`,
   `tests/rich-ir-queries.test.ts:160-193`). Snapshot evidence now records
   section, text-span, table, list, and link target-filter query results

@@ -185,12 +185,15 @@ describe("1.0 Rich IR structural views and query helpers", () => {
     expect(documentQueries.links(document, { url: "./phase-alpha.md" })).toEqual(
       [relativeLink],
     );
+    expect(documentQueries.links(document, { text: "relative link" })).toEqual([
+      relativeLink,
+    ]);
     expect(
       documentQueries.links(document, {
         targetId: relativeLink.target.id,
-        text: "relative link",
+        text: "overview",
       }),
-    ).toEqual([relativeLink]);
+    ).toEqual([]);
     expect(documentQueries.sourceSlice(document, relativeLink.target))
       .toMatchObject({
         text: "[relative link](./phase-alpha.md)",
@@ -273,13 +276,21 @@ function queryEvidence() {
           depth: 1,
         })
         .map((list) => list.target.id),
-      relativeLinkTargetsByTargetIdAndText:
+      relativeLinkTargetsByText:
+        relativeLink === undefined
+          ? []
+          : documentQueries
+              .links(document, {
+                text: "relative link",
+              })
+              .map((link) => link.target.id),
+      relativeLinkTargetsByTargetIdAndWrongText:
         relativeLink === undefined
           ? []
           : documentQueries
               .links(document, {
                 targetId: relativeLink.target.id,
-                text: "relative link",
+                text: "overview",
               })
               .map((link) => link.target.id),
     },
