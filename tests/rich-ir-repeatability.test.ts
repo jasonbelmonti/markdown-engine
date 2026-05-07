@@ -141,6 +141,69 @@ describe("BEL-949 rich IR serialization repeatability", () => {
         }),
       ]),
     );
+    expect(
+      arrayProperty(diagnosticResult, "diagnostics").map(diagnosticSummary),
+    ).toEqual([
+      {
+        code: "annotation.target.outOfBounds",
+        sourceStart: "1:1",
+        startOffset: undefined,
+        targetKey: "source",
+        message:
+          "Annotation source target range must be contained by the document source range.",
+      },
+      {
+        code: "annotation.target.unknown",
+        sourceStart: "9:1",
+        startOffset: 90,
+        targetKey: "node:a:missing",
+        message: "Annotation target 'node:a:missing' does not exist in the document.",
+      },
+      {
+        code: "annotation.target.unknown",
+        sourceStart: "9:1",
+        startOffset: 90,
+        targetKey: "node:z:missing",
+        message: "Annotation target 'node:z:missing' does not exist in the document.",
+      },
+      {
+        code: "annotation.target.unknown",
+        sourceStart: "9:1",
+        startOffset: undefined,
+        targetKey: "node:missing-offset",
+        message:
+          "Annotation target 'node:missing-offset' does not exist in the document.",
+      },
+      {
+        code: "annotation.target.invalidRange",
+        sourceStart: "10:4",
+        startOffset: 200,
+        targetKey: "source",
+        message: "Annotation source target range ends before it starts.",
+      },
+      {
+        code: "annotation.target.invalidKind",
+        sourceStart: undefined,
+        startOffset: undefined,
+        targetKey: undefined,
+        message: "Annotation node target must reference an engine node target.",
+      },
+      {
+        code: "annotation.target.invalidKind",
+        sourceStart: undefined,
+        startOffset: undefined,
+        targetKey: undefined,
+        message: "Annotation target kind must be 'node' or 'source'.",
+      },
+      {
+        code: "annotation.target.invalidRange",
+        sourceStart: undefined,
+        startOffset: undefined,
+        targetKey: undefined,
+        message:
+          "Annotation source target range must include start and end positions.",
+      },
+    ]);
   });
 });
 
@@ -186,4 +249,76 @@ function recordProperty(value: unknown, property: string): unknown {
   }
 
   return (value as Record<string, unknown>)[property];
+}
+
+function diagnosticSummary(diagnostic: unknown) {
+  return {
+    code: stringProperty(diagnostic, "code"),
+    sourceStart: sourceStart(recordProperty(diagnostic, "sourceRange")),
+    startOffset: sourceStartOffset(recordProperty(diagnostic, "sourceRange")),
+    targetKey: targetKey(recordProperty(diagnostic, "target")),
+    message: stringProperty(diagnostic, "message"),
+  };
+}
+
+function stringProperty(value: unknown, property: string): string {
+  const propertyValue = recordProperty(value, property);
+
+  if (typeof propertyValue !== "string") {
+    throw new TypeError(`Expected ${property} to be a string.`);
+  }
+
+  return propertyValue;
+}
+
+function sourceStart(sourceRange: unknown): string | undefined {
+  if (sourceRange === undefined) {
+    return undefined;
+  }
+
+  const start = recordProperty(sourceRange, "start");
+  const line = recordProperty(start, "line");
+  const column = recordProperty(start, "column");
+
+  return `${line}:${column}`;
+}
+
+function sourceStartOffset(sourceRange: unknown): number | undefined {
+  if (sourceRange === undefined) {
+    return undefined;
+  }
+
+  const offset = recordProperty(recordProperty(sourceRange, "start"), "offset");
+
+  if (offset === undefined || typeof offset === "number") {
+    return offset;
+  }
+
+  throw new TypeError("Expected sourceRange.start.offset to be a number.");
+}
+
+function targetKey(target: unknown): string | undefined {
+  if (target === null || typeof target !== "object") {
+    return undefined;
+  }
+
+  const kind = recordProperty(target, "kind");
+
+  if (kind === "source") {
+    return "source";
+  }
+
+  if (kind !== "node") {
+    return typeof kind === "string" ? kind : undefined;
+  }
+
+  const nodeTarget = recordProperty(target, "nodeTarget");
+
+  if (nodeTarget === null || typeof nodeTarget !== "object") {
+    return "node";
+  }
+
+  const id = recordProperty(nodeTarget, "id");
+
+  return typeof id === "string" ? id : "node";
 }
