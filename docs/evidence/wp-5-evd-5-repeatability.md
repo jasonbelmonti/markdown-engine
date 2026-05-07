@@ -55,10 +55,10 @@ validate:wp-4-diagnostics:compact: c91f3b405d131cf6c148cc26d6a3419a446c53ac1f499
 validate:wp-4-diagnostics:pretty: e949efce7ee7e2282e1e9df490dca24c04b2906b1dabd333a793d6e4d4912c5c (4754 bytes)
 rich-ir:document:compact: 6986761f7ce164124a97a256dedcb7079dc6c27c4ac9886e448b332790904315 (28643 bytes)
 rich-ir:document:pretty: 635f3f397aeb5971c886f6e7c2d23952f0455e3c5fbc17e9d1dcc52878d40699 (74245 bytes)
-rich-ir:annotated-document:compact: e48e3b9255800fc7b9b007367f51dda9c246d70d1fda03716b6a4379e51da7d2 (29204 bytes)
-rich-ir:annotated-document:pretty: 780ca9d6149f719a5c60f75d2f1b32d499d72f39ae2d1aac922aad172c5d5e5d (75382 bytes)
-rich-ir:annotation-diagnostics:compact: 77cb1e5c994453b1fed5002ce72c6ca16e485f19d906d88b31fac9a167aa5ecb (533 bytes)
-rich-ir:annotation-diagnostics:pretty: 05561f90277eed1d5e13656c4a4ccdc2a5c925074b85bca341b1b6e73ca19981 (871 bytes)
+rich-ir:annotated-document:compact: e23936a8bf08d95226ac7ad664cc78abf571410918ce81e1cc2beee1ea65cd03 (29214 bytes)
+rich-ir:annotated-document:pretty: 1886ab3d9256b5abcf07f39f0252fd513d55caa7e34f4e9153127e4248143f96 (75392 bytes)
+rich-ir:annotation-diagnostics:compact: 4da83a14aafe619a0610ad57c2f89d606c684e0081ad9d0e4c0323cbf18ec82b (541 bytes)
+rich-ir:annotation-diagnostics:pretty: 4d2c963eab6b7aff37390f01c04fdddf2775164337fcbd2da9773e6b79d12253 (879 bytes)
 ```
 
 ## Covered Inputs
@@ -96,6 +96,14 @@ rich-ir:annotation-diagnostics:pretty: 05561f90277eed1d5e13656c4a4ccdc2a5c925074
 - The gate is serializer-bound. It does not change parser, normalizer,
   validator, source, query, or CLI behavior.
 - BEL-949 does not promote `1.0.0-draft` to final `1.0.0`.
+
+## BEL-958 Evidence Integrity Update
+
+BEL-958 reran `node scripts/prove-repeatability.mjs --runs 10` from
+`origin/main` at `dc513a0` on 2026-05-07 and refreshed the four rich IR
+annotation digest lines above. The drift maps to later annotation target
+validation and annotation diagnostic source changes after the original BEL-949
+record; no snapshot file changed in this audit.
 
 ## Conclusion
 
