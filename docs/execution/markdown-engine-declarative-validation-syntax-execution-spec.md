@@ -84,7 +84,7 @@ Section status: Complete
 | Implementation reviewer | Reviews source changes, tests, fixtures, snapshots, diagnostics, public contracts, package boundaries, and traceability. | Review |
 | Downstream profile/runtime consumer | Reviews whether the syntax supports downstream profile compilation and operational-design-spec structural checks without core semantic leakage. | Review |
 | Boundary/security reviewer | Confirms validation profiles remain inert data and execution excludes scripts, regex compilation, plugins, network calls, LLM behavior, persistence, and profile-specific semantics. | Review |
-| CI/docs quality-gate user | Confirms CLI output, exit codes, and JSON result shape are usable in automated validation jobs. | Inform |
+| CI/docs quality-gate reviewer | Reviews CLI output, exit codes, and JSON result shape for automated validation jobs. | Review |
 
 Decision points:
 
@@ -185,7 +185,7 @@ Value / risk trace:
 - Observable value enabled: Consumers call approved package-root functions and receive documented profile parse or validation results.
 - Risk retired: RISK-4
 - Validation evidence: VAL-1 / VAL-7 / VAL-10 / EVD-1 / EVD-7 / EVD-10
-- Blocking unknowns: Final public API and CLI names remain gated by `MS-2`.
+- Blocking unknowns: None. `SRC-1` fixes the public API names `parseValidationProfile` and `validateWithProfile` and the CLI command `markdown-engine validate --file <markdown-file> --profile <profile-file> [--format json]`; `MS-2` verifies those approved names and contracts instead of re-deciding them.
 
 Owns:
 
@@ -200,8 +200,8 @@ Does not own:
 
 Public interface:
 
-- Exported types: `ValidationProfile`, declarative rule/selector/assertion types, profile parse result, validation options, validation result, config-error result, evidence fields, diagnostic-related types, or final approved equivalents.
-- Exported functions/classes/components: `parseValidationProfile`, `validateWithProfile`, and final approved package-root exports.
+- Exported types: `ValidationProfile`, declarative rule/selector/assertion types, profile parse result, validation options, validation result, config-error result, evidence fields, and diagnostic-related types defined by `SRC-1`.
+- Exported functions/classes/components: `parseValidationProfile` and `validateWithProfile` as package-root exports.
 - Events/messages/contracts: diagnostic codes and serialized JSON result contracts.
 - CLI/API surface: public API docs; CLI command contract through `PKG-5`.
 
@@ -425,7 +425,7 @@ Value / risk trace:
 - Observable value enabled: CI users can invoke declarative validation and reviewers can compare stable JSON evidence.
 - Risk retired: RISK-4
 - Validation evidence: VAL-6 / VAL-7 / VAL-10 / EVD-6 / EVD-7 / EVD-10
-- Blocking unknowns: None after `MS-2` approves public CLI/API contract.
+- Blocking unknowns: None. `MS-2` verifies the `SRC-1` public CLI/API contract and does not authorize local executor renaming.
 
 Owns:
 
@@ -616,9 +616,9 @@ Section status: Complete
 
 | ID | Gate objective | Covered work | Due point | Human verifier | Prerequisites | Review gate | Required evidence | Approval decision | Failure path |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| MS-1 | Approve the declarative validation critical-path proof before broad implementation. | OBJ-1 / OBJ-2 / OBJ-3 / OBJ-6 / SURF-1 / SURF-2 / SURF-7 / PKG-1 through PKG-6 / WP-1 | Before WP-2, WP-3, WP-4, or WP-5 source implementation starts | Project owner or implementation reviewer | DEP-1 resolved, VAL-1 / EVD-1 | REV-1 / REV-2 / REV-4 | EVD-1 | Approve / Reject / Conditional approval | If rejected, stop execution and revise syntax scope, parser/compile/evaluation approach, source-targeting approach, or design authority before continuing. |
-| MS-2 | Approve implementation completeness, public contract, and boundary evidence before merge. | OBJ-1 through OBJ-4 / OBJ-6 / SURF-1 through SURF-9 / PKG-1 through PKG-6 / WP-2 through WP-5 | Before merge | Project owner and implementation reviewer | VAL-2 through VAL-8 / EVD-2 through EVD-8 | REV-1 / REV-2 / REV-4 / REV-5 | EVD-2 / EVD-3 / EVD-4 / EVD-5 / EVD-6 / EVD-7 / EVD-8 | Approve / Reject / Conditional approval | If rejected, block merge and record required fixes, design revision, or approved deviations. |
-| MS-3 | Approve release readiness, downstream exercise, rollback containment, and handoff. | OBJ-4 / OBJ-5 / OBJ-6 / NG-4 / SURF-7 through SURF-9 / WP-6 | Before tag, package publication, or completion claim | Project owner with downstream consumer and boundary/security review | VAL-6 through VAL-10 / EVD-6 through EVD-10 | REV-1 / REV-3 / REV-4 / REV-5 | EVD-6 / EVD-7 / EVD-8 / EVD-9 / EVD-10 | Approve / Reject / Conditional approval | If rejected, withhold release/tag and continue compatibility, documentation, downstream exercise, boundary, or containment fixes. |
+| MS-1 | Approve the declarative validation critical-path proof before broad implementation. | OBJ-1 / OBJ-2 / OBJ-3 / OBJ-6 / SURF-1 / SURF-2 / SURF-7 / PKG-1 through PKG-6 / WP-1 | Before WP-2, WP-3, WP-4, or WP-5 source implementation starts | Primary: Project owner. Backup: implementation reviewer only if the project owner records delegation before the gate. | DEP-1 resolved, VAL-1 / EVD-1 | REV-1 / REV-2 / REV-4 | EVD-1 and MS-1 approval record | Approve / Reject / Conditional approval | If rejected, stop execution and revise syntax scope, parser/compile/evaluation approach, source-targeting approach, or design authority before continuing. |
+| MS-2 | Approve implementation completeness, public contract, and boundary evidence before merge. | OBJ-1 through OBJ-4 / OBJ-6 / SURF-1 through SURF-9 / PKG-1 through PKG-6 / WP-2 through WP-5 | Before merge | Primary: Project owner. Required co-verifier: implementation reviewer. | VAL-2 through VAL-8 / EVD-2 through EVD-8 | REV-1 / REV-2 / REV-4 / REV-5 | EVD-2 / EVD-3 / EVD-4 / EVD-5 / EVD-6 / EVD-7 / EVD-8 and MS-2 approval record | Approve / Reject / Conditional approval | If rejected, block merge and record required fixes, design revision, or approved deviations. |
+| MS-3 | Approve release readiness, downstream exercise, rollback containment, and handoff. | OBJ-4 / OBJ-5 / OBJ-6 / NG-4 / SURF-7 through SURF-9 / WP-6 | Before tag, package publication, or completion claim | Primary: Project owner. Required co-verifiers: downstream profile/runtime consumer and boundary/security reviewer. | VAL-6 through VAL-10 / EVD-6 through EVD-10 | REV-1 / REV-3 / REV-4 / REV-5 | EVD-6 / EVD-7 / EVD-8 / EVD-9 / EVD-10 and MS-3 approval record | Approve / Reject / Conditional approval | If rejected, withhold release/tag and continue compatibility, documentation, downstream exercise, boundary, or containment fixes. |
 
 Manual verification guide:
 
@@ -630,6 +630,14 @@ Manual verification guide:
 | MV-4 | MS-2 | Review `docs/contracts/**`, representative snapshots, CLI fixtures, diagnostic inventory referenced by `EVD-7`, and boundary-audit evidence referenced by `EVD-8`. | Syntax versioning, document-version mismatch, selector/assertion vocabulary, diagnostic precedence, evidence hashes, CLI JSON shape, exit codes, compatibility, non-goals, and boundary exclusions are documented. | EVD-7 / EVD-8 |
 | MV-5 | MS-3 | Run `npm run audit:declarative-validation-boundary`, `npm run test:validation:downstream`, and `npm run release:verify`, then inspect `docs/evidence/wp-6-evd-9-ods-profile-exercise.md`. | Boundary audit revalidation passes, downstream ODS fixture validates generic structural requirements without semantic leakage, and release verification passes. | EVD-8 / EVD-9 / EVD-10 |
 | MV-6 | MS-3 | Inspect release containment and handoff evidence under `docs/evidence/`. | Release/tag can be withheld or reverted at source/package-contract level, and handoff links all produced evidence plus unresolved non-blocking follow-ups. | EVD-10 |
+
+Milestone approval evidence:
+
+| Milestone | Approval evidence requirement |
+| --- | --- |
+| MS-1 | Approval record names the project owner or delegated implementation reviewer, cites `EVD-1`, states Approve / Reject / Conditional approval, records the decision date, and lists any conditions or failure-path actions. |
+| MS-2 | Approval record names the project owner and implementation reviewer, cites `EVD-2` through `EVD-8`, states Approve / Reject / Conditional approval, records the decision date, and lists any conditions or failure-path actions. |
+| MS-3 | Approval record names the project owner, downstream profile/runtime consumer, and boundary/security reviewer, cites `EVD-6` through `EVD-10`, states Approve / Reject / Conditional approval, records the decision date, and lists any conditions, release containment decisions, or failure-path actions. |
 
 Section status: Complete
 
@@ -727,7 +735,7 @@ Section status: Complete
 | OBS-3 | Assertion and diagnostic snapshots | Detect assertion semantics, source-targeting, empty-selection, duplicate-ID, and missing-reference drift. | Project owner and CI user | Block merge until expected behavior is restored or contract is revised. |
 | OBS-4 | Repeatability and evidence-hash output | Detect nondeterministic result ordering, serialization, or hash input behavior. | Project owner and implementation reviewer | Block merge/release until stable. |
 | OBS-5 | Boundary audit output | Detect scripts, regex compilation, plugins, network/LLM/persistence/file watching, or profile-specific core semantics. | Boundary/security reviewer | Block merge/release until removed or escalated. |
-| OBS-6 | CLI validation tests | Detect CLI JSON-shape, file-read, usage, format, and exit-code regressions. | CI/docs quality-gate user | Block release until fixed or explicitly descoped before publication. |
+| OBS-6 | CLI validation tests | Detect CLI JSON-shape, file-read, usage, format, and exit-code regressions. | CI/docs quality-gate reviewer | Block release until fixed or explicitly descoped before publication. |
 | OBS-7 | Operational-design-spec fixture exercise | Detect whether v1 vocabulary proves the motivating downstream structural profile. | Downstream consumer and project owner | Block release until addressed or formally deviated. |
 | OBS-8 | Release verification output | Detect build, typecheck, full-test, clean-diff, boundary, and repeatability failures. | Maintainer | Block release/tag until fixed. |
 
