@@ -46,6 +46,7 @@
     "release:check-clean": "git diff --check HEAD -- && git diff --exit-code HEAD --",
     "snapshots:update:parser": "npm run build && vitest run tests/parser-fixtures.test.ts -u \"--exclude=.worktrees/**\"",
     "snapshots:update:rules": "npm run build && vitest run tests/rules.test.ts -u \"--exclude=.worktrees/**\"",
+    "snapshots:update:rich-ir": "npm run build && vitest run tests/rich-ir-targets.test.ts tests/rich-ir-queries.test.ts -u \"--exclude=.worktrees/**\"",
     "snapshots:update:serialization": "npm run build && vitest run tests/serialization-repeatability.test.ts tests/boundary-inspection.test.ts -u \"--exclude=.worktrees/**\"",
     "test:rich-ir:proving": "npm run build && vitest run tests/rich-ir-proving.test.ts \"--exclude=.worktrees/**\"",
     "test:rich-ir:contract": "npm run build && tsc -p tsconfig.document-contract.json && vitest run tests/document-contract.test.ts \"--exclude=.worktrees/**\"",
@@ -59,7 +60,7 @@
     "docs:rich-ir-contract": "node scripts/check-rich-ir-contract-docs.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "npm run build && vitest run \"--exclude=.worktrees/**\"",
-    "test:snapshots": "npm run build && vitest run tests/parser-fixtures.test.ts tests/rules.test.ts tests/serialization-repeatability.test.ts \"--exclude=.worktrees/**\""
+    "test:snapshots": "npm run build && vitest run tests/parser-fixtures.test.ts tests/rules.test.ts tests/rich-ir-targets.test.ts tests/rich-ir-queries.test.ts tests/serialization-repeatability.test.ts \"--exclude=.worktrees/**\""
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
