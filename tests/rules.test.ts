@@ -247,4 +247,35 @@ describe("WP-4 deterministic rule families", () => {
     ]);
     expect(serialize(validationResult)).toContain("rawHtml.policy.warned");
   });
+
+  it("VAL-6: treats info diagnostics as rule failures without invalidating the result", () => {
+    const document = normalize(parse(compliantMarkdown).parsed).document;
+    const expectedDiagnostic = {
+      code: "frontmatter.required.missing",
+      ruleId: "frontmatter.required",
+      message: 'Required frontmatter field "reviewer" is missing.',
+      severity: "info",
+    };
+
+    const validationResult = validate(document, {
+      rules: {
+        "frontmatter.required": {
+          fields: ["reviewer"],
+          severity: "info",
+        },
+      },
+    });
+
+    expect(validationResult).toEqual({
+      valid: true,
+      diagnostics: [expectedDiagnostic],
+      ruleResults: [
+        {
+          ruleId: "frontmatter.required",
+          passed: false,
+          diagnostics: [expectedDiagnostic],
+        },
+      ],
+    });
+  });
 });
