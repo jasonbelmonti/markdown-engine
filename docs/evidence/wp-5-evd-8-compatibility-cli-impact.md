@@ -1,7 +1,7 @@
 # WP-5 EVD-8: Compatibility and CLI Impact Closeout
 
 Date: 2026-05-06
-Issue: BEL-952
+Issue: BEL-952 / BEL-955
 Work package: BEL-941 Slice 4 / WP-5
 Validation: VAL-8 / EVD-8
 
@@ -12,9 +12,10 @@ earlier BEL-951 no-change CLI decision and captures the default output change,
 explicit legacy selector, semver classification, migration notes, validation
 commands, and remaining release risks.
 
-BEL-952 changes only the CLI policy layer. Parser, source, query, annotation,
-serializer internals, and package root API signatures remain unchanged. The
-source-grounded 1.0 rich IR contract remains `documentVersion:
+BEL-952 changes only the CLI policy layer. BEL-955 records the documentation,
+evidence, and review-readiness gate for that cutover. Parser, source, query,
+annotation, serializer internals, and package root API signatures remain
+unchanged. The source-grounded 1.0 rich IR contract remains `documentVersion:
 "1.0.0-draft"` checked with `compatibilityMode: "default"` until final 1.0
 release approval records the release version.
 
@@ -50,7 +51,8 @@ and usage text.
 Semver classification: breaking CLI output-shape change for consumers that
 parse default CLI JSON. Existing CLI users that require the legacy shape must
 call `markdown-engine --document-version 0.0.0 --file <markdown-file>` or
-`markdown-engine --document-version 0.0.0 --path <markdown-file>`.
+`markdown-engine --document-version 0.0.0 --path <markdown-file>`. This belongs
+to the 1.0 release lane, not a `0.1.x` patch.
 
 ## Migration Notes
 
@@ -65,7 +67,7 @@ from the absence of rich IR fields; use the explicit selector.
 
 ## Commands
 
-Required BEL-952 validation commands:
+Required BEL-952/BEL-955 validation commands:
 
 ```sh
 npm run test:rich-ir:compat
@@ -83,7 +85,20 @@ Additional focused CLI command:
 npm run build && npx vitest run tests/cli.test.ts "--exclude=.worktrees/**"
 ```
 
+Review-readiness sequence:
+
+- Code Simplifier: re-read the diff for behavior-preserving simplification.
+- Organize Code Boundaries: confirm the docs gate remains a docs-contract
+  checker and no source boundary moved.
+- Review Test Value: confirm the CLI contract tests protect observable CLI
+  behavior instead of implementation choreography.
+- Consensus Review: dispatch exactly three independent reviewers and resolve
+  validated blockers before completion.
+
 ## Recorded Results
+
+Latest BEL-955 validation from
+`.worktrees/BEL-955-cli-docs-evidence-review-gates`:
 
 - `npm run build && npx vitest run tests/cli.test.ts "--exclude=.worktrees/**"`:
   pass, 1 file and 9 tests.
@@ -91,10 +106,13 @@ npm run build && npx vitest run tests/cli.test.ts "--exclude=.worktrees/**"
 - `npm run test:rich-ir:repeatability`: pass, 1 file and 2 tests.
 - `npm run docs:rich-ir-contract`: pass.
 - `npm run typecheck`: pass.
-- `npm test`: pass, 15 files and 94 tests.
+- `npm test`: pass, 16 files and 96 tests.
 - `node scripts/check-boundaries.mjs`: pass, 8 direct dependencies scanned, 0
   forbidden dependency matches, 0 annotation semantic leakage matches.
 - `git diff --check HEAD --`: pass.
+- BEL-955 review-readiness sequence: complete. Code Simplifier, Organize Code
+  Boundaries, Review Test Value, and three-reviewer Consensus Review completed
+  with no validated blockers.
 
 ## Residual Risks
 
@@ -109,6 +127,9 @@ npm run build && npx vitest run tests/cli.test.ts "--exclude=.worktrees/**"
 - This evidence proves representative compatibility and CLI behavior through
   the current validation gates. It does not exhaustively prove every Markdown
   input shape.
+- Review readiness found no validated blockers, but downstream CLI consumers
+  still need to migrate to rich IR or pin the legacy selector before consuming
+  default CLI JSON safely.
 
 ## Conclusion
 

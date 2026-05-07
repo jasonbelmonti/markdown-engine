@@ -481,7 +481,8 @@ Semver classification: this is a breaking CLI output-shape change for consumers
 that parse default CLI JSON. Migration is to either consume the rich IR fields or
 pin `--document-version 0.0.0` until the downstream consumer is ready. API
 consumers migrating to rich IR should continue to use the `documentVersion` and
-`compatibilityMode` selectors documented above.
+`compatibilityMode` selectors documented above. The CLI default-output cutover
+is carried in the 1.0 release lane, not as a `0.1.x` patch.
 
 ### Non-Goals And Limits
 

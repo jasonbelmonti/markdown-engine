@@ -133,7 +133,8 @@ BEL-952 classifies the default CLI output change as breaking for consumers that
 parse CLI JSON without selecting `--document-version 0.0.0`. Migration is to
 either consume the rich IR fields (`target`, `sections`, `textSpans`, `tables`,
 `lists`, and `links`) or pin the explicit legacy selector until the downstream
-consumer is ready.
+consumer is ready. This default-output cutover belongs to the 1.0 release lane,
+not a `0.1.x` patch.
 
 Contract references:
 
