@@ -93,6 +93,109 @@ rules:
     );
   });
 
+  it("accepts every public selector target", () => {
+    const result = parseValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "select-document",
+          select: { target: "document" },
+          assert: { text: { contains: "Mission" } },
+        },
+        {
+          id: "select-section",
+          select: { target: "section", title: "Requirements", depth: 2 },
+          assert: { text: { contains: "shall" } },
+        },
+        {
+          id: "select-heading",
+          select: { target: "heading", text: "Scope", depth: 1 },
+          assert: { text: { contains: "Scope" } },
+        },
+        {
+          id: "select-table",
+          select: {
+            target: "table",
+            section: "Requirements",
+            header: ["ID", "Statement"],
+          },
+          assert: { tableColumnsRequired: { columns: ["ID", "Statement"] } },
+        },
+        {
+          id: "select-table-row",
+          select: {
+            target: "tableRow",
+            section: "Requirements",
+            tableHeader: ["ID", "Statement"],
+            where: { column: "Type", equals: "Functional" },
+          },
+          assert: { text: { contains: "shall" } },
+        },
+        {
+          id: "select-table-cell",
+          select: {
+            target: "tableCell",
+            section: "Requirements",
+            tableHeader: ["ID", "Statement"],
+            column: "Statement",
+            rowWhere: { column: "ID", includes: "REQ" },
+          },
+          assert: { text: { contains: "shall" } },
+        },
+        {
+          id: "select-text-span",
+          select: {
+            target: "textSpan",
+            section: "Requirements",
+            nodeType: "paragraph",
+            textIncludes: "shall",
+          },
+          assert: { text: { contains: "shall" } },
+        },
+        {
+          id: "select-link",
+          select: {
+            target: "link",
+            section: "References",
+            text: "Design spec",
+            url: "https://example.com/spec",
+          },
+          assert: { text: { contains: "Design" } },
+        },
+        {
+          id: "select-list",
+          select: {
+            target: "list",
+            section: "Checklist",
+            ordered: false,
+            depth: 1,
+          },
+          assert: { text: { contains: "Done" } },
+        },
+        {
+          id: "select-frontmatter",
+          select: { target: "frontmatter", field: "title" },
+          assert: { text: { contains: "title" } },
+        },
+      ],
+    });
+
+    expect(result.profile?.rules.map((rule) => rule.select.target)).toEqual([
+      "document",
+      "section",
+      "heading",
+      "table",
+      "tableRow",
+      "tableCell",
+      "textSpan",
+      "link",
+      "list",
+      "frontmatter",
+    ]);
+    expect(result.diagnostics).toEqual([]);
+  });
+
   it("rejects unsupported profile and nested rule keys", () => {
     const result = parseValidationProfile({
       syntaxVersion: "markdown-engine.validation@v1",
