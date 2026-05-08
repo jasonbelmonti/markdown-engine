@@ -60,7 +60,7 @@
     "docs:rich-ir-contract": "node scripts/check-rich-ir-contract-docs.mjs",
     "test:validation:proving": "node scripts/gate-placeholder.mjs test:validation:proving",
     "test:validation:contract": "npm run build && tsc -p tsconfig.declarative-validation-contract.json && vitest run tests/declarative-validation-contract.test.ts \"--exclude=.worktrees/**\"",
-    "test:validation:profile": "node scripts/gate-placeholder.mjs test:validation:profile",
+    "test:validation:profile": "npm run build && vitest run tests/declarative-validation-profile.test.ts \"--exclude=.worktrees/**\"",
     "test:validation:compiler": "node scripts/gate-placeholder.mjs test:validation:compiler",
     "test:validation:selectors": "node scripts/gate-placeholder.mjs test:validation:selectors",
     "test:validation:assertions": "node scripts/gate-placeholder.mjs test:validation:assertions",
