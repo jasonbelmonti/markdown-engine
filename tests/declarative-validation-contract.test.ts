@@ -106,19 +106,8 @@ const missingSelectorTargetProfile = {
     },
   ],
 } as const;
-const unsupportedAssertionProfile = {
-  syntaxVersion: "markdown-engine.validation@v1",
-  documentVersion: "1.0.0",
-  rules: [
-    {
-      id: "ids.unique",
-      select: { target: "document" },
-      assert: { ids: { unique: true } },
-    },
-  ],
-} as const;
 const unsupportedSelector = { target: "section" } satisfies DeclarativeSelector;
-const unsupportedAssertion = { ids: { unique: true } } satisfies DeclarativeAssertion;
+const publicAssertion = { ids: { unique: true } } satisfies DeclarativeAssertion;
 const idSource = { section: "Records", column: "ID" } satisfies DeclarativeIdSource;
 const tableCellPredicate = {
   column: "Status",
@@ -179,18 +168,6 @@ describe("declarative validation public contract scaffold", () => {
         {
           code: "profile.config.invalidShape",
           message: "Rule select.target must be provided.",
-          severity: "error",
-        },
-      ],
-    });
-  });
-
-  it("classifies first-level assertion vocabulary errors as unsupported assertions", () => {
-    expect(parseValidationProfile(unsupportedAssertionProfile)).toEqual({
-      diagnostics: [
-        {
-          code: "profile.compile.unsupportedAssertion",
-          message: 'Unsupported assertion "ids".',
           severity: "error",
         },
       ],
@@ -273,6 +250,6 @@ describe("declarative validation public contract scaffold", () => {
 void (undefined as unknown as CompiledDeclarativeValidationPlan);
 void (undefined as unknown as DeclarativeValidationCompileResult);
 void unsupportedSelector;
-void unsupportedAssertion;
+void publicAssertion;
 void idSource;
 void tableCellPredicate;
