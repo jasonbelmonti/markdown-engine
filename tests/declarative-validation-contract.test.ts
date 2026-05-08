@@ -61,6 +61,28 @@ const duplicateRuleProfile = {
     },
   ],
 } satisfies ValidationProfile;
+const missingSelectorTargetProfile = {
+  syntaxVersion: "markdown-engine.validation@v1",
+  documentVersion: "1.0.0",
+  rules: [
+    {
+      id: "sections.required",
+      select: {},
+      assert: { sectionsRequired: { headings: ["Objective"] } },
+    },
+  ],
+} as const;
+const unsupportedAssertionProfile = {
+  syntaxVersion: "markdown-engine.validation@v1",
+  documentVersion: "1.0.0",
+  rules: [
+    {
+      id: "ids.unique",
+      select: { target: "document" },
+      assert: { ids: { unique: true } },
+    },
+  ],
+} as const;
 // @ts-expect-error Section selectors are reserved for a later parser slice.
 const unsupportedSelector = { target: "section" } satisfies DeclarativeSelector;
 // @ts-expect-error ID assertions are reserved for a later parser slice.
@@ -83,6 +105,30 @@ describe("declarative validation public contract scaffold", () => {
           code: "profile.config.invalidShape",
           message:
             'Profile rule at index 1 duplicates rule id "sections.required".',
+          severity: "error",
+        },
+      ],
+    });
+  });
+
+  it("classifies missing selector targets as invalid profile shape", () => {
+    expect(parseValidationProfile(missingSelectorTargetProfile)).toEqual({
+      diagnostics: [
+        {
+          code: "profile.config.invalidShape",
+          message: "Rule select.target must be provided.",
+          severity: "error",
+        },
+      ],
+    });
+  });
+
+  it("classifies first-level assertion vocabulary errors as unsupported assertions", () => {
+    expect(parseValidationProfile(unsupportedAssertionProfile)).toEqual({
+      diagnostics: [
+        {
+          code: "profile.compile.unsupportedAssertion",
+          message: 'Unsupported assertion "ids".',
           severity: "error",
         },
       ],

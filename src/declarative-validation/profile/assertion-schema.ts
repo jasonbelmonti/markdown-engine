@@ -2,10 +2,18 @@ import type { MarkdownDiagnostic } from "../../api/diagnostics.js";
 import { isPlainRecord } from "../../internal/plain-record.js";
 import type { DeclarativeAssertion } from "./index.js";
 import {
+  diagnostic,
   invalidShape,
   stringArray,
   unsupportedKeys,
 } from "./schema-values.js";
+
+const SUPPORTED_ASSERTION_KEYS = [
+  "sectionsRequired",
+  "tableColumnsRequired",
+  "text",
+] as const;
+const REGEX_LIKE_KEYS = new Set(["matches", "pattern", "regex", "regexp"]);
 
 export function assertionFromValue(
   value: unknown,
@@ -17,11 +25,7 @@ export function assertionFromValue(
     return undefined;
   }
 
-  unsupportedKeys(
-    value,
-    ["sectionsRequired", "tableColumnsRequired", "text"],
-    diagnostics,
-  );
+  const hasUnsupportedVocabulary = unsupportedAssertionKeys(value, diagnostics);
 
   const assertion = {
     ...sectionsRequiredFromValue(value.sectionsRequired, diagnostics),
@@ -30,6 +34,10 @@ export function assertionFromValue(
   };
 
   if (Object.keys(assertion).length === 0) {
+    if (hasUnsupportedVocabulary) {
+      return undefined;
+    }
+
     diagnostics.push(
       invalidShape("Rule assert must include at least one supported assertion."),
     );
@@ -39,6 +47,37 @@ export function assertionFromValue(
 
   return assertion;
 }
+
+function unsupportedAssertionKeys(
+  value: Record<string, unknown>,
+  diagnostics: MarkdownDiagnostic[],
+): boolean {
+  let hasUnsupportedVocabulary = false;
+
+  for (const key of Object.keys(value)) {
+    if (SUPPORTED_ASSERTION_KEYS.includes(key as SupportedAssertionKey)) {
+      continue;
+    }
+
+    hasUnsupportedVocabulary = true;
+
+    if (REGEX_LIKE_KEYS.has(key)) {
+      unsupportedKeys({ [key]: value[key] }, [], diagnostics);
+      continue;
+    }
+
+    diagnostics.push(
+      diagnostic(
+        "profile.compile.unsupportedAssertion",
+        `Unsupported assertion "${key}".`,
+      ),
+    );
+  }
+
+  return hasUnsupportedVocabulary;
+}
+
+type SupportedAssertionKey = (typeof SUPPORTED_ASSERTION_KEYS)[number];
 
 function sectionsRequiredFromValue(
   value: unknown,

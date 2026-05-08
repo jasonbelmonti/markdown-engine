@@ -19,6 +19,18 @@ export function selectorFromValue(
     return undefined;
   }
 
+  if (value.target === undefined) {
+    diagnostics.push(invalidShape("Rule select.target must be provided."));
+
+    return undefined;
+  }
+
+  if (typeof value.target !== "string") {
+    diagnostics.push(invalidShape("Rule select.target must be a string."));
+
+    return undefined;
+  }
+
   switch (value.target) {
     case "document":
       unsupportedKeys(value, ["target"], diagnostics);
