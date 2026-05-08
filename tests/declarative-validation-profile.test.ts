@@ -237,6 +237,185 @@ rules:
     );
   });
 
+  it("accepts every public assertion member", () => {
+    const result = parseValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "public-assertions",
+          select: { target: "document" },
+          assert: {
+            sectionsRequired: {
+              headings: ["Objective", "Evidence"],
+              order: "strict",
+            },
+            sectionOrder: {
+              headings: ["Objective", "Evidence"],
+            },
+            tableColumnsRequired: {
+              columns: ["ID", "Requirement statement"],
+            },
+            ids: {
+              column: "ID",
+              prefix: "REQ",
+              unique: true,
+              caseSensitive: false,
+            },
+            references: {
+              idsFrom: {
+                section: "Requirements",
+                column: "ID",
+                prefix: "REQ",
+              },
+              mustAppearIn: ["Traceability", "Verification"],
+            },
+            text: {
+              column: "Requirement statement",
+              containsExactlyOne: "shall",
+              excludes: ["and/or"],
+            },
+            textOccurrenceCount: {
+              text: "shall",
+              count: 1,
+              column: "Requirement statement",
+            },
+            frontmatterRequired: {
+              fields: ["title", "owner"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result).toEqual({
+      profile: {
+        syntaxVersion: "markdown-engine.validation@v1",
+        documentVersion: "1.0.0",
+        rules: [
+          {
+            id: "public-assertions",
+            select: { target: "document" },
+            assert: {
+              sectionsRequired: {
+                headings: ["Objective", "Evidence"],
+                order: "strict",
+              },
+              sectionOrder: {
+                headings: ["Objective", "Evidence"],
+              },
+              tableColumnsRequired: {
+                columns: ["ID", "Requirement statement"],
+              },
+              ids: {
+                column: "ID",
+                prefix: "REQ",
+                unique: true,
+                caseSensitive: false,
+              },
+              references: {
+                idsFrom: {
+                  section: "Requirements",
+                  column: "ID",
+                  prefix: "REQ",
+                },
+                mustAppearIn: ["Traceability", "Verification"],
+              },
+              text: {
+                column: "Requirement statement",
+                containsExactlyOne: "shall",
+                excludes: ["and/or"],
+              },
+              textOccurrenceCount: {
+                text: "shall",
+                count: 1,
+                column: "Requirement statement",
+              },
+              frontmatterRequired: {
+                fields: ["title", "owner"],
+              },
+            },
+          },
+        ],
+      },
+      diagnostics: [],
+    });
+  });
+
+  it("rejects ineffective id assertion payloads", () => {
+    const ineffectiveIdsAssertions = [
+      {},
+      { column: "ID" },
+      { prefix: "REQ" },
+      { unique: false },
+    ];
+
+    for (const [index, ids] of ineffectiveIdsAssertions.entries()) {
+      const result = parseValidationProfile({
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: `ineffective-ids-${index}`,
+            select: { target: "document" },
+            assert: { ids },
+          },
+        ],
+      });
+
+      expect(result.profile).toBeUndefined();
+      expect(result.diagnostics).toContainEqual(
+        expect.objectContaining({
+          code: "profile.config.invalidShape",
+          message: "ids.unique must be true.",
+        }),
+      );
+    }
+  });
+
+  it("classifies unsupported-only assertion vocabulary without missing-assertion noise", () => {
+    expect(
+      parseValidationProfile({
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "regex-like-assertion",
+            select: { target: "document" },
+            assert: { matches: "REQ" },
+          },
+        ],
+      }),
+    ).toEqual({
+      diagnostics: [
+        {
+          code: "profile.config.unsupportedKey",
+          message: 'Unsupported validation profile key "matches".',
+          severity: "error",
+        },
+      ],
+    });
+
+    expect(
+      parseValidationProfile({
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "unknown-assertion",
+            select: { target: "document" },
+            assert: { unknown: true },
+          },
+        ],
+      }),
+    ).toEqual({
+      diagnostics: [
+        {
+          code: "profile.compile.unsupportedAssertion",
+          message: 'Unsupported assertion "unknown".',
+          severity: "error",
+        },
+      ],
+    });
+  });
+
   it("rejects unsupported profile and nested rule keys", () => {
     const result = parseValidationProfile({
       syntaxVersion: "markdown-engine.validation@v1",
