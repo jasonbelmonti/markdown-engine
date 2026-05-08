@@ -65,7 +65,7 @@ function parseYaml(raw: string): MaterializedProfileInput {
           diagnostics: [
             ...diagnostics,
             profileYamlDiagnostic(
-              jsonSafe.diagnostic.message,
+              profileYamlMessage(jsonSafe.diagnostic.message),
               jsonSafe.diagnostic.sourceRange ?? fallbackRange,
             ),
           ],
@@ -77,7 +77,7 @@ function parseYaml(raw: string): MaterializedProfileInput {
         ...diagnostics,
         profileYamlDiagnostic(
           error instanceof Error
-            ? error.message
+            ? profileYamlMessage(error.message)
             : "Validation profile YAML could not be parsed.",
           fallbackRange,
         ),
@@ -128,6 +128,10 @@ function profileYamlDiagnostic(
     severity: "error",
     sourceRange,
   };
+}
+
+function profileYamlMessage(message: string): string {
+  return message.replaceAll("YAML frontmatter", "Validation profile YAML");
 }
 
 function fullInputRange(input: string): SourceRange {
