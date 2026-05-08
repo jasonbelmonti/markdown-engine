@@ -1,8 +1,9 @@
 import type { MarkdownDiagnostic } from "../../api/diagnostics.js";
 import { isPlainRecord } from "../../internal/plain-record.js";
-import type { DeclarativeAssertion } from "./index.js";
+import type { DeclarativeAssertion, DeclarativeIdSource } from "./index.js";
 import {
   invalidShape,
+  nonEmptyString,
   stringArray,
   unsupportedKeys,
 } from "./schema-values.js";
@@ -19,14 +20,28 @@ export function assertionFromValue(
 
   unsupportedKeys(
     value,
-    ["sectionsRequired", "tableColumnsRequired", "text"],
+    [
+      "sectionsRequired",
+      "sectionOrder",
+      "tableColumnsRequired",
+      "ids",
+      "references",
+      "text",
+      "textOccurrenceCount",
+      "frontmatterRequired",
+    ],
     diagnostics,
   );
 
   const assertion = {
     ...sectionsRequiredFromValue(value.sectionsRequired, diagnostics),
+    ...sectionOrderFromValue(value.sectionOrder, diagnostics),
     ...tableColumnsRequiredFromValue(value.tableColumnsRequired, diagnostics),
+    ...idsFromValue(value.ids, diagnostics),
+    ...referencesFromValue(value.references, diagnostics),
     ...textAssertionFromValue(value.text, diagnostics),
+    ...textOccurrenceCountFromValue(value.textOccurrenceCount, diagnostics),
+    ...frontmatterRequiredFromValue(value.frontmatterRequired, diagnostics),
   };
 
   if (Object.keys(assertion).length === 0) {
@@ -89,6 +104,34 @@ function sectionsRequiredFromValue(
   };
 }
 
+function sectionOrderFromValue(
+  value: unknown,
+  diagnostics: MarkdownDiagnostic[],
+): Pick<DeclarativeAssertion, "sectionOrder"> {
+  if (value === undefined) {
+    return {};
+  }
+
+  if (!isPlainRecord(value)) {
+    diagnostics.push(invalidShape("sectionOrder must be an object."));
+
+    return {};
+  }
+
+  unsupportedKeys(value, ["headings"], diagnostics);
+
+  const headings = stringArray(value.headings);
+  if (headings === undefined) {
+    diagnostics.push(
+      invalidShape("sectionOrder.headings must be an array of non-empty strings."),
+    );
+
+    return {};
+  }
+
+  return { sectionOrder: { headings } };
+}
+
 function tableColumnsRequiredFromValue(
   value: unknown,
   diagnostics: MarkdownDiagnostic[],
@@ -119,6 +162,62 @@ function tableColumnsRequiredFromValue(
   return { tableColumnsRequired: { columns } };
 }
 
+function idsFromValue(
+  value: unknown,
+  diagnostics: MarkdownDiagnostic[],
+): Pick<DeclarativeAssertion, "ids"> {
+  if (value === undefined) {
+    return {};
+  }
+
+  if (!isPlainRecord(value)) {
+    diagnostics.push(invalidShape("ids must be an object."));
+
+    return {};
+  }
+
+  unsupportedKeys(value, ["column", "prefix", "unique", "caseSensitive"], diagnostics);
+
+  return {
+    ids: {
+      ...optionalAssertionString(value, "column", diagnostics),
+      ...optionalAssertionString(value, "prefix", diagnostics),
+      ...optionalBoolean(value, "unique", diagnostics),
+      ...optionalBoolean(value, "caseSensitive", diagnostics),
+    },
+  };
+}
+
+function referencesFromValue(
+  value: unknown,
+  diagnostics: MarkdownDiagnostic[],
+): Pick<DeclarativeAssertion, "references"> {
+  if (value === undefined) {
+    return {};
+  }
+
+  if (!isPlainRecord(value)) {
+    diagnostics.push(invalidShape("references must be an object."));
+
+    return {};
+  }
+
+  unsupportedKeys(value, ["idsFrom", "mustAppearIn"], diagnostics);
+
+  const idsFrom = idSourceFromValue(value.idsFrom, diagnostics);
+  const mustAppearIn = stringArray(value.mustAppearIn);
+
+  if (mustAppearIn === undefined) {
+    diagnostics.push(
+      invalidShape("references.mustAppearIn must be an array of non-empty strings."),
+    );
+  }
+
+  return idsFrom === undefined || mustAppearIn === undefined
+    ? {}
+    : { references: { idsFrom, mustAppearIn } };
+}
+
 function textAssertionFromValue(
   value: unknown,
   diagnostics: MarkdownDiagnostic[],
@@ -140,9 +239,9 @@ function textAssertionFromValue(
   );
 
   const text = {
-    ...optionalTextString(value, "column", diagnostics),
-    ...optionalTextString(value, "contains", diagnostics),
-    ...optionalTextString(value, "containsExactlyOne", diagnostics),
+    ...optionalAssertionString(value, "column", diagnostics),
+    ...optionalAssertionString(value, "contains", diagnostics),
+    ...optionalAssertionString(value, "containsExactlyOne", diagnostics),
     ...optionalStringArray(value, "excludes", diagnostics),
   };
 
@@ -159,7 +258,94 @@ function textAssertionFromValue(
   return { text };
 }
 
-function optionalTextString(
+function textOccurrenceCountFromValue(
+  value: unknown,
+  diagnostics: MarkdownDiagnostic[],
+): Pick<DeclarativeAssertion, "textOccurrenceCount"> {
+  if (value === undefined) {
+    return {};
+  }
+
+  if (!isPlainRecord(value)) {
+    diagnostics.push(invalidShape("textOccurrenceCount must be an object."));
+
+    return {};
+  }
+
+  unsupportedKeys(value, ["text", "count", "column"], diagnostics);
+
+  const text = nonEmptyString(value.text);
+  const count = finiteNumber(value.count);
+
+  if (text === undefined) {
+    diagnostics.push(
+      invalidShape("textOccurrenceCount.text must be a non-empty string."),
+    );
+  }
+
+  if (count === undefined) {
+    diagnostics.push(invalidShape("textOccurrenceCount.count must be a number."));
+  }
+
+  return text === undefined || count === undefined
+    ? {}
+    : {
+        textOccurrenceCount: {
+          text,
+          count,
+          ...optionalAssertionString(value, "column", diagnostics),
+        },
+      };
+}
+
+function frontmatterRequiredFromValue(
+  value: unknown,
+  diagnostics: MarkdownDiagnostic[],
+): Pick<DeclarativeAssertion, "frontmatterRequired"> {
+  if (value === undefined) {
+    return {};
+  }
+
+  if (!isPlainRecord(value)) {
+    diagnostics.push(invalidShape("frontmatterRequired must be an object."));
+
+    return {};
+  }
+
+  unsupportedKeys(value, ["fields"], diagnostics);
+
+  const fields = stringArray(value.fields);
+  if (fields === undefined) {
+    diagnostics.push(
+      invalidShape("frontmatterRequired.fields must be an array of non-empty strings."),
+    );
+
+    return {};
+  }
+
+  return { frontmatterRequired: { fields } };
+}
+
+function idSourceFromValue(
+  value: unknown,
+  diagnostics: MarkdownDiagnostic[],
+): DeclarativeIdSource | undefined {
+  if (!isPlainRecord(value)) {
+    diagnostics.push(invalidShape("references.idsFrom must be an object."));
+
+    return undefined;
+  }
+
+  unsupportedKeys(value, ["section", "column", "prefix"], diagnostics);
+
+  return {
+    ...optionalAssertionString(value, "section", diagnostics),
+    ...optionalAssertionString(value, "column", diagnostics),
+    ...optionalAssertionString(value, "prefix", diagnostics),
+  };
+}
+
+function optionalAssertionString(
   record: Record<string, unknown>,
   key: string,
   diagnostics: MarkdownDiagnostic[],
@@ -201,6 +387,30 @@ function optionalStringArray(
   }
 
   return { [key]: values };
+}
+
+function optionalBoolean(
+  record: Record<string, unknown>,
+  key: string,
+  diagnostics: MarkdownDiagnostic[],
+): Record<string, boolean> {
+  const value = record[key];
+
+  if (value === undefined) {
+    return {};
+  }
+
+  if (typeof value !== "boolean") {
+    diagnostics.push(invalidShape(`${key} must be a boolean when provided.`));
+
+    return {};
+  }
+
+  return { [key]: value };
+}
+
+function finiteNumber(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
 
 function hasTextPredicate(text: DeclarativeAssertion["text"]): boolean {
