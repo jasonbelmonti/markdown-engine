@@ -133,13 +133,80 @@ function textAssertionFromValue(
     return {};
   }
 
-  unsupportedKeys(value, ["contains"], diagnostics);
+  unsupportedKeys(
+    value,
+    ["column", "contains", "containsExactlyOne", "excludes"],
+    diagnostics,
+  );
 
-  if (typeof value.contains !== "string" || value.contains.length === 0) {
-    diagnostics.push(invalidShape("text.contains must be a non-empty string."));
+  const text = {
+    ...optionalTextString(value, "column", diagnostics),
+    ...optionalTextString(value, "contains", diagnostics),
+    ...optionalTextString(value, "containsExactlyOne", diagnostics),
+    ...optionalStringArray(value, "excludes", diagnostics),
+  };
+
+  if (!hasTextPredicate(text)) {
+    diagnostics.push(
+      invalidShape(
+        "text must include contains, containsExactlyOne, or a non-empty excludes array.",
+      ),
+    );
 
     return {};
   }
 
-  return { text: { contains: value.contains } };
+  return { text };
+}
+
+function optionalTextString(
+  record: Record<string, unknown>,
+  key: string,
+  diagnostics: MarkdownDiagnostic[],
+): Record<string, string> {
+  const value = record[key];
+
+  if (value === undefined) {
+    return {};
+  }
+
+  if (typeof value !== "string" || value.length === 0) {
+    diagnostics.push(invalidShape(`${key} must be a non-empty string when provided.`));
+
+    return {};
+  }
+
+  return { [key]: value };
+}
+
+function optionalStringArray(
+  record: Record<string, unknown>,
+  key: string,
+  diagnostics: MarkdownDiagnostic[],
+): Record<string, readonly string[]> {
+  const value = record[key];
+
+  if (value === undefined) {
+    return {};
+  }
+
+  const values = stringArray(value);
+
+  if (values === undefined) {
+    diagnostics.push(
+      invalidShape(`${key} must be an array of non-empty strings when provided.`),
+    );
+
+    return {};
+  }
+
+  return { [key]: values };
+}
+
+function hasTextPredicate(text: DeclarativeAssertion["text"]): boolean {
+  return (
+    text?.contains !== undefined ||
+    text?.containsExactlyOne !== undefined ||
+    text?.excludes !== undefined
+  );
 }

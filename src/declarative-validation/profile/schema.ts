@@ -109,6 +109,8 @@ function rulesFromValue(
     }
   }
 
+  rejectDuplicateRuleIds(rules, diagnostics);
+
   return rules;
 }
 
@@ -144,6 +146,27 @@ function ruleFromValue(
         select,
         assert,
       };
+}
+
+function rejectDuplicateRuleIds(
+  rules: readonly DeclarativeValidationRule[],
+  diagnostics: MarkdownDiagnostic[],
+): void {
+  const seenRuleIds = new Set<string>();
+  const duplicateRuleIds = new Set<string>();
+
+  for (const rule of rules) {
+    if (seenRuleIds.has(rule.id)) {
+      duplicateRuleIds.add(rule.id);
+      continue;
+    }
+
+    seenRuleIds.add(rule.id);
+  }
+
+  for (const ruleId of duplicateRuleIds) {
+    diagnostics.push(invalidShape(`Profile rule id "${ruleId}" must be unique.`));
+  }
 }
 
 function severityFromValue(

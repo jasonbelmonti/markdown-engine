@@ -65,6 +65,76 @@ describe("declarative validation public contract scaffold", () => {
     }
   });
 
+  it("rejects duplicate rule ids before compilation", () => {
+    const result = parseValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "duplicate-rule",
+          select: { target: "document" },
+          assert: { sectionsRequired: { headings: ["Objective"] } },
+        },
+        {
+          id: "duplicate-rule",
+          select: { target: "document" },
+          assert: { sectionsRequired: { headings: ["Evidence"] } },
+        },
+      ],
+    });
+
+    expect(result.profile).toBeUndefined();
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "profile.config.invalidShape",
+        message: 'Profile rule id "duplicate-rule" must be unique.',
+      }),
+    );
+  });
+
+  it("accepts the full public text assertion shape", () => {
+    const result = parseValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "text-contract",
+          select: { target: "table" },
+          assert: {
+            text: {
+              column: "Requirement statement",
+              contains: "shall",
+              containsExactlyOne: "shall",
+              excludes: ["should", "may"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result).toEqual({
+      profile: {
+        syntaxVersion: "markdown-engine.validation@v1",
+        documentVersion: "1.0.0",
+        rules: [
+          {
+            id: "text-contract",
+            select: { target: "table" },
+            assert: {
+              text: {
+                column: "Requirement statement",
+                contains: "shall",
+                containsExactlyOne: "shall",
+                excludes: ["should", "may"],
+              },
+            },
+          },
+        ],
+      },
+      diagnostics: [],
+    });
+  });
+
   it("registers required declarative validation gate script names", () => {
     const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8")) as {
       scripts?: Record<string, string>;
