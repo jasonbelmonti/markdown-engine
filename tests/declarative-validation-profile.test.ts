@@ -2,6 +2,17 @@ import { describe, expect, it } from "vitest";
 
 import { parseValidationProfile } from "@jasonbelmonti/markdown-engine";
 
+type ProfileInput = Parameters<typeof parseValidationProfile>[0];
+
+interface InvalidProfileCase {
+  name: string;
+  input: ProfileInput;
+  diagnostics: readonly {
+    code: string;
+    message?: string;
+  }[];
+}
+
 describe("declarative validation profile parser", () => {
   it("parses YAML strings with nested rules", () => {
     const result = parseValidationProfile(`
@@ -484,5 +495,479 @@ rules:
         }),
       ]),
     );
+  });
+
+  it.each<InvalidProfileCase>([
+    {
+      name: "missing syntaxVersion",
+      input: {
+        rules: [
+          {
+            id: "missing-syntax-version",
+            select: { target: "document" },
+            assert: { text: { contains: "Mission" } },
+          },
+        ],
+      },
+      diagnostics: [
+        {
+          code: "profile.config.unsupportedSyntaxVersion",
+          message:
+            'Profile syntaxVersion must be "markdown-engine.validation@v1".',
+        },
+      ],
+    },
+    {
+      name: "unsupported syntaxVersion",
+      input: {
+        syntaxVersion: "markdown-engine.validation@v2",
+        rules: [
+          {
+            id: "unsupported-syntax-version",
+            select: { target: "document" },
+            assert: { text: { contains: "Mission" } },
+          },
+        ],
+      },
+      diagnostics: [
+        {
+          code: "profile.config.unsupportedSyntaxVersion",
+          message:
+            'Profile syntaxVersion must be "markdown-engine.validation@v1".',
+        },
+      ],
+    },
+    {
+      name: "invalid documentVersion",
+      input: {
+        syntaxVersion: "markdown-engine.validation@v1",
+        documentVersion: "1.0.0-draft",
+        rules: [
+          {
+            id: "invalid-document-version",
+            select: { target: "document" },
+            assert: { text: { contains: "Mission" } },
+          },
+        ],
+      },
+      diagnostics: [
+        {
+          code: "profile.config.invalidShape",
+          message:
+            'Profile documentVersion must be "0.0.0" or "1.0.0" when provided.',
+        },
+      ],
+    },
+    {
+      name: "invalid severity",
+      input: {
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "invalid-severity",
+            severity: "critical",
+            select: { target: "document" },
+            assert: { text: { contains: "Mission" } },
+          },
+        ],
+      },
+      diagnostics: [
+        {
+          code: "profile.config.invalidShape",
+          message:
+            'Rule severity must be "error", "warning", or "info" when provided.',
+        },
+      ],
+    },
+    {
+      name: "duplicate rule IDs",
+      input: {
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "duplicate-rule",
+            select: { target: "document" },
+            assert: { text: { contains: "Mission" } },
+          },
+          {
+            id: "duplicate-rule",
+            select: { target: "document" },
+            assert: { text: { contains: "Control" } },
+          },
+        ],
+      },
+      diagnostics: [
+        {
+          code: "profile.config.invalidShape",
+          message: 'Profile rule at index 1 duplicates rule id "duplicate-rule".',
+        },
+      ],
+    },
+    {
+      name: "unsupported selector target",
+      input: {
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "unsupported-selector",
+            select: { target: "blockQuote" },
+            assert: { text: { contains: "Mission" } },
+          },
+        ],
+      },
+      diagnostics: [
+        {
+          code: "profile.compile.unsupportedSelector",
+          message: 'Unsupported selector target "blockQuote".',
+        },
+      ],
+    },
+    {
+      name: "unsupported selector key",
+      input: {
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "unsupported-selector-key",
+            select: { target: "document", owner: "mission-control" },
+            assert: { text: { contains: "Mission" } },
+          },
+        ],
+      },
+      diagnostics: [
+        {
+          code: "profile.config.unsupportedKey",
+          message: 'Unsupported validation profile key "owner".',
+        },
+      ],
+    },
+    {
+      name: "unsupported first-level assertion member",
+      input: {
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "unsupported-assertion",
+            select: { target: "document" },
+            assert: { semanticQuality: "approved" },
+          },
+        ],
+      },
+      diagnostics: [
+        {
+          code: "profile.compile.unsupportedAssertion",
+          message: 'Unsupported assertion "semanticQuality".',
+        },
+      ],
+    },
+    {
+      name: "unsafe selector key without target",
+      input: {
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "unsafe-selector-key-without-target",
+            select: { script: "return true" },
+            assert: { text: { contains: "Mission" } },
+          },
+        ],
+      },
+      diagnostics: [
+        {
+          code: "profile.config.unsupportedKey",
+          message: 'Unsupported validation profile key "script".',
+        },
+        {
+          code: "profile.config.invalidShape",
+          message: "Rule select.target must be provided.",
+        },
+      ],
+    },
+    {
+      name: "unsupported nested assertion key",
+      input: {
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "unsupported-nested-assertion-key",
+            select: { target: "document" },
+            assert: {
+              sectionsRequired: {
+                headings: ["Objective"],
+                owner: "mission-control",
+              },
+            },
+          },
+        ],
+      },
+      diagnostics: [
+        {
+          code: "profile.config.unsupportedKey",
+          message: 'Unsupported validation profile key "owner".',
+        },
+      ],
+    },
+    {
+      name: "regex-like top-level key",
+      input: {
+        syntaxVersion: "markdown-engine.validation@v1",
+        pattern: "^(a+)+$",
+        rules: [
+          {
+            id: "regex-top-level",
+            select: { target: "document" },
+            assert: { text: { contains: "Mission" } },
+          },
+        ],
+      },
+      diagnostics: [
+        {
+          code: "profile.config.unsupportedKey",
+          message: 'Unsupported validation profile key "pattern".',
+        },
+      ],
+    },
+    {
+      name: "regex-like selector predicate key",
+      input: {
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "regex-predicate",
+            select: {
+              target: "tableRow",
+              where: {
+                column: "Status",
+                equals: "Open",
+                regex: "^(a+)+$",
+              },
+            },
+            assert: { text: { contains: "Open" } },
+          },
+        ],
+      },
+      diagnostics: [
+        {
+          code: "profile.config.unsupportedKey",
+          message: 'Unsupported validation profile key "regex".',
+        },
+      ],
+    },
+    {
+      name: "unsafe tableCell rowWhere key with missing selector column",
+      input: {
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "unsafe-table-cell-row-where",
+            select: {
+              target: "tableCell",
+              rowWhere: {
+                script: "return true",
+              },
+            },
+            assert: { text: { contains: "Open" } },
+          },
+        ],
+      },
+      diagnostics: [
+        {
+          code: "profile.config.unsupportedKey",
+          message: 'Unsupported validation profile key "script".',
+        },
+        {
+          code: "profile.config.invalidShape",
+          message: "Selector column must be a non-empty string.",
+        },
+      ],
+    },
+    {
+      name: "regex-like tableCell rowWhere key with missing selector column",
+      input: {
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "regex-table-cell-row-where",
+            select: {
+              target: "tableCell",
+              rowWhere: {
+                column: "Status",
+                regex: ".*",
+              },
+            },
+            assert: { text: { contains: "Open" } },
+          },
+        ],
+      },
+      diagnostics: [
+        {
+          code: "profile.config.unsupportedKey",
+          message: 'Unsupported validation profile key "regex".',
+        },
+        {
+          code: "profile.config.invalidShape",
+          message: "Selector column must be a non-empty string.",
+        },
+      ],
+    },
+    {
+      name: "regex-like first-level assertion key",
+      input: {
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "regex-assertion",
+            select: { target: "document" },
+            assert: { matches: "^(a+)+$" },
+          },
+        ],
+      },
+      diagnostics: [
+        {
+          code: "profile.config.unsupportedKey",
+          message: 'Unsupported validation profile key "matches".',
+        },
+      ],
+    },
+    {
+      name: "regex-like nested assertion key",
+      input: {
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "regex-nested-assertion",
+            select: { target: "document" },
+            assert: {
+              text: {
+                contains: "Mission",
+                regexp: "^(a+)+$",
+              },
+            },
+          },
+        ],
+      },
+      diagnostics: [
+        {
+          code: "profile.config.unsupportedKey",
+          message: 'Unsupported validation profile key "regexp".',
+        },
+      ],
+    },
+    {
+      name: "unsafe executable-like assertion key",
+      input: {
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "unsafe-assertion",
+            select: { target: "document" },
+            assert: { script: "return true" },
+          },
+        ],
+      },
+      diagnostics: [
+        {
+          code: "profile.config.unsupportedKey",
+          message: 'Unsupported validation profile key "script".',
+        },
+      ],
+    },
+    {
+      name: "unsafe nested assertion key",
+      input: {
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "unsafe-nested-assertion",
+            select: { target: "document" },
+            assert: {
+              text: {
+                contains: "Mission",
+                callback: "isMissionReady",
+              },
+            },
+          },
+        ],
+      },
+      diagnostics: [
+        {
+          code: "profile.config.unsupportedKey",
+          message: 'Unsupported validation profile key "callback".',
+        },
+      ],
+    },
+    {
+      name: "text assertion without effective predicate",
+      input: {
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "ineffective-text",
+            select: { target: "document" },
+            assert: { text: { column: "Summary" } },
+          },
+        ],
+      },
+      diagnostics: [
+        {
+          code: "profile.config.invalidShape",
+          message:
+            "text must include contains, containsExactlyOne, or a non-empty excludes array.",
+        },
+      ],
+    },
+    {
+      name: "empty required array",
+      input: {
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "empty-required-array",
+            select: { target: "document" },
+            assert: { sectionsRequired: { headings: [] } },
+          },
+        ],
+      },
+      diagnostics: [
+        {
+          code: "profile.config.invalidShape",
+          message:
+            "sectionsRequired.headings must be an array of non-empty strings.",
+        },
+      ],
+    },
+  ])("rejects invalid declaration: $name", ({ input, diagnostics }) => {
+    const result = parseValidationProfile(input);
+
+    expect(result.profile).toBeUndefined();
+
+    for (const diagnostic of diagnostics) {
+      expect(result.diagnostics).toContainEqual(expect.objectContaining(diagnostic));
+    }
+  });
+
+  it("keeps omitted documentVersion out of the parsed profile", () => {
+    const result = parseValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      rules: [
+        {
+          id: "document-version-defaults-at-validation",
+          select: { target: "document" },
+          assert: { text: { contains: "Mission" } },
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([]);
+    expect(result.profile).toEqual({
+      syntaxVersion: "markdown-engine.validation@v1",
+      rules: [
+        {
+          id: "document-version-defaults-at-validation",
+          select: { target: "document" },
+          assert: { text: { contains: "Mission" } },
+        },
+      ],
+    });
   });
 });

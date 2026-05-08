@@ -1,28 +1,17 @@
 import type { MarkdownDiagnostic } from "../../api/diagnostics.js";
+import {
+  invalidProfileShape,
+  unsupportedProfileKeys,
+} from "../diagnostics/profile-config-diagnostics.js";
 
-export function diagnostic(code: string, message: string): MarkdownDiagnostic {
-  return { code, message, severity: "error" };
-}
-
-export function invalidShape(message: string): MarkdownDiagnostic {
-  return diagnostic("profile.config.invalidShape", message);
-}
+export const invalidShape = invalidProfileShape;
 
 export function unsupportedKeys(
   record: Record<string, unknown>,
   allowedKeys: readonly string[],
   diagnostics: MarkdownDiagnostic[],
 ): void {
-  for (const key of Object.keys(record)) {
-    if (!allowedKeys.includes(key)) {
-      diagnostics.push(
-        diagnostic(
-          "profile.config.unsupportedKey",
-          `Unsupported validation profile key "${key}".`,
-        ),
-      );
-    }
-  }
+  unsupportedProfileKeys(record, allowedKeys, diagnostics);
 }
 
 export function optionalString(

@@ -1,8 +1,12 @@
 import type { MarkdownDiagnostic } from "../../api/diagnostics.js";
 import { isPlainRecord } from "../../internal/plain-record.js";
+import {
+  hasConfigUnsupportedKeyPrecedence,
+  profileDiagnostic,
+  unsupportedProfileKey,
+} from "../diagnostics/profile-config-diagnostics.js";
 import type { DeclarativeAssertion, DeclarativeIdSource } from "./index.js";
 import {
-  diagnostic,
   invalidShape,
   nonEmptyString,
   stringArray,
@@ -19,7 +23,6 @@ const SUPPORTED_ASSERTION_KEYS = [
   "textOccurrenceCount",
   "frontmatterRequired",
 ] as const;
-const REGEX_LIKE_KEYS = new Set(["matches", "pattern", "regex", "regexp"]);
 
 export function assertionFromValue(
   value: unknown,
@@ -72,13 +75,13 @@ function unsupportedAssertionKeys(
 
     hasUnsupportedVocabulary = true;
 
-    if (REGEX_LIKE_KEYS.has(key)) {
-      unsupportedKeys({ [key]: value[key] }, [], diagnostics);
+    if (hasConfigUnsupportedKeyPrecedence(key)) {
+      diagnostics.push(unsupportedProfileKey(key));
       continue;
     }
 
     diagnostics.push(
-      diagnostic(
+      profileDiagnostic(
         "profile.compile.unsupportedAssertion",
         `Unsupported assertion "${key}".`,
       ),
