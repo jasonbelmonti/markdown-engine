@@ -4,9 +4,12 @@ export type MarkdownEngineApiName =
   | "validate"
   | "serialize"
   | "documentQueries"
-  | "validateAnnotations";
+  | "validateAnnotations"
+  | "parseValidationProfile"
+  | "validateWithProfile";
 
 export * from "./annotations.js";
+export * from "./declarative-validation.js";
 export * from "./diagnostics.js";
 export * from "./document.js";
 export * from "./document-queries.js";
