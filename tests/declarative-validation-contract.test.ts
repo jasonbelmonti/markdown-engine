@@ -5,6 +5,8 @@ import { describe, expect, it } from "vitest";
 import {
   parseValidationProfile,
   validateWithProfile,
+  type DeclarativeAssertion,
+  type DeclarativeSelector,
   type EngineDocument,
   type ValidationProfile,
 } from "@jasonbelmonti/markdown-engine";
@@ -59,6 +61,10 @@ const duplicateRuleProfile = {
     },
   ],
 } satisfies ValidationProfile;
+// @ts-expect-error Section selectors are reserved for a later parser slice.
+const unsupportedSelector = { target: "section" } satisfies DeclarativeSelector;
+// @ts-expect-error ID assertions are reserved for a later parser slice.
+const unsupportedAssertion = { ids: { unique: true } } satisfies DeclarativeAssertion;
 
 describe("declarative validation public contract scaffold", () => {
   it("exports the public profile parser and keeps validation execution scaffolded", () => {
@@ -115,3 +121,5 @@ describe("declarative validation public contract scaffold", () => {
 
 void (undefined as unknown as CompiledDeclarativeValidationPlan);
 void (undefined as unknown as DeclarativeValidationCompileResult);
+void unsupportedSelector;
+void unsupportedAssertion;

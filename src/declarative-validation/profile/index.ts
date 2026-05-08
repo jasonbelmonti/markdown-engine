@@ -32,83 +32,29 @@ export interface DeclarativeValidationRule {
 
 export type DeclarativeSelector =
   | { target: "document" }
-  | { target: "section"; title?: string; depth?: number }
-  | { target: "heading"; text?: string; depth?: number }
   | {
       target: "table";
       section?: string;
       header?: readonly string[];
     }
   | {
-      target: "tableRow";
-      section?: string;
-      tableHeader?: readonly string[];
-      where?: DeclarativeTableCellPredicate;
-    }
-  | {
-      target: "tableCell";
-      section?: string;
-      tableHeader?: readonly string[];
-      column: string;
-      rowWhere?: DeclarativeTableCellPredicate;
-    }
-  | {
       target: "textSpan";
       section?: string;
       nodeType?: EngineNode["type"];
       textIncludes?: string;
-    }
-  | { target: "link"; section?: string; text?: string; url?: string }
-  | { target: "list"; section?: string; ordered?: boolean; depth?: number }
-  | { target: "frontmatter"; field?: string };
-
-export interface DeclarativeTableCellPredicate {
-  column: string;
-  equals?: string;
-  includes?: string;
-}
+    };
 
 export interface DeclarativeAssertion {
   sectionsRequired?: {
     headings: readonly string[];
     order?: DeclarativeSectionOrder;
   };
-  sectionOrder?: {
-    headings: readonly string[];
-  };
   tableColumnsRequired?: {
     columns: readonly string[];
   };
-  ids?: {
-    column?: string;
-    prefix?: string;
-    unique?: boolean;
-    caseSensitive?: boolean;
-  };
-  references?: {
-    idsFrom: DeclarativeIdSource;
-    mustAppearIn: readonly string[];
-  };
   text?: {
-    column?: string;
-    contains?: string;
-    containsExactlyOne?: string;
-    excludes?: readonly string[];
+    contains: string;
   };
-  textOccurrenceCount?: {
-    text: string;
-    count: number;
-    column?: string;
-  };
-  frontmatterRequired?: {
-    fields: readonly string[];
-  };
-}
-
-export interface DeclarativeIdSource {
-  section?: string;
-  column?: string;
-  prefix?: string;
 }
 
 export interface DeclarativeProfileParseOptions {

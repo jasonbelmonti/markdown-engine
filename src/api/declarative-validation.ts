@@ -13,13 +13,11 @@ import type {
 
 export type {
   DeclarativeAssertion,
-  DeclarativeIdSource,
   DeclarativeOutputFormat,
   DeclarativeProfileParseOptions,
   DeclarativeProfileParseResult,
   DeclarativeSectionOrder,
   DeclarativeSelector,
-  DeclarativeTableCellPredicate,
   DeclarativeValidationRule,
   DeclarativeValidationSeverity,
   JsonSafeValue,
