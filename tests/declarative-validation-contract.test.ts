@@ -45,12 +45,10 @@ const profile = {
 } satisfies ValidationProfile;
 
 describe("declarative validation public contract scaffold", () => {
-  it("exports non-executing public API entry points", () => {
+  it("exports the public profile parser and keeps validation execution scaffolded", () => {
     expect(parseValidationProfile).toEqual(expect.any(Function));
     expect(validateWithProfile).toEqual(expect.any(Function));
-    expect(() => parseValidationProfile(profile)).toThrow(
-      "parseValidationProfile is scaffolded",
-    );
+    expect(parseValidationProfile(profile)).toEqual({ profile, diagnostics: [] });
     expect(() => validateWithProfile(document, profile)).toThrow(
       "validateWithProfile is scaffolded",
     );
