@@ -115,13 +115,56 @@ const tableCellPredicate = {
 } satisfies DeclarativeTableCellPredicate;
 
 describe("declarative validation public contract scaffold", () => {
-  it("exports the public profile parser and keeps validation execution scaffolded", () => {
+  it("exports the public profile parser and validation execution entry point", () => {
     expect(parseValidationProfile).toEqual(expect.any(Function));
     expect(validateWithProfile).toEqual(expect.any(Function));
     expect(parseValidationProfile(profile)).toEqual({ profile, diagnostics: [] });
-    expect(() => validateWithProfile(document, profile)).toThrow(
-      "validateWithProfile is scaffolded",
-    );
+    expect(validateWithProfile(document, supportedRuleProfile)).toMatchObject({
+      profile: {
+        syntaxVersion: "markdown-engine.validation@v1",
+        documentVersion: "1.0.0",
+        ruleCount: 1,
+      },
+      ruleResults: [
+        {
+          ruleId: "sections.required",
+          passed: false,
+        },
+      ],
+      valid: false,
+    });
+  });
+
+  it("rejects profile documentVersion mismatches before rule evaluation", () => {
+    expect(
+      validateWithProfile(document, {
+        syntaxVersion: "markdown-engine.validation@v1",
+        documentVersion: "0.0.0",
+        rules: [
+          {
+            id: "version.mismatch",
+            select: { target: "document" },
+            assert: { text: { contains: "markdown" } },
+          },
+        ],
+      }),
+    ).toEqual({
+      valid: false,
+      diagnostics: [
+        {
+          code: "profile.config.documentVersionMismatch",
+          message:
+            'Profile documentVersion "0.0.0" does not match document version "1.0.0".',
+          severity: "error",
+        },
+      ],
+      ruleResults: [],
+      profile: {
+        syntaxVersion: "markdown-engine.validation@v1",
+        documentVersion: "0.0.0",
+        ruleCount: 1,
+      },
+    });
   });
 
   it("materializes a supported non-empty rule from object input", () => {
