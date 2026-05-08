@@ -1,4 +1,5 @@
 import type { EngineDocument } from "./document.js";
+import { parseValidationProfileInput } from "../declarative-validation/profile/index.js";
 import type {
   DeclarativeProfileParseOptions,
   DeclarativeProfileParseResult,
@@ -45,10 +46,10 @@ export interface DeclarativeValidationApi {
 }
 
 export function parseValidationProfile(
-  _input: string | JsonSafeValue,
-  _options: DeclarativeProfileParseOptions = {},
+  input: string | JsonSafeValue,
+  options: DeclarativeProfileParseOptions = {},
 ): DeclarativeProfileParseResult {
-  throw declarativeValidationNotImplemented("parseValidationProfile");
+  return parseValidationProfileInput(input, options);
 }
 
 export function validateWithProfile(
