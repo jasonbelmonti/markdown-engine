@@ -77,7 +77,7 @@ Section status: Complete
 | OBJ-4 | Preserve deterministic 0.1.x-compatible behavior only through explicit documented compatibility gates and make 1.0 rich IR the root 1.0 contract. | Before release or package tag | EVD-5 / EVD-8 |
 | OBJ-5 | Prove the 1.0 contract is useful to a downstream structural document app through a SpecTrace-style fixture exercise without adding SpecTrace semantics to the engine. | Before 1.0 release approval | EVD-9 |
 | NG-1 | This execution will not implement SpecTrace registries, canonical entity IDs, relationship edges, issue-key policy, or profile semantics. | Boundary review | EVD-7 / EVD-9 |
-| NG-2 | This execution will not implement `markdown-profile`, `markdown-runtime`, MCP transport, agent adapters, file watchers, network services, or persistent storage. | Boundary review | EVD-7 |
+| NG-2 | This execution will not implement `markdown-types`, `markdown-runtime`, MCP transport, agent adapters, file watchers, network services, or persistent storage. | Boundary review | EVD-7 |
 | NG-3 | This execution will not expose raw mdast/unified parser AST or YAML parser internals as stable public contracts. | Contract review | EVD-8 |
 | NG-4 | This execution will not promise node target stability across arbitrary content edits. | Contract review | EVD-2 / EVD-8 |
 | NG-5 | This execution will not publish or tag 1.0 until release readiness, downstream exercise evidence, and rollback containment are approved. | Release gate | EVD-10 |

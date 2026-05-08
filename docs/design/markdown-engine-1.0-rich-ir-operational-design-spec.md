@@ -40,7 +40,7 @@ Section status: Complete
 
 Problem declaration: Downstream Markdown applications are unable to consume `markdown-engine` as a complete structural substrate because the current IR lacks stable node targeting, section boundaries, source text recovery, table coordinates, text span extraction, and app annotation targets, resulting in duplicated scanners, inconsistent diagnostics, and weaker review evidence.
 
-Affected actors or systems: SpecTrace, future `markdown-profile`, future `markdown-runtime`, docs quality gates, knowledge-base ingestion tools, migration tools, audit packet generators, review bots, and maintainers of `markdown-engine`.
+Affected actors or systems: SpecTrace, future `markdown-types`, future `markdown-runtime`, docs quality gates, knowledge-base ingestion tools, migration tools, audit packet generators, review bots, and maintainers of `markdown-engine`.
 
 Current-state baseline: As of 2026-05-01 `markdown-engine` exposes 1 public document tree shape with `type`, optional `text`, optional `attributes`, optional `children`, and optional `sourceRange`; it has 0 public section tree APIs, 0 public node ID contracts, 0 public source-slice APIs, 0 public table coordinate contracts, 0 generic token span APIs, and 0 annotation target contracts. SpecTrace has 1 R0 registry model and a BEL-905 worktree with at least 8 scanner/validation modules that re-derive line, section, label, range, and issue-key facts outside `markdown-engine`.
 
@@ -146,7 +146,7 @@ Layer 1 status: Complete
 
 System boundary: `markdown-engine` remains a local TypeScript library that accepts Markdown text and options, returns normalized IR and diagnostics, and offers deterministic query and serialization helpers over engine-owned data structures.
 
-External actors and systems: Package consumers, CI jobs, SpecTrace, future `markdown-profile`, future `markdown-runtime`, docs tooling, local caller-owned file readers, GFM parser dependency, YAML parser dependency. SpecTrace and future profile/runtime packages have no control authority over engine internals.
+External actors and systems: Package consumers, CI jobs, SpecTrace, future `markdown-types`, future `markdown-runtime`, docs tooling, local caller-owned file readers, GFM parser dependency, YAML parser dependency. SpecTrace and future profile/runtime packages have no control authority over engine internals.
 
 Trust or control boundaries: Caller-controlled Markdown, YAML frontmatter, validation config, annotations, and source text enter as untrusted local data. Raw HTML and source slices remain inert strings. Parser and YAML dependency upgrades cross a maintainer-controlled dependency boundary.
 

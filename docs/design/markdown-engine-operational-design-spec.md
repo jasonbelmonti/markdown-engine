@@ -40,9 +40,9 @@ Section status: Complete
 
 Problem declaration: Agent-document tooling is unable to validate special Markdown files through a reusable deterministic contract because the project has no standalone GFM parsing, normalized IR, YAML frontmatter, or declarative validation engine, resulting in duplicated parser decisions, brittle document checks, and unclear boundaries for downstream profile/runtime systems.
 
-Affected actors or systems: Project owner, `markdown-engine` implementers, downstream `markdown-profile`, `markdown-runtime`, `markdown-mcp`, `agent-adapters`, and coding agents that consume profiled Markdown files.
+Affected actors or systems: Project owner, `markdown-engine` implementers, downstream `markdown-types`, `markdown-runtime`, `markdown-mcp`, `agent-adapters`, and coding agents that consume typed Markdown files.
 
-Current-state baseline: As of 2026-04-27 the repository has 1 tracked architecture note, 0 implementation source files, 0 package APIs, 0 validation rule implementations, and at least 6 identified downstream special Markdown filetypes that may need profile-backed interpretation.
+Current-state baseline: As of 2026-04-27 the repository has 1 tracked architecture note, 0 implementation source files, 0 package APIs, 0 validation rule implementations, and at least 6 identified downstream special Markdown filetypes that may need type-backed interpretation.
 
 Evidence or source: Direct inspection of repository state; `RUNTIME_ARCHITECTURE.md`; user decision to start with `markdown-engine` while preserving package decomposition.
 
@@ -135,7 +135,7 @@ Layer 1 status: Complete
 
 System boundary: `markdown-engine` is a local library package that accepts Markdown text and validation config, then returns parse, normalize, validation, diagnostic, and serialization results. It does not run as a network service in this design.
 
-External actors and systems: Package consumers, CI jobs, future `markdown-profile`, future `markdown-runtime`, local file readers owned by callers, GFM parser dependency, YAML parser dependency. There is no database, remote service, or browser runtime dependency.
+External actors and systems: Package consumers, CI jobs, future `markdown-types`, future `markdown-runtime`, local file readers owned by callers, GFM parser dependency, YAML parser dependency. There is no database, remote service, or browser runtime dependency.
 
 Trust or control boundaries: Markdown input, YAML frontmatter, and validation config cross from caller-controlled content into the engine as untrusted data. Raw HTML remains inert data. Dependency upgrades cross a package-maintainer boundary and must be controlled by tests.
 
@@ -144,7 +144,7 @@ Trust or control boundaries: Markdown input, YAML frontmatter, and validation co
 | Public package API | `markdown-engine` | Package consumers, CI, downstream profile/runtime packages | Markdown text, optional path, optional config, API options | Parse result, IR, validation result, diagnostics, serialized JSON |
 | Parser adapter | `markdown-engine` | GFM parser dependency | Markdown body text and parser options | Parser syntax tree with source positions where available |
 | Frontmatter adapter | `markdown-engine` | YAML parser dependency | Frontmatter text | Structured frontmatter value or frontmatter diagnostic |
-| Config schema loader | `markdown-engine` | Package consumers and downstream profile compiler | YAML-friendly validation config | Validated config model or config diagnostics |
+| Config schema loader | `markdown-engine` | Package consumers and downstream type compiler | YAML-friendly validation config | Validated config model or config diagnostics |
 | Serialized result contract | `markdown-engine` | CI, editor tools, agents, downstream packages | Validation result object | Stable JSON result |
 
 Section status: Complete
@@ -336,7 +336,7 @@ Section status: Complete
 | Build a custom Markdown parser | Maximum control over AST and diagnostics. | Higher implementation cost and higher conformance risk than using a standard GFM-capable parser ecosystem. |
 | Use `markdown-it` as the core parser | Mature Markdown parser with broad plugin ecosystem. | Token stream and AST model are less aligned with stable structural validation than mdast-style trees. |
 | Use `cmark-gfm` bindings as the primary parser | Strong GFM conformance reference. | Native binding and AST integration burden are higher for a TypeScript package; better suited as a conformance oracle. |
-| Combine engine, profile compiler, runtime lens, and MCP in one package | Faster path to a visible end-to-end demo. | Violates the chosen package decomposition and would blur deterministic engine behavior with agent-runtime semantics. |
+| Combine engine, type compiler, runtime lens, and MCP in one package | Faster path to a visible end-to-end demo. | Violates the chosen package decomposition and would blur deterministic engine behavior with agent-runtime semantics. |
 | Add custom rule plugins in v1 | Maximizes flexibility for future downstream use cases. | Conflicts with closed deterministic validation, reproducibility, and unsupported-rule honesty. |
 
 | ID | Statement | Likelihood | Consequence | Mitigation |

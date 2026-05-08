@@ -22,7 +22,7 @@ Current package release:
 - emit structured diagnostics
 - serialize public results with stable JSON key ordering
 
-Out of scope for this package: profile compiler behavior, runtime lenses, MCP
+Out of scope for this package: type compiler behavior, runtime lenses, MCP
 transport, agent adapters, semantic or LLM evaluation, arbitrary rule plugins,
 network services, persistence, and raw parser AST as a public contract.
 
@@ -177,7 +177,7 @@ Do not tag or publish the 1.0 release until approval is recorded with:
 - semver classification and package version decision
 - release/tag decision
 - rollback and containment notes
-- downstream profile/runtime consumer confirmation
+- downstream type/runtime consumer confirmation
 - complete evidence links from EVD-1 through EVD-11
 
 Current release decision: BEL-965 promotes the package metadata and public rich

@@ -490,7 +490,7 @@ Structural views are derived from engine-owned document nodes, targets, and
 source metadata. They do not expose raw parser AST fields as public contract.
 
 The package boundary remains domain-neutral. The 1.0 contract does not
-implement SpecTrace entities, profile compiler behavior, runtime lenses, MCP
+implement SpecTrace entities, type compiler behavior, runtime lenses, MCP
 transport, agent adapters, semantic or LLM evaluation, arbitrary rule plugins,
 network services, persistence, file watching, graph storage, rendering,
 sanitization, fetching, or raw HTML execution.

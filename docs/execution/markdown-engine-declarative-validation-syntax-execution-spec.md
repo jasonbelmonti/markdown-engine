@@ -45,7 +45,7 @@ Section status: Complete
 | SRC-2 | `docs/contracts/api.md` | Current public package contract for `0.1.0` plus the 1.0 draft rich IR contract notes. | Preserve package-root API discipline, 1.0 draft document-version behavior, deterministic serialization rules, diagnostic conventions, and compatibility constraints. |
 | SRC-3 | `docs/execution/markdown-engine-1.0-rich-ir-execution-spec.md` | Current execution authority for the 1.0 rich IR substrate that declarative validation depends on. | Treat sections, tables, text spans, lists, links, source slices, annotation targets, document queries, and repeatability evidence as prerequisites and read-only source authority unless this plan explicitly assigns coordinated edits. |
 | SRC-4 | `docs/design/markdown-engine-1.0-rich-ir-operational-design-spec.md` | Design authority for the rich IR data model and engine boundary. | Build declarative validation over public `EngineDocument` data and query helpers without raw parser AST exposure or domain semantics. |
-| SRC-5 | `RUNTIME_ARCHITECTURE.md` | Package decomposition and deterministic/semantic boundary authority. | Keep `markdown-engine` limited to deterministic local parsing, normalization, validation, diagnostics, and serialization; exclude `markdown-profile`, runtime lenses, MCP, agent adapters, and semantic evaluation. |
+| SRC-5 | `RUNTIME_ARCHITECTURE.md` | Package decomposition and deterministic/semantic boundary authority. | Keep `markdown-engine` limited to deterministic local parsing, normalization, validation, diagnostics, and serialization; exclude `markdown-types`, runtime lenses, MCP, agent adapters, and semantic evaluation. |
 | SRC-6 | User request on 2026-05-07 to generate this execution spec from `SRC-1`. | Execution planning request. | Produce an implementation-ready execution artifact before coding begins. |
 
 In scope: Validation profile parser, JSON-safe object input support, closed profile schema validation, syntax-version and document-version handling, rule ID uniqueness, severity/default handling, unsupported-key diagnostics, regex-like key rejection, internal compiled rule-plan records, selector resolution over public 1.0 `EngineDocument` fields and `documentQueries`, selector/assertion compatibility checks, required section/order/table/ID/reference/text/frontmatter assertions, deterministic source-targeted diagnostics, evidence hashes, repeatability proof, public API exports, CLI `validate --file --profile --format json` behavior, contract documentation, fixtures, snapshots, boundary audit, downstream operational-design-spec fixture exercise, release containment, and handoff evidence.
@@ -82,7 +82,7 @@ Section status: Complete
 | Project owner | Approves design authority, entry, milestone gates, public syntax/API/CLI compatibility decisions, deviations, release readiness, and final execution outcome. | Approve |
 | Markdown-engine implementer | Executes work packages, maintains package boundaries, records evidence, and escalates blockers or deviations. | Execute |
 | Implementation reviewer | Reviews source changes, tests, fixtures, snapshots, diagnostics, public contracts, package boundaries, and traceability. | Review |
-| Downstream profile/runtime consumer | Reviews whether the syntax supports downstream profile compilation and operational-design-spec structural checks without core semantic leakage. | Review |
+| Downstream type/runtime consumer | Reviews whether the syntax supports downstream type compilation and operational-design-spec structural checks without core semantic leakage. | Review |
 | Boundary/security reviewer | Confirms validation profiles remain inert data and execution excludes scripts, regex compilation, plugins, network calls, LLM behavior, persistence, and profile-specific semantics. | Review |
 | CI/docs quality-gate reviewer | Reviews CLI output, exit codes, and JSON result shape for automated validation jobs. | Review |
 
@@ -140,7 +140,7 @@ Primary risks and unknowns:
 | RISK-2 | First-version selector/assertion vocabulary may be too narrow for real profile needs. | A syntax that cannot validate the motivating structural profile would add durable contract cost without value. | Downstream consumer / Implementer | VAL-4 / VAL-9 / EVD-4 / EVD-9 | MS-3 |
 | RISK-3 | Diagnostics may be less source-specific than users expect. | CI users and coding agents need actionable locations, but missing or cross-section failures cannot always point to exact text. | Implementer | VAL-5 / EVD-5 | MS-2 |
 | RISK-4 | Syntax versioning, document versioning, result shape, diagnostic precedence, evidence hashes, or CLI behavior may be ambiguous. | Ambiguity in public contract fields can break consumers and make review evidence non-repeatable. | Project owner / Implementer | VAL-6 / VAL-7 / VAL-10 / EVD-6 / EVD-7 / EVD-10 | MS-2 / MS-3 |
-| RISK-5 | Core engine may absorb operational-design-spec or other profile-specific vocabulary during fixtures and examples. | Domain leakage would couple `markdown-engine` to one profile and block reuse by `markdown-profile`. | Implementer | VAL-8 / VAL-9 / EVD-8 / EVD-9 | MS-2 / MS-3 |
+| RISK-5 | Core engine may absorb operational-design-spec or other profile-specific vocabulary during fixtures and examples. | Domain leakage would couple `markdown-engine` to one profile and block reuse by `markdown-types`. | Implementer | VAL-8 / VAL-9 / EVD-8 / EVD-9 | MS-2 / MS-3 |
 | RISK-6 | Regex-like matching could re-enter v1 and create denial-of-service risk. | User-supplied regular expressions can catastrophically backtrack against long spans or table cells. | Boundary reviewer / Implementer | VAL-2 / VAL-8 / EVD-2 / EVD-8 | MS-2 |
 
 Section status: Complete
@@ -213,9 +213,9 @@ Allowed dependencies:
 
 Forbidden dependencies:
 
-- Must not import: CLI runtime modules under `src/cli/**` or `src/declarative-validation/cli/**`, raw parser AST types as public exports, downstream `markdown-profile`, runtime, MCP, agent, LLM, network, database, UI, or profile-specific modules.
+- Must not import: CLI runtime modules under `src/cli/**` or `src/declarative-validation/cli/**`, raw parser AST types as public exports, downstream `markdown-types`, runtime, MCP, agent, LLM, network, database, UI, or type-specific modules.
 - Must not call: network services, shell commands, dynamic plugins, LLM APIs, file traversal outside caller-provided CLI inputs.
-- Must not know about: operational-design-spec semantics, AGENTS.md/TASK.md semantics, downstream profile IDs, entity registries, or issue-key policies.
+- Must not know about: operational-design-spec semantics, AGENTS.md/TASK.md semantics, downstream type IDs, entity registries, or issue-key policies.
 
 State boundary:
 
@@ -455,7 +455,7 @@ Forbidden dependencies:
 
 - Must not import: evidence helpers must not import package-root public API functions or CLI runtime modules; CLI adapters must not be imported by package-root API modules; all `PKG-5` modules must not import parser AST internals, downstream profile/runtime/MCP/agent modules, network clients, or LLM SDKs.
 - Must not call: file discovery, directory traversal, network services, shell commands, nondeterministic timestamp generation for serialized evidence.
-- Must not know about: downstream profile semantics or operational-design-spec-specific behavior.
+- Must not know about: downstream type semantics or operational-design-spec-specific behavior.
 
 State boundary:
 
@@ -553,7 +553,7 @@ Reusable package candidates:
 | Candidate | Current level | Reuse rationale | Required decoupling | Promotion trigger |
 | --- | --- | --- | --- | --- |
 | Public `markdown-engine` package contract | 4 | The package is already public and declarative validation becomes a durable contract surface. | Complete syntax docs, diagnostic inventory, CLI docs, release notes, compatibility matrix, and release evidence. | `MS-3` approval and explicit release/tag decision. |
-| Declarative validation schema/compiler | 2 | The parser/compiler may later be useful to `markdown-profile`. | Remove package-specific rich IR assumptions, define standalone compatibility policy, and prove a second repository consumer. | Future project-owner decision after `markdown-profile` needs it outside `markdown-engine`. |
+| Declarative validation schema/compiler | 2 | The parser/compiler may later be useful to `markdown-types`. | Remove package-specific rich IR assumptions, define standalone compatibility policy, and prove a second repository consumer. | Future project-owner decision after `markdown-types` needs it outside `markdown-engine`. |
 
 Coupling tripwires:
 
@@ -647,7 +647,7 @@ Section status: Complete
 | --- | --- | --- | --- | --- |
 | CTRL-1 | Implementation requires changing an approved design requirement, non-objective, syntax vocabulary, API function name, CLI command, result field, or diagnostic code from `SRC-1`. | Stop the affected work package and request project-owner approval through `DEV-*` or design revision. | Implementer | DEV record or revised design/spec. |
 | CTRL-2 | Profile execution, scripts, plugins, dynamic callbacks, user-supplied regular expressions, LLM behavior, network/persistent behavior, or semantic scoring appears in core code. | Remove the behavior or stop for project-owner decision; merge is blocked until resolved. | Implementer | VAL-2 / VAL-8 / REV-4 / EVD-2 / EVD-8. |
-| CTRL-3 | Operational-design-spec, AGENTS.md, TASK.md, issue-key, profile ID, runtime lens, MCP, or agent-adapter semantics enter parser, compiler, assertion, or diagnostic logic. | Remove the semantics or escalate for design revision; downstream fixture data may remain only as generic structural test input. | Implementer | VAL-8 / VAL-9 / EVD-8 / EVD-9. |
+| CTRL-3 | Operational-design-spec, AGENTS.md, TASK.md, issue-key, type ID, runtime lens, MCP, or agent-adapter semantics enter parser, compiler, assertion, or diagnostic logic. | Remove the semantics or escalate for design revision; downstream fixture data may remain only as generic structural test input. | Implementer | VAL-8 / VAL-9 / EVD-8 / EVD-9. |
 | CTRL-4 | Public API, CLI, diagnostic precedence, evidence hash input, or serialized field ordering changes after `MS-1`. | Coordinate with `PKG-*` owners and update docs, tests, snapshots, and traceability before continuing. | Implementer | Updated EVD and `REV-2` approval. |
 | CTRL-5 | Source ranges are unavailable or ambiguous for a diagnostic case. | Use nearest documented target or omit source range; do not fabricate a location. | Implementer | VAL-5 / EVD-5. |
 | CTRL-6 | Snapshot, serialized output, evidence hash, or repeatability output changes unexpectedly. | Treat as contract drift; investigate before updating baselines. | Implementer | VAL-6 / EVD-6. |
@@ -703,7 +703,7 @@ Section status: Complete
 | --- | --- | --- | --- | --- |
 | REV-1 | Project owner | Source authority, entry approval, public syntax/API/CLI decisions, compatibility policy, milestone decisions, deviations, release readiness, and final approval. | Yes | MS approval record and EVD review notes. |
 | REV-2 | Implementation reviewer | Source changes across `SURF-1` through `SURF-9`, package boundaries, tests, snapshots, deterministic behavior, typecheck/build, and traceability to work packages. | Yes | Code review approval and validation evidence review. |
-| REV-3 | Downstream profile/runtime consumer | Selector/assertion usefulness, operational-design-spec exercise, profile compiler fit, and absence of profile semantics in core engine code. | Yes for release | EVD-9 review approval or release blocker record. |
+| REV-3 | Downstream type/runtime consumer | Selector/assertion usefulness, operational-design-spec exercise, type compiler fit, and absence of type semantics in core engine code. | Yes for release | EVD-9 review approval or release blocker record. |
 | REV-4 | Boundary/security reviewer | Inert profile handling, no scripts/plugins/regex compilation/network/LLM/persistence/file watching, dependency audit, and no executable config behavior. | Yes | EVD-8 approval or blocker record. |
 | REV-5 | CI/docs quality-gate reviewer | CLI usage, JSON output union, exit codes, diagnostics, and evidence fields for automated validation workflows. | Yes for release | EVD-7 / EVD-10 approval or blocker record. |
 
@@ -741,7 +741,7 @@ Section status: Complete
 
 Operator actions: Maintainers run validation commands, inspect snapshots and evidence artifacts, approve or reject milestone gates, classify public contract changes, review migration notes, and withhold release if any gate fails.
 
-Monitoring window: From implementation branch start through the first release/tag decision and first downstream profile/runtime consumer review. No live service monitoring window is required.
+Monitoring window: From implementation branch start through the first release/tag decision and first downstream type/runtime consumer review. No live service monitoring window is required.
 
 N/A rationale: No production service, database, dashboard, alert, or on-call runbook is required because `markdown-engine` remains a local library.
 
@@ -757,7 +757,7 @@ Risks:
 | RISK-2 | First-version selector/assertion vocabulary is too narrow for real profile needs. | Durable syntax ships without proving the motivating downstream value. | Medium | Downstream consumer / Implementer | Prove ODS structural fixture before release; keep unsupported assertions explicit. | VAL-4 / VAL-9 |
 | RISK-3 | Diagnostics cannot always be source-specific. | CI users and agents may receive less actionable output than expected. | Medium | Implementer | Document targeting limits, target nearest available source, omit rather than fabricate unavailable ranges. | VAL-5 |
 | RISK-4 | Versioning, result shape, diagnostic precedence, evidence hashes, or CLI behavior remains ambiguous. | Consumers may depend on undocumented behavior and repeatability evidence may lose value. | Medium | Project owner / Implementer | Contract-first docs, deterministic diagnostic inventory, hash input contract, CLI JSON union tests. | VAL-6 / VAL-7 / VAL-10 |
-| RISK-5 | Core engine absorbs operational-design-spec or other profile-specific semantics. | `markdown-engine` becomes coupled to one downstream profile and blocks reuse. | Low | Implementer | Keep examples generic where possible, audit source for domain semantics, use ODS only as fixture data. | VAL-8 / VAL-9 |
+| RISK-5 | Core engine absorbs operational-design-spec or other type-specific semantics. | `markdown-engine` becomes coupled to one downstream type and blocks reuse. | Low | Implementer | Keep examples generic where possible, audit source for domain semantics, use ODS only as fixture data. | VAL-8 / VAL-9 |
 | RISK-6 | Regex-like matching re-enters v1 and creates denial-of-service risk. | User-supplied regular expressions can catastrophically backtrack on large cells/spans. | Low | Boundary reviewer / Implementer | Reject `matches`, `pattern`, `regex`, and `regexp`; audit for profile-sourced regex compilation. | VAL-2 / VAL-8 |
 
 Open questions:

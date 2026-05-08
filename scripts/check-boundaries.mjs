@@ -6,7 +6,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const defaultRepoRoot = join(scriptDir, "..");
 const forbiddenDependencyNames = new Set([
-  "markdown-profile",
+  "markdown-types",
   "markdown-runtime",
   "markdown-mcp",
   "agent-adapter",
@@ -47,8 +47,8 @@ const forbiddenDependencyPatterns = [
   },
   { label: "LLM", pattern: /(?:^|[@/_-])llm(?:$|[\/_-])/ },
   {
-    label: "markdown-profile",
-    pattern: /(?:^|[@/_-])markdown[-_]profile(?:$|[\/_-])/,
+    label: "markdown-types",
+    pattern: /(?:^|[@/_-])markdown[-_]types(?:$|[\/_-])/,
   },
   {
     label: "markdown-runtime",
@@ -59,8 +59,8 @@ const forbiddenDependencyPatterns = [
     pattern: /(?:^|[@/_-])markdown[-_]mcp(?:$|[\/_-])/,
   },
   {
-    label: "profile compiler",
-    pattern: /(?:^|[@/_-])profile[-_]compiler(?:$|[\/_-])/,
+    label: "type compiler",
+    pattern: /(?:^|[@/_-])type[-_]compiler(?:$|[\/_-])/,
   },
   {
     label: "runtime lens",
@@ -80,8 +80,8 @@ const dependencySections = [
 const annotationSemanticTerms = [
   { label: "SpecTrace", phrases: [["spec", "trace"]] },
   {
-    label: "markdown-profile",
-    phrases: [["markdown", "profile"]],
+    label: "markdown-types",
+    phrases: [["markdown", "types"]],
   },
   {
     label: "markdown-runtime",

@@ -40,15 +40,15 @@ Section status: Complete
 
 Problem declaration: Downstream Markdown profile authors are unable to define reusable deterministic document-structure validation policies because `markdown-engine` currently exposes only 5 fixed rule families and no declarative selector/assertion syntax over the 1.0 rich IR, resulting in repeated custom validators, duplicated table and section traversal, and inconsistent source-targeted diagnostics.
 
-Affected actors or systems: Project owner, markdown-engine implementers, future `markdown-profile`, future `markdown-runtime`, docs quality gates, CI validation jobs, coding agents that need deterministic feedback, and maintainers of profile-backed Markdown filetypes.
+Affected actors or systems: Project owner, markdown-engine implementers, future `markdown-types`, future `markdown-runtime`, docs quality gates, CI validation jobs, coding agents that need deterministic feedback, and maintainers of type-backed Markdown filetypes.
 
 Current-state baseline: As of 2026-05-07, direct inspection shows 5 supported deterministic rule families in `src/rules/index.ts`, 7 public rich IR query helper methods in `src/api/document-queries.ts`, 0 declarative profile syntax modules, 0 generic table-column validation rules, 0 generic ID-family validation rules, and 0 traceability validation rules.
 
 Evidence or source: Direct inspection of `src/rules/index.ts`, `src/api/document-queries.ts`, `docs/contracts/api.md`, `RUNTIME_ARCHITECTURE.md`, and prior live analysis of `docs/design/markdown-engine-1.0-rich-ir-operational-design-spec.md` showing 26 sections, 23 tables, 1276 text spans, and source-addressable nodes available through the existing rich IR.
 
-Consequence of inaction: Before the next profile-backed filetype or operational design spec validator is built, each consumer will continue implementing its own syntax, section traversal, table extraction, ID scanning, and traceability checks outside the engine, increasing contract drift before the 1.0 validation surface is stabilized.
+Consequence of inaction: Before the next type-backed filetype or operational design spec validator is built, each consumer will continue implementing its own syntax, section traversal, table extraction, ID scanning, and traceability checks outside the engine, increasing contract drift before the 1.0 validation surface is stabilized.
 
-Decision deadline or trigger: Before implementing operational-design-spec validation, AGENTS.md validation, TASK.md validation, or any downstream profile compiler that needs structural policies beyond the current fixed rule families.
+Decision deadline or trigger: Before implementing operational-design-spec validation, AGENTS.md validation, TASK.md validation, or any downstream type compiler that needs structural policies beyond the current fixed rule families.
 
 Section status: Complete
 
@@ -57,7 +57,7 @@ Section status: Complete
 | ID | Statement | Measurement or decision horizon |
 | --- | --- | --- |
 | OBJ-1 | Provide a closed declarative syntax for deterministic structural validation over `EngineDocument` 1.0 rich IR. | Implementation review |
-| OBJ-2 | Let downstream profiles express common section, table, ID, reference, text, and frontmatter policies without writing TypeScript validators. | First profile-backed validation exercise |
+| OBJ-2 | Let downstream type definitions express common section, table, ID, reference, text, and frontmatter policies without writing TypeScript validators. | First type-backed validation exercise |
 | OBJ-3 | Preserve `markdown-engine` as a deterministic local substrate with no arbitrary code execution, semantic judgment, or profile-specific meaning in core validation. | Boundary review |
 | OBJ-4 | Produce stable diagnostics and evidence packets that are suitable for CI, review automation, and coding-agent consumption. | CLI/API acceptance review |
 | NG-1 | This effort will not implement operational-design-spec, AGENTS.md, TASK.md, or any other profile semantics in core engine code. | Implementation review |
@@ -87,7 +87,7 @@ Section status: Complete
 | --- | --- | --- | --- | --- |
 | CON-1 | Invariant | The declarative syntax remains a closed deterministic vocabulary over public `EngineDocument` data. | `RUNTIME_ARCHITECTURE.md` defines deterministic validation as the engine boundary. | Validate with unsupported-key tests, boundary audit, and syntax schema tests in `VAL-2` and `VAL-8`. |
 | CON-2 | Constraint | The syntax does not execute arbitrary code, compile user-supplied regular expressions, import plugins, call networks, read additional files, invoke LLMs, or evaluate semantic quality. | Prevents trust-boundary, performance, and product-scope drift. | Verify with implementation inspection and negative tests in `VAL-8`. |
-| CON-3 | Constraint | Profile-specific concepts remain in downstream packages or caller-owned rule IDs, not in core rule semantics. | Existing rich IR design excludes SpecTrace/profile/runtime semantics. | Verify no profile-specific identifiers or hard-coded operational-design-spec logic enters engine modules in `VAL-8`. |
+| CON-3 | Constraint | Type-specific concepts remain in downstream packages or caller-owned rule IDs, not in core rule semantics. | Existing rich IR design excludes SpecTrace/type/runtime semantics. | Verify no type-specific identifiers or hard-coded operational-design-spec logic enters engine modules in `VAL-8`. |
 | CON-4 | Invariant | Validation diagnostics use existing `MarkdownDiagnostic` severity and source-range conventions where possible. | API contract already defines diagnostic shape. | Validate source-targeted fixtures in `VAL-5`. |
 | CON-5 | Constraint | Public syntax, result, and diagnostic changes require semver classification before release. | Config syntax becomes a durable author-facing contract. | Verify contract docs and migration notes in `VAL-7`. |
 | ASM-1 | Assumption | A small selector/assertion vocabulary can cover the first operational-design-spec structural checks. | Prior analysis found the current rich IR exposes required headings, tables, IDs, spans, and traceability source text. | Validate with an operational-design-spec fixture exercise in `VAL-9`. |
@@ -118,7 +118,7 @@ Section status: Complete
 | Measure | Baseline | Target or decision threshold | Evaluation date or decision event | Related IDs |
 | --- | --- | --- | --- | --- |
 | Structural profile coverage | 0 declarative profile syntax modules and 0 traceability rules as of 2026-05-07. | One operational-design-spec fixture validates required headings, table columns, ID uniqueness, text rules, and traceability without custom TypeScript profile code. | First profile exercise review | OBJ-1 / OBJ-2 / REQ-4 / REQ-5 |
-| Boundary preservation | Existing boundary audit excludes profile/runtime/MCP/LLM behavior from core. | Boundary audit reports no scripts, plugins, network calls, LLM calls, user-supplied regular expression compilation, or profile-specific semantics in declarative validation execution. | Implementation review | OBJ-3 / REQ-8 |
+| Boundary preservation | Existing boundary audit excludes type/runtime/MCP/LLM behavior from core. | Boundary audit reports no scripts, plugins, network calls, LLM calls, user-supplied regular expression compilation, or type-specific semantics in declarative validation execution. | Implementation review | OBJ-3 / REQ-8 |
 | Diagnostic actionability | Current fixed rules emit source ranges only for some node-backed failures. | Representative fixtures show source ranges for missing table columns, duplicate IDs, missing references, empty selections, and invalid table cells where offsets exist. | Diagnostic fixture review | OBJ-4 / REQ-6 |
 | Deterministic evidence | Existing engine has repeatability scripts and snapshots for parse/normalize/validation. | Ten repeated declarative validations produce identical serialized results and evidence packets. | Release readiness review | OBJ-4 / REQ-7 |
 | Contract readiness | API docs currently list fixed validation rule families only. | Contract docs define syntax version, rule plan behavior, selector vocabulary, assertion vocabulary, diagnostic codes, CLI usage, and non-goals. | Contract review | REQ-9 / REQ-10 |
@@ -133,13 +133,13 @@ Layer 1 status: Complete
 
 System boundary: `markdown-engine` remains a local TypeScript package that accepts Markdown text, parsed/normalized documents, and caller-supplied validation profile data, then returns deterministic validation results and diagnostics.
 
-External actors and systems: Package consumers, CLI users, CI jobs, downstream `markdown-profile`, future `markdown-runtime`, local file readers owned by callers, YAML parser dependency, and existing Markdown parser dependency. No remote service, database, daemon, runtime lens generator, MCP server, or agent adapter is part of this design.
+External actors and systems: Package consumers, CLI users, CI jobs, downstream `markdown-types`, future `markdown-runtime`, local file readers owned by callers, YAML parser dependency, and existing Markdown parser dependency. No remote service, database, daemon, runtime lens generator, MCP server, or agent adapter is part of this design.
 
 Trust or control boundaries: Markdown input and validation profile data cross from caller-controlled content into the engine as untrusted local data. Validation profiles are parsed and validated as data only. Raw HTML, source slices, and profile values remain inert strings or JSON-safe values.
 
 | Interface | Owner | Consumer or dependency | Inputs | Outputs |
 | --- | --- | --- | --- | --- |
-| Declarative validation API | `markdown-engine` | Package consumers and downstream profile compiler | `EngineDocument`, validation profile object, validation options | Validation result, rule results, diagnostics, optional evidence packet |
+| Declarative validation API | `markdown-engine` | Package consumers and downstream type compiler | `EngineDocument`, validation profile object, validation options | Validation result, rule results, diagnostics, optional evidence packet |
 | Profile syntax parser | `markdown-engine` | YAML parser dependency and package consumers | YAML-compatible profile text or object value | Parsed profile model or config diagnostics |
 | Rule compiler | `markdown-engine` | Internal validation pipeline | Parsed profile model and syntax version | Internal closed compiled rule plan or compile diagnostics |
 | Rule evaluator | `markdown-engine` | Declarative validation API and CLI | Compiled rule plan and `EngineDocument` | Deterministic diagnostics and per-rule results |
@@ -155,7 +155,7 @@ Section status: Complete
 | FLOW-1 | A caller validates Markdown with a declarative profile. | Markdown text and profile data are supplied through the public API. | The caller receives deterministic rule results and diagnostics without writing custom validation code. | REQ-1 / REQ-3 / REQ-4 / REQ-5 / REQ-6 |
 | FLOW-2 | A CLI user validates a file in CI. | The Markdown file and profile file are readable by the caller-owned CLI process. | The CLI emits stable output and exits non-zero when error-severity diagnostics exist. | REQ-7 / REQ-10 |
 | FLOW-3 | A profile contains unsupported syntax. | The profile includes an unknown selector, assertion, or key. | The engine emits config diagnostics and does not execute partial unsupported behavior. | REQ-2 / REQ-8 |
-| FLOW-4 | A downstream profile needs operational-design-spec structural checks. | The document uses numbered headings, tables, and ID families. | The profile validates required sections, table columns, ID uniqueness, and traceability through generic selectors and assertions. | REQ-4 / REQ-5 / REQ-9 |
+| FLOW-4 | A downstream Markdown type needs operational-design-spec structural checks. | The document uses numbered headings, tables, and ID families. | The compiled validation profile validates required sections, table columns, ID uniqueness, and traceability through generic selectors and assertions. | REQ-4 / REQ-5 / REQ-9 |
 | FLOW-5 | A validation failure is tied to a table cell or text span. | The normalized document contains source ranges for the selected target. | The diagnostic includes the nearest source range and a stable code. | REQ-6 / REQ-7 |
 | FUNC-1 | Profile parsing is invoked. | The profile input is a YAML string or object value. | The API returns a parsed profile model or config diagnostics. | REQ-1 / REQ-2 |
 | FUNC-2 | Rule compilation is invoked. | Profile parsing completed without error-severity diagnostics. | The engine creates an internal closed compiled rule plan that references public selectors and assertions only, or returns compile diagnostics when compilation fails. | REQ-3 / REQ-8 |
@@ -179,7 +179,7 @@ States and transitions: The engine remains stateless across calls. Each validati
 | Fault-5 | CLI cannot read the profile file. | The CLI exits with an operational error and does not emit a validation pass. | REQ-10 / FUNC-5 |
 | Misuse-1 | A profile attempts to include script text, imports, plugin references, regular expression patterns, or network URLs as executable behavior. | The engine treats the values as unsupported config and does not execute or compile them. | REQ-2 / REQ-8 / FUNC-1 |
 | Misuse-2 | A profile author attempts to encode semantic approval quality as deterministic syntax. | The engine rejects unsupported semantic assertions and leaves semantic review to downstream systems. | REQ-2 / REQ-8 / FUNC-2 |
-| Misuse-3 | A downstream package tries to add operational-design-spec-specific rule semantics to core engine execution. | Boundary review blocks the change and keeps the meaning in a downstream profile package. | REQ-8 / REQ-9 / FUNC-2 |
+| Misuse-3 | A downstream package tries to add operational-design-spec-specific rule semantics to core engine execution. | Boundary review blocks the change and keeps the meaning in a downstream type package. | REQ-8 / REQ-9 / FUNC-2 |
 
 Section status: Complete
 
@@ -227,7 +227,7 @@ Layer 2 status: Complete
 
 Architecture summary: Declarative validation adds a profile parser, syntax validator, rule compiler, selector resolver, assertion evaluator, diagnostic targeter, CLI entry point, and evidence serializer on top of the existing parse, normalize, query, validate, and serialize pipeline.
 
-Major components and boundaries: The main components are profile syntax parser, profile schema validator, compiled rule-plan model, selector resolver, assertion evaluator, diagnostic builder, CLI adapter, and contract documentation. Boundaries remain between untrusted profile data and validated profile model, between profile compiler behavior and core deterministic execution, between structural assertions and downstream semantic review, and between local file reading in CLI code and pure API functions.
+Major components and boundaries: The main components are profile syntax parser, profile schema validator, compiled rule-plan model, selector resolver, assertion evaluator, diagnostic builder, CLI adapter, and contract documentation. Boundaries remain between untrusted profile data and validated profile model, between type compiler behavior and core deterministic execution, between structural assertions and downstream semantic review, and between local file reading in CLI code and pure API functions.
 
 Deployment or runtime placement: The package runs in the caller's local Node.js process. The API path owns no file traversal, network service, database, daemon, LLM call, plugin loader, or persistent cache. The CLI reads only caller-specified local files.
 
@@ -636,7 +636,7 @@ Section status: Complete
 | Put operational-design-spec validation directly in core engine | Fastest path for the motivating use case. | Violates the domain-neutral boundary and would couple engine releases to one profile. |
 | Expose arbitrary JavaScript predicates in config | Maximizes flexibility. | Creates an execution boundary, weakens determinism, and introduces security review scope. |
 | Allow caller-supplied regular expressions in first-version matching | Improves flexible text and ID matching. | JavaScript regular expressions can catastrophically backtrack against long spans or table cells; first-version syntax uses exact, literal, and token matching instead. |
-| Build declarative syntax only in downstream `markdown-profile` | Keeps core engine smaller. | Duplicates rich IR traversal and diagnostic targeting outside the engine, reducing value of the core package. |
+| Build declarative syntax only in downstream `markdown-types` | Keeps core engine smaller. | Duplicates rich IR traversal and diagnostic targeting outside the engine, reducing value of the core package. |
 | Use JSON Schema as the only validation language | Familiar ecosystem and tooling. | JSON Schema does not naturally express Markdown sections, source ranges, table cell coordinates, or traceability over rich IR. |
 
 | ID | Statement | Likelihood | Consequence | Mitigation |

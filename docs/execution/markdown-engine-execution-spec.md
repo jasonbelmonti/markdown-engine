@@ -64,7 +64,7 @@ Section status: Complete
 | OBJ-2 | Deliver deterministic declarative validation over parsed frontmatter and normalized IR. | Before merge of implementation branch | EVD-4 / EVD-5 |
 | OBJ-3 | Deliver stable public API, IR, config, diagnostic, and serialization contracts suitable for downstream profile/runtime packages. | Before release or package tag | EVD-6 / EVD-7 |
 | OBJ-4 | Preserve the package boundary that excludes profile, runtime, MCP, agent-adapter, and semantic-eval behavior from `markdown-engine`. | Throughout execution | EVD-8 |
-| NG-1 | This execution will not implement `markdown-profile`, `markdown-runtime`, `markdown-mcp`, `agent-adapters`, or `agent-eval-harness`. | Completion review | EVD-8 |
+| NG-1 | This execution will not implement `markdown-types`, `markdown-runtime`, `markdown-mcp`, `agent-adapters`, or `agent-eval-harness`. | Completion review | EVD-8 |
 | NG-2 | This execution will not expose raw parser AST as a stable public contract in v1. | Contract review | EVD-6 |
 | NG-3 | This execution will not add arbitrary rule plugins or LLM-backed semantic validators. | Validation review | EVD-4 / EVD-8 |
 | NG-4 | This execution will not publish a package release until contract review and downstream-consumer confirmation are complete. | Release gate | EVD-7 / EVD-11 |
@@ -203,7 +203,7 @@ Allowed dependencies:
 
 Forbidden dependencies:
 
-- Must not import: `markdown-profile`, `markdown-runtime`, MCP, agent adapters, application routes, UI, database, environment-specific runtime modules.
+- Must not import: `markdown-types`, `markdown-runtime`, MCP, agent adapters, application routes, UI, database, environment-specific runtime modules.
 - Must not call: LLM APIs, network services, shell commands, file traversal owned by callers.
 - Must not know about: product-specific profile IDs such as `task/basic@v1`.
 

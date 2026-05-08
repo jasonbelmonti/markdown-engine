@@ -29,7 +29,7 @@ const forbiddenContractTerms = [
   "mdast",
   "unified",
   "SpecTrace",
-  "markdown-profile",
+  "markdown-types",
   "markdown-runtime",
   "MCP",
   "LLM",
