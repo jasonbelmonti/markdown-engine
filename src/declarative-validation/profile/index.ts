@@ -4,6 +4,8 @@ import type {
 } from "../../api/document.js";
 import type { MarkdownDiagnostic } from "../../api/diagnostics.js";
 
+export { parseValidationProfileInput } from "./parse.js";
+
 export type DeclarativeValidationSeverity = "error" | "warning" | "info";
 export type DeclarativeOutputFormat = "json";
 export type DeclarativeSectionOrder = "none" | "strict";
