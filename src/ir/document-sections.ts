@@ -3,6 +3,7 @@ import type {
   EngineSection,
   EngineNodeTarget,
 } from "../api/document.js";
+import { headingDepth } from "../api/engine-node-attributes.js";
 import { requireNodeTarget } from "./document-targets.js";
 
 interface MutableSection {
@@ -23,7 +24,7 @@ export function buildSections(
 
   for (const node of children) {
     if (isHeading(node)) {
-      const depth = headingDepth(node);
+      const depth = headingDepth(node) ?? 0;
       let currentSection = stack.at(-1);
 
       while (currentSection !== undefined && currentSection.depth >= depth) {
@@ -59,10 +60,6 @@ export function buildSections(
 
 function isHeading(node: EngineNode): boolean {
   return node.type === "heading" && node.target !== undefined;
-}
-
-function headingDepth(node: EngineNode): number {
-  return typeof node.attributes?.depth === "number" ? node.attributes.depth : 0;
 }
 
 function sectionForHeading(
