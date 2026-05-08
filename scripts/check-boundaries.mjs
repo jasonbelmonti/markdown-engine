@@ -89,6 +89,10 @@ const dependencySections = [
 const annotationSemanticTerms = [
   { label: "SpecTrace", phrases: [["spec", "trace"]] },
   {
+    label: "markdown-profile",
+    phrases: [["markdown", "profile"]],
+  },
+  {
     label: "markdown-types",
     phrases: [["markdown", "types"]],
   },

@@ -220,6 +220,26 @@ describe("WP-5 boundary dependency audit", () => {
     );
   });
 
+  it("keeps rejecting legacy markdown profile annotation vocabulary during migration", () => {
+    const cases = [
+      { content: "const legacy = markdownProfile;", term: "markdownProfile" },
+      { content: "const legacy = markdown_profile;", term: "markdown_profile" },
+    ];
+
+    for (const { content, term } of cases) {
+      const matches = inspectAnnotationSemanticLeakage([
+        { filePath: "src/api/annotations.ts", content },
+      ]);
+
+      expect(matches).toEqual([
+        expect.objectContaining({
+          label: "markdown-profile",
+          term,
+        }),
+      ]);
+    }
+  });
+
   it("flags each MCP and LLM identifier form independently", () => {
     const cases = [
       {
