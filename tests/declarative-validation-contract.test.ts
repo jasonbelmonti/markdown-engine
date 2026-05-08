@@ -6,7 +6,9 @@ import {
   parseValidationProfile,
   validateWithProfile,
   type DeclarativeAssertion,
+  type DeclarativeIdSource,
   type DeclarativeSelector,
+  type DeclarativeTableCellPredicate,
   type EngineDocument,
   type ValidationProfile,
 } from "@jasonbelmonti/markdown-engine";
@@ -45,6 +47,38 @@ const profile = {
   documentVersion: "1.0.0",
   rules: [],
 } satisfies ValidationProfile;
+const supportedRuleProfile = {
+  syntaxVersion: "markdown-engine.validation@v1",
+  documentVersion: "1.0.0",
+  rules: [
+    {
+      id: "sections.required",
+      severity: "error",
+      select: { target: "document" },
+      assert: {
+        sectionsRequired: {
+          headings: ["Objective", "Context"],
+          order: "strict",
+        },
+      },
+    },
+  ],
+} satisfies ValidationProfile;
+const supportedRuleProfileYaml = `
+syntaxVersion: markdown-engine.validation@v1
+documentVersion: 1.0.0
+rules:
+  - id: sections.required
+    severity: error
+    select:
+      target: document
+    assert:
+      sectionsRequired:
+        headings:
+          - Objective
+          - Context
+        order: strict
+`;
 const duplicateRuleProfile = {
   syntaxVersion: "markdown-engine.validation@v1",
   documentVersion: "1.0.0",
@@ -83,10 +117,13 @@ const unsupportedAssertionProfile = {
     },
   ],
 } as const;
-// @ts-expect-error Section selectors are reserved for a later parser slice.
 const unsupportedSelector = { target: "section" } satisfies DeclarativeSelector;
-// @ts-expect-error ID assertions are reserved for a later parser slice.
 const unsupportedAssertion = { ids: { unique: true } } satisfies DeclarativeAssertion;
+const idSource = { section: "Records", column: "ID" } satisfies DeclarativeIdSource;
+const tableCellPredicate = {
+  column: "Status",
+  equals: "Open",
+} satisfies DeclarativeTableCellPredicate;
 
 describe("declarative validation public contract scaffold", () => {
   it("exports the public profile parser and keeps validation execution scaffolded", () => {
@@ -96,6 +133,31 @@ describe("declarative validation public contract scaffold", () => {
     expect(() => validateWithProfile(document, profile)).toThrow(
       "validateWithProfile is scaffolded",
     );
+  });
+
+  it("materializes a supported non-empty rule from object input", () => {
+    expect(parseValidationProfile(supportedRuleProfile)).toEqual({
+      profile: supportedRuleProfile,
+      diagnostics: [],
+    });
+  });
+
+  it("materializes a supported non-empty rule from YAML input", () => {
+    expect(parseValidationProfile(supportedRuleProfileYaml)).toEqual({
+      profile: supportedRuleProfile,
+      diagnostics: [],
+    });
+  });
+
+  it("returns profile YAML diagnostics for invalid YAML input", () => {
+    expect(parseValidationProfile("syntaxVersion: [")).toEqual({
+      diagnostics: [
+        expect.objectContaining({
+          code: "profile.config.invalidYaml",
+          severity: "error",
+        }),
+      ],
+    });
   });
 
   it("rejects duplicate rule IDs before validation profile compilation", () => {
@@ -169,3 +231,5 @@ void (undefined as unknown as CompiledDeclarativeValidationPlan);
 void (undefined as unknown as DeclarativeValidationCompileResult);
 void unsupportedSelector;
 void unsupportedAssertion;
+void idSource;
+void tableCellPredicate;
