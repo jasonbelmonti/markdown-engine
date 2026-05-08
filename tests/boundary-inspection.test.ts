@@ -46,11 +46,14 @@ describe("WP-5 boundary dependency audit", () => {
       { name: "@ai-sdk/openai", section: "dependencies" },
       { name: "@llm/provider", section: "dependencies" },
       { name: "@markdown-runtime/sdk", section: "dependencies" },
+      { name: "@profile-compiler/core", section: "dependencies" },
       { name: "@type-compiler/core", section: "dependencies" },
       { name: "markdown-runtime", section: "dependencies" },
+      { name: "markdown-profile", section: "dependencies" },
       { name: "markdown-types", section: "dependencies" },
       { name: "mcp-client", section: "dependencies" },
       { name: "llm-provider", section: "dependencies" },
+      { name: "profile-compiler", section: "dependencies" },
       { name: "type-compiler", section: "dependencies" },
       { name: "runtime-lens", section: "dependencies" },
       { name: "network-service", section: "dependencies" },
@@ -65,14 +68,61 @@ describe("WP-5 boundary dependency audit", () => {
         expect.objectContaining({ name: "@ai-sdk/openai" }),
         expect.objectContaining({ name: "@llm/provider" }),
         expect.objectContaining({ name: "@markdown-runtime/sdk" }),
+        expect.objectContaining({ name: "@profile-compiler/core" }),
         expect.objectContaining({ name: "@type-compiler/core" }),
         expect.objectContaining({ name: "markdown-runtime" }),
+        expect.objectContaining({ name: "markdown-profile" }),
         expect.objectContaining({ name: "markdown-types" }),
         expect.objectContaining({ name: "mcp-client" }),
         expect.objectContaining({ name: "llm-provider" }),
+        expect.objectContaining({ name: "profile-compiler" }),
         expect.objectContaining({ name: "type-compiler" }),
         expect.objectContaining({ name: "runtime-lens" }),
         expect.objectContaining({ name: "network-service" }),
+      ]),
+    );
+  });
+
+  it("keeps rejecting legacy markdown profile dependency names during migration", () => {
+    const matches = inspectDependencies([
+      { name: "markdown-profile", section: "dependencies" },
+      { name: "@profile-compiler/core", section: "dependencies" },
+      {
+        name: "legacy-profile",
+        section: "dependencies",
+        spec: "npm:markdown-profile@1.0.0",
+      },
+      {
+        name: "legacy-profile-compiler",
+        section: "dependencies",
+        spec: "npm:@profile-compiler/core@1.0.0",
+      },
+    ]);
+
+    expect(matches).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: "markdown-profile",
+          name: "markdown-profile",
+          targetKind: "name",
+        }),
+        expect.objectContaining({
+          label: "profile compiler",
+          name: "@profile-compiler/core",
+          targetKind: "name",
+        }),
+        expect.objectContaining({
+          label: "markdown-profile",
+          name: "legacy-profile",
+          target: "markdown-profile",
+          targetKind: "npm alias target",
+        }),
+        expect.objectContaining({
+          label: "profile compiler",
+          name: "legacy-profile-compiler",
+          target: "@profile-compiler/core",
+          targetKind: "npm alias target",
+        }),
       ]),
     );
   });

@@ -6,6 +6,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const defaultRepoRoot = join(scriptDir, "..");
 const forbiddenDependencyNames = new Set([
+  "markdown-profile",
   "markdown-types",
   "markdown-runtime",
   "markdown-mcp",
@@ -47,6 +48,10 @@ const forbiddenDependencyPatterns = [
   },
   { label: "LLM", pattern: /(?:^|[@/_-])llm(?:$|[\/_-])/ },
   {
+    label: "markdown-profile",
+    pattern: /(?:^|[@/_-])markdown[-_]profile(?:$|[\/_-])/,
+  },
+  {
     label: "markdown-types",
     pattern: /(?:^|[@/_-])markdown[-_]types(?:$|[\/_-])/,
   },
@@ -57,6 +62,10 @@ const forbiddenDependencyPatterns = [
   {
     label: "markdown-mcp",
     pattern: /(?:^|[@/_-])markdown[-_]mcp(?:$|[\/_-])/,
+  },
+  {
+    label: "profile compiler",
+    pattern: /(?:^|[@/_-])profile[-_]compiler(?:$|[\/_-])/,
   },
   {
     label: "type compiler",
