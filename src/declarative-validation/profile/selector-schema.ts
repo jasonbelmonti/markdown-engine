@@ -1,11 +1,11 @@
 import type { MarkdownDiagnostic } from "../../api/diagnostics.js";
 import { isPlainRecord } from "../../internal/plain-record.js";
+import { profileDiagnostic } from "../diagnostics/profile-config-diagnostics.js";
 import type {
   DeclarativeSelector,
   DeclarativeTableCellPredicate,
 } from "./index.js";
 import {
-  diagnostic,
   invalidShape,
   nonEmptyString,
   optionalString,
@@ -24,12 +24,14 @@ export function selectorFromValue(
   }
 
   if (value.target === undefined) {
+    unsupportedKeys(value, ["target"], diagnostics);
     diagnostics.push(invalidShape("Rule select.target must be provided."));
 
     return undefined;
   }
 
   if (typeof value.target !== "string") {
+    unsupportedKeys(value, ["target"], diagnostics);
     diagnostics.push(invalidShape("Rule select.target must be a string."));
 
     return undefined;
@@ -137,8 +139,9 @@ export function selectorFromValue(
       };
 
     default:
+      unsupportedKeys(value, ["target"], diagnostics);
       diagnostics.push(
-        diagnostic(
+        profileDiagnostic(
           "profile.compile.unsupportedSelector",
           `Unsupported selector target "${String(value.target)}".`,
         ),
