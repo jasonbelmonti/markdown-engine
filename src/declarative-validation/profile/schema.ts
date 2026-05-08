@@ -100,11 +100,21 @@ function rulesFromValue(
   }
 
   const rules: DeclarativeValidationRule[] = [];
+  const seenRuleIds = new Set<string>();
 
   for (const [index, item] of value.entries()) {
     const rule = ruleFromValue(item, index, diagnostics);
 
     if (rule !== undefined) {
+      if (seenRuleIds.has(rule.id)) {
+        diagnostics.push(
+          invalidShape(
+            `Profile rule at index ${index} duplicates rule id "${rule.id}".`,
+          ),
+        );
+      }
+
+      seenRuleIds.add(rule.id);
       rules.push(rule);
     }
   }

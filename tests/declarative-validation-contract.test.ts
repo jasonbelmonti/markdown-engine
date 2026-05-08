@@ -43,6 +43,22 @@ const profile = {
   documentVersion: "1.0.0",
   rules: [],
 } satisfies ValidationProfile;
+const duplicateRuleProfile = {
+  syntaxVersion: "markdown-engine.validation@v1",
+  documentVersion: "1.0.0",
+  rules: [
+    {
+      id: "sections.required",
+      select: { target: "document" },
+      assert: { sectionsRequired: { headings: ["Objective"] } },
+    },
+    {
+      id: "sections.required",
+      select: { target: "document" },
+      assert: { sectionsRequired: { headings: ["Context"] } },
+    },
+  ],
+} satisfies ValidationProfile;
 
 describe("declarative validation public contract scaffold", () => {
   it("exports the public profile parser and keeps validation execution scaffolded", () => {
@@ -52,6 +68,19 @@ describe("declarative validation public contract scaffold", () => {
     expect(() => validateWithProfile(document, profile)).toThrow(
       "validateWithProfile is scaffolded",
     );
+  });
+
+  it("rejects duplicate rule IDs before validation profile compilation", () => {
+    expect(parseValidationProfile(duplicateRuleProfile)).toEqual({
+      diagnostics: [
+        {
+          code: "profile.config.invalidShape",
+          message:
+            'Profile rule at index 1 duplicates rule id "sections.required".',
+          severity: "error",
+        },
+      ],
+    });
   });
 
   it("keeps compiled plans and raw parser internals out of the public API barrel", () => {
