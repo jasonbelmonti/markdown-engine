@@ -82,7 +82,13 @@ export function selectorFromValue(
         diagnostics,
       );
 
+      const selector = {
+        ...optionalString(value, "section", diagnostics),
+        ...optionalStringArray(value, "tableHeader", diagnostics),
+        ...optionalCellPredicate(value, "rowWhere", diagnostics),
+      };
       const column = nonEmptyString(value.column);
+
       if (column === undefined) {
         diagnostics.push(
           invalidShape("Selector column must be a non-empty string."),
@@ -94,9 +100,7 @@ export function selectorFromValue(
       return {
         target: "tableCell",
         column,
-        ...optionalString(value, "section", diagnostics),
-        ...optionalStringArray(value, "tableHeader", diagnostics),
-        ...optionalCellPredicate(value, "rowWhere", diagnostics),
+        ...selector,
       };
     }
 

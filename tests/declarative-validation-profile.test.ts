@@ -754,6 +754,63 @@ rules:
       ],
     },
     {
+      name: "unsafe tableCell rowWhere key with missing selector column",
+      input: {
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "unsafe-table-cell-row-where",
+            select: {
+              target: "tableCell",
+              rowWhere: {
+                script: "return true",
+              },
+            },
+            assert: { text: { contains: "Open" } },
+          },
+        ],
+      },
+      diagnostics: [
+        {
+          code: "profile.config.unsupportedKey",
+          message: 'Unsupported validation profile key "script".',
+        },
+        {
+          code: "profile.config.invalidShape",
+          message: "Selector column must be a non-empty string.",
+        },
+      ],
+    },
+    {
+      name: "regex-like tableCell rowWhere key with missing selector column",
+      input: {
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "regex-table-cell-row-where",
+            select: {
+              target: "tableCell",
+              rowWhere: {
+                column: "Status",
+                regex: ".*",
+              },
+            },
+            assert: { text: { contains: "Open" } },
+          },
+        ],
+      },
+      diagnostics: [
+        {
+          code: "profile.config.unsupportedKey",
+          message: 'Unsupported validation profile key "regex".',
+        },
+        {
+          code: "profile.config.invalidShape",
+          message: "Selector column must be a non-empty string.",
+        },
+      ],
+    },
+    {
       name: "regex-like first-level assertion key",
       input: {
         syntaxVersion: "markdown-engine.validation@v1",
