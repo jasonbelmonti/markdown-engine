@@ -196,6 +196,47 @@ rules:
     expect(result.diagnostics).toEqual([]);
   });
 
+  it("rejects table selector predicates without a comparison", () => {
+    const result = parseValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      rules: [
+        {
+          id: "missing-row-predicate-comparison",
+          select: {
+            target: "tableRow",
+            where: { column: "Status" },
+          },
+          assert: { text: { contains: "Open" } },
+        },
+        {
+          id: "missing-cell-predicate-comparison",
+          select: {
+            target: "tableCell",
+            column: "Summary",
+            rowWhere: { column: "Status" },
+          },
+          assert: { text: { contains: "Open" } },
+        },
+      ],
+    });
+
+    expect(result.profile).toBeUndefined();
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "profile.config.invalidShape",
+          message:
+            "Selector where must include at least one of equals or includes.",
+        }),
+        expect.objectContaining({
+          code: "profile.config.invalidShape",
+          message:
+            "Selector rowWhere must include at least one of equals or includes.",
+        }),
+      ]),
+    );
+  });
+
   it("rejects unsupported profile and nested rule keys", () => {
     const result = parseValidationProfile({
       syntaxVersion: "markdown-engine.validation@v1",

@@ -186,10 +186,24 @@ function cellPredicateFromValue(
     return undefined;
   }
 
-  return {
-    column,
+  const predicate = {
     ...optionalString(value, "equals", diagnostics),
     ...optionalString(value, "includes", diagnostics),
+  };
+
+  if (predicate.equals === undefined && predicate.includes === undefined) {
+    diagnostics.push(
+      invalidShape(
+        `Selector ${key} must include at least one of equals or includes.`,
+      ),
+    );
+
+    return undefined;
+  }
+
+  return {
+    column,
+    ...predicate,
   };
 }
 
