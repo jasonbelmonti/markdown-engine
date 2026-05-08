@@ -115,13 +115,24 @@ const tableCellPredicate = {
 } satisfies DeclarativeTableCellPredicate;
 
 describe("declarative validation public contract scaffold", () => {
-  it("exports the public profile parser and keeps validation execution scaffolded", () => {
+  it("exports the public profile parser and validation execution entry point", () => {
     expect(parseValidationProfile).toEqual(expect.any(Function));
     expect(validateWithProfile).toEqual(expect.any(Function));
     expect(parseValidationProfile(profile)).toEqual({ profile, diagnostics: [] });
-    expect(() => validateWithProfile(document, profile)).toThrow(
-      "validateWithProfile is scaffolded",
-    );
+    expect(validateWithProfile(document, supportedRuleProfile)).toMatchObject({
+      profile: {
+        syntaxVersion: "markdown-engine.validation@v1",
+        documentVersion: "1.0.0",
+        ruleCount: 1,
+      },
+      ruleResults: [
+        {
+          ruleId: "sections.required",
+          passed: false,
+        },
+      ],
+      valid: false,
+    });
   });
 
   it("materializes a supported non-empty rule from object input", () => {

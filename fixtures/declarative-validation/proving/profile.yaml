@@ -1,0 +1,17 @@
+syntaxVersion: markdown-engine.validation@v1
+documentVersion: 1.0.0
+rules:
+  - id: objective.contains
+    select:
+      target: section
+      title: Objective
+    assert:
+      text:
+        contains: architecture viable
+  - id: verification.diagnostic
+    select:
+      target: section
+      title: Verification
+    assert:
+      text:
+        contains: unresolved selector gap

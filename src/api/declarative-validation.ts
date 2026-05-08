@@ -1,4 +1,9 @@
 import type { EngineDocument } from "./document.js";
+import type { ValidationRuleResult } from "./validate.js";
+import { cloneDiagnostics, hasErrorDiagnostic } from "../diagnostics/index.js";
+import { evaluateCompiledDeclarativeRule } from "../declarative-validation/assertions/index.js";
+import { compileValidationProfile } from "../declarative-validation/compiler/index.js";
+import { createDeclarativeValidationEvidence } from "../declarative-validation/evidence/index.js";
 import { parseValidationProfileInput } from "../declarative-validation/profile/index.js";
 import type {
   DeclarativeProfileParseOptions,
@@ -10,6 +15,7 @@ import type {
   DeclarativeValidationOptions,
   DeclarativeValidationResult,
 } from "../declarative-validation/results/index.js";
+import { resolveDeclarativeSelector } from "../declarative-validation/selectors/index.js";
 
 export type {
   DeclarativeAssertion,
@@ -53,18 +59,52 @@ export function parseValidationProfile(
 }
 
 export function validateWithProfile(
-  _document: EngineDocument,
-  _profile: ValidationProfile,
-  _options: DeclarativeValidationOptions = {},
+  document: EngineDocument,
+  profile: ValidationProfile,
+  options: DeclarativeValidationOptions = {},
 ): DeclarativeValidationResult {
-  throw declarativeValidationNotImplemented("validateWithProfile");
+  const compileResult = compileValidationProfile(profile);
+  const ruleResults =
+    compileResult.plan?.rules.map((rule) =>
+      evaluateCompiledDeclarativeRule(
+        rule,
+        resolveDeclarativeSelector(document, rule.selector),
+      ),
+    ) ?? [];
+  const diagnostics = [
+    ...compileResult.diagnostics,
+    ...ruleResults.flatMap((result) => result.diagnostics),
+  ];
+  const result = {
+    valid: !hasErrorDiagnostic(diagnostics),
+    diagnostics: cloneDiagnostics(diagnostics),
+    ruleResults: cloneRuleResults(ruleResults),
+    profile: {
+      syntaxVersion: profile.syntaxVersion,
+      documentVersion: profile.documentVersion ?? document.version,
+      ruleCount: profile.rules.length,
+    },
+  };
+
+  return options.includeEvidence === true
+    ? {
+        ...result,
+        evidence: createDeclarativeValidationEvidence(
+          document,
+          profile,
+          ruleResults,
+          diagnostics,
+        ),
+      }
+    : result;
 }
 
-function declarativeValidationNotImplemented(apiName: string): Error {
-  const error = new Error(
-    `${apiName} is scaffolded for the declarative validation implementation lane but is not implemented in BEL-973 / WP-1A.`,
-  );
-  error.name = "DeclarativeValidationNotImplementedError";
-
-  return error;
+function cloneRuleResults(
+  ruleResults: readonly ValidationRuleResult[],
+): ValidationRuleResult[] {
+  return ruleResults.map((result) => ({
+    ruleId: result.ruleId,
+    passed: result.passed,
+    diagnostics: cloneDiagnostics(result.diagnostics),
+  }));
 }
