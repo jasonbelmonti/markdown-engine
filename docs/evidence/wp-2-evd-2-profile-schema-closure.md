@@ -61,7 +61,7 @@ downstream runtime modules.
 
 Commands run from `.worktrees/bel-977-declarative-validation-wp-2-profile-schema-closure`:
 
-- `npm run test:validation:profile`: pass, 1 file and 29 tests.
+- `npm run test:validation:profile`: pass, 1 file and 31 tests.
 - `npm run test:validation:contract`: pass, 1 file and 10 tests.
 - `npm run test:validation:compiler`: pass, 1 file and 3 tests.
 - `npm run typecheck`: pass.
