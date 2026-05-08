@@ -1,8 +1,9 @@
 import type { EngineDocument, EngineNode } from "../api/document.js";
+import { codeLanguage, isFencedCodeBlock } from "../api/engine-node-attributes.js";
 import type { MarkdownDiagnostic } from "../api/diagnostics.js";
 import type { ValidationRuleResult } from "../api/validate.js";
 import { makeDiagnostic } from "../diagnostics/index.js";
-import { findNodes, stringAttribute } from "./document-query.js";
+import { findNodes } from "./document-query.js";
 import type { CodeFenceLanguagesRuleConfig } from "./code-fence-languages-config.js";
 
 export function evaluateCodeFenceLanguagesRule(
@@ -10,7 +11,7 @@ export function evaluateCodeFenceLanguagesRule(
   config: CodeFenceLanguagesRuleConfig,
 ): ValidationRuleResult {
   const allowed = new Set(config.allowed);
-  const diagnostics = findNodes(document, isFencedCodeNode)
+  const diagnostics = findNodes(document, isFencedCodeBlock)
     .map((node) => evaluateCodeNode(node, allowed, config))
     .filter((diagnostic): diagnostic is MarkdownDiagnostic => {
       return diagnostic !== undefined;
@@ -23,16 +24,12 @@ export function evaluateCodeFenceLanguagesRule(
   };
 }
 
-function isFencedCodeNode(node: EngineNode): boolean {
-  return node.type === "code" && node.attributes?.kind === "fenced";
-}
-
 function evaluateCodeNode(
   node: EngineNode,
   allowed: ReadonlySet<string>,
   config: CodeFenceLanguagesRuleConfig,
 ): MarkdownDiagnostic | undefined {
-  const language = stringAttribute(node, "lang");
+  const language = codeLanguage(node);
 
   if (language === undefined) {
     if (!config.requireLanguage) {

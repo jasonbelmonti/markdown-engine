@@ -24,12 +24,3 @@ export function flattenNodes(nodes: readonly EngineNode[]): EngineNode[] {
 
   return flattened;
 }
-
-export function stringAttribute(
-  node: EngineNode,
-  attribute: string,
-): string | undefined {
-  const value = node.attributes?.[attribute];
-
-  return typeof value === "string" ? value : undefined;
-}

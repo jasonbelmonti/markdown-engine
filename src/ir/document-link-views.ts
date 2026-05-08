@@ -1,24 +1,23 @@
 import type { EngineLink, EngineNode } from "../api/document.js";
+import { linkTitle, linkUrl } from "../api/engine-node-attributes.js";
 import { flatMapNodes } from "./document-node-walk.js";
 
 export function collectLinks(nodes: readonly EngineNode[]): readonly EngineLink[] {
   return flatMapNodes(nodes, (node) => {
-    if (
-      node.type !== "link" ||
-      node.target === undefined ||
-      typeof node.attributes?.url !== "string"
-    ) {
+    const url = linkUrl(node);
+
+    if (node.type !== "link" || node.target === undefined || url === undefined) {
       return [];
     }
+
+    const title = linkTitle(node);
 
     return [
       {
         target: node.target,
-        url: node.attributes.url,
+        url,
         text: node.text ?? "",
-        ...(typeof node.attributes.title === "string"
-          ? { title: node.attributes.title }
-          : {}),
+        ...(title !== undefined ? { title } : {}),
         ...(node.sourceRange !== undefined
           ? { sourceRange: node.sourceRange }
           : {}),

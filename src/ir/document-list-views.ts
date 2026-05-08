@@ -3,6 +3,11 @@ import type {
   EngineListItem,
   EngineNode,
 } from "../api/document.js";
+import {
+  listItemChecked,
+  listOrdered,
+  listStart,
+} from "../api/engine-node-attributes.js";
 import { requireNodeTarget } from "./document-targets.js";
 
 export function collectLists(nodes: readonly EngineNode[]): readonly EngineList[] {
@@ -21,13 +26,13 @@ function collectListsAtDepth(
       return nestedLists;
     }
 
+    const start = listStart(node);
+
     return [
       {
         target: node.target,
-        ordered: node.attributes?.ordered === true,
-        ...(typeof node.attributes?.start === "number"
-          ? { start: node.attributes.start }
-          : {}),
+        ordered: listOrdered(node) === true,
+        ...(start !== undefined ? { start } : {}),
         items: listItems(node, depth),
       },
       ...nestedLists,
@@ -38,13 +43,15 @@ function collectListsAtDepth(
 function listItems(list: EngineNode, depth: number): readonly EngineListItem[] {
   return (list.children ?? [])
     .filter((node) => node.type === "listItem" && node.target !== undefined)
-    .map((item, itemIndex) => ({
-      target: requireNodeTarget(item),
-      itemIndex,
-      depth,
-      ...(typeof item.attributes?.checked === "boolean"
-        ? { checked: item.attributes.checked }
-        : {}),
-      ...(item.sourceRange !== undefined ? { sourceRange: item.sourceRange } : {}),
-    }));
+    .map((item, itemIndex) => {
+      const checked = listItemChecked(item);
+
+      return {
+        target: requireNodeTarget(item),
+        itemIndex,
+        depth,
+        ...(checked !== undefined ? { checked } : {}),
+        ...(item.sourceRange !== undefined ? { sourceRange: item.sourceRange } : {}),
+      };
+    });
 }

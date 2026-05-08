@@ -1,8 +1,9 @@
 import type { EngineDocument, EngineNode } from "../api/document.js";
+import { linkUrl } from "../api/engine-node-attributes.js";
 import type { MarkdownDiagnostic } from "../api/diagnostics.js";
 import type { ValidationRuleResult } from "../api/validate.js";
 import { makeDiagnostic } from "../diagnostics/index.js";
-import { findNodes, stringAttribute } from "./document-query.js";
+import { findNodes } from "./document-query.js";
 import type { LinksAllowedSchemesRuleConfig } from "./links-allowed-schemes-config.js";
 
 const SCHEME_PATTERN = /^([A-Za-z][A-Za-z0-9+.-]*):/;
@@ -31,7 +32,7 @@ function evaluateLinkNode(
   allowedSchemes: ReadonlySet<string>,
   config: LinksAllowedSchemesRuleConfig,
 ): MarkdownDiagnostic | undefined {
-  const url = stringAttribute(node, "url");
+  const url = linkUrl(node);
   const scheme = url?.match(SCHEME_PATTERN)?.[1]?.toLowerCase();
 
   if (url === undefined || scheme === undefined || allowedSchemes.has(scheme)) {
