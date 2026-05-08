@@ -1,6 +1,7 @@
 import { documentQueries } from "../../api/document-queries.js";
 import type {
   EngineDocument,
+  EngineNode,
   EngineSection,
   EngineSourceSlice,
 } from "../../api/document.js";
@@ -78,12 +79,30 @@ function documentText(document: EngineDocument): string {
 }
 
 function sectionText(document: EngineDocument, section: EngineSection): string {
+  const nodesByTargetId = new Map(
+    documentQueries
+      .nodes(document)
+      .flatMap((node) =>
+        node.target === undefined ? [] : [[node.target.id, node] as const],
+      ),
+  );
+
   return [
     section.title,
     ...section.bodyTargets
-      .map((target) => documentQueries.sourceSlice(document, target)?.text)
-      .filter((text): text is string => text !== undefined),
+      .map((target) => nodesByTargetId.get(target.id))
+      .filter((node): node is EngineNode => node !== undefined)
+      .map((node) => normalizedNodeText(node))
+      .filter((text) => text.length > 0),
   ].join("\n");
+}
+
+function normalizedNodeText(node: EngineNode): string {
+  if (node.text !== undefined) {
+    return node.text;
+  }
+
+  return (node.children ?? []).map((child) => normalizedNodeText(child)).join("");
 }
 
 function sectionSource(

@@ -44,6 +44,38 @@ describe("declarative validation assertion proof", () => {
       },
     ]);
   });
+
+  it("evaluates section text assertions against normalized markdown text", () => {
+    const document = normalize(
+      parse("# Objective\n\nProve the **architecture** viable.\n").parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "objective.contains",
+          select: { target: "section", title: "Objective" },
+          assert: { text: { contains: "architecture viable" } },
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [
+        {
+          ruleId: "objective.contains",
+          passed: true,
+          diagnostics: [],
+        },
+      ],
+    });
+  });
 });
 
 const profile = {

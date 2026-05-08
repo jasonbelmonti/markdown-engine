@@ -1,4 +1,5 @@
 import type { EngineDocument } from "./document.js";
+import type { MarkdownDiagnostic } from "./diagnostics.js";
 import type { ValidationRuleResult } from "./validate.js";
 import { cloneDiagnostics, hasErrorDiagnostic } from "../diagnostics/index.js";
 import { evaluateCompiledDeclarativeRule } from "../declarative-validation/assertions/index.js";
@@ -63,6 +64,16 @@ export function validateWithProfile(
   profile: ValidationProfile,
   options: DeclarativeValidationOptions = {},
 ): DeclarativeValidationResult {
+  const profileDocumentVersion = profile.documentVersion ?? document.version;
+  const versionDiagnostics =
+    profileDocumentVersion === document.version
+      ? []
+      : [documentVersionMismatchDiagnostic(profileDocumentVersion, document.version)];
+
+  if (versionDiagnostics.length > 0) {
+    return validationResult(document, profile, [], versionDiagnostics, options);
+  }
+
   const compileResult = compileValidationProfile(profile);
   const ruleResults =
     compileResult.plan?.rules.map((rule) =>
@@ -75,7 +86,17 @@ export function validateWithProfile(
     ...compileResult.diagnostics,
     ...ruleResults.flatMap((result) => result.diagnostics),
   ];
-  const result = {
+  return validationResult(document, profile, ruleResults, diagnostics, options);
+}
+
+function validationResult(
+  document: EngineDocument,
+  profile: ValidationProfile,
+  ruleResults: readonly ValidationRuleResult[],
+  diagnostics: readonly MarkdownDiagnostic[],
+  options: DeclarativeValidationOptions,
+): DeclarativeValidationResult {
+  const result: DeclarativeValidationResult = {
     valid: !hasErrorDiagnostic(diagnostics),
     diagnostics: cloneDiagnostics(diagnostics),
     ruleResults: cloneRuleResults(ruleResults),
@@ -97,6 +118,17 @@ export function validateWithProfile(
         ),
       }
     : result;
+}
+
+function documentVersionMismatchDiagnostic(
+  profileDocumentVersion: EngineDocument["version"],
+  documentVersion: EngineDocument["version"],
+): MarkdownDiagnostic {
+  return {
+    code: "profile.config.documentVersionMismatch",
+    message: `Profile documentVersion "${profileDocumentVersion}" does not match document version "${documentVersion}".`,
+    severity: "error" as const,
+  };
 }
 
 function cloneRuleResults(

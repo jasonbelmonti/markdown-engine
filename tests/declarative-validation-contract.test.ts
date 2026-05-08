@@ -135,6 +135,38 @@ describe("declarative validation public contract scaffold", () => {
     });
   });
 
+  it("rejects profile documentVersion mismatches before rule evaluation", () => {
+    expect(
+      validateWithProfile(document, {
+        syntaxVersion: "markdown-engine.validation@v1",
+        documentVersion: "0.0.0",
+        rules: [
+          {
+            id: "version.mismatch",
+            select: { target: "document" },
+            assert: { text: { contains: "markdown" } },
+          },
+        ],
+      }),
+    ).toEqual({
+      valid: false,
+      diagnostics: [
+        {
+          code: "profile.config.documentVersionMismatch",
+          message:
+            'Profile documentVersion "0.0.0" does not match document version "1.0.0".',
+          severity: "error",
+        },
+      ],
+      ruleResults: [],
+      profile: {
+        syntaxVersion: "markdown-engine.validation@v1",
+        documentVersion: "0.0.0",
+        ruleCount: 1,
+      },
+    });
+  });
+
   it("materializes a supported non-empty rule from object input", () => {
     expect(parseValidationProfile(supportedRuleProfile)).toEqual({
       profile: supportedRuleProfile,
