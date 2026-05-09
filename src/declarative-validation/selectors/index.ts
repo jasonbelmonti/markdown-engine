@@ -9,6 +9,7 @@ import type {
   EngineTableCell,
   EngineTextSpan,
 } from "../../api/document.js";
+import { hasOwnProperty, isPlainRecord } from "../../internal/plain-record.js";
 import type { DeclarativeSelector } from "../profile/index.js";
 import {
   nodeTextByTargetId,
@@ -294,7 +295,10 @@ function frontmatterTargets(
     ];
   }
 
-  if (!isRecord(document.frontmatter) || !(selector.field in document.frontmatter)) {
+  if (
+    !isPlainRecord(document.frontmatter) ||
+    !hasOwnProperty(document.frontmatter, selector.field)
+  ) {
     return [];
   }
 
@@ -312,8 +316,4 @@ function frontmatterTargets(
 
 function valueText(value: unknown): string {
   return typeof value === "string" ? value : JSON.stringify(value);
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === "object" && !Array.isArray(value);
 }

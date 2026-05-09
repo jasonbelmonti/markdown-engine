@@ -66,6 +66,22 @@ function sectionContainsTarget(
 
   return section.bodyTargets.some((target) =>
     nodeContainsTarget(nodeByTargetId(document, target.id), targetId),
+  ) || section.childSections.some((target) =>
+    sectionContainsTargetId(document, target.id, targetId),
+  );
+}
+
+function sectionContainsTargetId(
+  document: EngineDocument,
+  sectionTargetId: string,
+  targetId: string,
+): boolean {
+  const section = documentQueries.sections(document, {
+    targetId: sectionTargetId,
+  })[0];
+
+  return (
+    section !== undefined && sectionContainsTarget(document, section, targetId)
   );
 }
 

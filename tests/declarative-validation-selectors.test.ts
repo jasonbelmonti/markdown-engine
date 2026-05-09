@@ -83,6 +83,19 @@ describe("declarative validation selector proof", () => {
 
     expect(
       resolveDeclarativeSelector(document, {
+        target: "table",
+        section: "Phase Alpha",
+        header: ["Step", "State"],
+      }).targets,
+    ).toEqual([
+      expect.objectContaining({
+        kind: "table",
+        text: expect.stringContaining("Build\tengine\tblocked"),
+      }),
+    ]);
+
+    expect(
+      resolveDeclarativeSelector(document, {
         target: "tableRow",
         tableHeader: ["Step", "Owner", "State"],
         where: { column: "State", equals: "blocked" },
@@ -182,6 +195,12 @@ describe("declarative validation selector proof", () => {
       resolveDeclarativeSelector(document, {
         target: "frontmatter",
         field: "missing",
+      }).targets,
+    ).toEqual([]);
+    expect(
+      resolveDeclarativeSelector(document, {
+        target: "frontmatter",
+        field: "toString",
       }).targets,
     ).toEqual([]);
     expect(
