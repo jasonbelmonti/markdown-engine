@@ -33,6 +33,43 @@ export type CompiledDeclarativeAssertion =
       order: "none" | "strict";
     }
   | {
-      kind: "textContains";
+      kind: "sectionOrder";
+      headings: readonly string[];
+    }
+  | {
+      kind: "tableColumnsRequired";
+      columns: readonly string[];
+    }
+  | {
+      kind: "ids";
+      unique: true;
+      caseSensitive: boolean;
+      column?: string;
+      prefix?: string;
+    }
+  | {
+      kind: "references";
+      idsFrom: {
+        section?: string;
+        column?: string;
+        prefix?: string;
+      };
+      mustAppearIn: readonly string[];
+    }
+  | {
+      kind: "text";
+      column?: string;
+      contains?: string;
+      containsExactlyOne?: string;
+      excludes?: readonly string[];
+    }
+  | {
+      kind: "textOccurrenceCount";
       text: string;
+      count: number;
+      column?: string;
+    }
+  | {
+      kind: "frontmatterRequired";
+      fields: readonly string[];
     };

@@ -4,8 +4,8 @@ import type { ValidationProfile } from "@jasonbelmonti/markdown-engine";
 import { compileValidationProfile } from "../src/declarative-validation/compiler/index.js";
 
 describe("declarative validation compiler proof", () => {
-  it("compiles a minimal supported profile into private data-only rule records", () => {
-    const result = compileValidationProfile(minimalProfile);
+  it("compiles supported profiles into private data-only rule records", () => {
+    const result = compileValidationProfile(supportedProfile);
 
     expect(result.diagnostics).toEqual([]);
     expect(result.plan).toMatchObject({
@@ -14,37 +14,68 @@ describe("declarative validation compiler proof", () => {
           ruleId: "objective.contains",
           severity: "error",
           selector: { target: "section", title: "Objective" },
-          assertions: [{ kind: "textContains", text: "architecture viable" }],
+          assertions: [{ kind: "text", contains: "architecture viable" }],
+        },
+        {
+          ruleId: "document.required-sections",
+          selector: { target: "document" },
+          assertions: [
+            {
+              kind: "sectionsRequired",
+              headings: ["Objective", "Verification"],
+              order: "strict",
+            },
+            {
+              kind: "sectionOrder",
+              headings: ["Objective", "Verification"],
+            },
+          ],
+        },
+        {
+          ruleId: "table.columns",
+          selector: { target: "table", header: ["Step", "State"] },
+          assertions: [{ kind: "tableColumnsRequired", columns: ["Owner"] }],
+        },
+        {
+          ruleId: "table.ids",
+          selector: { target: "tableRow", tableHeader: ["ID"], where: { column: "State", equals: "ready" } },
+          assertions: [
+            {
+              kind: "ids",
+              unique: true,
+              caseSensitive: false,
+              column: "ID",
+              prefix: "REQ",
+            },
+          ],
+        },
+        {
+          ruleId: "references.required",
+          selector: { target: "document" },
+          assertions: [
+            {
+              kind: "references",
+              idsFrom: { section: "Requirements", column: "ID", prefix: "REQ" },
+              mustAppearIn: ["Verification"],
+            },
+          ],
+        },
+        {
+          ruleId: "occurrences",
+          selector: { target: "textSpan", nodeType: "paragraph" },
+          assertions: [{ kind: "textOccurrenceCount", text: "MUST", count: 1 }],
+        },
+        {
+          ruleId: "frontmatter.required",
+          selector: { target: "frontmatter" },
+          assertions: [{ kind: "frontmatterRequired", fields: ["title", "owner"] }],
         },
       ],
     });
     expect(containsFunction(result.plan)).toBe(false);
   });
 
-  it("rejects declarations outside the WP-1B proof path before execution", () => {
-    const result = compileValidationProfile({
-      syntaxVersion: "markdown-engine.validation@v1",
-      rules: [
-        {
-          id: "ids.unique",
-          select: { target: "document" },
-          assert: { ids: { unique: true } },
-        },
-      ],
-    });
-
-    expect(result.plan).toBeUndefined();
-    expect(result.diagnostics).toEqual([
-      {
-        code: "profile.compile.unsupportedAssertion",
-        ruleId: "ids.unique",
-        message: 'Assertion "ids" is not implemented in the WP-1B proof path.',
-        severity: "error",
-      },
-    ]);
-  });
-
-  it("rejects incompatible selector and assertion pairs", () => {
+  it("rejects incompatible selector and assertion pairs before execution", () => {
     const result = compileValidationProfile({
       syntaxVersion: "markdown-engine.validation@v1",
       rules: [
@@ -61,15 +92,395 @@ describe("declarative validation compiler proof", () => {
       {
         code: "profile.compile.incompatibleSelectorAssertion",
         ruleId: "section.requires.sections",
+        message: 'Assertion "sectionsRequired" is compatible only with document selectors.',
+        severity: "error",
+      },
+    ]);
+  });
+
+  it("rejects column-scoped assertions outside table selector targets", () => {
+    const result = compileValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      rules: [
+        {
+          id: "section.column-text",
+          select: { target: "section", title: "Objective" },
+          assert: { text: { column: "State", contains: "ready" } },
+        },
+      ],
+    });
+
+    expect(result.plan).toBeUndefined();
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.compile.incompatibleSelectorAssertion",
+        ruleId: "section.column-text",
         message:
-          'Assertion "sectionsRequired" is only compatible with the document selector in the WP-1B proof path.',
+          'Assertion "text" with a column option is compatible only with table or tableRow selectors.',
+        severity: "error",
+      },
+    ]);
+  });
+
+  it("rejects typed text assertions with no predicate before execution", () => {
+    const result = compileValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      rules: [
+        {
+          id: "text.empty",
+          select: { target: "section", title: "Objective" },
+          assert: { text: {} },
+        },
+      ],
+    });
+
+    expect(result.plan).toBeUndefined();
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.config.invalidShape",
+        ruleId: "text.empty",
+        message:
+          "text must include contains, containsExactlyOne, or a non-empty excludes array.",
+        severity: "error",
+      },
+    ]);
+  });
+
+  it("rejects ids assertions without explicit unique true before execution", () => {
+    const invalidIdAssertions = [
+      { ids: {}, select: { target: "document" } },
+      { ids: { unique: false }, select: { target: "document" } },
+      { ids: { column: "ID" }, select: { target: "tableRow" } },
+    ] satisfies {
+      ids: ValidationProfile["rules"][number]["assert"]["ids"];
+      select: ValidationProfile["rules"][number]["select"];
+    }[];
+
+    for (const { ids, select } of invalidIdAssertions) {
+      const result = compileValidationProfile({
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "ids.invalid",
+            select,
+            assert: { ids },
+          },
+        ],
+      });
+
+      expect(result.plan).toBeUndefined();
+      expect(result.diagnostics).toEqual([
+        {
+          code: "profile.config.invalidShape",
+          ruleId: "ids.invalid",
+          message: "ids.unique must be true.",
+          severity: "error",
+        },
+      ]);
+    }
+  });
+
+  it("rejects direct typed assertions with parser-invalid empty string fields before execution", () => {
+    const invalidStringAssertions = [
+      {
+        assert: { text: { contains: "" } },
+        message: "contains must be a non-empty string when provided.",
+        select: { target: "section", title: "Objective" },
+      },
+      {
+        assert: { text: { column: "", contains: "ready" } },
+        message: "column must be a non-empty string when provided.",
+        select: { target: "table" },
+      },
+      {
+        assert: { ids: { unique: true, column: "" } },
+        message: "column must be a non-empty string when provided.",
+        select: { target: "tableRow" },
+      },
+    ] satisfies {
+      assert: ValidationProfile["rules"][number]["assert"];
+      message: string;
+      select: ValidationProfile["rules"][number]["select"];
+    }[];
+
+    for (const { assert, message, select } of invalidStringAssertions) {
+      const result = compileValidationProfile({
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "assertion.empty-string",
+            select,
+            assert,
+          },
+        ],
+      });
+
+      expect(result.plan).toBeUndefined();
+      expect(result.diagnostics).toEqual([
+        {
+          code: "profile.config.invalidShape",
+          ruleId: "assertion.empty-string",
+          message,
+          severity: "error",
+        },
+      ]);
+    }
+  });
+
+  it("rejects direct typed assertions with unsupported keys before execution", () => {
+    const invalidUnsupportedKeyAssertions = [
+      {
+        assert: {
+          text: { contains: "Mission", callback: "isMissionReady" },
+        },
+        message: 'Unsupported validation profile key "callback".',
+        select: { target: "section", title: "Objective" },
+      },
+      {
+        assert: {
+          matches: "REQ",
+          text: { contains: "Mission" },
+        },
+        message: 'Unsupported validation profile key "matches".',
+        select: { target: "section", title: "Objective" },
+      },
+      {
+        assert: {
+          references: {
+            idsFrom: { section: "Requirements", regexp: "REQ-.*" },
+            mustAppearIn: ["Verification"],
+          },
+        },
+        message: 'Unsupported validation profile key "regexp".',
+        select: { target: "document" },
+      },
+    ] satisfies {
+      assert: ValidationProfile["rules"][number]["assert"] & Record<string, unknown>;
+      message: string;
+      select: ValidationProfile["rules"][number]["select"];
+    }[];
+
+    for (const { assert, message, select } of invalidUnsupportedKeyAssertions) {
+      const result = compileValidationProfile({
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "assertion.unsupported-key",
+            select,
+            assert,
+          },
+        ],
+      });
+
+      expect(result.plan).toBeUndefined();
+      expect(result.diagnostics).toEqual([
+        {
+          code: "profile.config.unsupportedKey",
+          message,
+          severity: "error",
+        },
+      ]);
+    }
+  });
+
+  it("rejects direct typed non-object assertion payloads before execution", () => {
+    const invalidObjectAssertions = [
+      {
+        assert: { sectionsRequired: null },
+        message: "sectionsRequired must be an object.",
+      },
+      {
+        assert: { ids: null },
+        message: "ids must be an object.",
+      },
+      {
+        assert: { frontmatterRequired: null },
+        message: "frontmatterRequired must be an object.",
+      },
+    ];
+
+    for (const { assert, message } of invalidObjectAssertions) {
+      const result = compileValidationProfile({
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "assertion.non-object",
+            select: { target: "document" },
+            assert: assert as unknown as ValidationProfile["rules"][number]["assert"],
+          },
+        ],
+      });
+
+      expect(result.plan).toBeUndefined();
+      expect(result.diagnostics).toEqual([
+        {
+          code: "profile.config.invalidShape",
+          ruleId: "assertion.non-object",
+          message,
+          severity: "error",
+        },
+      ]);
+    }
+  });
+
+  it("rejects direct typed non-object rule assert payloads before execution", () => {
+    const result = compileValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      rules: [
+        {
+          id: "assert.non-object",
+          select: { target: "document" },
+          assert: null as unknown as ValidationProfile["rules"][number]["assert"],
+        },
+      ],
+    });
+
+    expect(result.plan).toBeUndefined();
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.config.invalidShape",
+        ruleId: "assert.non-object",
+        message: "Rule assert must be an object.",
+        severity: "error",
+      },
+    ]);
+  });
+
+  it("rejects direct typed references assertions without idsFrom before execution", () => {
+    const result = compileValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      rules: [
+        {
+          id: "references.missing-ids-from",
+          select: { target: "document" },
+          assert: {
+            references: { mustAppearIn: ["Verification"] },
+          } as unknown as ValidationProfile["rules"][number]["assert"],
+        },
+      ],
+    });
+
+    expect(result.plan).toBeUndefined();
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.config.invalidShape",
+        ruleId: "references.missing-ids-from",
+        message: "references.idsFrom must be an object.",
+        severity: "error",
+      },
+    ]);
+  });
+
+  it("rejects direct typed ids assertions with non-boolean caseSensitive before execution", () => {
+    const result = compileValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      rules: [
+        {
+          id: "ids.invalid-case-sensitive",
+          select: { target: "document" },
+          assert: {
+            ids: { unique: true, caseSensitive: "no" },
+          } as unknown as ValidationProfile["rules"][number]["assert"],
+        },
+      ],
+    });
+
+    expect(result.plan).toBeUndefined();
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.config.invalidShape",
+        ruleId: "ids.invalid-case-sensitive",
+        message: "caseSensitive must be a boolean when provided.",
+        severity: "error",
+      },
+    ]);
+  });
+
+  it("rejects direct typed assertions with parser-invalid empty string arrays before execution", () => {
+    const invalidArrayAssertions = [
+      {
+        assert: { sectionsRequired: { headings: [] } },
+        message:
+          "sectionsRequired.headings must be an array of non-empty strings.",
+        select: { target: "document" },
+      },
+      {
+        assert: { sectionOrder: { headings: [] } },
+        message: "sectionOrder.headings must be an array of non-empty strings.",
+        select: { target: "document" },
+      },
+      {
+        assert: { tableColumnsRequired: { columns: [] } },
+        message:
+          "tableColumnsRequired.columns must be an array of non-empty strings.",
+        select: { target: "table" },
+      },
+      {
+        assert: { references: { idsFrom: {}, mustAppearIn: [] } },
+        message: "references.mustAppearIn must be an array of non-empty strings.",
+        select: { target: "document" },
+      },
+      {
+        assert: { frontmatterRequired: { fields: [] } },
+        message:
+          "frontmatterRequired.fields must be an array of non-empty strings.",
+        select: { target: "frontmatter" },
+      },
+    ] satisfies {
+      assert: ValidationProfile["rules"][number]["assert"];
+      message: string;
+      select: ValidationProfile["rules"][number]["select"];
+    }[];
+
+    for (const { assert, message, select } of invalidArrayAssertions) {
+      const result = compileValidationProfile({
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "assertion.empty-array",
+            select,
+            assert,
+          },
+        ],
+      });
+
+      expect(result.plan).toBeUndefined();
+      expect(result.diagnostics).toEqual([
+        {
+          code: "profile.config.invalidShape",
+          ruleId: "assertion.empty-array",
+          message,
+          severity: "error",
+        },
+      ]);
+    }
+  });
+
+  it("rejects direct typed empty assertion objects before execution", () => {
+    const result = compileValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      rules: [
+        {
+          id: "assert.empty",
+          select: { target: "document" },
+          assert: {},
+        },
+      ],
+    });
+
+    expect(result.plan).toBeUndefined();
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.config.invalidShape",
+        ruleId: "assert.empty",
+        message: "Rule assert must include at least one supported assertion.",
         severity: "error",
       },
     ]);
   });
 });
 
-const minimalProfile = {
+const supportedProfile = {
   syntaxVersion: "markdown-engine.validation@v1",
   documentVersion: "1.0.0",
   rules: [
@@ -77,6 +488,60 @@ const minimalProfile = {
       id: "objective.contains",
       select: { target: "section", title: "Objective" },
       assert: { text: { contains: "architecture viable" } },
+    },
+    {
+      id: "document.required-sections",
+      select: { target: "document" },
+      assert: {
+        sectionsRequired: {
+          headings: ["Objective", "Verification"],
+          order: "strict",
+        },
+        sectionOrder: {
+          headings: ["Objective", "Verification"],
+        },
+      },
+    },
+    {
+      id: "table.columns",
+      select: { target: "table", header: ["Step", "State"] },
+      assert: { tableColumnsRequired: { columns: ["Owner"] } },
+    },
+    {
+      id: "table.ids",
+      select: {
+        target: "tableRow",
+        tableHeader: ["ID"],
+        where: { column: "State", equals: "ready" },
+      },
+      assert: {
+        ids: {
+          column: "ID",
+          prefix: "REQ",
+          unique: true,
+          caseSensitive: false,
+        },
+      },
+    },
+    {
+      id: "references.required",
+      select: { target: "document" },
+      assert: {
+        references: {
+          idsFrom: { section: "Requirements", column: "ID", prefix: "REQ" },
+          mustAppearIn: ["Verification"],
+        },
+      },
+    },
+    {
+      id: "occurrences",
+      select: { target: "textSpan", nodeType: "paragraph" },
+      assert: { textOccurrenceCount: { text: "MUST", count: 1 } },
+    },
+    {
+      id: "frontmatter.required",
+      select: { target: "frontmatter" },
+      assert: { frontmatterRequired: { fields: ["title", "owner"] } },
     },
   ],
 } satisfies ValidationProfile;

@@ -76,6 +76,114 @@ describe("declarative validation assertion proof", () => {
       ],
     });
   });
+
+  it("does not silently pass compiled text predicates outside the evaluator proof path", () => {
+    const sectionDocument = normalize(
+      parse("# Objective\n\nalpha beta beta forbidden\n").parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+
+    for (const assert of [
+      { text: { containsExactlyOne: "beta" } },
+      { text: { excludes: ["forbidden"] } },
+    ] satisfies ValidationProfile["rules"][number]["assert"][]) {
+      const result = validateWithProfile(sectionDocument, {
+        syntaxVersion: "markdown-engine.validation@v1",
+        documentVersion: "1.0.0",
+        rules: [
+          {
+            id: "text.unsupported-evaluator-path",
+            select: { target: "section", title: "Objective" },
+            assert,
+          },
+        ],
+      });
+
+      expect(result.valid).toBe(false);
+      expect(result.diagnostics).toEqual([
+        {
+          code: "profile.validation.assertionUnsupported",
+          ruleId: "text.unsupported-evaluator-path",
+          message:
+            'Assertion "text" is compiled but only text.contains without a column is implemented by the assertion evaluator yet.',
+          severity: "error",
+        },
+      ]);
+    }
+
+    const tableDocument = normalize(
+      parse([
+        "# Status",
+        "",
+        "| Step | State |",
+        "| --- | --- |",
+        "| Ready elsewhere | blocked |",
+      ].join("\n")).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(tableDocument, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "text.unsupported-evaluator-path",
+          select: { target: "table" },
+          assert: { text: { column: "State", contains: "ready" } },
+        },
+      ],
+    });
+
+    expect(result.valid).toBe(false);
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.validation.assertionUnsupported",
+        ruleId: "text.unsupported-evaluator-path",
+        message:
+          'Assertion "text" is compiled but only text.contains without a column is implemented by the assertion evaluator yet.',
+        severity: "error",
+      },
+    ]);
+  });
+
+  it("treats unsupported evaluator paths as errors regardless of rule severity", () => {
+    const document = normalize(parse("# Objective\n\nReady.\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "section-order.unsupported-evaluator-path",
+          severity: "warning",
+          select: { target: "document" },
+          assert: { sectionOrder: { headings: ["Objective"] } },
+        },
+      ],
+    });
+
+    expect(result.valid).toBe(false);
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.validation.assertionUnsupported",
+        ruleId: "section-order.unsupported-evaluator-path",
+        message:
+          'Assertion "sectionOrder" is compiled but not implemented by the assertion evaluator yet.',
+        severity: "error",
+      },
+    ]);
+    expect(result.ruleResults).toEqual([
+      {
+        ruleId: "section-order.unsupported-evaluator-path",
+        passed: false,
+        diagnostics: result.diagnostics,
+      },
+    ]);
+  });
 });
 
 const profile = {
