@@ -5,6 +5,7 @@ import type {
   DeclarativeAssertion,
   DeclarativeSelector,
 } from "../profile/index.js";
+import { stringArray } from "../profile/schema-values.js";
 import {
   type DeclarativeAssertionName,
   selectorAssertionCompatibilityError,
@@ -34,6 +35,7 @@ export function compiledAssertionsFromValue(
   pushUnsupportedKeyDiagnostics(assertion, ASSERTION_KEYS, diagnostics);
 
   if (assertion.sectionsRequired !== undefined) {
+    let headings: readonly string[] | undefined;
     if (
       pushObjectDiagnostic(
         "sectionsRequired",
@@ -46,12 +48,12 @@ export function compiledAssertionsFromValue(
         ["headings", "order"],
         diagnostics,
       ) &&
-      pushStringArrayDiagnostic(
+      (headings = closedStringArray(
         "sectionsRequired.headings",
         assertion.sectionsRequired.headings,
         ruleId,
         diagnostics,
-      ) &&
+      )) !== undefined &&
       pushSectionsRequiredOrderDiagnostic(
         assertion.sectionsRequired.order,
         ruleId,
@@ -61,13 +63,14 @@ export function compiledAssertionsFromValue(
     ) {
       compiled.push({
         kind: "sectionsRequired",
-        headings: [...assertion.sectionsRequired.headings],
+        headings,
         order: assertion.sectionsRequired.order ?? "none",
       });
     }
   }
 
   if (assertion.sectionOrder !== undefined) {
+    let headings: readonly string[] | undefined;
     if (
       pushObjectDiagnostic("sectionOrder", assertion.sectionOrder, ruleId, diagnostics) &&
       pushUnsupportedKeyDiagnostics(
@@ -75,22 +78,23 @@ export function compiledAssertionsFromValue(
         ["headings"],
         diagnostics,
       ) &&
-      pushStringArrayDiagnostic(
+      (headings = closedStringArray(
         "sectionOrder.headings",
         assertion.sectionOrder.headings,
         ruleId,
         diagnostics,
-      ) &&
+      )) !== undefined &&
       pushCompatibilityDiagnostic("sectionOrder", assertion, selector, ruleId, diagnostics)
     ) {
       compiled.push({
         kind: "sectionOrder",
-        headings: [...assertion.sectionOrder.headings],
+        headings,
       });
     }
   }
 
   if (assertion.tableColumnsRequired !== undefined) {
+    let columns: readonly string[] | undefined;
     if (
       pushObjectDiagnostic(
         "tableColumnsRequired",
@@ -110,16 +114,16 @@ export function compiledAssertionsFromValue(
         ruleId,
         diagnostics,
       ) &&
-      pushStringArrayDiagnostic(
+      (columns = closedStringArray(
         "tableColumnsRequired.columns",
         assertion.tableColumnsRequired.columns,
         ruleId,
         diagnostics,
-      )
+      )) !== undefined
     ) {
       compiled.push({
         kind: "tableColumnsRequired",
-        columns: [...assertion.tableColumnsRequired.columns],
+        columns,
       });
     }
   }
@@ -172,6 +176,7 @@ export function compiledAssertionsFromValue(
   }
 
   if (assertion.references !== undefined) {
+    let mustAppearIn: readonly string[] | undefined;
     if (
       pushObjectDiagnostic("references", assertion.references, ruleId, diagnostics) &&
       pushUnsupportedKeyDiagnostics(
@@ -190,12 +195,12 @@ export function compiledAssertionsFromValue(
         ["section", "column", "prefix"],
         diagnostics,
       ) &&
-      pushStringArrayDiagnostic(
+      (mustAppearIn = closedStringArray(
         "references.mustAppearIn",
         assertion.references.mustAppearIn,
         ruleId,
         diagnostics,
-      ) &&
+      )) !== undefined &&
       pushOptionalNonEmptyStringDiagnostic(
         "section",
         assertion.references.idsFrom.section,
@@ -223,7 +228,7 @@ export function compiledAssertionsFromValue(
           ...optionalString("column", assertion.references.idsFrom.column),
           ...optionalString("prefix", assertion.references.idsFrom.prefix),
         },
-        mustAppearIn: [...assertion.references.mustAppearIn],
+        mustAppearIn,
       });
     }
   }
@@ -328,17 +333,18 @@ export function compiledAssertionsFromValue(
         diagnostics,
       )
     ) {
+      let fields: readonly string[] | undefined;
       if (
-        pushStringArrayDiagnostic(
+        (fields = closedStringArray(
           "frontmatterRequired.fields",
           assertion.frontmatterRequired.fields,
           ruleId,
           diagnostics,
-        )
+        )) !== undefined
       ) {
         compiled.push({
           kind: "frontmatterRequired",
-          fields: [...assertion.frontmatterRequired.fields],
+          fields,
         });
       }
     }
@@ -448,7 +454,8 @@ function pushTextShapeDiagnostics(
 
   if (
     assertion?.excludes !== undefined &&
-    !pushStringArrayDiagnostic("excludes", assertion.excludes, ruleId, diagnostics)
+    closedStringArray("excludes", assertion.excludes, ruleId, diagnostics) ===
+      undefined
   ) {
     valid = false;
   }
@@ -549,18 +556,16 @@ function pushNonEmptyStringDiagnostic(
   return false;
 }
 
-function pushStringArrayDiagnostic(
+function closedStringArray(
   fieldName: string,
-  value: readonly string[],
+  value: unknown,
   ruleId: string,
   diagnostics: MarkdownDiagnostic[],
-): boolean {
-  if (
-    Array.isArray(value) &&
-    value.length > 0 &&
-    value.every((item) => typeof item === "string" && item.length > 0)
-  ) {
-    return true;
+): readonly string[] | undefined {
+  const values = stringArray(value);
+
+  if (values !== undefined) {
+    return values;
   }
 
   diagnostics.push(
@@ -571,7 +576,7 @@ function pushStringArrayDiagnostic(
     ),
   );
 
-  return false;
+  return undefined;
 }
 
 function optionalString<TKey extends string>(
@@ -583,11 +588,17 @@ function optionalString<TKey extends string>(
 
 function optionalStringArray<TKey extends string>(
   key: TKey,
-  value: readonly string[] | undefined,
+  value: unknown,
 ): Record<TKey, readonly string[]> | Record<string, never> {
-  return value === undefined
+  if (value === undefined) {
+    return {};
+  }
+
+  const values = stringArray(value);
+
+  return values === undefined
     ? {}
-    : ({ [key]: [...value] } as unknown as Record<TKey, readonly string[]>);
+    : ({ [key]: values } as unknown as Record<TKey, readonly string[]>);
 }
 
 function hasTextPredicate(assertion: DeclarativeAssertion["text"]): boolean {

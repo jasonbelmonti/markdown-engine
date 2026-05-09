@@ -87,6 +87,16 @@ describe("declarative validation compiler proof", () => {
   });
 
   it("rejects direct typed profile containers before plan creation", () => {
+    const accessorRules: unknown[] = [];
+    accessorRules.length = 1;
+    Object.defineProperty(accessorRules, "0", {
+      get: () => ({
+        id: "accessor.rule",
+        select: { target: "document" },
+        assert: { sectionsRequired: { headings: ["Objective"] } },
+      }),
+    });
+
     const invalidProfiles = [
       {
         profile: null,
@@ -94,6 +104,19 @@ describe("declarative validation compiler proof", () => {
           {
             code: "profile.config.invalidShape",
             message: "Profile must be an object.",
+            severity: "error",
+          },
+        ],
+      },
+      {
+        profile: {
+          syntaxVersion: "markdown-engine.validation@v1",
+          rules: accessorRules,
+        },
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            message: "Profile rules must be a dense array.",
             severity: "error",
           },
         ],
@@ -145,6 +168,92 @@ describe("declarative validation compiler proof", () => {
       expect(result.diagnostics).toEqual(diagnostics);
       expect(containsFunction(result.plan)).toBe(false);
     }
+  });
+
+  it("ignores caller-owned array methods and iterators before plan creation", () => {
+    const rules = [
+      {
+        id: "document.required-sections",
+        select: { target: "document" },
+        assert: {
+          sectionsRequired: {
+            headings: poisonedStringArray(["Objective", "Verification"]),
+          },
+        },
+      },
+      {
+        id: "table.columns",
+        select: {
+          target: "table",
+          header: poisonedStringArray(["Step", "State"]),
+        },
+        assert: {
+          tableColumnsRequired: {
+            columns: poisonedStringArray(["Owner"]),
+          },
+        },
+      },
+      {
+        id: "document.text-excludes",
+        select: { target: "document" },
+        assert: {
+          text: {
+            excludes: poisonedStringArray(["forbidden"]),
+          },
+        },
+      },
+    ] as unknown as ValidationProfile["rules"] & {
+      flatMap: () => unknown[];
+    };
+    Object.defineProperty(rules, "flatMap", {
+      value: () => [
+        {
+          ruleId: () => "function-bearing compiled rule",
+          severity: "error",
+          selector: { target: "document" },
+          assertions: [],
+        },
+      ],
+    });
+    Object.defineProperty(rules, Symbol.iterator, {
+      value: function* poisonedRulesIterator() {
+        yield {
+          ruleId: () => "function-bearing compiled rule",
+          severity: "error",
+          selector: { target: "document" },
+          assertions: [],
+        };
+      },
+    });
+
+    const result = compileValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      rules,
+    });
+
+    expect(result.diagnostics).toEqual([]);
+    expect(result.plan?.rules.map((rule) => rule.ruleId)).toEqual([
+      "document.required-sections",
+      "table.columns",
+      "document.text-excludes",
+    ]);
+    expect(result.plan?.rules[0]?.assertions[0]).toMatchObject({
+      kind: "sectionsRequired",
+      headings: ["Objective", "Verification"],
+    });
+    expect(result.plan?.rules[1]?.selector).toMatchObject({
+      target: "table",
+      header: ["Step", "State"],
+    });
+    expect(result.plan?.rules[1]?.assertions[0]).toMatchObject({
+      kind: "tableColumnsRequired",
+      columns: ["Owner"],
+    });
+    expect(result.plan?.rules[2]?.assertions[0]).toMatchObject({
+      kind: "text",
+      excludes: ["forbidden"],
+    });
+    expect(containsFunction(result.plan)).toBe(false);
   });
 
   it("rejects direct typed rule metadata before plan creation", () => {
@@ -779,4 +888,20 @@ function containsFunction(value: unknown): boolean {
   }
 
   return false;
+}
+
+function poisonedStringArray(values: readonly string[]): readonly string[] {
+  const array = values.slice() as string[] & {
+    every: () => boolean;
+  };
+  Object.defineProperty(array, "every", {
+    value: () => true,
+  });
+  Object.defineProperty(array, Symbol.iterator, {
+    value: function* poisonedStringIterator() {
+      yield () => "function-bearing array item";
+    },
+  });
+
+  return array;
 }

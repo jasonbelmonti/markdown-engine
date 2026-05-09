@@ -45,20 +45,23 @@ export function compileValidationProfile(
     return { diagnostics };
   }
 
-  const rules = profileRules.flatMap((ruleInput, index) => {
+  const rules = [];
+
+  for (let index = 0; index < profileRules.length; index += 1) {
+    const ruleInput = profileRules[index];
     const rule = ruleFromValue(ruleInput, index, diagnostics);
     if (rule === undefined) {
-      return [];
+      continue;
     }
 
     const ruleId = ruleIdFromValue(rule.id, index, diagnostics);
     if (ruleId === undefined) {
-      return [];
+      continue;
     }
 
     const severity = severityFromValue(rule.severity, ruleId, diagnostics);
     if (severity === undefined && rule.severity !== undefined) {
-      return [];
+      continue;
     }
 
     const diagnosticCountBeforeSelector = diagnostics.length;
@@ -67,7 +70,7 @@ export function compileValidationProfile(
       selector === undefined ||
       diagnostics.length > diagnosticCountBeforeSelector
     ) {
-      return [];
+      continue;
     }
 
     const diagnosticCountBeforeAssertions = diagnostics.length;
@@ -80,7 +83,7 @@ export function compileValidationProfile(
         ),
       );
 
-      return [];
+      continue;
     }
 
     const assertions = compiledAssertionsFromValue(
@@ -101,18 +104,16 @@ export function compileValidationProfile(
         );
       }
 
-      return [];
+      continue;
     }
 
-    return [
-      {
-        ruleId,
-        severity: severity ?? "error",
-        selector,
-        assertions,
-      },
-    ];
-  });
+    rules.push({
+      ruleId,
+      severity: severity ?? "error",
+      selector,
+      assertions,
+    });
+  }
 
   return diagnostics.length > 0
     ? { diagnostics }
@@ -127,18 +128,36 @@ export function compileValidationProfile(
 function profileRulesFromValue(
   value: unknown,
   diagnostics: MarkdownDiagnostic[],
-): readonly DeclarativeValidationRule[] | undefined {
-  if (Array.isArray(value)) {
-    return value as readonly DeclarativeValidationRule[];
+): readonly unknown[] | undefined {
+  if (!Array.isArray(value)) {
+    diagnostics.push({
+      code: "profile.config.invalidShape",
+      message: "Profile rules must be an array.",
+      severity: "error",
+    });
+
+    return undefined;
   }
 
-  diagnostics.push({
-    code: "profile.config.invalidShape",
-    message: "Profile rules must be an array.",
-    severity: "error",
-  });
+  const rules: unknown[] = [];
 
-  return undefined;
+  for (let index = 0; index < value.length; index += 1) {
+    const descriptor = Object.getOwnPropertyDescriptor(value, String(index));
+
+    if (descriptor === undefined || !("value" in descriptor)) {
+      diagnostics.push({
+        code: "profile.config.invalidShape",
+        message: "Profile rules must be a dense array.",
+        severity: "error",
+      });
+
+      return undefined;
+    }
+
+    rules.push(descriptor.value);
+  }
+
+  return rules;
 }
 
 function ruleFromValue(
