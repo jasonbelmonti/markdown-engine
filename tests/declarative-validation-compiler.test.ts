@@ -4,8 +4,8 @@ import type { ValidationProfile } from "@jasonbelmonti/markdown-engine";
 import { compileValidationProfile } from "../src/declarative-validation/compiler/index.js";
 
 describe("declarative validation compiler proof", () => {
-  it("compiles a minimal supported profile into private data-only rule records", () => {
-    const result = compileValidationProfile(minimalProfile);
+  it("compiles supported profiles into private data-only rule records", () => {
+    const result = compileValidationProfile(supportedProfile);
 
     expect(result.diagnostics).toEqual([]);
     expect(result.plan).toMatchObject({
@@ -14,37 +14,68 @@ describe("declarative validation compiler proof", () => {
           ruleId: "objective.contains",
           severity: "error",
           selector: { target: "section", title: "Objective" },
-          assertions: [{ kind: "textContains", text: "architecture viable" }],
+          assertions: [{ kind: "text", contains: "architecture viable" }],
+        },
+        {
+          ruleId: "document.required-sections",
+          selector: { target: "document" },
+          assertions: [
+            {
+              kind: "sectionsRequired",
+              headings: ["Objective", "Verification"],
+              order: "strict",
+            },
+            {
+              kind: "sectionOrder",
+              headings: ["Objective", "Verification"],
+            },
+          ],
+        },
+        {
+          ruleId: "table.columns",
+          selector: { target: "table", header: ["Step", "State"] },
+          assertions: [{ kind: "tableColumnsRequired", columns: ["Owner"] }],
+        },
+        {
+          ruleId: "table.ids",
+          selector: { target: "tableRow", tableHeader: ["ID"], where: { column: "State", equals: "ready" } },
+          assertions: [
+            {
+              kind: "ids",
+              unique: true,
+              caseSensitive: false,
+              column: "ID",
+              prefix: "REQ",
+            },
+          ],
+        },
+        {
+          ruleId: "references.required",
+          selector: { target: "document" },
+          assertions: [
+            {
+              kind: "references",
+              idsFrom: { section: "Requirements", column: "ID", prefix: "REQ" },
+              mustAppearIn: ["Verification"],
+            },
+          ],
+        },
+        {
+          ruleId: "occurrences",
+          selector: { target: "textSpan", nodeType: "paragraph" },
+          assertions: [{ kind: "textOccurrenceCount", text: "MUST", count: 1 }],
+        },
+        {
+          ruleId: "frontmatter.required",
+          selector: { target: "frontmatter" },
+          assertions: [{ kind: "frontmatterRequired", fields: ["title", "owner"] }],
         },
       ],
     });
     expect(containsFunction(result.plan)).toBe(false);
   });
 
-  it("rejects declarations outside the WP-1B proof path before execution", () => {
-    const result = compileValidationProfile({
-      syntaxVersion: "markdown-engine.validation@v1",
-      rules: [
-        {
-          id: "ids.unique",
-          select: { target: "document" },
-          assert: { ids: { unique: true } },
-        },
-      ],
-    });
-
-    expect(result.plan).toBeUndefined();
-    expect(result.diagnostics).toEqual([
-      {
-        code: "profile.compile.unsupportedAssertion",
-        ruleId: "ids.unique",
-        message: 'Assertion "ids" is not implemented in the WP-1B proof path.',
-        severity: "error",
-      },
-    ]);
-  });
-
-  it("rejects incompatible selector and assertion pairs", () => {
+  it("rejects incompatible selector and assertion pairs before execution", () => {
     const result = compileValidationProfile({
       syntaxVersion: "markdown-engine.validation@v1",
       rules: [
@@ -61,15 +92,38 @@ describe("declarative validation compiler proof", () => {
       {
         code: "profile.compile.incompatibleSelectorAssertion",
         ruleId: "section.requires.sections",
+        message: 'Assertion "sectionsRequired" is compatible only with document selectors.',
+        severity: "error",
+      },
+    ]);
+  });
+
+  it("rejects column-scoped assertions outside table selector targets", () => {
+    const result = compileValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      rules: [
+        {
+          id: "section.column-text",
+          select: { target: "section", title: "Objective" },
+          assert: { text: { column: "State", contains: "ready" } },
+        },
+      ],
+    });
+
+    expect(result.plan).toBeUndefined();
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.compile.incompatibleSelectorAssertion",
+        ruleId: "section.column-text",
         message:
-          'Assertion "sectionsRequired" is only compatible with the document selector in the WP-1B proof path.',
+          'Assertion "text" with a column option is compatible only with table or tableRow selectors.',
         severity: "error",
       },
     ]);
   });
 });
 
-const minimalProfile = {
+const supportedProfile = {
   syntaxVersion: "markdown-engine.validation@v1",
   documentVersion: "1.0.0",
   rules: [
@@ -77,6 +131,60 @@ const minimalProfile = {
       id: "objective.contains",
       select: { target: "section", title: "Objective" },
       assert: { text: { contains: "architecture viable" } },
+    },
+    {
+      id: "document.required-sections",
+      select: { target: "document" },
+      assert: {
+        sectionsRequired: {
+          headings: ["Objective", "Verification"],
+          order: "strict",
+        },
+        sectionOrder: {
+          headings: ["Objective", "Verification"],
+        },
+      },
+    },
+    {
+      id: "table.columns",
+      select: { target: "table", header: ["Step", "State"] },
+      assert: { tableColumnsRequired: { columns: ["Owner"] } },
+    },
+    {
+      id: "table.ids",
+      select: {
+        target: "tableRow",
+        tableHeader: ["ID"],
+        where: { column: "State", equals: "ready" },
+      },
+      assert: {
+        ids: {
+          column: "ID",
+          prefix: "REQ",
+          unique: true,
+          caseSensitive: false,
+        },
+      },
+    },
+    {
+      id: "references.required",
+      select: { target: "document" },
+      assert: {
+        references: {
+          idsFrom: { section: "Requirements", column: "ID", prefix: "REQ" },
+          mustAppearIn: ["Verification"],
+        },
+      },
+    },
+    {
+      id: "occurrences",
+      select: { target: "textSpan", nodeType: "paragraph" },
+      assert: { textOccurrenceCount: { text: "MUST", count: 1 } },
+    },
+    {
+      id: "frontmatter.required",
+      select: { target: "frontmatter" },
+      assert: { frontmatterRequired: { fields: ["title", "owner"] } },
     },
   ],
 } satisfies ValidationProfile;
