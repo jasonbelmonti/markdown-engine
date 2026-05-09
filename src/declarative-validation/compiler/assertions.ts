@@ -19,7 +19,20 @@ export function compiledAssertionsFromValue(
   const compiled: CompiledDeclarativeAssertion[] = [];
 
   if (assertion.sectionsRequired !== undefined) {
-    if (pushCompatibilityDiagnostic("sectionsRequired", assertion, selector, ruleId, diagnostics)) {
+    if (
+      pushStringArrayDiagnostic(
+        "sectionsRequired.headings",
+        assertion.sectionsRequired.headings,
+        ruleId,
+        diagnostics,
+      ) &&
+      pushSectionsRequiredOrderDiagnostic(
+        assertion.sectionsRequired.order,
+        ruleId,
+        diagnostics,
+      ) &&
+      pushCompatibilityDiagnostic("sectionsRequired", assertion, selector, ruleId, diagnostics)
+    ) {
       compiled.push({
         kind: "sectionsRequired",
         headings: assertion.sectionsRequired.headings,
@@ -29,7 +42,15 @@ export function compiledAssertionsFromValue(
   }
 
   if (assertion.sectionOrder !== undefined) {
-    if (pushCompatibilityDiagnostic("sectionOrder", assertion, selector, ruleId, diagnostics)) {
+    if (
+      pushStringArrayDiagnostic(
+        "sectionOrder.headings",
+        assertion.sectionOrder.headings,
+        ruleId,
+        diagnostics,
+      ) &&
+      pushCompatibilityDiagnostic("sectionOrder", assertion, selector, ruleId, diagnostics)
+    ) {
       compiled.push({
         kind: "sectionOrder",
         headings: assertion.sectionOrder.headings,
@@ -43,6 +64,12 @@ export function compiledAssertionsFromValue(
         "tableColumnsRequired",
         assertion,
         selector,
+        ruleId,
+        diagnostics,
+      ) &&
+      pushStringArrayDiagnostic(
+        "tableColumnsRequired.columns",
+        assertion.tableColumnsRequired.columns,
         ruleId,
         diagnostics,
       )
@@ -63,7 +90,21 @@ export function compiledAssertionsFromValue(
           ruleId,
         ),
       );
-    } else if (pushCompatibilityDiagnostic("ids", assertion, selector, ruleId, diagnostics)) {
+    } else if (
+      pushOptionalNonEmptyStringDiagnostic(
+        "column",
+        assertion.ids.column,
+        ruleId,
+        diagnostics,
+      ) &&
+      pushOptionalNonEmptyStringDiagnostic(
+        "prefix",
+        assertion.ids.prefix,
+        ruleId,
+        diagnostics,
+      ) &&
+      pushCompatibilityDiagnostic("ids", assertion, selector, ruleId, diagnostics)
+    ) {
       compiled.push({
         kind: "ids",
         unique: true,
@@ -75,7 +116,33 @@ export function compiledAssertionsFromValue(
   }
 
   if (assertion.references !== undefined) {
-    if (pushCompatibilityDiagnostic("references", assertion, selector, ruleId, diagnostics)) {
+    if (
+      pushStringArrayDiagnostic(
+        "references.mustAppearIn",
+        assertion.references.mustAppearIn,
+        ruleId,
+        diagnostics,
+      ) &&
+      pushOptionalNonEmptyStringDiagnostic(
+        "section",
+        assertion.references.idsFrom.section,
+        ruleId,
+        diagnostics,
+      ) &&
+      pushOptionalNonEmptyStringDiagnostic(
+        "column",
+        assertion.references.idsFrom.column,
+        ruleId,
+        diagnostics,
+      ) &&
+      pushOptionalNonEmptyStringDiagnostic(
+        "prefix",
+        assertion.references.idsFrom.prefix,
+        ruleId,
+        diagnostics,
+      ) &&
+      pushCompatibilityDiagnostic("references", assertion, selector, ruleId, diagnostics)
+    ) {
       compiled.push({
         kind: "references",
         idsFrom: {
@@ -89,22 +156,26 @@ export function compiledAssertionsFromValue(
   }
 
   if (assertion.text !== undefined) {
-    if (!hasTextPredicate(assertion.text)) {
-      diagnostics.push(
-        compileDiagnostic(
-          "profile.config.invalidShape",
-          "text must include contains, containsExactlyOne, or a non-empty excludes array.",
-          ruleId,
-        ),
-      );
-    } else if (pushCompatibilityDiagnostic("text", assertion, selector, ruleId, diagnostics)) {
-      compiled.push({
-        kind: "text",
-        ...optionalString("column", assertion.text.column),
-        ...optionalString("contains", assertion.text.contains),
-        ...optionalString("containsExactlyOne", assertion.text.containsExactlyOne),
-        ...optionalStringArray("excludes", assertion.text.excludes),
-      });
+    if (pushTextShapeDiagnostics(assertion.text, ruleId, diagnostics)) {
+      if (!hasTextPredicate(assertion.text)) {
+        diagnostics.push(
+          compileDiagnostic(
+            "profile.config.invalidShape",
+            "text must include contains, containsExactlyOne, or a non-empty excludes array.",
+            ruleId,
+          ),
+        );
+      } else if (
+        pushCompatibilityDiagnostic("text", assertion, selector, ruleId, diagnostics)
+      ) {
+        compiled.push({
+          kind: "text",
+          ...optionalString("column", assertion.text.column),
+          ...optionalString("contains", assertion.text.contains),
+          ...optionalString("containsExactlyOne", assertion.text.containsExactlyOne),
+          ...optionalStringArray("excludes", assertion.text.excludes),
+        });
+      }
     }
   }
 
@@ -114,6 +185,23 @@ export function compiledAssertionsFromValue(
         "textOccurrenceCount",
         assertion,
         selector,
+        ruleId,
+        diagnostics,
+      ) &&
+      pushNonEmptyStringDiagnostic(
+        "textOccurrenceCount.text",
+        assertion.textOccurrenceCount.text,
+        ruleId,
+        diagnostics,
+      ) &&
+      pushTextOccurrenceCountDiagnostic(
+        assertion.textOccurrenceCount.count,
+        ruleId,
+        diagnostics,
+      ) &&
+      pushOptionalNonEmptyStringDiagnostic(
+        "column",
+        assertion.textOccurrenceCount.column,
         ruleId,
         diagnostics,
       )
@@ -137,10 +225,19 @@ export function compiledAssertionsFromValue(
         diagnostics,
       )
     ) {
-      compiled.push({
-        kind: "frontmatterRequired",
-        fields: assertion.frontmatterRequired.fields,
-      });
+      if (
+        pushStringArrayDiagnostic(
+          "frontmatterRequired.fields",
+          assertion.frontmatterRequired.fields,
+          ruleId,
+          diagnostics,
+        )
+      ) {
+        compiled.push({
+          kind: "frontmatterRequired",
+          fields: assertion.frontmatterRequired.fields,
+        });
+      }
     }
   }
 
@@ -169,6 +266,151 @@ function pushCompatibilityDiagnostic(
   }
 
   return true;
+}
+
+function pushTextShapeDiagnostics(
+  assertion: DeclarativeAssertion["text"],
+  ruleId: string,
+  diagnostics: MarkdownDiagnostic[],
+): boolean {
+  let valid = true;
+
+  if (
+    assertion?.column !== undefined &&
+    !pushOptionalNonEmptyStringDiagnostic(
+      "column",
+      assertion.column,
+      ruleId,
+      diagnostics,
+    )
+  ) {
+    valid = false;
+  }
+
+  if (
+    assertion?.contains !== undefined &&
+    !pushNonEmptyStringDiagnostic("contains", assertion.contains, ruleId, diagnostics)
+  ) {
+    valid = false;
+  }
+
+  if (
+    assertion?.containsExactlyOne !== undefined &&
+    !pushNonEmptyStringDiagnostic(
+      "containsExactlyOne",
+      assertion.containsExactlyOne,
+      ruleId,
+      diagnostics,
+    )
+  ) {
+    valid = false;
+  }
+
+  if (
+    assertion?.excludes !== undefined &&
+    !pushStringArrayDiagnostic("excludes", assertion.excludes, ruleId, diagnostics)
+  ) {
+    valid = false;
+  }
+
+  return valid;
+}
+
+function pushSectionsRequiredOrderDiagnostic(
+  value: unknown,
+  ruleId: string,
+  diagnostics: MarkdownDiagnostic[],
+): boolean {
+  if (value === undefined || value === "none" || value === "strict") {
+    return true;
+  }
+
+  diagnostics.push(
+    compileDiagnostic(
+      "profile.config.invalidShape",
+      'sectionsRequired.order must be "none" or "strict" when provided.',
+      ruleId,
+    ),
+  );
+
+  return false;
+}
+
+function pushTextOccurrenceCountDiagnostic(
+  value: unknown,
+  ruleId: string,
+  diagnostics: MarkdownDiagnostic[],
+): boolean {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return true;
+  }
+
+  diagnostics.push(
+    compileDiagnostic(
+      "profile.config.invalidShape",
+      "textOccurrenceCount.count must be a number.",
+      ruleId,
+    ),
+  );
+
+  return false;
+}
+
+function pushOptionalNonEmptyStringDiagnostic(
+  fieldName: string,
+  value: unknown,
+  ruleId: string,
+  diagnostics: MarkdownDiagnostic[],
+): boolean {
+  return value === undefined
+    ? true
+    : pushNonEmptyStringDiagnostic(fieldName, value, ruleId, diagnostics);
+}
+
+function pushNonEmptyStringDiagnostic(
+  fieldName: string,
+  value: unknown,
+  ruleId: string,
+  diagnostics: MarkdownDiagnostic[],
+): boolean {
+  if (typeof value === "string" && value.length > 0) {
+    return true;
+  }
+
+  diagnostics.push(
+    compileDiagnostic(
+      "profile.config.invalidShape",
+      `${fieldName} must be a non-empty string when provided.`,
+      ruleId,
+    ),
+  );
+
+  return false;
+}
+
+function pushStringArrayDiagnostic(
+  fieldName: string,
+  value: readonly string[],
+  ruleId: string,
+  diagnostics: MarkdownDiagnostic[],
+): boolean {
+  if (
+    Array.isArray(value) &&
+    value.length > 0 &&
+    value.every((item) => typeof item === "string" && item.length > 0)
+  ) {
+    return true;
+  }
+
+  diagnostics.push(
+    compileDiagnostic(
+      "profile.config.invalidShape",
+      `${fieldName} must be an array of non-empty strings.`,
+      ruleId,
+    ),
+  );
+
+  return false;
 }
 
 function optionalString<TKey extends string>(

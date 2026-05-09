@@ -41,6 +41,7 @@ export function compileValidationProfile(
       return [];
     }
 
+    const diagnosticCountBeforeAssertions = diagnostics.length;
     const assertions = compiledAssertionsFromValue(
       rule.assert,
       rule.select,
@@ -49,6 +50,16 @@ export function compileValidationProfile(
     );
 
     if (assertions.length === 0) {
+      if (diagnostics.length === diagnosticCountBeforeAssertions) {
+        diagnostics.push(
+          compileDiagnostic(
+            "profile.config.invalidShape",
+            "Rule assert must include at least one supported assertion.",
+            rule.id,
+          ),
+        );
+      }
+
       return [];
     }
 

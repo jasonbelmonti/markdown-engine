@@ -179,6 +179,136 @@ describe("declarative validation compiler proof", () => {
       ]);
     }
   });
+
+  it("rejects direct typed assertions with parser-invalid empty string fields before execution", () => {
+    const invalidStringAssertions = [
+      {
+        assert: { text: { contains: "" } },
+        message: "contains must be a non-empty string when provided.",
+        select: { target: "section", title: "Objective" },
+      },
+      {
+        assert: { text: { column: "", contains: "ready" } },
+        message: "column must be a non-empty string when provided.",
+        select: { target: "table" },
+      },
+      {
+        assert: { ids: { unique: true, column: "" } },
+        message: "column must be a non-empty string when provided.",
+        select: { target: "tableRow" },
+      },
+    ] satisfies {
+      assert: ValidationProfile["rules"][number]["assert"];
+      message: string;
+      select: ValidationProfile["rules"][number]["select"];
+    }[];
+
+    for (const { assert, message, select } of invalidStringAssertions) {
+      const result = compileValidationProfile({
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "assertion.empty-string",
+            select,
+            assert,
+          },
+        ],
+      });
+
+      expect(result.plan).toBeUndefined();
+      expect(result.diagnostics).toEqual([
+        {
+          code: "profile.config.invalidShape",
+          ruleId: "assertion.empty-string",
+          message,
+          severity: "error",
+        },
+      ]);
+    }
+  });
+
+  it("rejects direct typed assertions with parser-invalid empty string arrays before execution", () => {
+    const invalidArrayAssertions = [
+      {
+        assert: { sectionsRequired: { headings: [] } },
+        message:
+          "sectionsRequired.headings must be an array of non-empty strings.",
+        select: { target: "document" },
+      },
+      {
+        assert: { sectionOrder: { headings: [] } },
+        message: "sectionOrder.headings must be an array of non-empty strings.",
+        select: { target: "document" },
+      },
+      {
+        assert: { tableColumnsRequired: { columns: [] } },
+        message:
+          "tableColumnsRequired.columns must be an array of non-empty strings.",
+        select: { target: "table" },
+      },
+      {
+        assert: { references: { idsFrom: {}, mustAppearIn: [] } },
+        message: "references.mustAppearIn must be an array of non-empty strings.",
+        select: { target: "document" },
+      },
+      {
+        assert: { frontmatterRequired: { fields: [] } },
+        message:
+          "frontmatterRequired.fields must be an array of non-empty strings.",
+        select: { target: "frontmatter" },
+      },
+    ] satisfies {
+      assert: ValidationProfile["rules"][number]["assert"];
+      message: string;
+      select: ValidationProfile["rules"][number]["select"];
+    }[];
+
+    for (const { assert, message, select } of invalidArrayAssertions) {
+      const result = compileValidationProfile({
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "assertion.empty-array",
+            select,
+            assert,
+          },
+        ],
+      });
+
+      expect(result.plan).toBeUndefined();
+      expect(result.diagnostics).toEqual([
+        {
+          code: "profile.config.invalidShape",
+          ruleId: "assertion.empty-array",
+          message,
+          severity: "error",
+        },
+      ]);
+    }
+  });
+
+  it("rejects direct typed empty assertion objects before execution", () => {
+    const result = compileValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      rules: [
+        {
+          id: "assert.empty",
+          select: { target: "document" },
+          assert: {},
+        },
+      ],
+    });
+
+    expect(result.plan).toBeUndefined();
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.config.invalidShape",
+        ruleId: "assert.empty",
+        message: "Rule assert must include at least one supported assertion.",
+        severity: "error",
+      },
+    ]);
+  });
 });
 
 const supportedProfile = {
