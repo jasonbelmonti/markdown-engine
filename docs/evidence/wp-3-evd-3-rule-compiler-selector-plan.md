@@ -88,9 +88,9 @@ Commands run from
 `.worktrees/bel-979-declarative-validation-wp-3-compiler-selector-plan`:
 
 - `npm run typecheck`: pass.
-- `npm run test:validation:compiler`: pass, 1 file and 3 tests.
+- `npm run test:validation:compiler`: pass, 1 file and 4 tests.
 - `npm run test:validation:selectors`: pass, 1 file and 4 tests.
-- `npm run test:validation:assertions`: pass, 1 file and 3 tests.
+- `npm run test:validation:assertions`: pass, 1 file and 4 tests.
 
 ## Result
 

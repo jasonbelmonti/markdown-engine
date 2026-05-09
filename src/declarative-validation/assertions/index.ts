@@ -41,7 +41,7 @@ function evaluateAssertion(
     case "textOccurrenceCount":
     case "frontmatterRequired":
       return [
-        validationDiagnostic(
+        unsupportedEvaluatorDiagnostic(
           "profile.validation.assertionUnsupported",
           `Assertion "${assertion.kind}" is compiled but not implemented by the assertion evaluator yet.`,
           rule,
@@ -112,7 +112,7 @@ function evaluateText(
 ): MarkdownDiagnostic[] {
   if (hasUnsupportedTextEvaluatorPredicate(assertion)) {
     return [
-      validationDiagnostic(
+      unsupportedEvaluatorDiagnostic(
         "profile.validation.assertionUnsupported",
         'Assertion "text" is compiled but only text.contains without a column is implemented by the assertion evaluator yet.',
         rule,
@@ -192,5 +192,18 @@ function validationDiagnostic(
     message,
     severity: rule.severity,
     ...(sourceRange !== undefined ? { sourceRange } : {}),
+  };
+}
+
+function unsupportedEvaluatorDiagnostic(
+  code: string,
+  message: string,
+  rule: CompiledDeclarativeValidationRule,
+): MarkdownDiagnostic {
+  return {
+    code,
+    ruleId: rule.ruleId,
+    message,
+    severity: "error",
   };
 }

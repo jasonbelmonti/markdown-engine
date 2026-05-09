@@ -81,7 +81,15 @@ export function compiledAssertionsFromValue(
   }
 
   if (assertion.text !== undefined) {
-    if (pushCompatibilityDiagnostic("text", assertion, selector, ruleId, diagnostics)) {
+    if (!hasTextPredicate(assertion.text)) {
+      diagnostics.push(
+        compileDiagnostic(
+          "profile.config.invalidShape",
+          "text must include contains, containsExactlyOne, or a non-empty excludes array.",
+          ruleId,
+        ),
+      );
+    } else if (pushCompatibilityDiagnostic("text", assertion, selector, ruleId, diagnostics)) {
       compiled.push({
         kind: "text",
         ...optionalString("column", assertion.text.column),
@@ -169,4 +177,12 @@ function optionalStringArray<TKey extends string>(
   return value === undefined
     ? {}
     : ({ [key]: value } as Record<TKey, readonly string[]>);
+}
+
+function hasTextPredicate(assertion: DeclarativeAssertion["text"]): boolean {
+  return (
+    assertion?.contains !== undefined ||
+    assertion?.containsExactlyOne !== undefined ||
+    (assertion?.excludes !== undefined && assertion.excludes.length > 0)
+  );
 }

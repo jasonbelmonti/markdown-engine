@@ -121,6 +121,30 @@ describe("declarative validation compiler proof", () => {
       },
     ]);
   });
+
+  it("rejects typed text assertions with no predicate before execution", () => {
+    const result = compileValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      rules: [
+        {
+          id: "text.empty",
+          select: { target: "section", title: "Objective" },
+          assert: { text: {} },
+        },
+      ],
+    });
+
+    expect(result.plan).toBeUndefined();
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.config.invalidShape",
+        ruleId: "text.empty",
+        message:
+          "text must include contains, containsExactlyOne, or a non-empty excludes array.",
+        severity: "error",
+      },
+    ]);
+  });
 });
 
 const supportedProfile = {
