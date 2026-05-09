@@ -50,7 +50,9 @@ The compiler creates closed data records only:
 Direct typed profile containers, caller-owned arrays, rule metadata, selector
 input, and assertion payloads are re-closed before plan creation, and
 unsupported selector keys reject compilation rather than entering the private
-plan.
+plan. Closure accepts JSON-safe primitives, dense arrays, and plain records, and
+it rejects non-plain payloads, accessors, and prototype-polluting data before
+compiler or evidence paths can read them.
 The public `validateWithProfile` wrapper also materializes profile data before
 reading profile metadata or generating evidence, so accessor-backed typed
 profiles return deterministic diagnostics rather than executing profile code.
@@ -96,9 +98,9 @@ Commands run from
 `.worktrees/bel-979-declarative-validation-wp-3-compiler-selector-plan`:
 
 - `npm run typecheck`: pass.
-- `npm run test:validation:compiler`: pass, 1 file and 19 tests.
+- `npm run test:validation:compiler`: pass, 1 file and 20 tests.
 - `npm run test:validation:selectors`: pass, 1 file and 5 tests.
-- `npm run test:validation:assertions`: pass, 1 file and 6 tests.
+- `npm run test:validation:assertions`: pass, 1 file and 8 tests.
 
 ## Result
 

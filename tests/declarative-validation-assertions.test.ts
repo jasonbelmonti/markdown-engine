@@ -251,7 +251,7 @@ describe("declarative validation assertion proof", () => {
     expect(result.diagnostics).toEqual([
       {
         code: "profile.config.invalidShape",
-        message: "Profile.rules must contain only data properties.",
+        message: "Profile.rules must contain only JSON-safe data properties.",
         severity: "error",
       },
     ]);
@@ -261,6 +261,81 @@ describe("declarative validation assertion proof", () => {
       ruleCount: 0,
     });
     expect(result.ruleResults).toEqual([]);
+    expect(result.evidence?.profileHash).toMatch(/^[a-f0-9]{64}$/);
+  });
+
+  it("does not execute nested profile payloads while generating evidence", () => {
+    const document = normalize(parse("# Objective\n\nReady.\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    class RulePayload {
+      get severity(): string {
+        throw new Error("severity getter must not run");
+      }
+    }
+
+    const result = validateWithProfile(
+      document,
+      {
+        syntaxVersion: "markdown-engine.validation@v1",
+        documentVersion: "1.0.0",
+        rules: [new RulePayload()],
+      } as unknown as ValidationProfile,
+      { includeEvidence: true },
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.config.invalidShape",
+        message: "Profile.rules[0] must contain only JSON-safe data properties.",
+        severity: "error",
+      },
+    ]);
+    expect(result.profile.ruleCount).toBe(0);
+    expect(result.ruleResults).toEqual([]);
+    expect(result.evidence?.profileHash).toMatch(/^[a-f0-9]{64}$/);
+  });
+
+  it("does not preserve profile __proto__ payloads during evidence hashing", () => {
+    const document = normalize(parse("# Objective\n\nReady.\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    const selector = { target: "document" } as Record<string, unknown>;
+    Object.defineProperty(selector, "__proto__", {
+      enumerable: true,
+      value: {
+        toJSON: () => {
+          throw new Error("profile prototype toJSON must not run");
+        },
+      },
+    });
+    const result = validateWithProfile(
+      document,
+      {
+        syntaxVersion: "markdown-engine.validation@v1",
+        documentVersion: "1.0.0",
+        rules: [
+          {
+            id: "proto.selector",
+            select: selector,
+            assert: { sectionsRequired: { headings: ["Objective"] } },
+          },
+        ],
+      } as unknown as ValidationProfile,
+      { includeEvidence: true },
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.config.invalidShape",
+        message:
+          "Profile.rules[0].select.__proto__ must contain only JSON-safe data properties.",
+        severity: "error",
+      },
+    ]);
+    expect(result.profile.ruleCount).toBe(0);
     expect(result.evidence?.profileHash).toMatch(/^[a-f0-9]{64}$/);
   });
 });

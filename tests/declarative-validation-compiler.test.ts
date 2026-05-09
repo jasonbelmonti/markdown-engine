@@ -81,8 +81,14 @@ describe("declarative validation compiler proof", () => {
     } as unknown as ValidationProfile;
     const closedResult = compileValidationProfile(profileWithUnsafeRootValue);
 
-    expect(closedResult.diagnostics).toEqual([]);
-    expect(closedResult.plan).not.toHaveProperty("profile");
+    expect(closedResult.plan).toBeUndefined();
+    expect(closedResult.diagnostics).toEqual([
+      {
+        code: "profile.config.invalidShape",
+        message: "Profile.callback must contain only JSON-safe data properties.",
+        severity: "error",
+      },
+    ]);
     expect(containsFunction(closedResult.plan)).toBe(false);
   });
 
@@ -116,7 +122,7 @@ describe("declarative validation compiler proof", () => {
         diagnostics: [
           {
             code: "profile.config.invalidShape",
-            message: "Profile rules must be a dense array.",
+            message: "Profile.rules[0] must contain only JSON-safe data properties.",
             severity: "error",
           },
         ],
@@ -138,7 +144,7 @@ describe("declarative validation compiler proof", () => {
         diagnostics: [
           {
             code: "profile.config.invalidShape",
-            message: "Profile rules must be an array.",
+            message: "Profile.rules.flatMap must contain only JSON-safe data properties.",
             severity: "error",
           },
         ],
@@ -283,8 +289,8 @@ describe("declarative validation compiler proof", () => {
         diagnostics: [
           {
             code: "profile.config.invalidShape",
-            ruleId: "selector.accessor",
-            message: "Rule select.title must contain only data properties.",
+            message:
+              "Profile.rules[0].select.title must contain only JSON-safe data properties.",
             severity: "error",
           },
         ],
@@ -303,8 +309,8 @@ describe("declarative validation compiler proof", () => {
         diagnostics: [
           {
             code: "profile.config.invalidShape",
-            ruleId: "assertion.accessor",
-            message: "Rule assert.text.contains must contain only data properties.",
+            message:
+              "Profile.rules[0].assert.text.contains must contain only JSON-safe data properties.",
             severity: "error",
           },
         ],
@@ -323,6 +329,37 @@ describe("declarative validation compiler proof", () => {
     }
   });
 
+  it("rejects direct typed __proto__ data before plan creation", () => {
+    const selector = { target: "document" } as Record<string, unknown>;
+    Object.defineProperty(selector, "__proto__", {
+      enumerable: true,
+      value: {
+        toJSON: () => "not data",
+      },
+    });
+    const result = compileValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      rules: [
+        {
+          id: "selector.proto",
+          select: selector,
+          assert: { sectionsRequired: { headings: ["Objective"] } },
+        },
+      ],
+    } as unknown as ValidationProfile);
+
+    expect(result.plan).toBeUndefined();
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.config.invalidShape",
+        message:
+          "Profile.rules[0].select.__proto__ must contain only JSON-safe data properties.",
+        severity: "error",
+      },
+    ]);
+    expect(containsFunction(result.plan)).toBe(false);
+  });
+
   it("rejects direct typed rule metadata before plan creation", () => {
     const invalidRuleMetadata = [
       {
@@ -334,7 +371,7 @@ describe("declarative validation compiler proof", () => {
         diagnostics: [
           {
             code: "profile.config.invalidShape",
-            message: "Profile rule at index 0 must have a non-empty id.",
+            message: "Profile.rules[0].id must contain only JSON-safe data properties.",
             severity: "error",
           },
         ],
@@ -349,9 +386,8 @@ describe("declarative validation compiler proof", () => {
         diagnostics: [
           {
             code: "profile.config.invalidShape",
-            ruleId: "objective.contains",
             message:
-              'Rule severity must be "error", "warning", or "info" when provided.',
+              "Profile.rules[0].severity must contain only JSON-safe data properties.",
             severity: "error",
           },
         ],
@@ -510,8 +546,9 @@ describe("declarative validation compiler proof", () => {
     expect(result.plan).toBeUndefined();
     expect(result.diagnostics).toEqual([
       {
-        code: "profile.config.unsupportedKey",
-        message: 'Unsupported validation profile key "callback".',
+        code: "profile.config.invalidShape",
+        message:
+          "Profile.rules[0].select.callback must contain only JSON-safe data properties.",
         severity: "error",
       },
     ]);

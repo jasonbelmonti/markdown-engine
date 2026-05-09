@@ -5,6 +5,10 @@ import type {
   DeclarativeValidationSeverity,
   ValidationProfile,
 } from "../profile/index.js";
+import {
+  closeProfileDataTree,
+  DATA_CLOSURE_FAILED,
+} from "../profile/data-closure.js";
 import { selectorFromValue } from "../profile/selector-schema.js";
 import { compiledAssertionsFromValue } from "./assertions.js";
 import { compileDiagnostic } from "./diagnostics.js";
@@ -40,16 +44,16 @@ export function compileValidationProfile(
     };
   }
 
-  const closedProfileRecord = closeRecordDataProperties(
+  const closedProfile = closeProfileDataTree(
     profileRecord,
     "Profile",
     diagnostics,
   );
-  if (closedProfileRecord === undefined) {
+  if (closedProfile === DATA_CLOSURE_FAILED || !isPlainRecord(closedProfile)) {
     return { diagnostics };
   }
 
-  const profileRules = profileRulesFromValue(closedProfileRecord.rules, diagnostics);
+  const profileRules = profileRulesFromValue(closedProfile.rules, diagnostics);
   if (profileRules === undefined) {
     return { diagnostics };
   }
@@ -73,7 +77,12 @@ export function compileValidationProfile(
       continue;
     }
 
-    const selectorInput = closeDataTree(rule.select, "Rule select", diagnostics, ruleId);
+    const selectorInput = closeProfileDataTree(
+      rule.select,
+      "Rule select",
+      diagnostics,
+      ruleId,
+    );
     if (selectorInput === DATA_CLOSURE_FAILED) {
       continue;
     }
@@ -87,7 +96,12 @@ export function compileValidationProfile(
       continue;
     }
 
-    const assertionInput = closeDataTree(rule.assert, "Rule assert", diagnostics, ruleId);
+    const assertionInput = closeProfileDataTree(
+      rule.assert,
+      "Rule assert",
+      diagnostics,
+      ruleId,
+    );
     if (assertionInput === DATA_CLOSURE_FAILED) {
       continue;
     }
@@ -144,108 +158,6 @@ export function compileValidationProfile(
       };
 }
 
-const DATA_CLOSURE_FAILED = Symbol("data-closure-failed");
-
-type DataClosureResult = unknown | typeof DATA_CLOSURE_FAILED;
-
-function closeDataTree(
-  value: unknown,
-  fieldName: string,
-  diagnostics: MarkdownDiagnostic[],
-  ruleId?: string,
-): DataClosureResult {
-  if (Array.isArray(value)) {
-    const values: unknown[] = [];
-
-    for (let index = 0; index < value.length; index += 1) {
-      const descriptor = Object.getOwnPropertyDescriptor(value, String(index));
-
-      if (descriptor === undefined || !("value" in descriptor)) {
-        pushDataPropertyDiagnostic(`${fieldName}[${index}]`, diagnostics, ruleId);
-
-        return DATA_CLOSURE_FAILED;
-      }
-
-      const closedValue = closeDataTree(
-        descriptor.value,
-        `${fieldName}[${index}]`,
-        diagnostics,
-        ruleId,
-      );
-      if (closedValue === DATA_CLOSURE_FAILED) {
-        return DATA_CLOSURE_FAILED;
-      }
-
-      values.push(closedValue);
-    }
-
-    return values;
-  }
-
-  if (isPlainRecord(value)) {
-    const record = closeRecordDataProperties(value, fieldName, diagnostics, ruleId);
-    if (record === undefined) {
-      return DATA_CLOSURE_FAILED;
-    }
-
-    const closedRecord: Record<string, unknown> = {};
-
-    for (const [key, propertyValue] of Object.entries(record)) {
-      const closedValue = closeDataTree(
-        propertyValue,
-        `${fieldName}.${key}`,
-        diagnostics,
-        ruleId,
-      );
-      if (closedValue === DATA_CLOSURE_FAILED) {
-        return DATA_CLOSURE_FAILED;
-      }
-
-      closedRecord[key] = closedValue;
-    }
-
-    return closedRecord;
-  }
-
-  return value;
-}
-
-function closeRecordDataProperties(
-  record: Record<string, unknown>,
-  fieldName: string,
-  diagnostics: MarkdownDiagnostic[],
-  ruleId?: string,
-): Record<string, unknown> | undefined {
-  const closedRecord: Record<string, unknown> = {};
-
-  for (const key of Object.keys(record)) {
-    const descriptor = Object.getOwnPropertyDescriptor(record, key);
-
-    if (descriptor === undefined || !("value" in descriptor)) {
-      pushDataPropertyDiagnostic(`${fieldName}.${key}`, diagnostics, ruleId);
-
-      return undefined;
-    }
-
-    closedRecord[key] = descriptor.value;
-  }
-
-  return closedRecord;
-}
-
-function pushDataPropertyDiagnostic(
-  fieldName: string,
-  diagnostics: MarkdownDiagnostic[],
-  ruleId?: string,
-): void {
-  diagnostics.push({
-    code: "profile.config.invalidShape",
-    ...(ruleId !== undefined ? { ruleId } : {}),
-    message: `${fieldName} must contain only data properties.`,
-    severity: "error",
-  });
-}
-
 function profileRulesFromValue(
   value: unknown,
   diagnostics: MarkdownDiagnostic[],
@@ -296,11 +208,15 @@ function ruleFromValue(
     return undefined;
   }
 
-  return closeRecordDataProperties(
+  const closedRule = closeProfileDataTree(
     value,
     `Profile rule at index ${index}`,
     diagnostics,
-  ) as DeclarativeValidationRule | undefined;
+  );
+
+  return closedRule === DATA_CLOSURE_FAILED || !isPlainRecord(closedRule)
+    ? undefined
+    : (closedRule as unknown as DeclarativeValidationRule);
 }
 
 function ruleIdFromValue(

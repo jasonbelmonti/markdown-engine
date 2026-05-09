@@ -10,6 +10,10 @@ import {
 } from "../declarative-validation/diagnostics/profile-config-diagnostics.js";
 import { createDeclarativeValidationEvidence } from "../declarative-validation/evidence/index.js";
 import { parseValidationProfileInput } from "../declarative-validation/profile/index.js";
+import {
+  closeProfileDataTree,
+  DATA_CLOSURE_FAILED,
+} from "../declarative-validation/profile/data-closure.js";
 import type {
   DeclarativeProfileParseOptions,
   DeclarativeProfileParseResult,
@@ -128,7 +132,7 @@ function materializeValidationProfile(
   document: EngineDocument,
 ): MaterializedValidationProfile {
   const diagnostics: MarkdownDiagnostic[] = [];
-  const closedProfile = closeDataTree(profile, "Profile", diagnostics);
+  const closedProfile = closeProfileDataTree(profile, "Profile", diagnostics);
   if (closedProfile === DATA_CLOSURE_FAILED || !isPlainRecord(closedProfile)) {
     if (diagnostics.length === 0) {
       diagnostics.push({
@@ -205,83 +209,6 @@ function rulesFromValue(
   }
 
   return value as ValidationProfile["rules"];
-}
-
-const DATA_CLOSURE_FAILED = Symbol("data-closure-failed");
-
-type DataClosureResult = unknown | typeof DATA_CLOSURE_FAILED;
-
-function closeDataTree(
-  value: unknown,
-  fieldName: string,
-  diagnostics: MarkdownDiagnostic[],
-): DataClosureResult {
-  if (Array.isArray(value)) {
-    const values: unknown[] = [];
-
-    for (let index = 0; index < value.length; index += 1) {
-      const descriptor = Object.getOwnPropertyDescriptor(value, String(index));
-
-      if (descriptor === undefined || !("value" in descriptor)) {
-        pushDataPropertyDiagnostic(`${fieldName}[${index}]`, diagnostics);
-
-        return DATA_CLOSURE_FAILED;
-      }
-
-      const closedValue = closeDataTree(
-        descriptor.value,
-        `${fieldName}[${index}]`,
-        diagnostics,
-      );
-      if (closedValue === DATA_CLOSURE_FAILED) {
-        return DATA_CLOSURE_FAILED;
-      }
-
-      values.push(closedValue);
-    }
-
-    return values;
-  }
-
-  if (isPlainRecord(value)) {
-    const closedRecord: Record<string, unknown> = {};
-
-    for (const key of Object.keys(value)) {
-      const descriptor = Object.getOwnPropertyDescriptor(value, key);
-
-      if (descriptor === undefined || !("value" in descriptor)) {
-        pushDataPropertyDiagnostic(`${fieldName}.${key}`, diagnostics);
-
-        return DATA_CLOSURE_FAILED;
-      }
-
-      const closedValue = closeDataTree(
-        descriptor.value,
-        `${fieldName}.${key}`,
-        diagnostics,
-      );
-      if (closedValue === DATA_CLOSURE_FAILED) {
-        return DATA_CLOSURE_FAILED;
-      }
-
-      closedRecord[key] = closedValue;
-    }
-
-    return closedRecord;
-  }
-
-  return value;
-}
-
-function pushDataPropertyDiagnostic(
-  fieldName: string,
-  diagnostics: MarkdownDiagnostic[],
-): void {
-  diagnostics.push({
-    code: "profile.config.invalidShape",
-    message: `${fieldName} must contain only data properties.`,
-    severity: "error",
-  });
 }
 
 function validationResult(
