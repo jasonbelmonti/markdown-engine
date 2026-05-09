@@ -15,6 +15,7 @@ import {
   DATA_CLOSURE_FAILED,
 } from "../declarative-validation/profile/data-closure.js";
 import type {
+  DeclarativeValidationRule,
   DeclarativeProfileParseOptions,
   DeclarativeProfileParseResult,
   JsonSafeValue,
@@ -208,7 +209,24 @@ function rulesFromValue(
     return undefined;
   }
 
-  return value as ValidationProfile["rules"];
+  const rules: DeclarativeValidationRule[] = [];
+
+  for (let index = 0; index < value.length; index += 1) {
+    const rule = value[index];
+    if (!isPlainRecord(rule)) {
+      diagnostics.push({
+        code: "profile.config.invalidShape",
+        message: `Profile rule at index ${index} must be an object.`,
+        severity: "error",
+      });
+
+      continue;
+    }
+
+    rules.push(rule as unknown as DeclarativeValidationRule);
+  }
+
+  return rules;
 }
 
 function validationResult(

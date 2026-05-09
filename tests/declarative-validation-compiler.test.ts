@@ -360,6 +360,33 @@ describe("declarative validation compiler proof", () => {
     expect(containsFunction(result.plan)).toBe(false);
   });
 
+  it("rejects cyclic typed profile data before plan creation", () => {
+    const selector = { target: "document" } as Record<string, unknown>;
+    selector.self = selector;
+
+    const result = compileValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      rules: [
+        {
+          id: "selector.cycle",
+          select: selector,
+          assert: { sectionsRequired: { headings: ["Objective"] } },
+        },
+      ],
+    } as unknown as ValidationProfile);
+
+    expect(result.plan).toBeUndefined();
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.config.invalidShape",
+        message:
+          "Profile.rules[0].select.self must contain only JSON-safe data properties.",
+        severity: "error",
+      },
+    ]);
+    expect(containsFunction(result.plan)).toBe(false);
+  });
+
   it("rejects direct typed rule metadata before plan creation", () => {
     const invalidRuleMetadata = [
       {

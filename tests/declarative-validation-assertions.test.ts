@@ -297,6 +297,33 @@ describe("declarative validation assertion proof", () => {
     expect(result.evidence?.profileHash).toMatch(/^[a-f0-9]{64}$/);
   });
 
+  it("generates evidence for invalid JSON-safe typed rule entries", () => {
+    const document = normalize(parse("# Objective\n\nReady.\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    const result = validateWithProfile(
+      document,
+      {
+        syntaxVersion: "markdown-engine.validation@v1",
+        documentVersion: "1.0.0",
+        rules: [null],
+      } as unknown as ValidationProfile,
+      { includeEvidence: true },
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.config.invalidShape",
+        message: "Profile rule at index 0 must be an object.",
+        severity: "error",
+      },
+    ]);
+    expect(result.profile.ruleCount).toBe(0);
+    expect(result.ruleResults).toEqual([]);
+    expect(result.evidence?.profileHash).toMatch(/^[a-f0-9]{64}$/);
+  });
+
   it("does not preserve profile __proto__ payloads during evidence hashing", () => {
     const document = normalize(parse("# Objective\n\nReady.\n").parsed, {
       documentVersion: "1.0.0",
