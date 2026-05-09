@@ -227,6 +227,96 @@ describe("declarative validation compiler proof", () => {
     }
   });
 
+  it("rejects direct typed non-object assertion payloads before execution", () => {
+    const invalidObjectAssertions = [
+      {
+        assert: { sectionsRequired: null },
+        message: "sectionsRequired must be an object.",
+      },
+      {
+        assert: { ids: null },
+        message: "ids must be an object.",
+      },
+      {
+        assert: { frontmatterRequired: null },
+        message: "frontmatterRequired must be an object.",
+      },
+    ];
+
+    for (const { assert, message } of invalidObjectAssertions) {
+      const result = compileValidationProfile({
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "assertion.non-object",
+            select: { target: "document" },
+            assert: assert as unknown as ValidationProfile["rules"][number]["assert"],
+          },
+        ],
+      });
+
+      expect(result.plan).toBeUndefined();
+      expect(result.diagnostics).toEqual([
+        {
+          code: "profile.config.invalidShape",
+          ruleId: "assertion.non-object",
+          message,
+          severity: "error",
+        },
+      ]);
+    }
+  });
+
+  it("rejects direct typed references assertions without idsFrom before execution", () => {
+    const result = compileValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      rules: [
+        {
+          id: "references.missing-ids-from",
+          select: { target: "document" },
+          assert: {
+            references: { mustAppearIn: ["Verification"] },
+          } as unknown as ValidationProfile["rules"][number]["assert"],
+        },
+      ],
+    });
+
+    expect(result.plan).toBeUndefined();
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.config.invalidShape",
+        ruleId: "references.missing-ids-from",
+        message: "references.idsFrom must be an object.",
+        severity: "error",
+      },
+    ]);
+  });
+
+  it("rejects direct typed ids assertions with non-boolean caseSensitive before execution", () => {
+    const result = compileValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      rules: [
+        {
+          id: "ids.invalid-case-sensitive",
+          select: { target: "document" },
+          assert: {
+            ids: { unique: true, caseSensitive: "no" },
+          } as unknown as ValidationProfile["rules"][number]["assert"],
+        },
+      ],
+    });
+
+    expect(result.plan).toBeUndefined();
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.config.invalidShape",
+        ruleId: "ids.invalid-case-sensitive",
+        message: "caseSensitive must be a boolean when provided.",
+        severity: "error",
+      },
+    ]);
+  });
+
   it("rejects direct typed assertions with parser-invalid empty string arrays before execution", () => {
     const invalidArrayAssertions = [
       {

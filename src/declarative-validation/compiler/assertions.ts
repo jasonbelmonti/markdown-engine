@@ -1,4 +1,5 @@
 import type { MarkdownDiagnostic } from "../../api/diagnostics.js";
+import { isPlainRecord } from "../../internal/plain-record.js";
 import type {
   DeclarativeAssertion,
   DeclarativeSelector,
@@ -20,6 +21,12 @@ export function compiledAssertionsFromValue(
 
   if (assertion.sectionsRequired !== undefined) {
     if (
+      pushObjectDiagnostic(
+        "sectionsRequired",
+        assertion.sectionsRequired,
+        ruleId,
+        diagnostics,
+      ) &&
       pushStringArrayDiagnostic(
         "sectionsRequired.headings",
         assertion.sectionsRequired.headings,
@@ -43,6 +50,7 @@ export function compiledAssertionsFromValue(
 
   if (assertion.sectionOrder !== undefined) {
     if (
+      pushObjectDiagnostic("sectionOrder", assertion.sectionOrder, ruleId, diagnostics) &&
       pushStringArrayDiagnostic(
         "sectionOrder.headings",
         assertion.sectionOrder.headings,
@@ -60,6 +68,12 @@ export function compiledAssertionsFromValue(
 
   if (assertion.tableColumnsRequired !== undefined) {
     if (
+      pushObjectDiagnostic(
+        "tableColumnsRequired",
+        assertion.tableColumnsRequired,
+        ruleId,
+        diagnostics,
+      ) &&
       pushCompatibilityDiagnostic(
         "tableColumnsRequired",
         assertion,
@@ -82,7 +96,9 @@ export function compiledAssertionsFromValue(
   }
 
   if (assertion.ids !== undefined) {
-    if (assertion.ids.unique !== true) {
+    if (!pushObjectDiagnostic("ids", assertion.ids, ruleId, diagnostics)) {
+      // Shape diagnostics are already recorded.
+    } else if (assertion.ids.unique !== true) {
       diagnostics.push(
         compileDiagnostic(
           "profile.config.invalidShape",
@@ -103,6 +119,12 @@ export function compiledAssertionsFromValue(
         ruleId,
         diagnostics,
       ) &&
+      pushOptionalBooleanDiagnostic(
+        "caseSensitive",
+        assertion.ids.caseSensitive,
+        ruleId,
+        diagnostics,
+      ) &&
       pushCompatibilityDiagnostic("ids", assertion, selector, ruleId, diagnostics)
     ) {
       compiled.push({
@@ -117,6 +139,13 @@ export function compiledAssertionsFromValue(
 
   if (assertion.references !== undefined) {
     if (
+      pushObjectDiagnostic("references", assertion.references, ruleId, diagnostics) &&
+      pushObjectDiagnostic(
+        "references.idsFrom",
+        assertion.references.idsFrom,
+        ruleId,
+        diagnostics,
+      ) &&
       pushStringArrayDiagnostic(
         "references.mustAppearIn",
         assertion.references.mustAppearIn,
@@ -156,7 +185,10 @@ export function compiledAssertionsFromValue(
   }
 
   if (assertion.text !== undefined) {
-    if (pushTextShapeDiagnostics(assertion.text, ruleId, diagnostics)) {
+    if (
+      pushObjectDiagnostic("text", assertion.text, ruleId, diagnostics) &&
+      pushTextShapeDiagnostics(assertion.text, ruleId, diagnostics)
+    ) {
       if (!hasTextPredicate(assertion.text)) {
         diagnostics.push(
           compileDiagnostic(
@@ -181,6 +213,12 @@ export function compiledAssertionsFromValue(
 
   if (assertion.textOccurrenceCount !== undefined) {
     if (
+      pushObjectDiagnostic(
+        "textOccurrenceCount",
+        assertion.textOccurrenceCount,
+        ruleId,
+        diagnostics,
+      ) &&
       pushCompatibilityDiagnostic(
         "textOccurrenceCount",
         assertion,
@@ -217,6 +255,12 @@ export function compiledAssertionsFromValue(
 
   if (assertion.frontmatterRequired !== undefined) {
     if (
+      pushObjectDiagnostic(
+        "frontmatterRequired",
+        assertion.frontmatterRequired,
+        ruleId,
+        diagnostics,
+      ) &&
       pushCompatibilityDiagnostic(
         "frontmatterRequired",
         assertion,
@@ -266,6 +310,27 @@ function pushCompatibilityDiagnostic(
   }
 
   return true;
+}
+
+function pushObjectDiagnostic(
+  fieldName: string,
+  value: unknown,
+  ruleId: string,
+  diagnostics: MarkdownDiagnostic[],
+): boolean {
+  if (isPlainRecord(value)) {
+    return true;
+  }
+
+  diagnostics.push(
+    compileDiagnostic(
+      "profile.config.invalidShape",
+      `${fieldName} must be an object.`,
+      ruleId,
+    ),
+  );
+
+  return false;
 }
 
 function pushTextShapeDiagnostics(
@@ -365,6 +430,27 @@ function pushOptionalNonEmptyStringDiagnostic(
   return value === undefined
     ? true
     : pushNonEmptyStringDiagnostic(fieldName, value, ruleId, diagnostics);
+}
+
+function pushOptionalBooleanDiagnostic(
+  fieldName: string,
+  value: unknown,
+  ruleId: string,
+  diagnostics: MarkdownDiagnostic[],
+): boolean {
+  if (value === undefined || typeof value === "boolean") {
+    return true;
+  }
+
+  diagnostics.push(
+    compileDiagnostic(
+      "profile.config.invalidShape",
+      `${fieldName} must be a boolean when provided.`,
+      ruleId,
+    ),
+  );
+
+  return false;
 }
 
 function pushNonEmptyStringDiagnostic(
