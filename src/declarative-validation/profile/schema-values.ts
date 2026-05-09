@@ -71,9 +71,22 @@ export function stringArray(value: unknown): readonly string[] | undefined {
     return undefined;
   }
 
-  return value.every(
-    (item): item is string => typeof item === "string" && item.length > 0,
-  )
-    ? [...value]
-    : undefined;
+  const values: string[] = [];
+
+  for (let index = 0; index < value.length; index += 1) {
+    const descriptor = Object.getOwnPropertyDescriptor(value, String(index));
+
+    if (
+      descriptor === undefined ||
+      !("value" in descriptor) ||
+      typeof descriptor.value !== "string" ||
+      descriptor.value.length === 0
+    ) {
+      return undefined;
+    }
+
+    values.push(descriptor.value);
+  }
+
+  return values;
 }

@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   normalize,
   parse,
+  parseValidationProfile,
   validateWithProfile,
   type ValidationProfile,
 } from "@jasonbelmonti/markdown-engine";
@@ -226,6 +227,350 @@ describe("declarative validation assertion proof", () => {
         diagnostics: result.diagnostics,
       },
     ]);
+  });
+
+  it("returns deterministic diagnostics for typed profile accessors", () => {
+    const document = normalize(parse("# Objective\n\nReady.\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    const profileWithRulesAccessor = {
+      syntaxVersion: "markdown-engine.validation@v1",
+    };
+    Object.defineProperty(profileWithRulesAccessor, "rules", {
+      enumerable: true,
+      get: () => {
+        throw new Error("rules getter must not run");
+      },
+    });
+    const result = validateWithProfile(
+      document,
+      profileWithRulesAccessor as ValidationProfile,
+      { includeEvidence: true },
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.config.invalidShape",
+        message: "Profile.rules must contain only JSON-safe data properties.",
+        severity: "error",
+      },
+    ]);
+    expect(result.profile).toEqual({
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      ruleCount: 0,
+    });
+    expect(result.ruleResults).toEqual([]);
+    expect(result.evidence?.profileHash).toMatch(/^[a-f0-9]{64}$/);
+  });
+
+  it("rejects unsupported typed profile root keys before evidence generation", () => {
+    const document = normalize(parse("# Objective\n\nReady.\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    const profile = {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [],
+      plugin: () => "mission-control",
+    } as const;
+    const diagnostics = [
+      {
+        code: "profile.config.unsupportedKey",
+        message: 'Unsupported validation profile key "plugin".',
+        severity: "error",
+      },
+    ];
+
+    expect(parseValidationProfile(profile).diagnostics).toEqual(diagnostics);
+
+    const result = validateWithProfile(
+      document,
+      profile as unknown as ValidationProfile,
+      { includeEvidence: true },
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.diagnostics).toEqual(diagnostics);
+    expect(result.profile.ruleCount).toBe(0);
+    expect(result.ruleResults).toEqual([]);
+    expect(result.evidence?.profileHash).toMatch(/^[a-f0-9]{64}$/);
+  });
+
+  it("rejects unsupported typed rule keys and duplicate ids before evidence generation", () => {
+    const document = normalize(parse("# Objective\n\nReady.\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    const invalidProfiles = [
+      {
+        profile: {
+          syntaxVersion: "markdown-engine.validation@v1",
+          documentVersion: "1.0.0",
+          rules: [
+            {
+              id: "rule.notes",
+              select: { target: "document" },
+              assert: { sectionsRequired: { headings: ["Objective"] } },
+              notes: () => "not part of the public profile contract",
+            },
+          ],
+        },
+        diagnostics: [
+          {
+            code: "profile.config.unsupportedKey",
+            message: 'Unsupported validation profile key "notes".',
+            severity: "error",
+          },
+        ],
+        ruleCount: 0,
+      },
+      {
+        profile: {
+          syntaxVersion: "markdown-engine.validation@v1",
+          documentVersion: "1.0.0",
+          rules: [
+            {
+              id: "duplicate",
+              select: { target: "document" },
+              assert: { sectionsRequired: { headings: ["Objective"] } },
+            },
+            {
+              id: "duplicate",
+              select: { target: "document" },
+              assert: { sectionsRequired: { headings: ["Verification"] } },
+            },
+          ],
+        },
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            message: 'Profile rule at index 1 duplicates rule id "duplicate".',
+            severity: "error",
+          },
+        ],
+        ruleCount: 2,
+      },
+    ] satisfies {
+      profile: unknown;
+      diagnostics: unknown[];
+      ruleCount: number;
+    }[];
+
+    for (const { profile, diagnostics, ruleCount } of invalidProfiles) {
+      expect(parseValidationProfile(profile).diagnostics).toEqual(diagnostics);
+
+      const result = validateWithProfile(
+        document,
+        profile as unknown as ValidationProfile,
+        { includeEvidence: true },
+      );
+
+      expect(result.valid).toBe(false);
+      expect(result.diagnostics).toEqual(diagnostics);
+      expect(result.profile.ruleCount).toBe(ruleCount);
+      expect(result.ruleResults).toEqual([]);
+      expect(result.evidence?.profileHash).toMatch(/^[a-f0-9]{64}$/);
+    }
+  });
+
+  it("does not execute nested profile payloads while generating evidence", () => {
+    const document = normalize(parse("# Objective\n\nReady.\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    class RulePayload {
+      get severity(): string {
+        throw new Error("severity getter must not run");
+      }
+    }
+
+    const result = validateWithProfile(
+      document,
+      {
+        syntaxVersion: "markdown-engine.validation@v1",
+        documentVersion: "1.0.0",
+        rules: [new RulePayload()],
+      } as unknown as ValidationProfile,
+      { includeEvidence: true },
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.config.invalidShape",
+        message: "Profile.rules[0] must contain only JSON-safe data properties.",
+        severity: "error",
+      },
+    ]);
+    expect(result.profile.ruleCount).toBe(0);
+    expect(result.ruleResults).toEqual([]);
+    expect(result.evidence?.profileHash).toMatch(/^[a-f0-9]{64}$/);
+  });
+
+  it("generates evidence for invalid JSON-safe typed rule entries", () => {
+    const document = normalize(parse("# Objective\n\nReady.\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    const result = validateWithProfile(
+      document,
+      {
+        syntaxVersion: "markdown-engine.validation@v1",
+        documentVersion: "1.0.0",
+        rules: [null],
+      } as unknown as ValidationProfile,
+      { includeEvidence: true },
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.config.invalidShape",
+        message: "Profile rule at index 0 must be an object.",
+        severity: "error",
+      },
+    ]);
+    expect(result.profile.ruleCount).toBe(0);
+    expect(result.ruleResults).toEqual([]);
+    expect(result.evidence?.profileHash).toMatch(/^[a-f0-9]{64}$/);
+  });
+
+  it("generates evidence diagnostics for typed proxy traps and non-finite numbers", () => {
+    const document = normalize(parse("# Objective\n\nReady.\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    let proxyTrapExecuted = false;
+    let rulesProxyTrapExecuted = false;
+    const throwingProxyProfile = new Proxy(
+      {
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [],
+      },
+      {
+        ownKeys: () => {
+          proxyTrapExecuted = true;
+          throw new Error("ownKeys trap must not escape");
+        },
+      },
+    );
+    const throwingRulesProxy = new Proxy([], {
+      get: (target, property, receiver) => {
+        if (property === "length") {
+          rulesProxyTrapExecuted = true;
+          throw new Error("rules length trap must not escape");
+        }
+
+        return Reflect.get(target, property, receiver);
+      },
+    });
+    const invalidProfiles = [
+      {
+        profile: throwingProxyProfile,
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            message: "Profile must contain only JSON-safe data properties.",
+            severity: "error",
+          },
+        ],
+      },
+      {
+        profile: {
+          syntaxVersion: "markdown-engine.validation@v1",
+          documentVersion: "1.0.0",
+          rules: throwingRulesProxy,
+        },
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            message: "Profile.rules must contain only JSON-safe data properties.",
+            severity: "error",
+          },
+        ],
+      },
+      {
+        profile: {
+          syntaxVersion: "markdown-engine.validation@v1",
+          documentVersion: "1.0.0",
+          rules: [
+            {
+              id: "selector.depth",
+              select: { target: "section", depth: Number.POSITIVE_INFINITY },
+              assert: { text: { contains: "Objective" } },
+            },
+          ],
+        },
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            message:
+              "Profile.rules[0].select.depth must contain only JSON-safe data properties.",
+            severity: "error",
+          },
+        ],
+      },
+    ] satisfies {
+      profile: unknown;
+      diagnostics: unknown[];
+    }[];
+
+    for (const { profile, diagnostics } of invalidProfiles) {
+      const result = validateWithProfile(
+        document,
+        profile as ValidationProfile,
+        { includeEvidence: true },
+      );
+
+      expect(result.valid).toBe(false);
+      expect(result.diagnostics).toEqual(diagnostics);
+      expect(result.profile.ruleCount).toBe(0);
+      expect(result.ruleResults).toEqual([]);
+      expect(result.evidence?.profileHash).toMatch(/^[a-f0-9]{64}$/);
+    }
+
+    expect(proxyTrapExecuted).toBe(false);
+    expect(rulesProxyTrapExecuted).toBe(false);
+  });
+
+  it("does not preserve profile __proto__ payloads during evidence hashing", () => {
+    const document = normalize(parse("# Objective\n\nReady.\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    const selector = { target: "document" } as Record<string, unknown>;
+    Object.defineProperty(selector, "__proto__", {
+      enumerable: true,
+      value: {
+        toJSON: () => {
+          throw new Error("profile prototype toJSON must not run");
+        },
+      },
+    });
+    const result = validateWithProfile(
+      document,
+      {
+        syntaxVersion: "markdown-engine.validation@v1",
+        documentVersion: "1.0.0",
+        rules: [
+          {
+            id: "proto.selector",
+            select: selector,
+            assert: { sectionsRequired: { headings: ["Objective"] } },
+          },
+        ],
+      } as unknown as ValidationProfile,
+      { includeEvidence: true },
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.config.invalidShape",
+        message:
+          "Profile.rules[0].select.__proto__ must contain only JSON-safe data properties.",
+        severity: "error",
+      },
+    ]);
+    expect(result.profile.ruleCount).toBe(0);
+    expect(result.evidence?.profileHash).toMatch(/^[a-f0-9]{64}$/);
   });
 });
 
