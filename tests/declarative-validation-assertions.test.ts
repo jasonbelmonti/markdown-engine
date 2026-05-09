@@ -324,6 +324,71 @@ describe("declarative validation assertion proof", () => {
     expect(result.evidence?.profileHash).toMatch(/^[a-f0-9]{64}$/);
   });
 
+  it("generates evidence diagnostics for typed proxy traps and non-finite numbers", () => {
+    const document = normalize(parse("# Objective\n\nReady.\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    let proxyTrapExecuted = false;
+    const throwingProxyProfile = new Proxy(
+      {
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [],
+      },
+      {
+        ownKeys: () => {
+          proxyTrapExecuted = true;
+          throw new Error("ownKeys trap must not escape");
+        },
+      },
+    );
+    const invalidProfiles = [
+      {
+        profile: throwingProxyProfile,
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            message: "Profile must contain only JSON-safe data properties.",
+            severity: "error",
+          },
+        ],
+      },
+      {
+        profile: {
+          syntaxVersion: "markdown-engine.validation@v1",
+          documentVersion: "1.0.0",
+          rules: [],
+          note: Number.POSITIVE_INFINITY,
+        },
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            message: "Profile.note must contain only JSON-safe data properties.",
+            severity: "error",
+          },
+        ],
+      },
+    ] satisfies {
+      profile: unknown;
+      diagnostics: unknown[];
+    }[];
+
+    for (const { profile, diagnostics } of invalidProfiles) {
+      const result = validateWithProfile(
+        document,
+        profile as ValidationProfile,
+        { includeEvidence: true },
+      );
+
+      expect(result.valid).toBe(false);
+      expect(result.diagnostics).toEqual(diagnostics);
+      expect(result.profile.ruleCount).toBe(0);
+      expect(result.ruleResults).toEqual([]);
+      expect(result.evidence?.profileHash).toMatch(/^[a-f0-9]{64}$/);
+    }
+
+    expect(proxyTrapExecuted).toBe(false);
+  });
+
   it("does not preserve profile __proto__ payloads during evidence hashing", () => {
     const document = normalize(parse("# Objective\n\nReady.\n").parsed, {
       documentVersion: "1.0.0",

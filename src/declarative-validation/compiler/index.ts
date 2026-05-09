@@ -31,26 +31,25 @@ export function compileValidationProfile(
   profile: ValidationProfile,
 ): DeclarativeValidationCompileResult {
   const diagnostics: MarkdownDiagnostic[] = [];
-  const profileRecord = profile as unknown;
-  if (!isPlainRecord(profileRecord)) {
-    return {
-      diagnostics: [
-        {
-          code: "profile.config.invalidShape",
-          message: "Profile must be an object.",
-          severity: "error",
-        },
-      ],
-    };
-  }
-
   const closedProfile = closeProfileDataTree(
-    profileRecord,
+    profile as unknown,
     "Profile",
     diagnostics,
   );
-  if (closedProfile === DATA_CLOSURE_FAILED || !isPlainRecord(closedProfile)) {
+  if (closedProfile === DATA_CLOSURE_FAILED) {
     return { diagnostics };
+  }
+  if (!isPlainRecord(closedProfile)) {
+    return {
+      diagnostics: [
+        ...diagnostics,
+        {
+          code: "profile.config.invalidShape",
+          message: "Profile must be an object.",
+          severity: "error" as const,
+        },
+      ],
+    };
   }
 
   const profileRules = profileRulesFromValue(closedProfile.rules, diagnostics);

@@ -387,6 +387,61 @@ describe("declarative validation compiler proof", () => {
     expect(containsFunction(result.plan)).toBe(false);
   });
 
+  it("rejects typed proxy traps and non-finite numbers before plan creation", () => {
+    let proxyTrapExecuted = false;
+    const throwingProxyProfile = new Proxy(
+      {
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [],
+      },
+      {
+        ownKeys: () => {
+          proxyTrapExecuted = true;
+          throw new Error("ownKeys trap must not escape");
+        },
+      },
+    );
+    const invalidProfiles = [
+      {
+        profile: throwingProxyProfile,
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            message: "Profile must contain only JSON-safe data properties.",
+            severity: "error",
+          },
+        ],
+      },
+      {
+        profile: {
+          syntaxVersion: "markdown-engine.validation@v1",
+          rules: [],
+          note: Number.NaN,
+        },
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            message: "Profile.note must contain only JSON-safe data properties.",
+            severity: "error",
+          },
+        ],
+      },
+    ] satisfies {
+      profile: unknown;
+      diagnostics: unknown[];
+    }[];
+
+    for (const { profile, diagnostics } of invalidProfiles) {
+      const result = compileValidationProfile(profile as ValidationProfile);
+
+      expect(result.plan).toBeUndefined();
+      expect(result.diagnostics).toEqual(diagnostics);
+      expect(containsFunction(result.plan)).toBe(false);
+    }
+
+    expect(proxyTrapExecuted).toBe(false);
+  });
+
   it("rejects direct typed rule metadata before plan creation", () => {
     const invalidRuleMetadata = [
       {
