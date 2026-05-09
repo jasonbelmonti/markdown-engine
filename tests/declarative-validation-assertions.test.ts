@@ -149,6 +149,49 @@ describe("declarative validation assertion proof", () => {
     ]);
   });
 
+  it("emits source-targeted diagnostics for table cell text assertions", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Status",
+          "",
+          "| Step | Owner |",
+          "| --- | --- |",
+          "| Build | engine |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "owner.contains",
+          select: {
+            target: "tableCell",
+            column: "Owner",
+            rowWhere: { column: "Step", equals: "Build" },
+          },
+          assert: { text: { contains: "docs" } },
+        },
+      ],
+    });
+
+    expect(result.valid).toBe(false);
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.textMissing",
+        ruleId: "owner.contains",
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({ line: 5 }),
+        }),
+      }),
+    ]);
+  });
+
   it("treats unsupported evaluator paths as errors regardless of rule severity", () => {
     const document = normalize(parse("# Objective\n\nReady.\n").parsed, {
       documentVersion: "1.0.0",
