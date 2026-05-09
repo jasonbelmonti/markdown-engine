@@ -61,7 +61,7 @@ export function compiledAssertionsFromValue(
     ) {
       compiled.push({
         kind: "sectionsRequired",
-        headings: assertion.sectionsRequired.headings,
+        headings: [...assertion.sectionsRequired.headings],
         order: assertion.sectionsRequired.order ?? "none",
       });
     }
@@ -85,7 +85,7 @@ export function compiledAssertionsFromValue(
     ) {
       compiled.push({
         kind: "sectionOrder",
-        headings: assertion.sectionOrder.headings,
+        headings: [...assertion.sectionOrder.headings],
       });
     }
   }
@@ -119,7 +119,7 @@ export function compiledAssertionsFromValue(
     ) {
       compiled.push({
         kind: "tableColumnsRequired",
-        columns: assertion.tableColumnsRequired.columns,
+        columns: [...assertion.tableColumnsRequired.columns],
       });
     }
   }
@@ -223,7 +223,7 @@ export function compiledAssertionsFromValue(
           ...optionalString("column", assertion.references.idsFrom.column),
           ...optionalString("prefix", assertion.references.idsFrom.prefix),
         },
-        mustAppearIn: assertion.references.mustAppearIn,
+        mustAppearIn: [...assertion.references.mustAppearIn],
       });
     }
   }
@@ -338,7 +338,7 @@ export function compiledAssertionsFromValue(
       ) {
         compiled.push({
           kind: "frontmatterRequired",
-          fields: assertion.frontmatterRequired.fields,
+          fields: [...assertion.frontmatterRequired.fields],
         });
       }
     }
@@ -587,7 +587,7 @@ function optionalStringArray<TKey extends string>(
 ): Record<TKey, readonly string[]> | Record<string, never> {
   return value === undefined
     ? {}
-    : ({ [key]: value } as Record<TKey, readonly string[]>);
+    : ({ [key]: [...value] } as unknown as Record<TKey, readonly string[]>);
 }
 
 function hasTextPredicate(assertion: DeclarativeAssertion["text"]): boolean {

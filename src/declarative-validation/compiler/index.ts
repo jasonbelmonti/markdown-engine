@@ -1,6 +1,7 @@
 import type { MarkdownDiagnostic } from "../../api/diagnostics.js";
 import { isPlainRecord } from "../../internal/plain-record.js";
-import type { DeclarativeSelector, ValidationProfile } from "../profile/index.js";
+import type { ValidationProfile } from "../profile/index.js";
+import { selectorFromValue } from "../profile/selector-schema.js";
 import { compiledAssertionsFromValue } from "./assertions.js";
 import { compileDiagnostic } from "./diagnostics.js";
 import type { DeclarativeValidationCompileResult } from "./plan.js";
@@ -12,33 +13,17 @@ export type {
   DeclarativeValidationCompileResult,
 } from "./plan.js";
 
-const SUPPORTED_SELECTOR_TARGETS = new Set<DeclarativeSelector["target"]>([
-  "document",
-  "section",
-  "heading",
-  "table",
-  "tableRow",
-  "tableCell",
-  "textSpan",
-  "link",
-  "list",
-  "frontmatter",
-]);
-
 export function compileValidationProfile(
   profile: ValidationProfile,
 ): DeclarativeValidationCompileResult {
   const diagnostics: MarkdownDiagnostic[] = [];
   const rules = profile.rules.flatMap((rule) => {
-    if (!SUPPORTED_SELECTOR_TARGETS.has(rule.select.target)) {
-      diagnostics.push(
-        compileDiagnostic(
-          "profile.compile.unsupportedSelector",
-          `Selector target "${rule.select.target}" is not supported by declarative validation.`,
-          rule.id,
-        ),
-      );
-
+    const diagnosticCountBeforeSelector = diagnostics.length;
+    const selector = selectorFromValue(rule.select, diagnostics);
+    if (
+      selector === undefined ||
+      diagnostics.length > diagnosticCountBeforeSelector
+    ) {
       return [];
     }
 
@@ -57,7 +42,7 @@ export function compileValidationProfile(
 
     const assertions = compiledAssertionsFromValue(
       rule.assert,
-      rule.select,
+      selector,
       rule.id,
       diagnostics,
     );
@@ -80,7 +65,7 @@ export function compileValidationProfile(
       {
         ruleId: rule.id,
         severity: rule.severity ?? "error",
-        selector: rule.select,
+        selector,
         assertions,
       },
     ];
@@ -90,7 +75,6 @@ export function compileValidationProfile(
     ? { diagnostics }
     : {
         plan: {
-          profile,
           rules,
         },
         diagnostics,

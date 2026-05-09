@@ -72,7 +72,18 @@ describe("declarative validation compiler proof", () => {
         },
       ],
     });
+    expect(result.plan).not.toHaveProperty("profile");
     expect(containsFunction(result.plan)).toBe(false);
+
+    const profileWithUnsafeRootValue = {
+      ...supportedProfile,
+      callback: () => "not part of the compiled plan",
+    } as unknown as ValidationProfile;
+    const closedResult = compileValidationProfile(profileWithUnsafeRootValue);
+
+    expect(closedResult.diagnostics).toEqual([]);
+    expect(closedResult.plan).not.toHaveProperty("profile");
+    expect(containsFunction(closedResult.plan)).toBe(false);
   });
 
   it("rejects incompatible selector and assertion pairs before execution", () => {
@@ -99,13 +110,82 @@ describe("declarative validation compiler proof", () => {
   });
 
   it("rejects column-scoped assertions outside table selector targets", () => {
+    const invalidColumnAssertions = [
+      {
+        id: "section.column-text",
+        assert: { text: { column: "State", contains: "ready" } },
+        message:
+          'Assertion "text" with a column option is compatible only with table or tableRow selectors.',
+      },
+      {
+        id: "section.column-ids",
+        assert: { ids: { unique: true, column: "ID" } },
+        message:
+          'Assertion "ids" with a column option is compatible only with table or tableRow selectors.',
+      },
+      {
+        id: "section.column-occurrences",
+        assert: { textOccurrenceCount: { text: "ready", count: 1, column: "State" } },
+        message:
+          'Assertion "textOccurrenceCount" with a column option is compatible only with table or tableRow selectors.',
+      },
+    ] satisfies {
+      id: string;
+      assert: ValidationProfile["rules"][number]["assert"];
+      message: string;
+    }[];
+
+    for (const { id, assert, message } of invalidColumnAssertions) {
+      const result = compileValidationProfile({
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id,
+            select: { target: "section", title: "Objective" },
+            assert,
+          },
+        ],
+      });
+
+      expect(result.plan).toBeUndefined();
+      expect(result.diagnostics).toEqual([
+        {
+          code: "profile.compile.incompatibleSelectorAssertion",
+          ruleId: id,
+          message,
+          severity: "error",
+        },
+      ]);
+    }
+  });
+
+  it("applies frontmatter selector compatibility before execution", () => {
+    for (const select of [
+      { target: "document" },
+      { target: "frontmatter" },
+    ] satisfies ValidationProfile["rules"][number]["select"][]) {
+      const result = compileValidationProfile({
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "frontmatter.allowed",
+            select,
+            assert: { frontmatterRequired: { fields: ["title"] } },
+          },
+        ],
+      });
+
+      expect(result.diagnostics).toEqual([]);
+      expect(result.plan?.rules).toHaveLength(1);
+    }
+
     const result = compileValidationProfile({
       syntaxVersion: "markdown-engine.validation@v1",
       rules: [
         {
-          id: "section.column-text",
-          select: { target: "section", title: "Objective" },
-          assert: { text: { column: "State", contains: "ready" } },
+          id: "frontmatter.filtered",
+          select: { target: "frontmatter", field: "title" },
+          assert: { frontmatterRequired: { fields: ["title"] } },
         },
       ],
     });
@@ -114,9 +194,35 @@ describe("declarative validation compiler proof", () => {
     expect(result.diagnostics).toEqual([
       {
         code: "profile.compile.incompatibleSelectorAssertion",
-        ruleId: "section.column-text",
+        ruleId: "frontmatter.filtered",
         message:
-          'Assertion "text" with a column option is compatible only with table or tableRow selectors.',
+          'Assertion "frontmatterRequired" is compatible only with document selectors or unfiltered frontmatter selectors.',
+        severity: "error",
+      },
+    ]);
+  });
+
+  it("rejects direct typed selectors with unsupported keys before execution", () => {
+    const result = compileValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      rules: [
+        {
+          id: "selector.unsupported-key",
+          select: {
+            target: "section",
+            title: "Objective",
+            callback: () => true,
+          } as unknown as ValidationProfile["rules"][number]["select"],
+          assert: { text: { contains: "ready" } },
+        },
+      ],
+    });
+
+    expect(result.plan).toBeUndefined();
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.config.unsupportedKey",
+        message: 'Unsupported validation profile key "callback".',
         severity: "error",
       },
     ]);
