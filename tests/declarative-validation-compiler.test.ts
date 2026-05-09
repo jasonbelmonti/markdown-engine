@@ -176,6 +176,24 @@ describe("declarative validation compiler proof", () => {
     }
   });
 
+  it("rejects unsupported direct typed profile root keys before plan creation", () => {
+    const result = compileValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      rules: [],
+      plugin: "mission-control",
+    } as unknown as ValidationProfile);
+
+    expect(result.plan).toBeUndefined();
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.config.unsupportedKey",
+        message: 'Unsupported validation profile key "plugin".',
+        severity: "error",
+      },
+    ]);
+    expect(containsFunction(result.plan)).toBe(false);
+  });
+
   it("ignores caller-owned array methods and iterators before plan creation", () => {
     const rules = [
       {

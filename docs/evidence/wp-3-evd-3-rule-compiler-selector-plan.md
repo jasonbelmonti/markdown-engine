@@ -57,6 +57,8 @@ compiler or evidence paths can read them.
 The public `validateWithProfile` wrapper also materializes profile data before
 reading profile metadata or generating evidence, so accessor-backed typed
 profiles return deterministic diagnostics rather than executing profile code.
+Direct typed profile root keys use the same unsupported-key contract as parsed
+profiles before validation or evidence generation proceeds.
 
 `tests/declarative-validation-compiler.test.ts` verifies that compiled plans do
 not contain functions.
@@ -99,9 +101,9 @@ Commands run from
 `.worktrees/bel-979-declarative-validation-wp-3-compiler-selector-plan`:
 
 - `npm run typecheck`: pass.
-- `npm run test:validation:compiler`: pass, 1 file and 22 tests.
+- `npm run test:validation:compiler`: pass, 1 file and 23 tests.
 - `npm run test:validation:selectors`: pass, 1 file and 5 tests.
-- `npm run test:validation:assertions`: pass, 1 file and 10 tests.
+- `npm run test:validation:assertions`: pass, 1 file and 11 tests.
 
 ## Result
 

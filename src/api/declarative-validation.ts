@@ -6,6 +6,7 @@ import { evaluateCompiledDeclarativeRule } from "../declarative-validation/asser
 import { compileValidationProfile } from "../declarative-validation/compiler/index.js";
 import {
   PROFILE_SYNTAX_VERSION,
+  unsupportedProfileKeys,
   unsupportedSyntaxVersion,
 } from "../declarative-validation/diagnostics/profile-config-diagnostics.js";
 import { createDeclarativeValidationEvidence } from "../declarative-validation/evidence/index.js";
@@ -27,6 +28,8 @@ import type {
 } from "../declarative-validation/results/index.js";
 import { resolveDeclarativeSelector } from "../declarative-validation/selectors/index.js";
 import { isPlainRecord } from "../internal/plain-record.js";
+
+const PROFILE_KEYS = ["syntaxVersion", "documentVersion", "rules"] as const;
 
 export type {
   DeclarativeAssertion,
@@ -145,6 +148,8 @@ function materializeValidationProfile(
 
     return { profile: fallbackProfile(document), diagnostics };
   }
+
+  unsupportedProfileKeys(closedProfile, PROFILE_KEYS, diagnostics);
 
   const syntaxVersion =
     closedProfile.syntaxVersion === PROFILE_SYNTAX_VERSION

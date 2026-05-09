@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   normalize,
   parse,
+  parseValidationProfile,
   validateWithProfile,
   type ValidationProfile,
 } from "@jasonbelmonti/markdown-engine";
@@ -260,6 +261,39 @@ describe("declarative validation assertion proof", () => {
       documentVersion: "1.0.0",
       ruleCount: 0,
     });
+    expect(result.ruleResults).toEqual([]);
+    expect(result.evidence?.profileHash).toMatch(/^[a-f0-9]{64}$/);
+  });
+
+  it("rejects unsupported typed profile root keys before evidence generation", () => {
+    const document = normalize(parse("# Objective\n\nReady.\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    const profile = {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [],
+      plugin: "mission-control",
+    } as const;
+    const diagnostics = [
+      {
+        code: "profile.config.unsupportedKey",
+        message: 'Unsupported validation profile key "plugin".',
+        severity: "error",
+      },
+    ];
+
+    expect(parseValidationProfile(profile).diagnostics).toEqual(diagnostics);
+
+    const result = validateWithProfile(
+      document,
+      profile as unknown as ValidationProfile,
+      { includeEvidence: true },
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.diagnostics).toEqual(diagnostics);
+    expect(result.profile.ruleCount).toBe(0);
     expect(result.ruleResults).toEqual([]);
     expect(result.evidence?.profileHash).toMatch(/^[a-f0-9]{64}$/);
   });

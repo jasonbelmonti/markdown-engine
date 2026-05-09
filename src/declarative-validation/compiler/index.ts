@@ -1,5 +1,6 @@
 import type { MarkdownDiagnostic } from "../../api/diagnostics.js";
 import { isPlainRecord } from "../../internal/plain-record.js";
+import { unsupportedProfileKeys } from "../diagnostics/profile-config-diagnostics.js";
 import type {
   DeclarativeValidationRule,
   DeclarativeValidationSeverity,
@@ -26,6 +27,7 @@ const SEVERITIES = new Set<DeclarativeValidationSeverity>([
   "warning",
   "info",
 ]);
+const PROFILE_KEYS = ["syntaxVersion", "documentVersion", "rules"] as const;
 
 export function compileValidationProfile(
   profile: ValidationProfile,
@@ -51,6 +53,8 @@ export function compileValidationProfile(
       ],
     };
   }
+
+  unsupportedProfileKeys(closedProfile, PROFILE_KEYS, diagnostics);
 
   const profileRules = profileRulesFromValue(closedProfile.rules, diagnostics);
   if (profileRules === undefined) {
