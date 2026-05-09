@@ -256,6 +256,73 @@ describe("declarative validation compiler proof", () => {
     expect(containsFunction(result.plan)).toBe(false);
   });
 
+  it("rejects direct typed selector and assertion accessors before plan creation", () => {
+    const selectorWithAccessor = { target: "section" };
+    Object.defineProperty(selectorWithAccessor, "title", {
+      enumerable: true,
+      get: () => "Objective",
+    });
+    const textWithAccessor = {};
+    Object.defineProperty(textWithAccessor, "contains", {
+      enumerable: true,
+      get: () => "ready",
+    });
+
+    const invalidAccessorProfiles = [
+      {
+        profile: {
+          syntaxVersion: "markdown-engine.validation@v1",
+          rules: [
+            {
+              id: "selector.accessor",
+              select: selectorWithAccessor,
+              assert: { text: { contains: "ready" } },
+            },
+          ],
+        },
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            ruleId: "selector.accessor",
+            message: "Rule select.title must contain only data properties.",
+            severity: "error",
+          },
+        ],
+      },
+      {
+        profile: {
+          syntaxVersion: "markdown-engine.validation@v1",
+          rules: [
+            {
+              id: "assertion.accessor",
+              select: { target: "section", title: "Objective" },
+              assert: { text: textWithAccessor },
+            },
+          ],
+        },
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            ruleId: "assertion.accessor",
+            message: "Rule assert.text.contains must contain only data properties.",
+            severity: "error",
+          },
+        ],
+      },
+    ] satisfies {
+      profile: unknown;
+      diagnostics: unknown[];
+    }[];
+
+    for (const { profile, diagnostics } of invalidAccessorProfiles) {
+      const result = compileValidationProfile(profile as ValidationProfile);
+
+      expect(result.plan).toBeUndefined();
+      expect(result.diagnostics).toEqual(diagnostics);
+      expect(containsFunction(result.plan)).toBe(false);
+    }
+  });
+
   it("rejects direct typed rule metadata before plan creation", () => {
     const invalidRuleMetadata = [
       {

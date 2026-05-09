@@ -47,9 +47,10 @@ The compiler creates closed data records only:
 - parsed selector data
 - assertion plan records with scalar, array, and plain-object fields
 
-Direct typed profile containers, caller-owned arrays, rule metadata, and
-selector input are re-closed before plan creation, and unsupported selector keys
-reject compilation rather than entering the private plan.
+Direct typed profile containers, caller-owned arrays, rule metadata, selector
+input, and assertion payloads are re-closed before plan creation, and
+unsupported selector keys reject compilation rather than entering the private
+plan.
 
 `tests/declarative-validation-compiler.test.ts` verifies that compiled plans do
 not contain functions.
@@ -92,7 +93,7 @@ Commands run from
 `.worktrees/bel-979-declarative-validation-wp-3-compiler-selector-plan`:
 
 - `npm run typecheck`: pass.
-- `npm run test:validation:compiler`: pass, 1 file and 18 tests.
+- `npm run test:validation:compiler`: pass, 1 file and 19 tests.
 - `npm run test:validation:selectors`: pass, 1 file and 5 tests.
 - `npm run test:validation:assertions`: pass, 1 file and 5 tests.
 
