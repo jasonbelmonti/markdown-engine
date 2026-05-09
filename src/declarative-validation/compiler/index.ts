@@ -1,4 +1,5 @@
 import type { MarkdownDiagnostic } from "../../api/diagnostics.js";
+import { isPlainRecord } from "../../internal/plain-record.js";
 import type { DeclarativeSelector, ValidationProfile } from "../profile/index.js";
 import { compiledAssertionsFromValue } from "./assertions.js";
 import { compileDiagnostic } from "./diagnostics.js";
@@ -42,6 +43,18 @@ export function compileValidationProfile(
     }
 
     const diagnosticCountBeforeAssertions = diagnostics.length;
+    if (!isPlainRecord(rule.assert)) {
+      diagnostics.push(
+        compileDiagnostic(
+          "profile.config.invalidShape",
+          "Rule assert must be an object.",
+          rule.id,
+        ),
+      );
+
+      return [];
+    }
+
     const assertions = compiledAssertionsFromValue(
       rule.assert,
       rule.select,

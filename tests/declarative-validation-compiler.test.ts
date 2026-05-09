@@ -323,6 +323,29 @@ describe("declarative validation compiler proof", () => {
     }
   });
 
+  it("rejects direct typed non-object rule assert payloads before execution", () => {
+    const result = compileValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      rules: [
+        {
+          id: "assert.non-object",
+          select: { target: "document" },
+          assert: null as unknown as ValidationProfile["rules"][number]["assert"],
+        },
+      ],
+    });
+
+    expect(result.plan).toBeUndefined();
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.config.invalidShape",
+        ruleId: "assert.non-object",
+        message: "Rule assert must be an object.",
+        severity: "error",
+      },
+    ]);
+  });
+
   it("rejects direct typed references assertions without idsFrom before execution", () => {
     const result = compileValidationProfile({
       syntaxVersion: "markdown-engine.validation@v1",
