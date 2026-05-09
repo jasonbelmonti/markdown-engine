@@ -31,8 +31,22 @@ function evaluateAssertion(
     case "sectionsRequired":
       return evaluateSectionsRequired(rule, assertion, selection);
 
-    case "textContains":
-      return evaluateTextContains(rule, assertion, selection);
+    case "text":
+      return evaluateText(rule, assertion, selection);
+
+    case "sectionOrder":
+    case "tableColumnsRequired":
+    case "ids":
+    case "references":
+    case "textOccurrenceCount":
+    case "frontmatterRequired":
+      return [
+        unsupportedEvaluatorDiagnostic(
+          "profile.validation.assertionUnsupported",
+          `Assertion "${assertion.kind}" is compiled but not implemented by the assertion evaluator yet.`,
+          rule,
+        ),
+      ];
   }
 }
 
@@ -91,11 +105,21 @@ function strictSectionOrderDiagnostics(
   return [];
 }
 
-function evaluateTextContains(
+function evaluateText(
   rule: CompiledDeclarativeValidationRule,
-  assertion: Extract<CompiledDeclarativeAssertion, { kind: "textContains" }>,
+  assertion: Extract<CompiledDeclarativeAssertion, { kind: "text" }>,
   selection: DeclarativeSelection,
 ): MarkdownDiagnostic[] {
+  if (hasUnsupportedTextEvaluatorPredicate(assertion)) {
+    return [
+      unsupportedEvaluatorDiagnostic(
+        "profile.validation.assertionUnsupported",
+        'Assertion "text" is compiled but only text.contains without a column is implemented by the assertion evaluator yet.',
+        rule,
+      ),
+    ];
+  }
+
   if (selection.targets.length === 0) {
     return [
       validationDiagnostic(
@@ -107,17 +131,53 @@ function evaluateTextContains(
   }
 
   return selection.targets.flatMap((target) =>
-    target.text.includes(assertion.text)
-      ? []
-      : [
-          validationDiagnostic(
-            "profile.validation.textMissing",
-            `Selected ${target.kind} text must contain "${assertion.text}".`,
-            rule,
-            target.kind === "section" ? target.source?.range : undefined,
-          ),
-        ],
+    evaluateTextTarget(
+      rule,
+      assertion,
+      target.kind,
+      target.text,
+      targetSourceRange(target),
+    ),
   );
+}
+
+function evaluateTextTarget(
+  rule: CompiledDeclarativeValidationRule,
+  assertion: Extract<CompiledDeclarativeAssertion, { kind: "text" }>,
+  targetKind: string,
+  text: string,
+  sourceRange?: MarkdownDiagnostic["sourceRange"],
+): MarkdownDiagnostic[] {
+  const diagnostics: MarkdownDiagnostic[] = [];
+
+  if (assertion.contains !== undefined && !text.includes(assertion.contains)) {
+    diagnostics.push(
+      validationDiagnostic(
+        "profile.validation.textMissing",
+        `Selected ${targetKind} text must contain "${assertion.contains}".`,
+        rule,
+        sourceRange,
+      ),
+    );
+  }
+
+  return diagnostics;
+}
+
+function hasUnsupportedTextEvaluatorPredicate(
+  assertion: Extract<CompiledDeclarativeAssertion, { kind: "text" }>,
+): boolean {
+  return (
+    assertion.column !== undefined ||
+    assertion.containsExactlyOne !== undefined ||
+    assertion.excludes !== undefined
+  );
+}
+
+function targetSourceRange(
+  target: DeclarativeSelection["targets"][number],
+): MarkdownDiagnostic["sourceRange"] | undefined {
+  return "source" in target ? target.source?.range : undefined;
 }
 
 function validationDiagnostic(
@@ -132,5 +192,18 @@ function validationDiagnostic(
     message,
     severity: rule.severity,
     ...(sourceRange !== undefined ? { sourceRange } : {}),
+  };
+}
+
+function unsupportedEvaluatorDiagnostic(
+  code: string,
+  message: string,
+  rule: CompiledDeclarativeValidationRule,
+): MarkdownDiagnostic {
+  return {
+    code,
+    ruleId: rule.ruleId,
+    message,
+    severity: "error",
   };
 }
