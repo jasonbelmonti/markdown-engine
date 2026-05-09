@@ -227,6 +227,42 @@ describe("declarative validation assertion proof", () => {
       },
     ]);
   });
+
+  it("returns deterministic diagnostics for typed profile accessors", () => {
+    const document = normalize(parse("# Objective\n\nReady.\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    const profileWithRulesAccessor = {
+      syntaxVersion: "markdown-engine.validation@v1",
+    };
+    Object.defineProperty(profileWithRulesAccessor, "rules", {
+      enumerable: true,
+      get: () => {
+        throw new Error("rules getter must not run");
+      },
+    });
+    const result = validateWithProfile(
+      document,
+      profileWithRulesAccessor as ValidationProfile,
+      { includeEvidence: true },
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.config.invalidShape",
+        message: "Profile.rules must contain only data properties.",
+        severity: "error",
+      },
+    ]);
+    expect(result.profile).toEqual({
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      ruleCount: 0,
+    });
+    expect(result.ruleResults).toEqual([]);
+    expect(result.evidence?.profileHash).toMatch(/^[a-f0-9]{64}$/);
+  });
 });
 
 const profile = {

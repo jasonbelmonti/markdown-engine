@@ -4,6 +4,10 @@ import type { ValidationRuleResult } from "./validate.js";
 import { cloneDiagnostics, hasErrorDiagnostic } from "../diagnostics/index.js";
 import { evaluateCompiledDeclarativeRule } from "../declarative-validation/assertions/index.js";
 import { compileValidationProfile } from "../declarative-validation/compiler/index.js";
+import {
+  PROFILE_SYNTAX_VERSION,
+  unsupportedSyntaxVersion,
+} from "../declarative-validation/diagnostics/profile-config-diagnostics.js";
 import { createDeclarativeValidationEvidence } from "../declarative-validation/evidence/index.js";
 import { parseValidationProfileInput } from "../declarative-validation/profile/index.js";
 import type {
@@ -17,6 +21,7 @@ import type {
   DeclarativeValidationResult,
 } from "../declarative-validation/results/index.js";
 import { resolveDeclarativeSelector } from "../declarative-validation/selectors/index.js";
+import { isPlainRecord } from "../internal/plain-record.js";
 
 export type {
   DeclarativeAssertion,
@@ -64,17 +69,35 @@ export function validateWithProfile(
   profile: ValidationProfile,
   options: DeclarativeValidationOptions = {},
 ): DeclarativeValidationResult {
-  const profileDocumentVersion = profile.documentVersion ?? document.version;
+  const materializedProfile = materializeValidationProfile(profile, document);
+  if (materializedProfile.diagnostics.length > 0) {
+    return validationResult(
+      document,
+      materializedProfile.profile,
+      [],
+      materializedProfile.diagnostics,
+      options,
+    );
+  }
+
+  const profileDocumentVersion =
+    materializedProfile.profile.documentVersion ?? document.version;
   const versionDiagnostics =
     profileDocumentVersion === document.version
       ? []
       : [documentVersionMismatchDiagnostic(profileDocumentVersion, document.version)];
 
   if (versionDiagnostics.length > 0) {
-    return validationResult(document, profile, [], versionDiagnostics, options);
+    return validationResult(
+      document,
+      materializedProfile.profile,
+      [],
+      versionDiagnostics,
+      options,
+    );
   }
 
-  const compileResult = compileValidationProfile(profile);
+  const compileResult = compileValidationProfile(materializedProfile.profile);
   const ruleResults =
     compileResult.plan?.rules.map((rule) =>
       evaluateCompiledDeclarativeRule(
@@ -86,7 +109,179 @@ export function validateWithProfile(
     ...compileResult.diagnostics,
     ...ruleResults.flatMap((result) => result.diagnostics),
   ];
-  return validationResult(document, profile, ruleResults, diagnostics, options);
+  return validationResult(
+    document,
+    materializedProfile.profile,
+    ruleResults,
+    diagnostics,
+    options,
+  );
+}
+
+interface MaterializedValidationProfile {
+  profile: ValidationProfile;
+  diagnostics: readonly MarkdownDiagnostic[];
+}
+
+function materializeValidationProfile(
+  profile: ValidationProfile,
+  document: EngineDocument,
+): MaterializedValidationProfile {
+  const diagnostics: MarkdownDiagnostic[] = [];
+  const closedProfile = closeDataTree(profile, "Profile", diagnostics);
+  if (closedProfile === DATA_CLOSURE_FAILED || !isPlainRecord(closedProfile)) {
+    if (diagnostics.length === 0) {
+      diagnostics.push({
+        code: "profile.config.invalidShape",
+        message: "Profile must be an object.",
+        severity: "error",
+      });
+    }
+
+    return { profile: fallbackProfile(document), diagnostics };
+  }
+
+  const syntaxVersion =
+    closedProfile.syntaxVersion === PROFILE_SYNTAX_VERSION
+      ? PROFILE_SYNTAX_VERSION
+      : undefined;
+  if (syntaxVersion === undefined) {
+    diagnostics.push(unsupportedSyntaxVersion());
+  }
+
+  const documentVersion =
+    closedProfile.documentVersion === undefined
+      ? undefined
+      : documentVersionFromValue(closedProfile.documentVersion, diagnostics);
+  const rules = rulesFromValue(closedProfile.rules, diagnostics);
+
+  return {
+    profile: {
+      syntaxVersion: PROFILE_SYNTAX_VERSION,
+      ...(documentVersion !== undefined ? { documentVersion } : {}),
+      rules: rules ?? [],
+    },
+    diagnostics,
+  };
+}
+
+function fallbackProfile(document: EngineDocument): ValidationProfile {
+  return {
+    syntaxVersion: PROFILE_SYNTAX_VERSION,
+    documentVersion: document.version,
+    rules: [],
+  };
+}
+
+function documentVersionFromValue(
+  value: unknown,
+  diagnostics: MarkdownDiagnostic[],
+): EngineDocument["version"] | undefined {
+  if (value === "0.0.0" || value === "1.0.0") {
+    return value;
+  }
+
+  diagnostics.push({
+    code: "profile.config.invalidShape",
+    message: 'Profile documentVersion must be "0.0.0" or "1.0.0" when provided.',
+    severity: "error",
+  });
+
+  return undefined;
+}
+
+function rulesFromValue(
+  value: unknown,
+  diagnostics: MarkdownDiagnostic[],
+): ValidationProfile["rules"] | undefined {
+  if (!Array.isArray(value)) {
+    diagnostics.push({
+      code: "profile.config.invalidShape",
+      message: "Profile rules must be an array.",
+      severity: "error",
+    });
+
+    return undefined;
+  }
+
+  return value as ValidationProfile["rules"];
+}
+
+const DATA_CLOSURE_FAILED = Symbol("data-closure-failed");
+
+type DataClosureResult = unknown | typeof DATA_CLOSURE_FAILED;
+
+function closeDataTree(
+  value: unknown,
+  fieldName: string,
+  diagnostics: MarkdownDiagnostic[],
+): DataClosureResult {
+  if (Array.isArray(value)) {
+    const values: unknown[] = [];
+
+    for (let index = 0; index < value.length; index += 1) {
+      const descriptor = Object.getOwnPropertyDescriptor(value, String(index));
+
+      if (descriptor === undefined || !("value" in descriptor)) {
+        pushDataPropertyDiagnostic(`${fieldName}[${index}]`, diagnostics);
+
+        return DATA_CLOSURE_FAILED;
+      }
+
+      const closedValue = closeDataTree(
+        descriptor.value,
+        `${fieldName}[${index}]`,
+        diagnostics,
+      );
+      if (closedValue === DATA_CLOSURE_FAILED) {
+        return DATA_CLOSURE_FAILED;
+      }
+
+      values.push(closedValue);
+    }
+
+    return values;
+  }
+
+  if (isPlainRecord(value)) {
+    const closedRecord: Record<string, unknown> = {};
+
+    for (const key of Object.keys(value)) {
+      const descriptor = Object.getOwnPropertyDescriptor(value, key);
+
+      if (descriptor === undefined || !("value" in descriptor)) {
+        pushDataPropertyDiagnostic(`${fieldName}.${key}`, diagnostics);
+
+        return DATA_CLOSURE_FAILED;
+      }
+
+      const closedValue = closeDataTree(
+        descriptor.value,
+        `${fieldName}.${key}`,
+        diagnostics,
+      );
+      if (closedValue === DATA_CLOSURE_FAILED) {
+        return DATA_CLOSURE_FAILED;
+      }
+
+      closedRecord[key] = closedValue;
+    }
+
+    return closedRecord;
+  }
+
+  return value;
+}
+
+function pushDataPropertyDiagnostic(
+  fieldName: string,
+  diagnostics: MarkdownDiagnostic[],
+): void {
+  diagnostics.push({
+    code: "profile.config.invalidShape",
+    message: `${fieldName} must contain only data properties.`,
+    severity: "error",
+  });
 }
 
 function validationResult(

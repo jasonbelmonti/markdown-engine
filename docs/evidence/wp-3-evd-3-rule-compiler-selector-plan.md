@@ -51,6 +51,9 @@ Direct typed profile containers, caller-owned arrays, rule metadata, selector
 input, and assertion payloads are re-closed before plan creation, and
 unsupported selector keys reject compilation rather than entering the private
 plan.
+The public `validateWithProfile` wrapper also materializes profile data before
+reading profile metadata or generating evidence, so accessor-backed typed
+profiles return deterministic diagnostics rather than executing profile code.
 
 `tests/declarative-validation-compiler.test.ts` verifies that compiled plans do
 not contain functions.
@@ -95,7 +98,7 @@ Commands run from
 - `npm run typecheck`: pass.
 - `npm run test:validation:compiler`: pass, 1 file and 19 tests.
 - `npm run test:validation:selectors`: pass, 1 file and 5 tests.
-- `npm run test:validation:assertions`: pass, 1 file and 5 tests.
+- `npm run test:validation:assertions`: pass, 1 file and 6 tests.
 
 ## Result
 
