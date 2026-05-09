@@ -86,6 +86,119 @@ describe("declarative validation compiler proof", () => {
     expect(containsFunction(closedResult.plan)).toBe(false);
   });
 
+  it("rejects direct typed profile containers before plan creation", () => {
+    const invalidProfiles = [
+      {
+        profile: null,
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            message: "Profile must be an object.",
+            severity: "error",
+          },
+        ],
+      },
+      {
+        profile: {
+          syntaxVersion: "markdown-engine.validation@v1",
+          rules: {
+            flatMap: () => [
+              {
+                ruleId: () => "function-bearing compiled rule",
+                severity: "error",
+                selector: { target: "document" },
+                assertions: [],
+              },
+            ],
+          },
+        },
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            message: "Profile rules must be an array.",
+            severity: "error",
+          },
+        ],
+      },
+      {
+        profile: {
+          syntaxVersion: "markdown-engine.validation@v1",
+          rules: [null],
+        },
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            message: "Profile rule at index 0 must be an object.",
+            severity: "error",
+          },
+        ],
+      },
+    ] satisfies {
+      profile: unknown;
+      diagnostics: unknown[];
+    }[];
+
+    for (const { profile, diagnostics } of invalidProfiles) {
+      const result = compileValidationProfile(profile as ValidationProfile);
+
+      expect(result.plan).toBeUndefined();
+      expect(result.diagnostics).toEqual(diagnostics);
+      expect(containsFunction(result.plan)).toBe(false);
+    }
+  });
+
+  it("rejects direct typed rule metadata before plan creation", () => {
+    const invalidRuleMetadata = [
+      {
+        rule: {
+          id: () => "objective.contains",
+          select: { target: "section", title: "Objective" },
+          assert: { text: { contains: "ready" } },
+        },
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            message: "Profile rule at index 0 must have a non-empty id.",
+            severity: "error",
+          },
+        ],
+      },
+      {
+        rule: {
+          id: "objective.contains",
+          severity: () => "error",
+          select: { target: "section", title: "Objective" },
+          assert: { text: { contains: "ready" } },
+        },
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            ruleId: "objective.contains",
+            message:
+              'Rule severity must be "error", "warning", or "info" when provided.',
+            severity: "error",
+          },
+        ],
+      },
+    ] satisfies {
+      rule: unknown;
+      diagnostics: unknown[];
+    }[];
+
+    for (const { rule, diagnostics } of invalidRuleMetadata) {
+      const result = compileValidationProfile({
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          rule as unknown as ValidationProfile["rules"][number],
+        ],
+      });
+
+      expect(result.plan).toBeUndefined();
+      expect(result.diagnostics).toEqual(diagnostics);
+      expect(containsFunction(result.plan)).toBe(false);
+    }
+  });
+
   it("rejects incompatible selector and assertion pairs before execution", () => {
     const result = compileValidationProfile({
       syntaxVersion: "markdown-engine.validation@v1",
