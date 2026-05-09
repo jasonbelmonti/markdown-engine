@@ -145,6 +145,40 @@ describe("declarative validation compiler proof", () => {
       },
     ]);
   });
+
+  it("rejects ids assertions without explicit unique true before execution", () => {
+    const invalidIdAssertions = [
+      { ids: {}, select: { target: "document" } },
+      { ids: { unique: false }, select: { target: "document" } },
+      { ids: { column: "ID" }, select: { target: "tableRow" } },
+    ] satisfies {
+      ids: ValidationProfile["rules"][number]["assert"]["ids"];
+      select: ValidationProfile["rules"][number]["select"];
+    }[];
+
+    for (const { ids, select } of invalidIdAssertions) {
+      const result = compileValidationProfile({
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "ids.invalid",
+            select,
+            assert: { ids },
+          },
+        ],
+      });
+
+      expect(result.plan).toBeUndefined();
+      expect(result.diagnostics).toEqual([
+        {
+          code: "profile.config.invalidShape",
+          ruleId: "ids.invalid",
+          message: "ids.unique must be true.",
+          severity: "error",
+        },
+      ]);
+    }
+  });
 });
 
 const supportedProfile = {

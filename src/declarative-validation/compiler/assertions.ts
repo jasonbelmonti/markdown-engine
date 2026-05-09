@@ -55,7 +55,15 @@ export function compiledAssertionsFromValue(
   }
 
   if (assertion.ids !== undefined) {
-    if (pushCompatibilityDiagnostic("ids", assertion, selector, ruleId, diagnostics)) {
+    if (assertion.ids.unique !== true) {
+      diagnostics.push(
+        compileDiagnostic(
+          "profile.config.invalidShape",
+          "ids.unique must be true.",
+          ruleId,
+        ),
+      );
+    } else if (pushCompatibilityDiagnostic("ids", assertion, selector, ruleId, diagnostics)) {
       compiled.push({
         kind: "ids",
         unique: true,
