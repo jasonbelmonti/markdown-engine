@@ -132,6 +132,9 @@ describe("declarative validation selector proof", () => {
       expect.objectContaining({
         kind: "textSpan",
         text: expect.stringContaining("source span text"),
+        source: expect.objectContaining({
+          text: expect.stringContaining("source span text"),
+        }),
       }),
     ]);
 
@@ -210,5 +213,44 @@ describe("declarative validation selector proof", () => {
         text: "relative link",
       }).targets,
     ).toEqual([]);
+  });
+
+  it("matches inline heading targets when scoped to their section", () => {
+    const document = normalize(
+      parse("# Alpha [heading link](./heading.md)\n\nBody text.\n").parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+
+    expect(
+      resolveDeclarativeSelector(document, {
+        target: "link",
+        section: "Alpha heading link",
+        text: "heading link",
+      }).targets,
+    ).toEqual([
+      expect.objectContaining({
+        kind: "link",
+        text: "heading link",
+      }),
+    ]);
+
+    expect(
+      resolveDeclarativeSelector(document, {
+        target: "textSpan",
+        section: "Alpha heading link",
+        nodeType: "link",
+        textIncludes: "heading link",
+      }).targets,
+    ).toEqual([
+      expect.objectContaining({
+        kind: "textSpan",
+        text: "heading link",
+        source: expect.objectContaining({
+          text: "[heading link](./heading.md)",
+        }),
+      }),
+    ]);
   });
 });

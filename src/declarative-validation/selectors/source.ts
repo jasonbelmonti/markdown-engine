@@ -64,10 +64,14 @@ function sectionContainsTarget(
     return true;
   }
 
-  return section.bodyTargets.some((target) =>
-    nodeContainsTarget(nodeByTargetId(document, target.id), targetId),
-  ) || section.childSections.some((target) =>
-    sectionContainsTargetId(document, target.id, targetId),
+  return (
+    nodeContainsTarget(nodeByTargetId(document, section.headingTarget.id), targetId) ||
+    section.bodyTargets.some((target) =>
+      nodeContainsTarget(nodeByTargetId(document, target.id), targetId),
+    ) ||
+    section.childSections.some((target) =>
+      sectionContainsTargetId(document, target.id, targetId),
+    )
   );
 }
 

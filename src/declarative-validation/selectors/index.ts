@@ -67,11 +67,13 @@ export type DeclarativeSelectionTarget =
       table: EngineTable;
       cell: EngineTableCell;
       text: string;
+      source?: EngineSourceSlice;
     }
   | {
       kind: "textSpan";
       span: EngineTextSpan;
       text: string;
+      source?: EngineSourceSlice;
     }
   | {
       kind: "link";
@@ -238,6 +240,7 @@ function textSpanTargets(
       kind: "textSpan" as const,
       span,
       text: span.text,
+      ...sourceFromTarget(document, span.target),
     }));
 }
 

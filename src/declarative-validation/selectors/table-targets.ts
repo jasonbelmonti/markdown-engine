@@ -68,6 +68,7 @@ export function tableCellTargets(
                   table,
                   cell,
                   text: cell.text,
+                  ...sourceFromTarget(document, cell.target),
                 },
               ];
         });
