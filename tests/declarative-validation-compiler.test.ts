@@ -467,6 +467,7 @@ describe("declarative validation compiler proof", () => {
 
   it("rejects typed proxy traps and non-finite numbers before plan creation", () => {
     let proxyTrapExecuted = false;
+    let rulesProxyTrapExecuted = false;
     const throwingProxyProfile = new Proxy(
       {
         syntaxVersion: "markdown-engine.validation@v1",
@@ -479,6 +480,16 @@ describe("declarative validation compiler proof", () => {
         },
       },
     );
+    const throwingRulesProxy = new Proxy([], {
+      get: (target, property, receiver) => {
+        if (property === "length") {
+          rulesProxyTrapExecuted = true;
+          throw new Error("rules length trap must not escape");
+        }
+
+        return Reflect.get(target, property, receiver);
+      },
+    });
     const invalidProfiles = [
       {
         profile: throwingProxyProfile,
@@ -486,6 +497,19 @@ describe("declarative validation compiler proof", () => {
           {
             code: "profile.config.invalidShape",
             message: "Profile must contain only JSON-safe data properties.",
+            severity: "error",
+          },
+        ],
+      },
+      {
+        profile: {
+          syntaxVersion: "markdown-engine.validation@v1",
+          rules: throwingRulesProxy,
+        },
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            message: "Profile.rules must contain only JSON-safe data properties.",
             severity: "error",
           },
         ],
@@ -524,6 +548,7 @@ describe("declarative validation compiler proof", () => {
     }
 
     expect(proxyTrapExecuted).toBe(false);
+    expect(rulesProxyTrapExecuted).toBe(false);
   });
 
   it("rejects direct typed rule metadata before plan creation", () => {

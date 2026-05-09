@@ -439,6 +439,7 @@ describe("declarative validation assertion proof", () => {
       documentVersion: "1.0.0",
     }).document;
     let proxyTrapExecuted = false;
+    let rulesProxyTrapExecuted = false;
     const throwingProxyProfile = new Proxy(
       {
         syntaxVersion: "markdown-engine.validation@v1",
@@ -451,6 +452,16 @@ describe("declarative validation assertion proof", () => {
         },
       },
     );
+    const throwingRulesProxy = new Proxy([], {
+      get: (target, property, receiver) => {
+        if (property === "length") {
+          rulesProxyTrapExecuted = true;
+          throw new Error("rules length trap must not escape");
+        }
+
+        return Reflect.get(target, property, receiver);
+      },
+    });
     const invalidProfiles = [
       {
         profile: throwingProxyProfile,
@@ -458,6 +469,20 @@ describe("declarative validation assertion proof", () => {
           {
             code: "profile.config.invalidShape",
             message: "Profile must contain only JSON-safe data properties.",
+            severity: "error",
+          },
+        ],
+      },
+      {
+        profile: {
+          syntaxVersion: "markdown-engine.validation@v1",
+          documentVersion: "1.0.0",
+          rules: throwingRulesProxy,
+        },
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            message: "Profile.rules must contain only JSON-safe data properties.",
             severity: "error",
           },
         ],
@@ -503,6 +528,7 @@ describe("declarative validation assertion proof", () => {
     }
 
     expect(proxyTrapExecuted).toBe(false);
+    expect(rulesProxyTrapExecuted).toBe(false);
   });
 
   it("does not preserve profile __proto__ payloads during evidence hashing", () => {

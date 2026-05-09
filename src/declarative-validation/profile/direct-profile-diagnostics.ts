@@ -18,7 +18,12 @@ export function pushDirectProfileUnsupportedKeyDiagnostics(
 
   let hasUnsupportedKeys = pushUnsupportedKeys(keys, PROFILE_KEYS, diagnostics);
   const rules = dataPropertyValue(value, "rules");
-  if (!Array.isArray(rules)) {
+  if (
+    rules === null ||
+    typeof rules !== "object" ||
+    nodeTypes.isProxy(rules) ||
+    !Array.isArray(rules)
+  ) {
     return hasUnsupportedKeys;
   }
 
@@ -59,8 +64,8 @@ function enumerableDataKeys(value: unknown): readonly string[] | undefined {
   if (
     value === null ||
     typeof value !== "object" ||
-    Array.isArray(value) ||
-    nodeTypes.isProxy(value)
+    nodeTypes.isProxy(value) ||
+    Array.isArray(value)
   ) {
     return undefined;
   }
