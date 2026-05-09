@@ -273,7 +273,7 @@ describe("declarative validation assertion proof", () => {
       syntaxVersion: "markdown-engine.validation@v1",
       documentVersion: "1.0.0",
       rules: [],
-      plugin: "mission-control",
+      plugin: () => "mission-control",
     } as const;
     const diagnostics = [
       {
@@ -296,6 +296,82 @@ describe("declarative validation assertion proof", () => {
     expect(result.profile.ruleCount).toBe(0);
     expect(result.ruleResults).toEqual([]);
     expect(result.evidence?.profileHash).toMatch(/^[a-f0-9]{64}$/);
+  });
+
+  it("rejects unsupported typed rule keys and duplicate ids before evidence generation", () => {
+    const document = normalize(parse("# Objective\n\nReady.\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    const invalidProfiles = [
+      {
+        profile: {
+          syntaxVersion: "markdown-engine.validation@v1",
+          documentVersion: "1.0.0",
+          rules: [
+            {
+              id: "rule.notes",
+              select: { target: "document" },
+              assert: { sectionsRequired: { headings: ["Objective"] } },
+              notes: () => "not part of the public profile contract",
+            },
+          ],
+        },
+        diagnostics: [
+          {
+            code: "profile.config.unsupportedKey",
+            message: 'Unsupported validation profile key "notes".',
+            severity: "error",
+          },
+        ],
+        ruleCount: 0,
+      },
+      {
+        profile: {
+          syntaxVersion: "markdown-engine.validation@v1",
+          documentVersion: "1.0.0",
+          rules: [
+            {
+              id: "duplicate",
+              select: { target: "document" },
+              assert: { sectionsRequired: { headings: ["Objective"] } },
+            },
+            {
+              id: "duplicate",
+              select: { target: "document" },
+              assert: { sectionsRequired: { headings: ["Verification"] } },
+            },
+          ],
+        },
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            message: 'Profile rule at index 1 duplicates rule id "duplicate".',
+            severity: "error",
+          },
+        ],
+        ruleCount: 2,
+      },
+    ] satisfies {
+      profile: unknown;
+      diagnostics: unknown[];
+      ruleCount: number;
+    }[];
+
+    for (const { profile, diagnostics, ruleCount } of invalidProfiles) {
+      expect(parseValidationProfile(profile).diagnostics).toEqual(diagnostics);
+
+      const result = validateWithProfile(
+        document,
+        profile as unknown as ValidationProfile,
+        { includeEvidence: true },
+      );
+
+      expect(result.valid).toBe(false);
+      expect(result.diagnostics).toEqual(diagnostics);
+      expect(result.profile.ruleCount).toBe(ruleCount);
+      expect(result.ruleResults).toEqual([]);
+      expect(result.evidence?.profileHash).toMatch(/^[a-f0-9]{64}$/);
+    }
   });
 
   it("does not execute nested profile payloads while generating evidence", () => {
@@ -390,13 +466,19 @@ describe("declarative validation assertion proof", () => {
         profile: {
           syntaxVersion: "markdown-engine.validation@v1",
           documentVersion: "1.0.0",
-          rules: [],
-          note: Number.POSITIVE_INFINITY,
+          rules: [
+            {
+              id: "selector.depth",
+              select: { target: "section", depth: Number.POSITIVE_INFINITY },
+              assert: { text: { contains: "Objective" } },
+            },
+          ],
         },
         diagnostics: [
           {
             code: "profile.config.invalidShape",
-            message: "Profile.note must contain only JSON-safe data properties.",
+            message:
+              "Profile.rules[0].select.depth must contain only JSON-safe data properties.",
             severity: "error",
           },
         ],

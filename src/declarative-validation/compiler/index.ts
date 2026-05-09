@@ -1,6 +1,5 @@
 import type { MarkdownDiagnostic } from "../../api/diagnostics.js";
 import { isPlainRecord } from "../../internal/plain-record.js";
-import { unsupportedProfileKeys } from "../diagnostics/profile-config-diagnostics.js";
 import type {
   DeclarativeValidationRule,
   DeclarativeValidationSeverity,
@@ -10,6 +9,7 @@ import {
   closeProfileDataTree,
   DATA_CLOSURE_FAILED,
 } from "../profile/data-closure.js";
+import { pushDirectProfileUnsupportedKeyDiagnostics } from "../profile/direct-profile-diagnostics.js";
 import { selectorFromValue } from "../profile/selector-schema.js";
 import { compiledAssertionsFromValue } from "./assertions.js";
 import { compileDiagnostic } from "./diagnostics.js";
@@ -27,12 +27,15 @@ const SEVERITIES = new Set<DeclarativeValidationSeverity>([
   "warning",
   "info",
 ]);
-const PROFILE_KEYS = ["syntaxVersion", "documentVersion", "rules"] as const;
 
 export function compileValidationProfile(
   profile: ValidationProfile,
 ): DeclarativeValidationCompileResult {
   const diagnostics: MarkdownDiagnostic[] = [];
+  if (pushDirectProfileUnsupportedKeyDiagnostics(profile, diagnostics)) {
+    return { diagnostics };
+  }
+
   const closedProfile = closeProfileDataTree(
     profile as unknown,
     "Profile",
@@ -54,14 +57,13 @@ export function compileValidationProfile(
     };
   }
 
-  unsupportedProfileKeys(closedProfile, PROFILE_KEYS, diagnostics);
-
   const profileRules = profileRulesFromValue(closedProfile.rules, diagnostics);
   if (profileRules === undefined) {
     return { diagnostics };
   }
 
   const rules = [];
+  const seenRuleIds = new Set<string>();
 
   for (let index = 0; index < profileRules.length; index += 1) {
     const ruleInput = profileRules[index];
@@ -74,6 +76,17 @@ export function compileValidationProfile(
     if (ruleId === undefined) {
       continue;
     }
+    if (seenRuleIds.has(ruleId)) {
+      diagnostics.push({
+        code: "profile.config.invalidShape",
+        message: `Profile rule at index ${index} duplicates rule id "${ruleId}".`,
+        severity: "error",
+      });
+
+      continue;
+    }
+
+    seenRuleIds.add(ruleId);
 
     const severity = severityFromValue(rule.severity, ruleId, diagnostics);
     if (severity === undefined && rule.severity !== undefined) {

@@ -84,8 +84,8 @@ describe("declarative validation compiler proof", () => {
     expect(closedResult.plan).toBeUndefined();
     expect(closedResult.diagnostics).toEqual([
       {
-        code: "profile.config.invalidShape",
-        message: "Profile.callback must contain only JSON-safe data properties.",
+        code: "profile.config.unsupportedKey",
+        message: 'Unsupported validation profile key "callback".',
         severity: "error",
       },
     ]);
@@ -180,7 +180,7 @@ describe("declarative validation compiler proof", () => {
     const result = compileValidationProfile({
       syntaxVersion: "markdown-engine.validation@v1",
       rules: [],
-      plugin: "mission-control",
+      plugin: () => "mission-control",
     } as unknown as ValidationProfile);
 
     expect(result.plan).toBeUndefined();
@@ -192,6 +192,66 @@ describe("declarative validation compiler proof", () => {
       },
     ]);
     expect(containsFunction(result.plan)).toBe(false);
+  });
+
+  it("rejects unsupported direct typed rule keys and duplicate rule ids before plan creation", () => {
+    const invalidProfiles = [
+      {
+        profile: {
+          syntaxVersion: "markdown-engine.validation@v1",
+          rules: [
+            {
+              id: "rule.notes",
+              select: { target: "document" },
+              assert: { sectionsRequired: { headings: ["Objective"] } },
+              notes: () => "not part of the public profile contract",
+            },
+          ],
+        },
+        diagnostics: [
+          {
+            code: "profile.config.unsupportedKey",
+            message: 'Unsupported validation profile key "notes".',
+            severity: "error",
+          },
+        ],
+      },
+      {
+        profile: {
+          syntaxVersion: "markdown-engine.validation@v1",
+          rules: [
+            {
+              id: "duplicate",
+              select: { target: "document" },
+              assert: { sectionsRequired: { headings: ["Objective"] } },
+            },
+            {
+              id: "duplicate",
+              select: { target: "document" },
+              assert: { sectionsRequired: { headings: ["Verification"] } },
+            },
+          ],
+        },
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            message: 'Profile rule at index 1 duplicates rule id "duplicate".',
+            severity: "error",
+          },
+        ],
+      },
+    ] satisfies {
+      profile: unknown;
+      diagnostics: unknown[];
+    }[];
+
+    for (const { profile, diagnostics } of invalidProfiles) {
+      const result = compileValidationProfile(profile as ValidationProfile);
+
+      expect(result.plan).toBeUndefined();
+      expect(result.diagnostics).toEqual(diagnostics);
+      expect(containsFunction(result.plan)).toBe(false);
+    }
   });
 
   it("ignores caller-owned array methods and iterators before plan creation", () => {
@@ -433,13 +493,19 @@ describe("declarative validation compiler proof", () => {
       {
         profile: {
           syntaxVersion: "markdown-engine.validation@v1",
-          rules: [],
-          note: Number.NaN,
+          rules: [
+            {
+              id: "selector.depth",
+              select: { target: "section", depth: Number.NaN },
+              assert: { text: { contains: "Objective" } },
+            },
+          ],
         },
         diagnostics: [
           {
             code: "profile.config.invalidShape",
-            message: "Profile.note must contain only JSON-safe data properties.",
+            message:
+              "Profile.rules[0].select.depth must contain only JSON-safe data properties.",
             severity: "error",
           },
         ],

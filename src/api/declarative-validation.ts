@@ -6,7 +6,6 @@ import { evaluateCompiledDeclarativeRule } from "../declarative-validation/asser
 import { compileValidationProfile } from "../declarative-validation/compiler/index.js";
 import {
   PROFILE_SYNTAX_VERSION,
-  unsupportedProfileKeys,
   unsupportedSyntaxVersion,
 } from "../declarative-validation/diagnostics/profile-config-diagnostics.js";
 import { createDeclarativeValidationEvidence } from "../declarative-validation/evidence/index.js";
@@ -15,6 +14,7 @@ import {
   closeProfileDataTree,
   DATA_CLOSURE_FAILED,
 } from "../declarative-validation/profile/data-closure.js";
+import { pushDirectProfileUnsupportedKeyDiagnostics } from "../declarative-validation/profile/direct-profile-diagnostics.js";
 import type {
   DeclarativeValidationRule,
   DeclarativeProfileParseOptions,
@@ -28,8 +28,6 @@ import type {
 } from "../declarative-validation/results/index.js";
 import { resolveDeclarativeSelector } from "../declarative-validation/selectors/index.js";
 import { isPlainRecord } from "../internal/plain-record.js";
-
-const PROFILE_KEYS = ["syntaxVersion", "documentVersion", "rules"] as const;
 
 export type {
   DeclarativeAssertion,
@@ -136,6 +134,10 @@ function materializeValidationProfile(
   document: EngineDocument,
 ): MaterializedValidationProfile {
   const diagnostics: MarkdownDiagnostic[] = [];
+  if (pushDirectProfileUnsupportedKeyDiagnostics(profile, diagnostics)) {
+    return { profile: fallbackProfile(document), diagnostics };
+  }
+
   const closedProfile = closeProfileDataTree(profile, "Profile", diagnostics);
   if (closedProfile === DATA_CLOSURE_FAILED || !isPlainRecord(closedProfile)) {
     if (diagnostics.length === 0) {
@@ -148,8 +150,6 @@ function materializeValidationProfile(
 
     return { profile: fallbackProfile(document), diagnostics };
   }
-
-  unsupportedProfileKeys(closedProfile, PROFILE_KEYS, diagnostics);
 
   const syntaxVersion =
     closedProfile.syntaxVersion === PROFILE_SYNTAX_VERSION
@@ -164,6 +164,7 @@ function materializeValidationProfile(
       ? undefined
       : documentVersionFromValue(closedProfile.documentVersion, diagnostics);
   const rules = rulesFromValue(closedProfile.rules, diagnostics);
+  pushDuplicateRuleIdDiagnostics(rules, diagnostics);
 
   return {
     profile: {
@@ -232,6 +233,33 @@ function rulesFromValue(
   }
 
   return rules;
+}
+
+function pushDuplicateRuleIdDiagnostics(
+  rules: ValidationProfile["rules"] | undefined,
+  diagnostics: MarkdownDiagnostic[],
+): void {
+  if (rules === undefined) {
+    return;
+  }
+
+  const seenRuleIds = new Set<string>();
+  for (let index = 0; index < rules.length; index += 1) {
+    const ruleId = rules[index]?.id;
+    if (typeof ruleId !== "string") {
+      continue;
+    }
+
+    if (seenRuleIds.has(ruleId)) {
+      diagnostics.push({
+        code: "profile.config.invalidShape",
+        message: `Profile rule at index ${index} duplicates rule id "${ruleId}".`,
+        severity: "error",
+      });
+    }
+
+    seenRuleIds.add(ruleId);
+  }
 }
 
 function validationResult(
