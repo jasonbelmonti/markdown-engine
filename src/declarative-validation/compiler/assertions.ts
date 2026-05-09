@@ -1,5 +1,6 @@
 import type { MarkdownDiagnostic } from "../../api/diagnostics.js";
 import { isPlainRecord } from "../../internal/plain-record.js";
+import { unsupportedProfileKey } from "../diagnostics/profile-config-diagnostics.js";
 import type {
   DeclarativeAssertion,
   DeclarativeSelector,
@@ -11,6 +12,17 @@ import {
 import { compileDiagnostic } from "./diagnostics.js";
 import type { CompiledDeclarativeAssertion } from "./plan.js";
 
+const ASSERTION_KEYS = [
+  "sectionsRequired",
+  "sectionOrder",
+  "tableColumnsRequired",
+  "ids",
+  "references",
+  "text",
+  "textOccurrenceCount",
+  "frontmatterRequired",
+];
+
 export function compiledAssertionsFromValue(
   assertion: DeclarativeAssertion,
   selector: DeclarativeSelector,
@@ -19,12 +31,19 @@ export function compiledAssertionsFromValue(
 ): CompiledDeclarativeAssertion[] {
   const compiled: CompiledDeclarativeAssertion[] = [];
 
+  pushUnsupportedKeyDiagnostics(assertion, ASSERTION_KEYS, diagnostics);
+
   if (assertion.sectionsRequired !== undefined) {
     if (
       pushObjectDiagnostic(
         "sectionsRequired",
         assertion.sectionsRequired,
         ruleId,
+        diagnostics,
+      ) &&
+      pushUnsupportedKeyDiagnostics(
+        assertion.sectionsRequired,
+        ["headings", "order"],
         diagnostics,
       ) &&
       pushStringArrayDiagnostic(
@@ -51,6 +70,11 @@ export function compiledAssertionsFromValue(
   if (assertion.sectionOrder !== undefined) {
     if (
       pushObjectDiagnostic("sectionOrder", assertion.sectionOrder, ruleId, diagnostics) &&
+      pushUnsupportedKeyDiagnostics(
+        assertion.sectionOrder,
+        ["headings"],
+        diagnostics,
+      ) &&
       pushStringArrayDiagnostic(
         "sectionOrder.headings",
         assertion.sectionOrder.headings,
@@ -72,6 +96,11 @@ export function compiledAssertionsFromValue(
         "tableColumnsRequired",
         assertion.tableColumnsRequired,
         ruleId,
+        diagnostics,
+      ) &&
+      pushUnsupportedKeyDiagnostics(
+        assertion.tableColumnsRequired,
+        ["columns"],
         diagnostics,
       ) &&
       pushCompatibilityDiagnostic(
@@ -107,6 +136,11 @@ export function compiledAssertionsFromValue(
         ),
       );
     } else if (
+      pushUnsupportedKeyDiagnostics(
+        assertion.ids,
+        ["column", "prefix", "unique", "caseSensitive"],
+        diagnostics,
+      ) &&
       pushOptionalNonEmptyStringDiagnostic(
         "column",
         assertion.ids.column,
@@ -140,10 +174,20 @@ export function compiledAssertionsFromValue(
   if (assertion.references !== undefined) {
     if (
       pushObjectDiagnostic("references", assertion.references, ruleId, diagnostics) &&
+      pushUnsupportedKeyDiagnostics(
+        assertion.references,
+        ["idsFrom", "mustAppearIn"],
+        diagnostics,
+      ) &&
       pushObjectDiagnostic(
         "references.idsFrom",
         assertion.references.idsFrom,
         ruleId,
+        diagnostics,
+      ) &&
+      pushUnsupportedKeyDiagnostics(
+        assertion.references.idsFrom,
+        ["section", "column", "prefix"],
         diagnostics,
       ) &&
       pushStringArrayDiagnostic(
@@ -187,6 +231,11 @@ export function compiledAssertionsFromValue(
   if (assertion.text !== undefined) {
     if (
       pushObjectDiagnostic("text", assertion.text, ruleId, diagnostics) &&
+      pushUnsupportedKeyDiagnostics(
+        assertion.text,
+        ["column", "contains", "containsExactlyOne", "excludes"],
+        diagnostics,
+      ) &&
       pushTextShapeDiagnostics(assertion.text, ruleId, diagnostics)
     ) {
       if (!hasTextPredicate(assertion.text)) {
@@ -217,6 +266,11 @@ export function compiledAssertionsFromValue(
         "textOccurrenceCount",
         assertion.textOccurrenceCount,
         ruleId,
+        diagnostics,
+      ) &&
+      pushUnsupportedKeyDiagnostics(
+        assertion.textOccurrenceCount,
+        ["text", "count", "column"],
         diagnostics,
       ) &&
       pushCompatibilityDiagnostic(
@@ -259,6 +313,11 @@ export function compiledAssertionsFromValue(
         "frontmatterRequired",
         assertion.frontmatterRequired,
         ruleId,
+        diagnostics,
+      ) &&
+      pushUnsupportedKeyDiagnostics(
+        assertion.frontmatterRequired,
+        ["fields"],
         diagnostics,
       ) &&
       pushCompatibilityDiagnostic(
@@ -310,6 +369,22 @@ function pushCompatibilityDiagnostic(
   }
 
   return true;
+}
+
+function pushUnsupportedKeyDiagnostics(
+  record: object,
+  allowedKeys: readonly string[],
+  diagnostics: MarkdownDiagnostic[],
+): boolean {
+  const diagnosticCountBefore = diagnostics.length;
+
+  for (const key of Object.keys(record)) {
+    if (!allowedKeys.includes(key)) {
+      diagnostics.push(unsupportedProfileKey(key));
+    }
+  }
+
+  return diagnostics.length === diagnosticCountBefore;
 }
 
 function pushObjectDiagnostic(

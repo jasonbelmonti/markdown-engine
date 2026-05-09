@@ -227,6 +227,62 @@ describe("declarative validation compiler proof", () => {
     }
   });
 
+  it("rejects direct typed assertions with unsupported keys before execution", () => {
+    const invalidUnsupportedKeyAssertions = [
+      {
+        assert: {
+          text: { contains: "Mission", callback: "isMissionReady" },
+        },
+        message: 'Unsupported validation profile key "callback".',
+        select: { target: "section", title: "Objective" },
+      },
+      {
+        assert: {
+          matches: "REQ",
+          text: { contains: "Mission" },
+        },
+        message: 'Unsupported validation profile key "matches".',
+        select: { target: "section", title: "Objective" },
+      },
+      {
+        assert: {
+          references: {
+            idsFrom: { section: "Requirements", regexp: "REQ-.*" },
+            mustAppearIn: ["Verification"],
+          },
+        },
+        message: 'Unsupported validation profile key "regexp".',
+        select: { target: "document" },
+      },
+    ] satisfies {
+      assert: ValidationProfile["rules"][number]["assert"] & Record<string, unknown>;
+      message: string;
+      select: ValidationProfile["rules"][number]["select"];
+    }[];
+
+    for (const { assert, message, select } of invalidUnsupportedKeyAssertions) {
+      const result = compileValidationProfile({
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "assertion.unsupported-key",
+            select,
+            assert,
+          },
+        ],
+      });
+
+      expect(result.plan).toBeUndefined();
+      expect(result.diagnostics).toEqual([
+        {
+          code: "profile.config.unsupportedKey",
+          message,
+          severity: "error",
+        },
+      ]);
+    }
+  });
+
   it("rejects direct typed non-object assertion payloads before execution", () => {
     const invalidObjectAssertions = [
       {
