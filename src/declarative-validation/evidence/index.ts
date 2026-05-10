@@ -4,7 +4,7 @@ import type { EngineDocument } from "../../api/document.js";
 import type { MarkdownDiagnostic } from "../../api/diagnostics.js";
 import type { ValidationRuleResult } from "../../api/validate.js";
 import { cloneDiagnostics } from "../../diagnostics/index.js";
-import { isPlainRecord } from "../../internal/plain-record.js";
+import { stringifyStableJson } from "../../internal/stable-json.js";
 import type { ValidationProfile } from "../profile/index.js";
 
 export interface DeclarativeValidationEvidence {
@@ -23,8 +23,8 @@ export function createDeclarativeValidationEvidence(
   diagnostics: readonly MarkdownDiagnostic[],
 ): DeclarativeValidationEvidence {
   return {
-    inputHash: sha256(stableJson(documentWithoutPath(document))),
-    profileHash: sha256(stableJson(resolvedProfile(profile, document))),
+    inputHash: sha256(stringifyStableJson(documentWithoutPath(document))),
+    profileHash: sha256(stringifyStableJson(resolvedProfile(profile, document))),
     engineVersion: "1.0.0",
     runtimeVersion: process.version,
     ruleResults: cloneRuleResults(ruleResults),
@@ -64,25 +64,4 @@ function cloneRuleResults(
 
 function sha256(value: string): string {
   return createHash("sha256").update(value, "utf8").digest("hex");
-}
-
-function stableJson(value: unknown): string {
-  return JSON.stringify(normalizeStableValue(value)) ?? "null";
-}
-
-function normalizeStableValue(value: unknown): unknown {
-  if (Array.isArray(value)) {
-    return value.map((item) => normalizeStableValue(item));
-  }
-
-  if (isPlainRecord(value)) {
-    return Object.fromEntries(
-      Object.keys(value)
-        .filter((key) => value[key] !== undefined)
-        .sort()
-        .map((key) => [key, normalizeStableValue(value[key])]),
-    );
-  }
-
-  return value;
 }
