@@ -4,19 +4,10 @@ import type { ValidationRuleResult } from "./validate.js";
 import { cloneDiagnostics, hasErrorDiagnostic } from "../diagnostics/index.js";
 import { evaluateCompiledDeclarativeRule } from "../declarative-validation/assertions/index.js";
 import { compileValidationProfile } from "../declarative-validation/compiler/index.js";
-import {
-  PROFILE_SYNTAX_VERSION,
-  unsupportedSyntaxVersion,
-} from "../declarative-validation/diagnostics/profile-config-diagnostics.js";
 import { createDeclarativeValidationEvidence } from "../declarative-validation/evidence/index.js";
 import { parseValidationProfileInput } from "../declarative-validation/profile/index.js";
-import {
-  closeProfileDataTree,
-  DATA_CLOSURE_FAILED,
-} from "../declarative-validation/profile/data-closure.js";
-import { pushDirectProfileUnsupportedKeyDiagnostics } from "../declarative-validation/profile/direct-profile-diagnostics.js";
+import { materializeValidationProfile } from "../declarative-validation/profile/materialization.js";
 import type {
-  DeclarativeValidationRule,
   DeclarativeProfileParseOptions,
   DeclarativeProfileParseResult,
   JsonSafeValue,
@@ -27,7 +18,6 @@ import type {
   DeclarativeValidationResult,
 } from "../declarative-validation/results/index.js";
 import { resolveDeclarativeSelector } from "../declarative-validation/selectors/index.js";
-import { isPlainRecord } from "../internal/plain-record.js";
 
 export type {
   DeclarativeAssertion,
@@ -75,7 +65,10 @@ export function validateWithProfile(
   profile: ValidationProfile,
   options: DeclarativeValidationOptions = {},
 ): DeclarativeValidationResult {
-  const materializedProfile = materializeValidationProfile(profile, document);
+  const materializedProfile = materializeValidationProfile(
+    profile,
+    document.version,
+  );
   if (materializedProfile.diagnostics.length > 0) {
     return validationResult(
       document,
@@ -122,144 +115,6 @@ export function validateWithProfile(
     diagnostics,
     options,
   );
-}
-
-interface MaterializedValidationProfile {
-  profile: ValidationProfile;
-  diagnostics: readonly MarkdownDiagnostic[];
-}
-
-function materializeValidationProfile(
-  profile: ValidationProfile,
-  document: EngineDocument,
-): MaterializedValidationProfile {
-  const diagnostics: MarkdownDiagnostic[] = [];
-  if (pushDirectProfileUnsupportedKeyDiagnostics(profile, diagnostics)) {
-    return { profile: fallbackProfile(document), diagnostics };
-  }
-
-  const closedProfile = closeProfileDataTree(profile, "Profile", diagnostics);
-  if (closedProfile === DATA_CLOSURE_FAILED || !isPlainRecord(closedProfile)) {
-    if (diagnostics.length === 0) {
-      diagnostics.push({
-        code: "profile.config.invalidShape",
-        message: "Profile must be an object.",
-        severity: "error",
-      });
-    }
-
-    return { profile: fallbackProfile(document), diagnostics };
-  }
-
-  const syntaxVersion =
-    closedProfile.syntaxVersion === PROFILE_SYNTAX_VERSION
-      ? PROFILE_SYNTAX_VERSION
-      : undefined;
-  if (syntaxVersion === undefined) {
-    diagnostics.push(unsupportedSyntaxVersion());
-  }
-
-  const documentVersion =
-    closedProfile.documentVersion === undefined
-      ? undefined
-      : documentVersionFromValue(closedProfile.documentVersion, diagnostics);
-  const rules = rulesFromValue(closedProfile.rules, diagnostics);
-  pushDuplicateRuleIdDiagnostics(rules, diagnostics);
-
-  return {
-    profile: {
-      syntaxVersion: PROFILE_SYNTAX_VERSION,
-      ...(documentVersion !== undefined ? { documentVersion } : {}),
-      rules: rules ?? [],
-    },
-    diagnostics,
-  };
-}
-
-function fallbackProfile(document: EngineDocument): ValidationProfile {
-  return {
-    syntaxVersion: PROFILE_SYNTAX_VERSION,
-    documentVersion: document.version,
-    rules: [],
-  };
-}
-
-function documentVersionFromValue(
-  value: unknown,
-  diagnostics: MarkdownDiagnostic[],
-): EngineDocument["version"] | undefined {
-  if (value === "0.0.0" || value === "1.0.0") {
-    return value;
-  }
-
-  diagnostics.push({
-    code: "profile.config.invalidShape",
-    message: 'Profile documentVersion must be "0.0.0" or "1.0.0" when provided.',
-    severity: "error",
-  });
-
-  return undefined;
-}
-
-function rulesFromValue(
-  value: unknown,
-  diagnostics: MarkdownDiagnostic[],
-): ValidationProfile["rules"] | undefined {
-  if (!Array.isArray(value)) {
-    diagnostics.push({
-      code: "profile.config.invalidShape",
-      message: "Profile rules must be an array.",
-      severity: "error",
-    });
-
-    return undefined;
-  }
-
-  const rules: DeclarativeValidationRule[] = [];
-
-  for (let index = 0; index < value.length; index += 1) {
-    const rule = value[index];
-    if (!isPlainRecord(rule)) {
-      diagnostics.push({
-        code: "profile.config.invalidShape",
-        message: `Profile rule at index ${index} must be an object.`,
-        severity: "error",
-      });
-
-      continue;
-    }
-
-    rules.push(rule as unknown as DeclarativeValidationRule);
-  }
-
-  return rules;
-}
-
-function pushDuplicateRuleIdDiagnostics(
-  rules: ValidationProfile["rules"] | undefined,
-  diagnostics: MarkdownDiagnostic[],
-): void {
-  if (rules === undefined) {
-    return;
-  }
-
-  const seenRuleIds = new Set<string>();
-  for (let index = 0; index < rules.length; index += 1) {
-    const ruleId = rules[index]?.id;
-    if (typeof ruleId !== "string") {
-      continue;
-    }
-
-    if (seenRuleIds.has(ruleId)) {
-      diagnostics.push({
-        code: "profile.config.invalidShape",
-        message: `Profile rule at index ${index} duplicates rule id "${ruleId}".`,
-        severity: "error",
-      });
-    }
-
-    seenRuleIds.add(ruleId);
-  }
 }
 
 function validationResult(
