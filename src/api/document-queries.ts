@@ -16,7 +16,7 @@ import type {
   EngineTextSpan,
   EngineTextSpanQuery,
 } from "./document.js";
-import { flattenNodes } from "../ir/document-node-walk.js";
+import { flattenNodes } from "../internal/document-node-walk.js";
 
 export const documentQueries: EngineDocumentQueries = {
   nodes,
