@@ -8,7 +8,11 @@ import {
 import type { DeclarativeAssertion, DeclarativeIdSource } from "./index.js";
 import {
   invalidShape,
-  nonEmptyString,
+  isFiniteNumber,
+  optionalBooleanField,
+  optionalStringArrayField,
+  optionalStringField,
+  requiredNonEmptyStringField,
   stringArray,
   unsupportedKeys,
 } from "./schema-values.js";
@@ -318,14 +322,12 @@ function textOccurrenceCountFromValue(
 
   unsupportedKeys(value, ["text", "count", "column"], diagnostics);
 
-  const text = nonEmptyString(value.text);
-  const count = finiteNumber(value.count);
-
-  if (text === undefined) {
-    diagnostics.push(
-      invalidShape("textOccurrenceCount.text must be a non-empty string."),
-    );
-  }
+  const text = requiredAssertionString(
+    value.text,
+    "textOccurrenceCount.text",
+    diagnostics,
+  );
+  const count = isFiniteNumber(value.count) ? value.count : undefined;
 
   if (count === undefined) {
     diagnostics.push(invalidShape("textOccurrenceCount.count must be a number."));
@@ -393,68 +395,53 @@ function optionalAssertionString(
   record: Record<string, unknown>,
   key: string,
   diagnostics: MarkdownDiagnostic[],
-): Record<string, string> {
-  const value = record[key];
-
-  if (value === undefined) {
-    return {};
-  }
-
-  if (typeof value !== "string" || value.length === 0) {
-    diagnostics.push(invalidShape(`${key} must be a non-empty string when provided.`));
-
-    return {};
-  }
-
-  return { [key]: value };
+): Partial<Record<string, string>> {
+  return optionalStringField(
+    record,
+    key,
+    diagnostics,
+    (field) => `${field} must be a non-empty string when provided.`,
+  );
 }
 
 function optionalStringArray(
   record: Record<string, unknown>,
   key: string,
   diagnostics: MarkdownDiagnostic[],
-): Record<string, readonly string[]> {
-  const value = record[key];
-
-  if (value === undefined) {
-    return {};
-  }
-
-  const values = stringArray(value);
-
-  if (values === undefined) {
-    diagnostics.push(
-      invalidShape(`${key} must be an array of non-empty strings when provided.`),
-    );
-
-    return {};
-  }
-
-  return { [key]: values };
+): Partial<Record<string, readonly string[]>> {
+  return optionalStringArrayField(
+    record,
+    key,
+    diagnostics,
+    (field) =>
+      `${field} must be an array of non-empty strings when provided.`,
+  );
 }
 
 function optionalBoolean(
   record: Record<string, unknown>,
   key: string,
   diagnostics: MarkdownDiagnostic[],
-): Record<string, boolean> {
-  const value = record[key];
-
-  if (value === undefined) {
-    return {};
-  }
-
-  if (typeof value !== "boolean") {
-    diagnostics.push(invalidShape(`${key} must be a boolean when provided.`));
-
-    return {};
-  }
-
-  return { [key]: value };
+): Partial<Record<string, boolean>> {
+  return optionalBooleanField(
+    record,
+    key,
+    diagnostics,
+    (field) => `${field} must be a boolean when provided.`,
+  );
 }
 
-function finiteNumber(value: unknown): number | undefined {
-  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
+function requiredAssertionString(
+  value: unknown,
+  field: string,
+  diagnostics: MarkdownDiagnostic[],
+): string | undefined {
+  return requiredNonEmptyStringField(
+    value,
+    field,
+    diagnostics,
+    (fieldName) => `${fieldName} must be a non-empty string.`,
+  );
 }
 
 function hasTextPredicate(text: DeclarativeAssertion["text"]): boolean {

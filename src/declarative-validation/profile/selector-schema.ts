@@ -7,9 +7,11 @@ import type {
 } from "./index.js";
 import {
   invalidShape,
-  nonEmptyString,
-  optionalString,
-  optionalStringArray,
+  optionalBooleanField,
+  optionalNumberField,
+  optionalStringArrayField,
+  optionalStringField,
+  requiredNonEmptyStringField,
   unsupportedKeys,
 } from "./schema-values.js";
 
@@ -46,7 +48,7 @@ export function selectorFromValue(
       unsupportedKeys(value, ["target", "title", "depth"], diagnostics);
       return {
         target: "section",
-        ...optionalString(value, "title", diagnostics),
+        ...optionalSelectorString(value, "title", diagnostics),
         ...optionalNumber(value, "depth", diagnostics),
       };
 
@@ -54,7 +56,7 @@ export function selectorFromValue(
       unsupportedKeys(value, ["target", "text", "depth"], diagnostics);
       return {
         target: "heading",
-        ...optionalString(value, "text", diagnostics),
+        ...optionalSelectorString(value, "text", diagnostics),
         ...optionalNumber(value, "depth", diagnostics),
       };
 
@@ -62,16 +64,16 @@ export function selectorFromValue(
       unsupportedKeys(value, ["target", "section", "header"], diagnostics);
       return {
         target: "table",
-        ...optionalString(value, "section", diagnostics),
-        ...optionalStringArray(value, "header", diagnostics),
+        ...optionalSelectorString(value, "section", diagnostics),
+        ...optionalSelectorStringArray(value, "header", diagnostics),
       };
 
     case "tableRow":
       unsupportedKeys(value, ["target", "section", "tableHeader", "where"], diagnostics);
       return {
         target: "tableRow",
-        ...optionalString(value, "section", diagnostics),
-        ...optionalStringArray(value, "tableHeader", diagnostics),
+        ...optionalSelectorString(value, "section", diagnostics),
+        ...optionalSelectorStringArray(value, "tableHeader", diagnostics),
         ...optionalCellPredicate(value, "where", diagnostics),
       };
 
@@ -83,17 +85,17 @@ export function selectorFromValue(
       );
 
       const selector = {
-        ...optionalString(value, "section", diagnostics),
-        ...optionalStringArray(value, "tableHeader", diagnostics),
+        ...optionalSelectorString(value, "section", diagnostics),
+        ...optionalSelectorStringArray(value, "tableHeader", diagnostics),
         ...optionalCellPredicate(value, "rowWhere", diagnostics),
       };
-      const column = nonEmptyString(value.column);
+      const column = requiredSelectorString(
+        value.column,
+        "column",
+        diagnostics,
+      );
 
       if (column === undefined) {
-        diagnostics.push(
-          invalidShape("Selector column must be a non-empty string."),
-        );
-
         return undefined;
       }
 
@@ -112,25 +114,25 @@ export function selectorFromValue(
       );
       return {
         target: "textSpan",
-        ...optionalString(value, "section", diagnostics),
-        ...optionalString(value, "nodeType", diagnostics),
-        ...optionalString(value, "textIncludes", diagnostics),
+        ...optionalSelectorString(value, "section", diagnostics),
+        ...optionalSelectorString(value, "nodeType", diagnostics),
+        ...optionalSelectorString(value, "textIncludes", diagnostics),
       };
 
     case "link":
       unsupportedKeys(value, ["target", "section", "text", "url"], diagnostics);
       return {
         target: "link",
-        ...optionalString(value, "section", diagnostics),
-        ...optionalString(value, "text", diagnostics),
-        ...optionalString(value, "url", diagnostics),
+        ...optionalSelectorString(value, "section", diagnostics),
+        ...optionalSelectorString(value, "text", diagnostics),
+        ...optionalSelectorString(value, "url", diagnostics),
       };
 
     case "list":
       unsupportedKeys(value, ["target", "section", "ordered", "depth"], diagnostics);
       return {
         target: "list",
-        ...optionalString(value, "section", diagnostics),
+        ...optionalSelectorString(value, "section", diagnostics),
         ...optionalBoolean(value, "ordered", diagnostics),
         ...optionalNumber(value, "depth", diagnostics),
       };
@@ -139,7 +141,7 @@ export function selectorFromValue(
       unsupportedKeys(value, ["target", "field"], diagnostics);
       return {
         target: "frontmatter",
-        ...optionalString(value, "field", diagnostics),
+        ...optionalSelectorString(value, "field", diagnostics),
       };
 
     default:
@@ -184,18 +186,14 @@ function cellPredicateFromValue(
 
   unsupportedKeys(value, ["column", "equals", "includes"], diagnostics);
 
-  const column = nonEmptyString(value.column);
+  const column = requiredSelectorString(value.column, `${key}.column`, diagnostics);
   if (column === undefined) {
-    diagnostics.push(
-      invalidShape(`Selector ${key}.column must be a non-empty string.`),
-    );
-
     return undefined;
   }
 
   const predicate = {
-    ...optionalString(value, "equals", diagnostics),
-    ...optionalString(value, "includes", diagnostics),
+    ...optionalSelectorString(value, "equals", diagnostics),
+    ...optionalSelectorString(value, "includes", diagnostics),
   };
 
   if (predicate.equals === undefined && predicate.includes === undefined) {
@@ -218,42 +216,64 @@ function optionalBoolean(
   record: Record<string, unknown>,
   key: string,
   diagnostics: MarkdownDiagnostic[],
-): Record<string, boolean> {
-  const value = record[key];
-
-  if (value === undefined) {
-    return {};
-  }
-
-  if (typeof value !== "boolean") {
-    diagnostics.push(
-      invalidShape(`Selector ${key} must be a boolean when provided.`),
-    );
-
-    return {};
-  }
-
-  return { [key]: value };
+): Partial<Record<string, boolean>> {
+  return optionalBooleanField(
+    record,
+    key,
+    diagnostics,
+    (field) => `Selector ${field} must be a boolean when provided.`,
+  );
 }
 
 function optionalNumber(
   record: Record<string, unknown>,
   key: string,
   diagnostics: MarkdownDiagnostic[],
-): Record<string, number> {
-  const value = record[key];
+): Partial<Record<string, number>> {
+  return optionalNumberField(
+    record,
+    key,
+    diagnostics,
+    (field) => `Selector ${field} must be a number when provided.`,
+  );
+}
 
-  if (value === undefined) {
-    return {};
-  }
+function optionalSelectorString(
+  record: Record<string, unknown>,
+  key: string,
+  diagnostics: MarkdownDiagnostic[],
+): Partial<Record<string, string>> {
+  return optionalStringField(
+    record,
+    key,
+    diagnostics,
+    (field) => `Selector ${field} must be a non-empty string when provided.`,
+  );
+}
 
-  if (typeof value !== "number" || !Number.isFinite(value)) {
-    diagnostics.push(
-      invalidShape(`Selector ${key} must be a number when provided.`),
-    );
+function optionalSelectorStringArray(
+  record: Record<string, unknown>,
+  key: string,
+  diagnostics: MarkdownDiagnostic[],
+): Partial<Record<string, readonly string[]>> {
+  return optionalStringArrayField(
+    record,
+    key,
+    diagnostics,
+    (field) =>
+      `Selector ${field} must be an array of non-empty strings when provided.`,
+  );
+}
 
-    return {};
-  }
-
-  return { [key]: value };
+function requiredSelectorString(
+  value: unknown,
+  field: string,
+  diagnostics: MarkdownDiagnostic[],
+): string | undefined {
+  return requiredNonEmptyStringField(
+    value,
+    field,
+    diagnostics,
+    (fieldName) => `Selector ${fieldName} must be a non-empty string.`,
+  );
 }
