@@ -14,11 +14,14 @@ export function unsupportedKeys(
   unsupportedProfileKeys(record, allowedKeys, diagnostics);
 }
 
-export function optionalString(
+export type FieldDiagnosticMessage = (field: string) => string;
+
+export function optionalStringField<Key extends string>(
   record: Record<string, unknown>,
-  key: string,
+  key: Key,
   diagnostics: MarkdownDiagnostic[],
-): Record<string, string> {
+  message: FieldDiagnosticMessage,
+): Partial<Record<Key, string>> {
   const value = record[key];
 
   if (value === undefined) {
@@ -26,21 +29,20 @@ export function optionalString(
   }
 
   if (typeof value !== "string" || value.length === 0) {
-    diagnostics.push(
-      invalidShape(`Selector ${key} must be a non-empty string when provided.`),
-    );
+    diagnostics.push(invalidShape(message(key)));
 
     return {};
   }
 
-  return { [key]: value };
+  return { [key]: value } as Partial<Record<Key, string>>;
 }
 
-export function optionalStringArray(
+export function optionalStringArrayField<Key extends string>(
   record: Record<string, unknown>,
-  key: string,
+  key: Key,
   diagnostics: MarkdownDiagnostic[],
-): Record<string, readonly string[]> {
+  message: FieldDiagnosticMessage,
+): Partial<Record<Key, readonly string[]>> {
   const value = record[key];
 
   if (value === undefined) {
@@ -50,16 +52,73 @@ export function optionalStringArray(
   const values = stringArray(value);
 
   if (values === undefined) {
-    diagnostics.push(
-      invalidShape(
-        `Selector ${key} must be an array of non-empty strings when provided.`,
-      ),
-    );
+    diagnostics.push(invalidShape(message(key)));
 
     return {};
   }
 
-  return { [key]: values };
+  return { [key]: values } as Partial<Record<Key, readonly string[]>>;
+}
+
+export function optionalBooleanField<Key extends string>(
+  record: Record<string, unknown>,
+  key: Key,
+  diagnostics: MarkdownDiagnostic[],
+  message: FieldDiagnosticMessage,
+): Partial<Record<Key, boolean>> {
+  const value = record[key];
+
+  if (value === undefined) {
+    return {};
+  }
+
+  if (typeof value !== "boolean") {
+    diagnostics.push(invalidShape(message(key)));
+
+    return {};
+  }
+
+  return { [key]: value } as Partial<Record<Key, boolean>>;
+}
+
+export function optionalNumberField<Key extends string>(
+  record: Record<string, unknown>,
+  key: Key,
+  diagnostics: MarkdownDiagnostic[],
+  message: FieldDiagnosticMessage,
+): Partial<Record<Key, number>> {
+  const value = record[key];
+
+  if (value === undefined) {
+    return {};
+  }
+
+  if (!isFiniteNumber(value)) {
+    diagnostics.push(invalidShape(message(key)));
+
+    return {};
+  }
+
+  return { [key]: value } as Partial<Record<Key, number>>;
+}
+
+export function requiredNonEmptyStringField(
+  value: unknown,
+  field: string,
+  diagnostics: MarkdownDiagnostic[],
+  message: FieldDiagnosticMessage,
+): string | undefined {
+  const text = nonEmptyString(value);
+
+  if (text === undefined) {
+    diagnostics.push(invalidShape(message(field)));
+  }
+
+  return text;
+}
+
+export function isFiniteNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
 }
 
 export function nonEmptyString(value: unknown): string | undefined {
