@@ -3,7 +3,7 @@ import type {
   EngineTable,
   EngineTableCell,
 } from "../api/document.js";
-import { flatMapNodes, nodeText } from "./document-node-walk.js";
+import { flatMapNodes, nodeText } from "../internal/document-node-walk.js";
 import { requireNodeTarget } from "./document-targets.js";
 
 export function collectTables(nodes: readonly EngineNode[]): readonly EngineTable[] {

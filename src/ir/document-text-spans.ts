@@ -1,5 +1,5 @@
 import type { EngineNode, EngineTextSpan } from "../api/document.js";
-import { flatMapNodes } from "./document-node-walk.js";
+import { flatMapNodes } from "../internal/document-node-walk.js";
 
 export function collectTextSpans(
   nodes: readonly EngineNode[],

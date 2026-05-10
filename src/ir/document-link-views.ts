@@ -1,6 +1,6 @@
 import type { EngineLink, EngineNode } from "../api/document.js";
 import { linkTitle, linkUrl } from "../api/engine-node-attributes.js";
-import { flatMapNodes } from "./document-node-walk.js";
+import { flatMapNodes } from "../internal/document-node-walk.js";
 
 export function collectLinks(nodes: readonly EngineNode[]): readonly EngineLink[] {
   return flatMapNodes(nodes, (node) => {
