@@ -258,7 +258,7 @@ First-version authoring shape:
 
 ```yaml
 syntaxVersion: markdown-engine.validation@v1
-documentVersion: 1.0.0-draft
+documentVersion: 1.0.0
 rules:
   - id: required-ods-sections
     severity: error
@@ -365,7 +365,7 @@ type JsonSafeValue =
 
 interface ValidationProfile {
   syntaxVersion: "markdown-engine.validation@v1";
-  /** Defaults to "1.0.0-draft" when omitted. */
+  /** Omitted versions resolve to the supplied EngineDocument.version at validation. */
   documentVersion?: EngineDocumentVersion;
   rules: readonly DeclarativeValidationRule[];
 }
@@ -511,7 +511,7 @@ interface DeclarativeValidationEvidence {
 Schema closure and validation rules:
 
 - Top-level profile keys are exactly `syntaxVersion`, `documentVersion`, and `rules`.
-- Profile `documentVersion` is optional and defaults to `1.0.0-draft` before compilation. Declarative validation requires a normalized `EngineDocument` whose `version` equals the resolved profile `documentVersion`; mismatch emits `profile.config.documentVersionMismatch` and does not evaluate rules.
+- Profile `documentVersion` is optional and, when provided, must be `0.0.0` or `1.0.0`. The parser does not inject a default into the parsed profile. During `validateWithProfile`, an omitted profile version resolves to the supplied normalized `EngineDocument.version`; the returned profile metadata and evidence profile hash use that resolved value. Declarative validation requires the resolved profile `documentVersion` to equal the supplied `EngineDocument.version`; mismatch emits `profile.config.documentVersionMismatch` and does not evaluate rules.
 - Rule keys are exactly `id`, `severity`, `select`, and `assert`.
 - Rule `id` values must be unique within one validation profile. Duplicate rule IDs produce `profile.config.invalidShape` diagnostics before compilation because public rule results, diagnostics, and evidence identify rule output by `ruleId`.
 - Rule `severity` is optional and defaults to `error` before compilation and evaluation. Unsupported severity values produce `profile.config.invalidShape` diagnostics.
@@ -544,7 +544,7 @@ Selector/assertion compatibility:
 
 When one rule contains multiple assertion members, every assertion member must be compatible with the selector. Compilation stops before evaluation when any member is incompatible.
 
-Evidence hash contract: `inputHash` and `profileHash` are lowercase hexadecimal SHA-256 digests over UTF-8 bytes. `inputHash` hashes the stable JSON serialization of the canonical `EngineDocument` validation input: the `EngineDocument` supplied to `validateWithProfile` after omitting the top-level `document.path` field. The name refers to the validation input after parsing and normalization, not raw Markdown bytes. Structural node target paths such as `target.path` remain part of the canonical input because they are document structure, not caller file paths. `profileHash` hashes the stable JSON serialization of the resolved `ValidationProfile` after applying `documentVersion` and rule `severity` defaults. Both serializations use the same deterministic object-key ordering and `undefined` omission rules as the public `serialize` API. Raw Markdown bytes, raw YAML bytes, YAML comments, top-level `EngineDocument.path`, and caller file paths are not part of the first-version evidence hash contract. `DeclarativeValidationOptions.includeEvidence` controls whether evidence is emitted and is not included in either hash. `DeclarativeValidationOptions.path` is accepted for API symmetry but has no first-version effect on diagnostics, result fields, or evidence hashes; any future path-bearing result behavior requires an explicit contract update.
+Evidence hash contract: `inputHash` and `profileHash` are lowercase hexadecimal SHA-256 digests over UTF-8 bytes. `inputHash` hashes the stable JSON serialization of the canonical `EngineDocument` validation input: the `EngineDocument` supplied to `validateWithProfile` after omitting the top-level `document.path` field. The name refers to the validation input after parsing and normalization, not raw Markdown bytes. Structural node target paths such as `target.path` remain part of the canonical input because they are document structure, not caller file paths. `profileHash` hashes the stable JSON serialization of the resolved `ValidationProfile` after applying `documentVersion` and rule `severity` defaults. An omitted profile `documentVersion` and an explicit matching `documentVersion` therefore hash to the same profile hash for the same document version and rules. Both serializations use the same deterministic object-key ordering and `undefined` omission rules as the public `serialize` API. Raw Markdown bytes, raw YAML bytes, YAML comments, top-level `EngineDocument.path`, and caller file paths are not part of the first-version evidence hash contract. `DeclarativeValidationOptions.includeEvidence` controls whether evidence is emitted and is not included in either hash. `DeclarativeValidationOptions.path` is accepted for API symmetry but has no first-version effect on diagnostics, result fields, or evidence hashes; any future path-bearing result behavior requires an explicit contract update.
 
 Compiled rule-plan records are internal implementation details. They are not exported from the package root, are not serialized in public results, and carry no semver stability guarantee. Public compatibility applies only to the authoring profile syntax, public API function names and result shapes, CLI flags and output formats, diagnostic codes, and documented evidence fields.
 
@@ -721,7 +721,7 @@ Section status: Complete
 | TR-1 | Major | Resolved | 11 / 17 | The initial draft omitted CLI and evidence behavior from one traceability path. | Add `REQ-10`, `FUNC-5`, `FUNC-6`, `ACC-9`, `VAL-10`, and corresponding mechanism mappings. | Codex |
 | CR-1 | Major | Resolved | 14 / 16 | Consensus review found that the R2 contract left selector/assertion schemas, compiled plan visibility, evidence/result shape, diagnostic inventory, and CLI/API defaults unresolved. | Define the first-version closed schema, declare compiled plans internal, define result/evidence fields, define diagnostic codes, fix CLI/API contracts, and make public names/defaults explicit. | Codex |
 | CR-2 | Major | Resolved | 14 | Consensus review found that the first-version YAML example violated the closed selector/assertion schema and that omitted rule severity had no defined behavior. | Align the YAML example with the target-discriminated table selector and `references` assertion, and define omitted severity as defaulting to `error`. | Codex |
-| CR-3 | Major | Resolved | 14 / 16 | Review found that optional `documentVersion` had no default or mismatch behavior, and that first-version CLI promised text and SARIF without defining their contracts. | Default omitted `documentVersion` to `1.0.0-draft`, add document-version mismatch diagnostics, and narrow first-version CLI output to stable JSON only. | Codex |
+| CR-3 | Major | Resolved | 14 / 16 | Review found that optional `documentVersion` had no default or mismatch behavior, and that first-version CLI promised text and SARIF without defining their contracts. | Define omitted `documentVersion` resolution and mismatch diagnostics, and narrow first-version CLI output to stable JSON only. BEL-1017 later aligned the resolved profile version with the final `1.0.0` implementation contract. | Codex |
 | SM-3 | Major | Resolved | 14 / 15 / 17 | External review found that regex-like `matches` and `pattern` fields were unbounded and could undermine deterministic local validation through catastrophic backtracking. | Remove regex-like fields from the v1 schema, define them as unsupported keys, add acceptance and verification coverage for rejection, and audit that declarative validation performs no user-supplied regular expression compilation. | Codex |
 | SM-4 | Major | Resolved | 14 / 17 | External review found that reference assertions did not define ID extraction, token matching, target section cardinality, case behavior, or source targeting. | Define ID-token grammar, source ID collection, `mustAppearIn` section matching, at-least-one cardinality, case sensitivity, self-reference handling, and missing-reference diagnostic targets. | Codex |
 | CR-4 | Major | Resolved | 14 / 17 | Consensus review found remaining public-contract gaps in selector/assertion compatibility, diagnostic-code precedence, evidence hash semantics, and table predicate matching. | Add a selector/assertion compatibility matrix, deterministic diagnostic precedence, canonical SHA-256 evidence hash semantics, table predicate matching rules, and verification coverage. | Codex |

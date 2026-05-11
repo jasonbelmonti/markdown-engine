@@ -195,6 +195,34 @@ describe("declarative validation public contract scaffold", () => {
     });
   });
 
+  it("resolves omitted profile documentVersion to the supplied document version for evidence", () => {
+    const omittedVersionResult = validateWithProfile(
+      document,
+      {
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [],
+      },
+      { includeEvidence: true },
+    );
+    const explicitVersionResult = validateWithProfile(document, profile, {
+      includeEvidence: true,
+    });
+
+    expect(omittedVersionResult).toMatchObject({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [],
+      profile: {
+        syntaxVersion: "markdown-engine.validation@v1",
+        documentVersion: "1.0.0",
+        ruleCount: 0,
+      },
+    });
+    expect(omittedVersionResult.evidence?.profileHash).toEqual(
+      explicitVersionResult.evidence?.profileHash,
+    );
+  });
+
   it("materializes a supported non-empty rule from object input", () => {
     expect(parseValidationProfile(supportedRuleProfile)).toEqual({
       profile: supportedRuleProfile,
