@@ -250,23 +250,18 @@ function textAssertionFromValue(
     return {};
   }
 
-  unsupportedKeys(
-    value,
-    ["column", "contains", "containsExactlyOne", "excludes"],
-    diagnostics,
-  );
+  unsupportedKeys(value, ["column", "contains", "excludes"], diagnostics);
 
   const text = {
     ...optionalAssertionString(value, "column", diagnostics),
     ...optionalAssertionString(value, "contains", diagnostics),
-    ...optionalAssertionString(value, "containsExactlyOne", diagnostics),
     ...optionalStringArray(value, "excludes", diagnostics),
   };
 
   if (!hasTextPredicate(text)) {
     diagnostics.push(
       invalidShape(
-        "text must include contains, containsExactlyOne, or a non-empty excludes array.",
+        "text must include contains or a non-empty excludes array.",
       ),
     );
 
@@ -415,9 +410,5 @@ function requiredAssertionString(
 }
 
 function hasTextPredicate(text: DeclarativeAssertion["text"]): boolean {
-  return (
-    text?.contains !== undefined ||
-    text?.containsExactlyOne !== undefined ||
-    text?.excludes !== undefined
-  );
+  return text?.contains !== undefined || text?.excludes !== undefined;
 }

@@ -21,8 +21,7 @@ describe("declarative validation compiler assertion proof", () => {
       {
         code: "profile.config.invalidShape",
         ruleId: "text.empty",
-        message:
-          "text must include contains, containsExactlyOne, or a non-empty excludes array.",
+        message: "text must include contains or a non-empty excludes array.",
         severity: "error",
       },
     ]);

@@ -69,18 +69,6 @@ export function pushTextShapeDiagnostics(
   }
 
   if (
-    assertion?.containsExactlyOne !== undefined &&
-    !pushNonEmptyStringDiagnostic(
-      "containsExactlyOne",
-      assertion.containsExactlyOne,
-      ruleId,
-      diagnostics,
-    )
-  ) {
-    valid = false;
-  }
-
-  if (
     assertion?.excludes !== undefined &&
     closedStringArray("excludes", assertion.excludes, ruleId, diagnostics) ===
       undefined
@@ -232,7 +220,6 @@ export function optionalStringArray<TKey extends string>(
 export function hasTextPredicate(assertion: DeclarativeAssertion["text"]): boolean {
   return (
     assertion?.contains !== undefined ||
-    assertion?.containsExactlyOne !== undefined ||
     (assertion?.excludes !== undefined && assertion.excludes.length > 0)
   );
 }

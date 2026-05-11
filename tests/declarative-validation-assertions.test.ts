@@ -122,7 +122,7 @@ describe("declarative validation assertion proof", () => {
           id: "empty-selection.unsupported-text",
           severity: "warning",
           select: { target: "section", title: "Verification" },
-          assert: { text: { containsExactlyOne: "complete" } },
+          assert: { text: { excludes: ["incomplete"] } },
         },
         message:
           'Assertion "text" is compiled but only text.contains without a column is implemented by the assertion evaluator yet.',
@@ -271,7 +271,6 @@ describe("declarative validation assertion proof", () => {
     ).document;
 
     for (const assert of [
-      { text: { containsExactlyOne: "beta" } },
       { text: { excludes: ["forbidden"] } },
     ] satisfies ValidationProfile["rules"][number]["assert"][]) {
       const result = validateWithProfile(sectionDocument, {
