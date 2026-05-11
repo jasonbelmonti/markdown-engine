@@ -377,6 +377,9 @@ optional `title`, and optional `sourceRange`.
 `documentQueries` exposes deterministic helper methods over this public IR:
 
 - `nodes(document, query?)` filters recursive nodes by node type or target ID.
+  Recursive node-backed helper results use preorder depth-first document order:
+  each node appears before its descendants, and descendants are exhausted before
+  the next sibling.
 - `sections(document, query?)` filters sections by target ID, heading target
   ID, parent section target ID, title, or depth.
 - `textSpans(document, query?)` filters spans by target ID, node type, exact

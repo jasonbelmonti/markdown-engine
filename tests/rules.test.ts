@@ -3,7 +3,11 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { normalize, parse, serialize, validate } from "@jasonbelmonti/markdown-engine";
-import type { ValidationConfig } from "@jasonbelmonti/markdown-engine";
+import type {
+  EngineDocument,
+  EngineNode,
+  ValidationConfig,
+} from "@jasonbelmonti/markdown-engine";
 
 import { snapshotRoot, stableJson } from "./support/parser-fixture-support.js";
 
@@ -248,6 +252,46 @@ describe("WP-4 deterministic rule families", () => {
     expect(serialize(validationResult)).toContain("rawHtml.policy.warned");
   });
 
+  it("VAL-4: evaluates recursive node rules in preorder depth-first order", () => {
+    const document = normalize(
+      parse("> [Nested](ftp://nested.example)\n\n[Top](http://top.example)\n")
+        .parsed,
+    ).document;
+    const validationResult = validate(document, {
+      rules: {
+        "links.allowedSchemes": {
+          schemes: ["https"],
+        },
+      },
+    });
+
+    expect(
+      validationResult.diagnostics.map((diagnostic) => diagnostic.message),
+    ).toEqual([
+      'Link URL scheme "ftp" is not allowed.',
+      'Link URL scheme "http" is not allowed.',
+    ]);
+  });
+
+  it("VAL-4: evaluates recursive node rules iteratively for deep documents", () => {
+    const validationResult = validate(deepNestedLinkDocument(12_000), {
+      rules: {
+        "links.allowedSchemes": {
+          schemes: ["https"],
+        },
+      },
+    });
+
+    expect(validationResult.diagnostics).toEqual([
+      {
+        code: "links.allowedSchemes.disallowed",
+        ruleId: "links.allowedSchemes",
+        message: 'Link URL scheme "ftp" is not allowed.',
+        severity: "error",
+      },
+    ]);
+  });
+
   it("VAL-6: treats info diagnostics as rule failures without invalidating the result", () => {
     const document = normalize(parse(compliantMarkdown).parsed).document;
     const expectedDiagnostic = {
@@ -279,3 +323,25 @@ describe("WP-4 deterministic rule families", () => {
     });
   });
 });
+
+function deepNestedLinkDocument(depth: number): EngineDocument {
+  let node: EngineNode = {
+    type: "link",
+    attributes: {
+      url: "ftp://deep.example",
+    },
+  };
+
+  for (let index = 0; index < depth; index += 1) {
+    node = {
+      type: "blockquote",
+      children: [node],
+    };
+  }
+
+  return {
+    kind: "markdown-document",
+    version: "0.0.0",
+    children: [node],
+  };
+}
