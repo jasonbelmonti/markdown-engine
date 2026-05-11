@@ -19,6 +19,8 @@ The package root exports the API functions, helpers, and types from `src/api/**`
 - `serialize(result, options?)`
 - `documentQueries`
 - `validateAnnotations(document, annotations)`
+- `parseValidationProfile(input, options?)`
+- `validateWithProfile(document, profile, options?)`
 
 The package root also exports the public result, document, diagnostic, config,
 and function types declared in `src/api/**`.
@@ -201,6 +203,45 @@ Each `ValidationRuleResult` contains `ruleId`, `passed`, and `diagnostics`.
 `passed` is `false` when the rule emits diagnostics, including warning or info
 diagnostics. `valid` is controlled by error-severity diagnostics only.
 
+## Declarative Validation
+
+Signatures:
+
+```ts
+parseValidationProfile(
+  input: string | JsonSafeValue,
+  options?: DeclarativeProfileParseOptions,
+): DeclarativeProfileParseResult
+
+validateWithProfile(
+  document: EngineDocument,
+  profile: ValidationProfile,
+  options?: DeclarativeValidationOptions,
+): DeclarativeValidationResult
+```
+
+`parseValidationProfile` accepts YAML text or JSON-safe profile objects. The
+top-level profile keys are `syntaxVersion`, `documentVersion`, and `rules`.
+`syntaxVersion` must be `"markdown-engine.validation@v1"`.
+`documentVersion` is optional; when provided it must be `"0.0.0"` or
+`"1.0.0"`. The parser preserves omission and does not inject a default into
+the parsed profile.
+
+`validateWithProfile` resolves an omitted profile `documentVersion` to the
+supplied normalized `EngineDocument.version`. The returned
+`DeclarativeValidationResult.profile.documentVersion` records that resolved
+version. If an explicit profile `documentVersion` does not match
+`document.version`, validation emits `profile.config.documentVersionMismatch`,
+returns no rule results, and does not evaluate rules.
+
+When `DeclarativeValidationOptions.includeEvidence` is `true`, the result
+contains deterministic evidence. `inputHash` hashes the canonical supplied
+`EngineDocument` without top-level `document.path`. `profileHash` hashes the
+resolved profile after applying the `documentVersion` and rule `severity`
+defaults, so an omitted `documentVersion` and an explicit matching
+`documentVersion` produce the same profile hash for the same document version
+and rules.
+
 ## `serialize`
 
 Signature:
@@ -211,6 +252,7 @@ serialize(
     | ParseResult
     | NormalizeResult
     | ValidationResult
+    | DeclarativeValidationResult
     | EngineDocument
     | AnnotationValidationResult,
   options?: SerializeOptions,
