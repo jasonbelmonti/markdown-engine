@@ -228,7 +228,7 @@ describe("declarative validation public contract scaffold", () => {
     }
   });
 
-  it("accepts the full public text assertion shape", () => {
+  it("accepts the public text assertion shape", () => {
     const result = parseValidationProfile({
       syntaxVersion: "markdown-engine.validation@v1",
       documentVersion: "1.0.0",
@@ -240,7 +240,6 @@ describe("declarative validation public contract scaffold", () => {
             text: {
               column: "Requirement statement",
               contains: "shall",
-              containsExactlyOne: "shall",
               excludes: ["should", "may"],
             },
           },
@@ -260,7 +259,6 @@ describe("declarative validation public contract scaffold", () => {
               text: {
                 column: "Requirement statement",
                 contains: "shall",
-                containsExactlyOne: "shall",
                 excludes: ["should", "may"],
               },
             },

@@ -280,7 +280,6 @@ rules:
             },
             text: {
               column: "Requirement statement",
-              containsExactlyOne: "shall",
               excludes: ["and/or"],
             },
             textOccurrenceCount: {
@@ -328,7 +327,6 @@ rules:
               },
               text: {
                 column: "Requirement statement",
-                containsExactlyOne: "shall",
                 excludes: ["and/or"],
               },
               textOccurrenceCount: {
@@ -912,6 +910,33 @@ rules:
       ],
     },
     {
+      name: "removed containsExactlyOne text assertion key",
+      input: {
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "removed-text-assertion",
+            select: { target: "document" },
+            assert: {
+              text: {
+                containsExactlyOne: "Mission",
+              },
+            },
+          },
+        ],
+      },
+      diagnostics: [
+        {
+          code: "profile.config.unsupportedKey",
+          message: 'Unsupported validation profile key "containsExactlyOne".',
+        },
+        {
+          code: "profile.config.invalidShape",
+          message: "text must include contains or a non-empty excludes array.",
+        },
+      ],
+    },
+    {
       name: "text assertion without effective predicate",
       input: {
         syntaxVersion: "markdown-engine.validation@v1",
@@ -926,8 +951,7 @@ rules:
       diagnostics: [
         {
           code: "profile.config.invalidShape",
-          message:
-            "text must include contains, containsExactlyOne, or a non-empty excludes array.",
+          message: "text must include contains or a non-empty excludes array.",
         },
       ],
     },

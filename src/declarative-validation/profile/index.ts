@@ -89,7 +89,6 @@ export interface DeclarativeAssertion {
   text?: {
     column?: string;
     contains?: string;
-    containsExactlyOne?: string;
     excludes?: readonly string[];
   };
   textOccurrenceCount?: {

@@ -280,7 +280,7 @@ function buildTextAssertion(
     !pushObjectDiagnostic("text", assertion.text, ruleId, diagnostics) ||
     !pushUnsupportedKeyDiagnostics(
       assertion.text,
-      ["column", "contains", "containsExactlyOne", "excludes"],
+      ["column", "contains", "excludes"],
       diagnostics,
     ) ||
     !pushTextShapeDiagnostics(assertion.text, ruleId, diagnostics)
@@ -292,7 +292,7 @@ function buildTextAssertion(
     diagnostics.push(
       compileDiagnostic(
         "profile.config.invalidShape",
-        "text must include contains, containsExactlyOne, or a non-empty excludes array.",
+        "text must include contains or a non-empty excludes array.",
         ruleId,
       ),
     );
@@ -305,7 +305,6 @@ function buildTextAssertion(
       kind: "text",
       ...optionalString("column", assertion.text.column),
       ...optionalString("contains", assertion.text.contains),
-      ...optionalString("containsExactlyOne", assertion.text.containsExactlyOne),
       ...optionalStringArray("excludes", assertion.text.excludes),
     };
   }
