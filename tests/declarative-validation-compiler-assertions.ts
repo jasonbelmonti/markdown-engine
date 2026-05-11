@@ -31,7 +31,7 @@ describe("declarative validation compiler assertion proof", () => {
     const invalidIdAssertions = [
       { ids: {}, select: { target: "document" } },
       { ids: { unique: false }, select: { target: "document" } },
-      { ids: { column: "ID" }, select: { target: "tableRow" } },
+      { ids: { prefix: "REQ" }, select: { target: "document" } },
     ] satisfies {
       ids: ValidationProfile["rules"][number]["assert"]["ids"];
       select: ValidationProfile["rules"][number]["select"];
@@ -69,14 +69,9 @@ describe("declarative validation compiler assertion proof", () => {
         select: { target: "section", title: "Objective" },
       },
       {
-        assert: { text: { column: "", contains: "ready" } },
-        message: "column must be a non-empty string when provided.",
-        select: { target: "table" },
-      },
-      {
-        assert: { ids: { unique: true, column: "" } },
-        message: "column must be a non-empty string when provided.",
-        select: { target: "tableRow" },
+        assert: { ids: { unique: true, prefix: "" } },
+        message: "prefix must be a non-empty string when provided.",
+        select: { target: "document" },
       },
     ] satisfies {
       assert: ValidationProfile["rules"][number]["assert"];
@@ -169,6 +164,85 @@ describe("declarative validation compiler assertion proof", () => {
         },
       ]);
     }
+  });
+
+  it("rejects removed direct typed assertion column modifiers before execution", () => {
+    const removedColumnAssertions = [
+      {
+        assert: { ids: { unique: true, column: "ID" } },
+        select: { target: "tableCell", column: "ID" },
+      },
+      {
+        assert: { text: { column: "Statement", contains: "shall" } },
+        select: { target: "tableCell", column: "Statement" },
+      },
+      {
+        assert: {
+          textOccurrenceCount: {
+            text: "shall",
+            count: 1,
+            column: "Statement",
+          },
+        },
+        select: { target: "tableCell", column: "Statement" },
+      },
+    ] satisfies {
+      assert: ValidationProfile["rules"][number]["assert"] &
+        Record<string, unknown>;
+      select: ValidationProfile["rules"][number]["select"];
+    }[];
+
+    for (const { assert, select } of removedColumnAssertions) {
+      const result = compileValidationProfile({
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "assertion.removed-column",
+            select,
+            assert,
+          },
+        ],
+      });
+
+      expect(result.plan).toBeUndefined();
+      expect(result.diagnostics).toEqual([
+        {
+          code: "profile.config.unsupportedKey",
+          message: 'Unsupported validation profile key "column".',
+          severity: "error",
+        },
+      ]);
+    }
+  });
+
+  it("reports removed ids column modifiers before missing unique diagnostics", () => {
+    const result = compileValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      rules: [
+        {
+          id: "ids.removed-column-without-unique",
+          select: { target: "tableCell", column: "ID" },
+          assert: {
+            ids: { column: "ID" },
+          } as unknown as ValidationProfile["rules"][number]["assert"],
+        },
+      ],
+    });
+
+    expect(result.plan).toBeUndefined();
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.config.unsupportedKey",
+        message: 'Unsupported validation profile key "column".',
+        severity: "error",
+      },
+      {
+        code: "profile.config.invalidShape",
+        ruleId: "ids.removed-column-without-unique",
+        message: "ids.unique must be true.",
+        severity: "error",
+      },
+    ]);
   });
 
   it("rejects direct typed non-object assertion payloads before execution", () => {

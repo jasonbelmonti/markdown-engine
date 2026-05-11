@@ -75,7 +75,12 @@ function buildSectionsRequiredAssertion(
       ruleId,
       diagnostics,
     ) &&
-    pushCompatibilityDiagnostic("sectionsRequired", assertion, selector, ruleId, diagnostics)
+    pushCompatibilityDiagnostic(
+      "sectionsRequired",
+      selector,
+      ruleId,
+      diagnostics,
+    )
   ) {
     return {
       kind: "sectionsRequired",
@@ -112,7 +117,6 @@ function buildTableColumnsRequiredAssertion(
     ) &&
     pushCompatibilityDiagnostic(
       "tableColumnsRequired",
-      assertion,
       selector,
       ruleId,
       diagnostics,
@@ -147,6 +151,12 @@ function buildIdsAssertion(
     return undefined;
   }
 
+  const hasSupportedKeys = pushUnsupportedKeyDiagnostics(
+    assertion.ids,
+    ["prefix", "unique", "caseSensitive"],
+    diagnostics,
+  );
+
   if (assertion.ids.unique !== true) {
     diagnostics.push(
       compileDiagnostic(
@@ -160,17 +170,7 @@ function buildIdsAssertion(
   }
 
   if (
-    pushUnsupportedKeyDiagnostics(
-      assertion.ids,
-      ["column", "prefix", "unique", "caseSensitive"],
-      diagnostics,
-    ) &&
-    pushOptionalNonEmptyStringDiagnostic(
-      "column",
-      assertion.ids.column,
-      ruleId,
-      diagnostics,
-    ) &&
+    hasSupportedKeys &&
     pushOptionalNonEmptyStringDiagnostic(
       "prefix",
       assertion.ids.prefix,
@@ -183,13 +183,12 @@ function buildIdsAssertion(
       ruleId,
       diagnostics,
     ) &&
-    pushCompatibilityDiagnostic("ids", assertion, selector, ruleId, diagnostics)
+    pushCompatibilityDiagnostic("ids", selector, ruleId, diagnostics)
   ) {
     return {
       kind: "ids",
       unique: true,
       caseSensitive: assertion.ids.caseSensitive ?? true,
-      ...optionalString("column", assertion.ids.column),
       ...optionalString("prefix", assertion.ids.prefix),
     };
   }
@@ -250,7 +249,7 @@ function buildReferencesAssertion(
       ruleId,
       diagnostics,
     ) &&
-    pushCompatibilityDiagnostic("references", assertion, selector, ruleId, diagnostics)
+    pushCompatibilityDiagnostic("references", selector, ruleId, diagnostics)
   ) {
     return {
       kind: "references",
@@ -280,7 +279,7 @@ function buildTextAssertion(
     !pushObjectDiagnostic("text", assertion.text, ruleId, diagnostics) ||
     !pushUnsupportedKeyDiagnostics(
       assertion.text,
-      ["column", "contains", "excludes"],
+      ["contains", "excludes"],
       diagnostics,
     ) ||
     !pushTextShapeDiagnostics(assertion.text, ruleId, diagnostics)
@@ -300,10 +299,9 @@ function buildTextAssertion(
     return undefined;
   }
 
-  if (pushCompatibilityDiagnostic("text", assertion, selector, ruleId, diagnostics)) {
+  if (pushCompatibilityDiagnostic("text", selector, ruleId, diagnostics)) {
     return {
       kind: "text",
-      ...optionalString("column", assertion.text.column),
       ...optionalString("contains", assertion.text.contains),
       ...optionalStringArray("excludes", assertion.text.excludes),
     };
@@ -331,12 +329,11 @@ function buildTextOccurrenceCountAssertion(
     ) &&
     pushUnsupportedKeyDiagnostics(
       assertion.textOccurrenceCount,
-      ["text", "count", "column"],
+      ["text", "count"],
       diagnostics,
     ) &&
     pushCompatibilityDiagnostic(
       "textOccurrenceCount",
-      assertion,
       selector,
       ruleId,
       diagnostics,
@@ -351,19 +348,12 @@ function buildTextOccurrenceCountAssertion(
       assertion.textOccurrenceCount.count,
       ruleId,
       diagnostics,
-    ) &&
-    pushOptionalNonEmptyStringDiagnostic(
-      "column",
-      assertion.textOccurrenceCount.column,
-      ruleId,
-      diagnostics,
     )
   ) {
     return {
       kind: "textOccurrenceCount",
       text: assertion.textOccurrenceCount.text,
       count: assertion.textOccurrenceCount.count,
-      ...optionalString("column", assertion.textOccurrenceCount.column),
     };
   }
 
@@ -394,7 +384,6 @@ function buildFrontmatterRequiredAssertion(
     ) &&
     pushCompatibilityDiagnostic(
       "frontmatterRequired",
-      assertion,
       selector,
       ruleId,
       diagnostics,
@@ -421,12 +410,11 @@ function buildFrontmatterRequiredAssertion(
 
 function pushCompatibilityDiagnostic(
   assertionName: DeclarativeAssertionName,
-  assertion: DeclarativeAssertion,
   selector: DeclarativeSelector,
   ruleId: string,
   diagnostics: MarkdownDiagnostic[],
 ): boolean {
-  const message = selectorAssertionCompatibilityError(assertionName, selector, assertion);
+  const message = selectorAssertionCompatibilityError(assertionName, selector);
 
   if (message !== undefined) {
     diagnostics.push(

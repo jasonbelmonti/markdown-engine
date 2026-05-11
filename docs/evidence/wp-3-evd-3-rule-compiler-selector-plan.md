@@ -29,8 +29,8 @@ This evidence covers the WP-3 compiler and selector substrate:
 
 This evidence does not claim WP-4 assertion evaluation completeness. The current
 assertion evaluator still implements the existing `sectionsRequired` and
-`text.contains` without `column` proof paths. Other compiled assertion records,
-plus `text.column` and `text.excludes`, return a deterministic
+`text.contains` proof paths. Other compiled assertion records, plus
+`text.excludes`, return a deterministic
 unsupported-evaluator diagnostic if routed through `validateWithProfile` before
 WP-4 rather than silently passing.
 
@@ -73,8 +73,9 @@ The compatibility matrix is encoded in
 tests:
 
 - document-only assertions reject section selectors before execution.
-- column-scoped `text`, `ids`, and `textOccurrenceCount` assertions reject
-  non-table selectors before execution.
+- removed assertion-level `column` modifiers on `text`, `ids`, and
+  `textOccurrenceCount` reject before execution; column-specific checks use
+  `tableCell` selectors.
 - frontmatter-required assertions allow document selectors and unfiltered
   frontmatter selectors, but reject filtered frontmatter selectors.
 

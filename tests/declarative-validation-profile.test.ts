@@ -22,18 +22,14 @@ rules:
   - id: table-requirements
     severity: warning
     select:
-      target: table
+      target: tableCell
       section: Requirements
-      header:
+      tableHeader:
         - ID
         - Statement
+      column: Statement
     assert:
-      tableColumnsRequired:
-        columns:
-          - ID
-          - Statement
       text:
-        column: Statement
         contains: shall
         excludes:
           - maybe
@@ -48,16 +44,13 @@ rules:
             id: "table-requirements",
             severity: "warning",
             select: {
-              target: "table",
+              target: "tableCell",
               section: "Requirements",
-              header: ["ID", "Statement"],
+              tableHeader: ["ID", "Statement"],
+              column: "Statement",
             },
             assert: {
-              tableColumnsRequired: {
-                columns: ["ID", "Statement"],
-              },
               text: {
-                column: "Statement",
                 contains: "shall",
                 excludes: ["maybe"],
               },
@@ -265,7 +258,6 @@ rules:
               columns: ["ID", "Requirement statement"],
             },
             ids: {
-              column: "ID",
               prefix: "REQ",
               unique: true,
               caseSensitive: false,
@@ -279,13 +271,11 @@ rules:
               mustAppearIn: ["Traceability", "Verification"],
             },
             text: {
-              column: "Requirement statement",
               excludes: ["and/or"],
             },
             textOccurrenceCount: {
               text: "shall",
               count: 1,
-              column: "Requirement statement",
             },
             frontmatterRequired: {
               fields: ["title", "owner"],
@@ -312,7 +302,6 @@ rules:
                 columns: ["ID", "Requirement statement"],
               },
               ids: {
-                column: "ID",
                 prefix: "REQ",
                 unique: true,
                 caseSensitive: false,
@@ -326,13 +315,11 @@ rules:
                 mustAppearIn: ["Traceability", "Verification"],
               },
               text: {
-                column: "Requirement statement",
                 excludes: ["and/or"],
               },
               textOccurrenceCount: {
                 text: "shall",
                 count: 1,
-                column: "Requirement statement",
               },
               frontmatterRequired: {
                 fields: ["title", "owner"],
@@ -348,7 +335,6 @@ rules:
   it("rejects ineffective id assertion payloads", () => {
     const ineffectiveIdsAssertions = [
       {},
-      { column: "ID" },
       { prefix: "REQ" },
       { unique: false },
     ];
@@ -937,7 +923,7 @@ rules:
       ],
     },
     {
-      name: "text assertion without effective predicate",
+      name: "removed text assertion column modifier",
       input: {
         syntaxVersion: "markdown-engine.validation@v1",
         rules: [
@@ -950,8 +936,56 @@ rules:
       },
       diagnostics: [
         {
+          code: "profile.config.unsupportedKey",
+          message: 'Unsupported validation profile key "column".',
+        },
+        {
           code: "profile.config.invalidShape",
           message: "text must include contains or a non-empty excludes array.",
+        },
+      ],
+    },
+    {
+      name: "removed ids assertion column modifier",
+      input: {
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "removed-ids-column",
+            select: { target: "tableCell", column: "ID" },
+            assert: { ids: { unique: true, column: "ID" } },
+          },
+        ],
+      },
+      diagnostics: [
+        {
+          code: "profile.config.unsupportedKey",
+          message: 'Unsupported validation profile key "column".',
+        },
+      ],
+    },
+    {
+      name: "removed occurrence assertion column modifier",
+      input: {
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "removed-occurrence-column",
+            select: { target: "tableCell", column: "Statement" },
+            assert: {
+              textOccurrenceCount: {
+                text: "shall",
+                count: 1,
+                column: "Statement",
+              },
+            },
+          },
+        ],
+      },
+      diagnostics: [
+        {
+          code: "profile.config.unsupportedKey",
+          message: 'Unsupported validation profile key "column".',
         },
       ],
     },

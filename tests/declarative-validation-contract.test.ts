@@ -114,6 +114,28 @@ const removedTextAssertion = {
     containsExactlyOne: "shall",
   },
 } satisfies DeclarativeAssertion;
+const removedIdsColumnAssertion = {
+  ids: {
+    unique: true,
+    // @ts-expect-error ids.column was removed from public assertion syntax.
+    column: "ID",
+  },
+} satisfies DeclarativeAssertion;
+const removedTextColumnAssertion = {
+  text: {
+    contains: "shall",
+    // @ts-expect-error text.column was removed from public assertion syntax.
+    column: "Requirement statement",
+  },
+} satisfies DeclarativeAssertion;
+const removedOccurrenceColumnAssertion = {
+  textOccurrenceCount: {
+    text: "shall",
+    count: 1,
+    // @ts-expect-error textOccurrenceCount.column was removed from public assertion syntax.
+    column: "Requirement statement",
+  },
+} satisfies DeclarativeAssertion;
 const idSource = { section: "Records", column: "ID" } satisfies DeclarativeIdSource;
 const tableCellPredicate = {
   column: "Status",
@@ -241,10 +263,13 @@ describe("declarative validation public contract scaffold", () => {
       rules: [
         {
           id: "text-contract",
-          select: { target: "table" },
+          select: {
+            target: "tableCell",
+            tableHeader: ["ID", "Requirement statement"],
+            column: "Requirement statement",
+          },
           assert: {
             text: {
-              column: "Requirement statement",
               contains: "shall",
               excludes: ["should", "may"],
             },
@@ -260,10 +285,13 @@ describe("declarative validation public contract scaffold", () => {
         rules: [
           {
             id: "text-contract",
-            select: { target: "table" },
+            select: {
+              target: "tableCell",
+              tableHeader: ["ID", "Requirement statement"],
+              column: "Requirement statement",
+            },
             assert: {
               text: {
-                column: "Requirement statement",
                 contains: "shall",
                 excludes: ["should", "may"],
               },
@@ -299,5 +327,8 @@ void (undefined as unknown as DeclarativeValidationCompileResult);
 void unsupportedSelector;
 void publicAssertion;
 void removedTextAssertion;
+void removedIdsColumnAssertion;
+void removedTextColumnAssertion;
+void removedOccurrenceColumnAssertion;
 void idSource;
 void tableCellPredicate;

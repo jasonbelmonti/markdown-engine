@@ -50,18 +50,6 @@ export function pushTextShapeDiagnostics(
   let valid = true;
 
   if (
-    assertion?.column !== undefined &&
-    !pushOptionalNonEmptyStringDiagnostic(
-      "column",
-      assertion.column,
-      ruleId,
-      diagnostics,
-    )
-  ) {
-    valid = false;
-  }
-
-  if (
     assertion?.contains !== undefined &&
     !pushNonEmptyStringDiagnostic("contains", assertion.contains, ruleId, diagnostics)
   ) {

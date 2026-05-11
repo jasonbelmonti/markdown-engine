@@ -77,7 +77,6 @@ export interface DeclarativeAssertion {
     columns: readonly string[];
   };
   ids?: {
-    column?: string;
     prefix?: string;
     unique?: boolean;
     caseSensitive?: boolean;
@@ -87,14 +86,12 @@ export interface DeclarativeAssertion {
     mustAppearIn: readonly string[];
   };
   text?: {
-    column?: string;
     contains?: string;
     excludes?: readonly string[];
   };
   textOccurrenceCount?: {
     text: string;
     count: number;
-    column?: string;
   };
   frontmatterRequired?: {
     fields: readonly string[];

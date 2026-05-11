@@ -125,7 +125,7 @@ describe("declarative validation assertion proof", () => {
           assert: { text: { excludes: ["incomplete"] } },
         },
         message:
-          'Assertion "text" is compiled but only text.contains without a column is implemented by the assertion evaluator yet.',
+          'Assertion "text" is compiled but only text.contains is implemented by the assertion evaluator yet.',
       },
       {
         rule: {
@@ -291,43 +291,79 @@ describe("declarative validation assertion proof", () => {
           code: "profile.validation.assertionUnsupported",
           ruleId: "text.unsupported-evaluator-path",
           message:
-            'Assertion "text" is compiled but only text.contains without a column is implemented by the assertion evaluator yet.',
+            'Assertion "text" is compiled but only text.contains is implemented by the assertion evaluator yet.',
           severity: "error",
         },
       ]);
     }
+  });
 
-    const tableDocument = normalize(
+  it("rejects removed assertion column modifiers before rule evaluation", () => {
+    const document = normalize(
       parse([
         "# Status",
         "",
-        "| Step | State |",
+        "| ID | Statement |",
         "| --- | --- |",
-        "| Ready elsewhere | blocked |",
+        "| REQ-1 | system shall pass |",
       ].join("\n")).parsed,
       {
         documentVersion: "1.0.0",
       },
     ).document;
-    const result = validateWithProfile(tableDocument, {
-      syntaxVersion: "markdown-engine.validation@v1",
-      documentVersion: "1.0.0",
-      rules: [
-        {
-          id: "text.unsupported-evaluator-path",
-          select: { target: "table" },
-          assert: { text: { column: "State", contains: "ready" } },
-        },
-      ],
-    });
+    const result = validateWithProfile(
+      document,
+      {
+        syntaxVersion: "markdown-engine.validation@v1",
+        documentVersion: "1.0.0",
+        rules: [
+          {
+            id: "ids.removed-column",
+            select: { target: "tableCell", column: "ID" },
+            assert: { ids: { column: "ID" } },
+          },
+          {
+            id: "text.removed-column",
+            select: { target: "tableCell", column: "Statement" },
+            assert: { text: { contains: "shall", column: "Statement" } },
+          },
+          {
+            id: "occurrence.removed-column",
+            select: { target: "tableCell", column: "Statement" },
+            assert: {
+              textOccurrenceCount: {
+                text: "shall",
+                count: 1,
+                column: "Statement",
+              },
+            },
+          },
+        ],
+      } as unknown as ValidationProfile,
+    );
 
     expect(result.valid).toBe(false);
+    expect(result.ruleResults).toEqual([]);
     expect(result.diagnostics).toEqual([
       {
-        code: "profile.validation.assertionUnsupported",
-        ruleId: "text.unsupported-evaluator-path",
-        message:
-          'Assertion "text" is compiled but only text.contains without a column is implemented by the assertion evaluator yet.',
+        code: "profile.config.unsupportedKey",
+        message: 'Unsupported validation profile key "column".',
+        severity: "error",
+      },
+      {
+        code: "profile.config.invalidShape",
+        ruleId: "ids.removed-column",
+        message: "ids.unique must be true.",
+        severity: "error",
+      },
+      {
+        code: "profile.config.unsupportedKey",
+        message: 'Unsupported validation profile key "column".',
+        severity: "error",
+      },
+      {
+        code: "profile.config.unsupportedKey",
+        message: 'Unsupported validation profile key "column".',
         severity: "error",
       },
     ]);

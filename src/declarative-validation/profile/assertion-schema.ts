@@ -188,7 +188,7 @@ function idsFromValue(
     return {};
   }
 
-  unsupportedKeys(value, ["column", "prefix", "unique", "caseSensitive"], diagnostics);
+  unsupportedKeys(value, ["prefix", "unique", "caseSensitive"], diagnostics);
 
   if (value.unique !== true) {
     diagnostics.push(invalidShape("ids.unique must be true."));
@@ -198,7 +198,6 @@ function idsFromValue(
 
   return {
     ids: {
-      ...optionalAssertionString(value, "column", diagnostics),
       ...optionalAssertionString(value, "prefix", diagnostics),
       unique: true,
       ...optionalBoolean(value, "caseSensitive", diagnostics),
@@ -250,10 +249,9 @@ function textAssertionFromValue(
     return {};
   }
 
-  unsupportedKeys(value, ["column", "contains", "excludes"], diagnostics);
+  unsupportedKeys(value, ["contains", "excludes"], diagnostics);
 
   const text = {
-    ...optionalAssertionString(value, "column", diagnostics),
     ...optionalAssertionString(value, "contains", diagnostics),
     ...optionalStringArray(value, "excludes", diagnostics),
   };
@@ -285,7 +283,7 @@ function textOccurrenceCountFromValue(
     return {};
   }
 
-  unsupportedKeys(value, ["text", "count", "column"], diagnostics);
+  unsupportedKeys(value, ["text", "count"], diagnostics);
 
   const text = requiredAssertionString(
     value.text,
@@ -304,7 +302,6 @@ function textOccurrenceCountFromValue(
         textOccurrenceCount: {
           text,
           count,
-          ...optionalAssertionString(value, "column", diagnostics),
         },
       };
 }

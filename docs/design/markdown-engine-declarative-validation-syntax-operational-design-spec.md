@@ -189,7 +189,7 @@ External service expectations: The package has no network availability service l
 
 | ID | Acceptance case | Expected result | Covers |
 | --- | --- | --- | --- |
-| ACC-1 | Parse a valid YAML profile with 3 rules using section, table, and ID assertions. | The API returns a parsed profile model with no diagnostics. | REQ-1 / FUNC-1 |
+| ACC-1 | Parse a valid YAML profile with section, table, table-cell ID, and table-cell text assertions. | The API returns a parsed profile model with no diagnostics. | REQ-1 / FUNC-1 |
 | ACC-2 | Parse a profile containing duplicate rule IDs, `script`, `plugin`, regex-like `matches` or `pattern` keys, or unknown assertion keys. | The API returns config diagnostics and no executable behavior, ambiguous rule output, or regular expression compilation. | REQ-2 / REQ-8 / FUNC-1 / FUNC-2 |
 | ACC-3 | Compile a profile containing only supported selectors and assertions. | Internal inspection or test evidence shows a closed rule plan with no raw function callbacks or external handles. | REQ-3 / FUNC-2 |
 | ACC-4 | Validate a document missing a required section. | The result contains an error diagnostic for the missing section. | REQ-4 / REQ-5 / FUNC-3 |
@@ -286,16 +286,51 @@ rules:
         - Rationale
         - Verification
     assert:
+      tableColumnsRequired:
+        columns:
+          - ID
+          - Type
+          - Priority
+          - Requirement statement
+          - Rationale
+          - Verification
+
+  - id: requirement-id-uniqueness
+    severity: error
+    select:
+      target: tableCell
+      section: 5. Requirements
+      tableHeader:
+        - ID
+        - Type
+        - Priority
+        - Requirement statement
+        - Rationale
+        - Verification
+      column: ID
+    assert:
       ids:
-        column: ID
         prefix: REQ
         unique: true
+
+  - id: requirement-statement-text
+    severity: error
+    select:
+      target: tableCell
+      section: 5. Requirements
+      tableHeader:
+        - ID
+        - Type
+        - Priority
+        - Requirement statement
+        - Rationale
+        - Verification
+      column: Requirement statement
+    assert:
       textOccurrenceCount:
         text: shall
         count: 1
-        column: Requirement statement
       text:
-        column: Requirement statement
         excludes:
           - and/or
 
@@ -390,7 +425,6 @@ interface DeclarativeAssertion {
     columns: readonly string[];
   };
   ids?: {
-    column?: string;
     prefix?: string;
     unique?: boolean;
     caseSensitive?: boolean;
@@ -400,14 +434,12 @@ interface DeclarativeAssertion {
     mustAppearIn: readonly string[];
   };
   text?: {
-    column?: string;
     contains?: string;
     excludes?: readonly string[];
   };
   textOccurrenceCount?: {
     text: string;
     count: number;
-    column?: string;
   };
   frontmatterRequired?: {
     fields: readonly string[];
@@ -488,14 +520,14 @@ Schema closure and validation rules:
 - Unknown first-level assertion members under `assert` produce `profile.compile.unsupportedAssertion` diagnostics, except regex-like keys whose unsupported-key diagnostic precedence is defined below. Unsupported `select.target` values produce `profile.compile.unsupportedSelector` diagnostics. Supported selectors combined with incompatible supported assertions produce `profile.compile.incompatibleSelectorAssertion` diagnostics. These three compile diagnostics take precedence over `profile.config.invalidShape` for selector and assertion vocabulary errors.
 - `profile.config.invalidShape` covers missing required fields, wrong primitive/container types, empty required arrays, invalid scalar values such as unsupported `severity` or `order`, table predicates with neither `equals` nor `includes`, assertion members that contain no effective validation predicate, and empty required strings.
 - First-version matching is limited to exact string equality, substring inclusion, prefix selection, and exact occurrence counts. Regex-like keys such as `matches`, `pattern`, `regex`, and `regexp` are not part of the v1 vocabulary; their presence produces `profile.config.unsupportedKey` diagnostics and stops compilation. This unsupported-key precedence applies wherever those keys appear in the profile, including as first-level members under `assert`, so `assert.matches` emits `profile.config.unsupportedKey` rather than `profile.compile.unsupportedAssertion`.
-- String comparisons use deterministic Unicode code point comparison over normalized `EngineDocument` text. Heading, section, header, column, `equals`, and frontmatter field names match exactly. `includes`, `contains`, `excludes`, and `textOccurrenceCount.text` use non-overlapping literal substring matching. `textOccurrenceCount` requires the configured number of non-overlapping occurrences per selected target, or per selected cell when `column` is set.
+- String comparisons use deterministic Unicode code point comparison over normalized `EngineDocument` text. Heading, section, header, column, `equals`, and frontmatter field names match exactly. `includes`, `contains`, `excludes`, and `textOccurrenceCount.text` use non-overlapping literal substring matching. `textOccurrenceCount` requires the configured number of non-overlapping occurrences per selected target, including selected `tableCell` targets.
 - Section order uses the normalized document section tree flattened in source order. `sectionsRequired.order: none` or an omitted `order` checks only that every listed heading exists. The retained ordered required-section mechanism is `sectionsRequired.order: strict`, which requires the listed headings to appear as an ordered subsequence in that flattened source-order list; unrelated sections may appear before, between, or after listed headings. Matching uses exact section titles and ignores heading depth unless a future selector adds an explicit depth contract. Duplicate document headings are resolved by the first unmatched occurrence after the previous matched heading. Duplicate headings in the profile require separate matching occurrences in the document. A section-order failure targets the first listed heading that is missing or that has no valid occurrence after the previous matched heading.
 - Table `header` and `tableHeader` selector arrays match against the normalized table header row as an exact-title ordered subsequence. The supplied array must be non-empty, every supplied value must be a non-empty string, unrelated table columns may appear before, between, or after listed values, and duplicate supplied header values require separate matching header cells. A table without a normalized header row does not match a selector that supplies `header` or `tableHeader`. Matching is deterministic, left-to-right, and uses the first unmatched header cell after the previous match.
 - Table row predicates use the named `column` in the candidate row. `column` and each supplied `equals` or `includes` value must be non-empty strings. At least one of `equals` or `includes` is required. When both are present, the predicate matches only when both tests pass; evaluation order is `equals` and then `includes`. A missing predicate column makes that row fail the predicate rather than emitting a diagnostic. `where` filters `tableRow` selector results. `rowWhere` filters candidate rows before a `tableCell` selector selects its required `column`. If filtering removes every candidate target, the rule follows the empty selector behavior below.
-- ID assertions collect ID tokens from the selected target text, or from the specified table `column` when `column` is set. First-version `ids` assertions require `unique: true`; `column`, `prefix`, and `caseSensitive` are modifiers, not standalone predicates. `ids: {}`, `ids` with only modifiers, and `unique: false` produce `profile.config.invalidShape` because they do not request an effective ID validation predicate. `prefix: REQ` matches complete tokens that start with `REQ-`; the default ID token grammar is `[A-Za-z][A-Za-z0-9]*-[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*`. `ids.caseSensitive` defaults to `true`; when `false`, prefix filtering and ID uniqueness comparison are case-insensitive, while emitted diagnostics preserve original text.
+- ID assertions collect ID tokens from the selected target text. Column-specific ID checks use `select.target: tableCell` with the selector `column` field. First-version `ids` assertions require `unique: true`; `prefix` and `caseSensitive` are modifiers, not standalone predicates. `ids: {}`, `ids` with only modifiers, and `unique: false` produce `profile.config.invalidShape` because they do not request an effective ID validation predicate. `prefix: REQ` matches complete tokens that start with `REQ-`; the default ID token grammar is `[A-Za-z][A-Za-z0-9]*-[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*`. `ids.caseSensitive` defaults to `true`; when `false`, prefix filtering and ID uniqueness comparison are case-insensitive, while emitted diagnostics preserve original text.
 - `references.idsFrom` collects source IDs using the same ID-token rules. When `idsFrom.column` is set, only cells in that column within the optional `idsFrom.section` contribute source IDs; other references in the same section do not create additional source IDs.
 - `references.mustAppearIn` values are exact section titles. For each source ID and each listed target section, the target section body must contain at least one complete ID-token occurrence equal to that source ID. Matching is case-sensitive. If a source section is also a target section, the source occurrence itself does not satisfy the reference requirement. A missing reference diagnostic targets the source ID location when available, otherwise the target section heading, and never fabricates a source range.
-- Text assertions require at least one text predicate: `contains` or a non-empty `excludes` array. `column` is a modifier that scopes those predicates to table cells, not a standalone predicate. `text: {}`, `text` with only `column`, and `text.excludes: []` produce `profile.config.invalidShape` because they do not request an effective text validation predicate.
+- Text assertions require at least one text predicate: `contains` or a non-empty `excludes` array. Column-specific text checks use `select.target: tableCell` with the selector `column` field. `text: {}` and `text.excludes: []` produce `profile.config.invalidShape` because they do not request an effective text validation predicate.
 - Empty selector result behavior is assertion-specific: required-section and required-frontmatter assertions evaluate against the document, while table, ID, reference, text, and occurrence assertions fail with `profile.validation.emptySelection` unless explicitly documented otherwise.
 
 Selector/assertion compatibility:
@@ -504,13 +536,10 @@ Selector/assertion compatibility:
 | --- | --- | --- |
 | `sectionsRequired` | `document` | Evaluates the document section tree. Any other selector target produces `profile.compile.incompatibleSelectorAssertion`. |
 | `tableColumnsRequired` | `table` | Evaluates each selected table. Any other selector target produces `profile.compile.incompatibleSelectorAssertion`. |
-| `ids` without `column` | `document`, `section`, `heading`, `table`, `tableRow`, `tableCell`, `textSpan`, `link`, `list` | Collects ID tokens from selected target text. `frontmatter` is incompatible. |
-| `ids` with `column` | `table`, `tableRow` | Collects ID tokens from the named column in selected tables or rows. Any non-table selector, including `tableCell`, produces `profile.compile.incompatibleSelectorAssertion`. |
+| `ids` | `document`, `section`, `heading`, `table`, `tableRow`, `tableCell`, `textSpan`, `link`, `list` | Collects ID tokens from selected target text. Use `tableCell` selectors for column-specific checks. `frontmatter` is incompatible. |
 | `references` | `document` | `idsFrom` and `mustAppearIn` define source and target sections. Any other selector target produces `profile.compile.incompatibleSelectorAssertion`. |
-| `text` without `column` | `document`, `section`, `heading`, `table`, `tableRow`, `tableCell`, `textSpan`, `link`, `list` | Evaluates literal text predicates against selected target text. `frontmatter` is incompatible. |
-| `text` with `column` | `table`, `tableRow` | Evaluates literal text predicates against the named column in selected tables or rows. Any non-table selector, including `tableCell`, produces `profile.compile.incompatibleSelectorAssertion`. |
-| `textOccurrenceCount` without `column` | `document`, `section`, `heading`, `table`, `tableRow`, `tableCell`, `textSpan`, `link`, `list` | Counts non-overlapping literal occurrences in selected target text. `frontmatter` is incompatible. |
-| `textOccurrenceCount` with `column` | `table`, `tableRow` | Counts non-overlapping literal occurrences in the named column in selected tables or rows. Any non-table selector, including `tableCell`, produces `profile.compile.incompatibleSelectorAssertion`. |
+| `text` | `document`, `section`, `heading`, `table`, `tableRow`, `tableCell`, `textSpan`, `link`, `list` | Evaluates literal text predicates against selected target text. Use `tableCell` selectors for column-specific checks. `frontmatter` is incompatible. |
+| `textOccurrenceCount` | `document`, `section`, `heading`, `table`, `tableRow`, `tableCell`, `textSpan`, `link`, `list` | Counts non-overlapping literal occurrences in selected target text. Use `tableCell` selectors for column-specific checks. `frontmatter` is incompatible. |
 | `frontmatterRequired` | `document`, `frontmatter` | Evaluates document frontmatter fields. If the selector is `frontmatter`, its optional `field` filter must be omitted; otherwise the pair produces `profile.compile.incompatibleSelectorAssertion`. |
 
 When one rule contains multiple assertion members, every assertion member must be compatible with the selector. Compilation stops before evaluation when any member is incompatible.
@@ -530,7 +559,7 @@ First-version diagnostic inventory:
 | `profile.config.unsupportedKey` | `error` | A closed profile, rule, selector, known assertion object, or nested object contains an unknown key, including unsupported regex-like keys such as `matches`, `pattern`, `regex`, or `regexp`. |
 | `profile.compile.unsupportedSelector` | `error` | `select.target` is not one of the first-version supported targets. |
 | `profile.compile.unsupportedAssertion` | `error` | A first-level member of `assert` is not one of the first-version supported assertions. |
-| `profile.compile.incompatibleSelectorAssertion` | `error` | A supported selector target is paired with a supported assertion member or column option that the compatibility matrix does not allow. |
+| `profile.compile.incompatibleSelectorAssertion` | `error` | A supported selector target is paired with a supported assertion member that the compatibility matrix does not allow. |
 | `profile.validation.emptySelection` | Rule severity | A rule cannot evaluate because its selector matches no applicable target. |
 | `profile.validation.assertionFailed` | Rule severity | A supported assertion evaluates and fails. |
 | `profile.validation.referenceMissing` | Rule severity | A reference assertion finds an ID token that is absent from a required target section. |
