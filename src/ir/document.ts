@@ -1,13 +1,15 @@
 import type { EngineDocument, EngineNode } from "../api/document.js";
-import type { NormalizeOptions } from "../api/normalize.js";
-import type { ParsedMarkdown } from "../api/parse.js";
 import { hasOwnProperty, isPlainRecord } from "../internal/plain-record.js";
 import { buildDocumentViews } from "./document-derived-views.js";
+import type {
+  NormalizationInput,
+  NormalizationOptions,
+} from "./normalization-input.js";
 import { cloneSourceRange } from "./source-ranges.js";
 
 export function normalizeParsedMarkdown(
-  parsed: ParsedMarkdown,
-  options: NormalizeOptions = {},
+  parsed: NormalizationInput,
+  options: NormalizationOptions = {},
 ): EngineDocument {
   const preserveSourceLocations = options.preserveSourceLocations ?? true;
   const document = parsed.document;
