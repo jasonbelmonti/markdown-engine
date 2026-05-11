@@ -30,9 +30,9 @@ This evidence covers the WP-3 compiler and selector substrate:
 This evidence does not claim WP-4 assertion evaluation completeness. The current
 assertion evaluator still implements the existing `sectionsRequired` and
 `text.contains` without `column` proof paths. Other compiled assertion records,
-plus `text.column`, `text.containsExactlyOne`, and `text.excludes`, return a
-deterministic unsupported-evaluator diagnostic if routed through
-`validateWithProfile` before WP-4 rather than silently passing.
+plus `text.column` and `text.excludes`, return a deterministic
+unsupported-evaluator diagnostic if routed through `validateWithProfile` before
+WP-4 rather than silently passing.
 
 ## Private Plan Closure
 
