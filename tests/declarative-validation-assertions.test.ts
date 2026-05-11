@@ -78,6 +78,154 @@ describe("declarative validation assertion proof", () => {
     });
   });
 
+  it("emits empty-selection diagnostics without fabricated source ranges", () => {
+    const document = normalize(parse("# Objective\n\nReady.\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "missing-section.empty-selection",
+          select: { target: "section", title: "Verification" },
+          assert: { text: { contains: "complete" } },
+        },
+      ],
+    });
+
+    expect(result.valid).toBe(false);
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.validation.emptySelection",
+        ruleId: "missing-section.empty-selection",
+        message: "Rule selector did not match any document targets.",
+        severity: "error",
+      },
+    ]);
+    expect(result.ruleResults).toEqual([
+      {
+        ruleId: "missing-section.empty-selection",
+        passed: false,
+        diagnostics: result.diagnostics,
+      },
+    ]);
+  });
+
+  it("reports unsupported evaluator paths even when selectors are empty", () => {
+    const document = normalize(parse("# Objective\n\nReady.\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    const unsupportedCases = [
+      {
+        rule: {
+          id: "empty-selection.unsupported-text",
+          severity: "warning",
+          select: { target: "section", title: "Verification" },
+          assert: { text: { containsExactlyOne: "complete" } },
+        },
+        message:
+          'Assertion "text" is compiled but only text.contains without a column is implemented by the assertion evaluator yet.',
+      },
+      {
+        rule: {
+          id: "empty-selection.unsupported-table-columns",
+          severity: "warning",
+          select: { target: "table" },
+          assert: { tableColumnsRequired: { columns: ["Status"] } },
+        },
+        message:
+          'Assertion "tableColumnsRequired" is compiled but not implemented by the assertion evaluator yet.',
+      },
+    ] satisfies {
+      rule: ValidationProfile["rules"][number];
+      message: string;
+    }[];
+
+    for (const { rule, message } of unsupportedCases) {
+      const result = validateWithProfile(document, {
+        syntaxVersion: "markdown-engine.validation@v1",
+        documentVersion: "1.0.0",
+        rules: [rule],
+      });
+
+      expect(result.valid).toBe(false);
+      expect(result.diagnostics).toEqual([
+        {
+          code: "profile.validation.assertionUnsupported",
+          ruleId: rule.id,
+          message,
+          severity: "error",
+        },
+      ]);
+      expect(result.ruleResults).toEqual([
+        {
+          ruleId: rule.id,
+          passed: false,
+          diagnostics: result.diagnostics,
+        },
+      ]);
+    }
+  });
+
+  it("sorts rule results and diagnostics deterministically by rule id", () => {
+    const document = normalize(
+      parse("# Bravo\n\nReady.\n\n# Alpha\n\nReady.\n").parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "zeta.rule",
+          select: { target: "section", title: "Bravo" },
+          assert: { text: { contains: "complete" } },
+        },
+        {
+          id: "alpha.rule",
+          select: { target: "section", title: "Alpha" },
+          assert: { text: { contains: "complete" } },
+        },
+      ],
+    });
+
+    expect(result.ruleResults.map((ruleResult) => ruleResult.ruleId)).toEqual([
+      "alpha.rule",
+      "zeta.rule",
+    ]);
+    expect(result.diagnostics.map((diagnostic) => diagnostic.ruleId)).toEqual([
+      "alpha.rule",
+      "zeta.rule",
+    ]);
+  });
+
+  it("sorts diagnostics within a rule by source evidence", () => {
+    const document = normalize(
+      parse("# Alpha\n\nReady.\n\n# Bravo\n\nReady.\n").parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "sections.text",
+          select: { target: "section" },
+          assert: { text: { contains: "complete" } },
+        },
+      ],
+    });
+
+    expect(
+      result.diagnostics.map((diagnostic) => diagnostic.sourceRange?.start.line),
+    ).toEqual([1, 5]);
+  });
+
   it("does not silently pass compiled text predicates outside the evaluator proof path", () => {
     const sectionDocument = normalize(
       parse("# Objective\n\nalpha beta beta forbidden\n").parsed,
