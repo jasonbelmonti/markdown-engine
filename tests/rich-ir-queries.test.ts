@@ -200,6 +200,28 @@ describe("1.0 Rich IR structural views and query helpers", () => {
       });
   });
 
+  it("returns recursive nodes in preorder depth-first order", () => {
+    const document = normalize(
+      parse("> [Nested](https://nested.example)\n\n[Top](https://top.example)\n")
+        .parsed,
+      { documentVersion: "1.0.0" },
+    ).document;
+
+    expect(documentQueries.nodes(document).map((node) => node.type)).toEqual([
+      "blockquote",
+      "paragraph",
+      "link",
+      "text",
+      "paragraph",
+      "link",
+      "text",
+    ]);
+    expect(documentQueries.links(document).map((link) => link.url)).toEqual([
+      "https://nested.example",
+      "https://top.example",
+    ]);
+  });
+
   it("records durable WP-3 derived-view and query fixture evidence", async () => {
     const baseline = queryEvidence();
     const repeatedEvidence = Array.from({ length: 10 }, () => queryEvidence());
