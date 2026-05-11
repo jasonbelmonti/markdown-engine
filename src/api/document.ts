@@ -152,6 +152,26 @@ export interface EngineLinkQuery {
   text?: string;
 }
 
+export type EngineTargetCategory = "document" | "node" | "section";
+
+export type EngineTargetResolution =
+  | {
+      category: "document";
+      target: EngineNodeTarget;
+    }
+  | {
+      category: "node";
+      target: EngineNodeTarget;
+      node: EngineNode;
+      sourceSlice?: EngineSourceSlice;
+    }
+  | {
+      category: "section";
+      target: EngineNodeTarget;
+      section: EngineSection;
+      sourceSlice?: EngineSourceSlice;
+    };
+
 export interface EngineDocumentQueries {
   nodes(document: EngineDocument, query?: EngineNodeQuery): readonly EngineNode[];
   sections(
@@ -165,6 +185,14 @@ export interface EngineDocumentQueries {
   tables(document: EngineDocument, query?: EngineTableQuery): readonly EngineTable[];
   lists(document: EngineDocument, query?: EngineListQuery): readonly EngineList[];
   links(document: EngineDocument, query?: EngineLinkQuery): readonly EngineLink[];
+  targetCategory(
+    document: EngineDocument,
+    target: EngineNodeTarget,
+  ): EngineTargetCategory | undefined;
+  resolveTarget(
+    document: EngineDocument,
+    target: EngineNodeTarget,
+  ): EngineTargetResolution | undefined;
   sourceSlice(
     document: EngineDocument,
     target: EngineNodeTarget,

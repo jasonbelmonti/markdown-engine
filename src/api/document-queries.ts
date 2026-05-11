@@ -13,6 +13,8 @@ import type {
   EngineTable,
   EngineTableQuery,
   EngineNodeTarget,
+  EngineTargetCategory,
+  EngineTargetResolution,
   EngineTextSpan,
   EngineTextSpanQuery,
 } from "./document.js";
@@ -25,6 +27,8 @@ export const documentQueries: EngineDocumentQueries = {
   tables,
   lists,
   links,
+  targetCategory,
+  resolveTarget,
   sourceSlice,
 };
 
@@ -146,8 +150,31 @@ function sourceSlice(
   document: EngineDocument,
   target: EngineNodeTarget,
 ): EngineSourceSlice | undefined {
+  const resolution = resolveTarget(document, target);
+
+  return resolution?.category === "document" ? undefined : resolution?.sourceSlice;
+}
+
+function targetCategory(
+  document: EngineDocument,
+  target: EngineNodeTarget,
+): EngineTargetCategory | undefined {
+  return resolveTarget(document, target)?.category;
+}
+
+function resolveTarget(
+  document: EngineDocument,
+  target: EngineNodeTarget,
+): EngineTargetResolution | undefined {
   if (target.kind !== "node") {
     return undefined;
+  }
+
+  if (document.target?.id === target.id) {
+    return {
+      category: "document",
+      target: document.target,
+    };
   }
 
   const section = (document.sections ?? []).find(
@@ -155,10 +182,46 @@ function sourceSlice(
   );
 
   if (section !== undefined) {
-    return sourceSlice(document, section.headingTarget);
+    return {
+      category: "section",
+      target: section.target,
+      section,
+      ...sourceSliceProperty(sourceSliceForNodeTarget(document, section.headingTarget)),
+    };
   }
 
+  const node = nodeByTargetId(document, target.id);
+
+  if (node === undefined || node.target === undefined) {
+    return undefined;
+  }
+
+  return {
+    category: "node",
+    target: node.target,
+    node,
+    ...sourceSliceProperty(node.source),
+  };
+}
+
+function nodeByTargetId(
+  document: EngineDocument,
+  targetId: string,
+): EngineNode | undefined {
   return flattenNodes(document.children).find(
-    (node) => node.target?.id === target.id,
-  )?.source;
+    (node) => node.target?.id === targetId,
+  );
+}
+
+function sourceSliceForNodeTarget(
+  document: EngineDocument,
+  target: EngineNodeTarget,
+): EngineSourceSlice | undefined {
+  return nodeByTargetId(document, target.id)?.source;
+}
+
+function sourceSliceProperty(
+  sourceSlice: EngineSourceSlice | undefined,
+): { sourceSlice: EngineSourceSlice } | Record<string, never> {
+  return sourceSlice === undefined ? {} : { sourceSlice };
 }

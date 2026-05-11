@@ -1,7 +1,7 @@
 # Public API Contract
 
 Status: 1.0.0 public contract
-Last updated: 2026-05-07
+Last updated: 2026-05-11
 
 This document defines the public `@jasonbelmonti/markdown-engine` package
 contract for the `1.0.0` release. The stable public surface is the package
@@ -333,6 +333,22 @@ path it may also include:
 - `sourceRange`: optional cloned source range when source locations are
   preserved.
 
+Compatibility-first target taxonomy decision: the serialized
+`EngineNodeTarget` shape remains unchanged for the 1.0 release lane. Its
+`kind` field is still `"node"` for document, ordinary node, and section
+addresses, so callers must not treat `target.kind` as the semantic target
+category. Runtime target category is resolved by the documented query helpers:
+
+- `document`: the document-level `document.target`. It identifies the whole
+  normalized document, is not returned by `documentQueries.nodes`, and does not
+  currently produce a source slice because normalized documents do not retain
+  the complete source text.
+- `node`: an actual recursive `EngineNode.target` in `document.children`.
+  `documentQueries.nodes(document, { targetId })` only resolves this category.
+- `section`: an `EngineSection.target` derived from an owning heading target.
+  It is resolved through `documentQueries.sections`; `sourceSlice` returns the
+  owning heading source slice when available.
+
 Target IDs are deterministic for identical Markdown input, parser behavior,
 normalization options, package version, and runtime version. They are not a
 promise of stability across arbitrary content edits, parser upgrades, or final
@@ -388,11 +404,18 @@ optional `title`, and optional `sourceRange`.
 - `lists(document, query?)` filters list views by target ID, ordered state, or
   item depth.
 - `links(document, query?)` filters link views by target ID, URL, or text.
+- `targetCategory(document, target)` returns `"document"`, `"node"`,
+  `"section"`, or `undefined` for targets that do not resolve in the document.
+- `resolveTarget(document, target)` returns a category-specific resolution:
+  document target, ordinary node plus optional source slice, or section plus
+  optional owning-heading source slice.
 - `sourceSlice(document, target)` returns the precomputed source slice for node
   targets when parser offsets are present, integer, ordered, non-negative, and
   in bounds. For section targets, it returns the source slice for the owning
-  heading target. It returns `undefined` instead of guessing when offsets are
-  absent, non-integer, reversed, negative, unsupported, or out of bounds.
+  heading target. For document targets, it returns `undefined` because complete
+  source text is not stored on `EngineDocument`. It returns `undefined` instead
+  of guessing when offsets are absent, non-integer, reversed, negative,
+  unsupported, out of bounds, or when the target does not resolve.
 
 ### Annotation Contract
 
@@ -416,8 +439,11 @@ caller-owned; the engine validates only target shape and target existence.
 - `annotations`: cloned annotations with target data preserved.
 - `diagnostics`: deterministic `EngineTargetDiagnostic[]`.
 
-The annotation validator accepts document node targets and section targets. For
-source targets, it verifies start/end shape and ordering. When the normalized
+The annotation validator accepts all resolvable engine targets: the document
+target, ordinary node targets, and section targets. These keep
+`target.kind: "node"` for wire compatibility; target category is determined by
+the resolver APIs above. For source targets, it verifies start/end shape and
+ordering. When the normalized
 document has `sourceRange`, source targets must be contained by that document
 range; when `sourceRange` is absent, the validator cannot prove source-target
 bounds and does not synthesize a document range. It rejects malformed target

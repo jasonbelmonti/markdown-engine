@@ -102,6 +102,23 @@ describe("1.0 Rich IR structural views and query helpers", () => {
         targetId: firstParagraph.target?.id ?? missing(),
       }),
     ).toHaveLength(1);
+    expect(
+      documentQueries.nodes(document, {
+        targetId: document.target?.id ?? missing(),
+      }),
+    ).toEqual([]);
+    expect(documentQueries.nodes(document, { targetId: details.target.id })).toEqual(
+      [],
+    );
+    expect(
+      documentQueries.targetCategory(document, document.target ?? missing()),
+    ).toBe("document");
+    expect(documentQueries.targetCategory(document, details.target)).toBe(
+      "section",
+    );
+    expect(
+      documentQueries.targetCategory(document, firstParagraph.target ?? missing()),
+    ).toBe("node");
     expect(detailsSource?.text).toBe("### Phase Alpha Details");
 
     expect(
