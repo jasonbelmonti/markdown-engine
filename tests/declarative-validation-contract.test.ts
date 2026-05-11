@@ -108,6 +108,12 @@ const missingSelectorTargetProfile = {
 } as const;
 const unsupportedSelector = { target: "section" } satisfies DeclarativeSelector;
 const publicAssertion = { ids: { unique: true } } satisfies DeclarativeAssertion;
+const removedTextAssertion = {
+  text: {
+    // @ts-expect-error containsExactlyOne was removed from public text assertion syntax.
+    containsExactlyOne: "shall",
+  },
+} satisfies DeclarativeAssertion;
 const idSource = { section: "Records", column: "ID" } satisfies DeclarativeIdSource;
 const tableCellPredicate = {
   column: "Status",
@@ -292,5 +298,6 @@ void (undefined as unknown as CompiledDeclarativeValidationPlan);
 void (undefined as unknown as DeclarativeValidationCompileResult);
 void unsupportedSelector;
 void publicAssertion;
+void removedTextAssertion;
 void idSource;
 void tableCellPredicate;

@@ -60,7 +60,6 @@ function evaluateTextTarget(
 function hasUnsupportedTextEvaluatorPredicate(assertion: TextAssertion): boolean {
   return (
     assertion.column !== undefined ||
-    assertion.containsExactlyOne !== undefined ||
     assertion.excludes !== undefined
   );
 }

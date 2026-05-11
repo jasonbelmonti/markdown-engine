@@ -119,6 +119,13 @@ describe("declarative validation compiler assertion proof", () => {
       },
       {
         assert: {
+          text: { containsExactlyOne: "Mission" },
+        },
+        message: 'Unsupported validation profile key "containsExactlyOne".',
+        select: { target: "section", title: "Objective" },
+      },
+      {
+        assert: {
           matches: "REQ",
           text: { contains: "Mission" },
         },

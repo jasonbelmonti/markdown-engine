@@ -54,7 +54,6 @@ export type CompiledDeclarativeAssertion =
       kind: "text";
       column?: string;
       contains?: string;
-      containsExactlyOne?: string;
       excludes?: readonly string[];
     }
   | {
