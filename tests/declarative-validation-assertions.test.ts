@@ -226,6 +226,42 @@ describe("declarative validation assertion proof", () => {
     ).toEqual([1, 5]);
   });
 
+  it("preserves declared order for source-less assertion diagnostics", () => {
+    const document = normalize(parse("# Objective\n\nReady.\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "sections.required",
+          select: { target: "document" },
+          assert: {
+            sectionsRequired: {
+              headings: ["Zeta", "Alpha"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.validation.sectionMissing",
+        ruleId: "sections.required",
+        message: 'Required section "Zeta" is missing.',
+        severity: "error",
+      },
+      {
+        code: "profile.validation.sectionMissing",
+        ruleId: "sections.required",
+        message: 'Required section "Alpha" is missing.',
+        severity: "error",
+      },
+    ]);
+  });
+
   it("does not silently pass compiled text predicates outside the evaluator proof path", () => {
     const sectionDocument = normalize(
       parse("# Objective\n\nalpha beta beta forbidden\n").parsed,

@@ -38,10 +38,28 @@ function compareAssertionDiagnostics(
       left.diagnostic.sourceRange,
       right.diagnostic.sourceRange,
     ) ||
+    compareSourceLessDiagnosticOrder(left, right) ||
     compareStrings(left.targetKey, right.targetKey) ||
     compareStrings(left.diagnostic.code, right.diagnostic.code) ||
     compareStrings(left.diagnostic.message, right.diagnostic.message) ||
     compareStrings(left.diagnostic.severity, right.diagnostic.severity) ||
+    left.targetOrder - right.targetOrder ||
+    left.diagnosticOrder - right.diagnosticOrder
+  );
+}
+
+function compareSourceLessDiagnosticOrder(
+  left: AssertionDiagnostic,
+  right: AssertionDiagnostic,
+): number {
+  if (
+    left.diagnostic.sourceRange !== undefined ||
+    right.diagnostic.sourceRange !== undefined
+  ) {
+    return 0;
+  }
+
+  return (
     left.targetOrder - right.targetOrder ||
     left.diagnosticOrder - right.diagnosticOrder
   );
