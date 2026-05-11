@@ -9,6 +9,7 @@ import {
   type EngineDocument,
   type EngineNode,
   type EngineNodeTarget,
+  type EngineSection,
   type ParsedMarkdown,
   type SourceRange,
 } from "@jasonbelmonti/markdown-engine";
@@ -115,6 +116,66 @@ describe("1.0 Rich IR target/source substrate", () => {
       expect(node.target?.sourceRange).not.toBe(node.sourceRange);
       expect(node.source?.range).not.toBe(node.sourceRange);
     }
+  });
+
+  it("classifies document, section, and ordinary node targets without changing target JSON", () => {
+    const document = normalizeDraftFixture();
+    const documentTarget = requireDocumentTarget(document);
+    const heading = requireNode(document, "node:0:heading");
+    const headingTarget = requireTarget(heading);
+    const section = requireFirstSection(document);
+    const sectionTarget = section.target;
+
+    expect(documentTarget).toMatchObject({
+      kind: "node",
+      nodeType: "document",
+    });
+    expect(sectionTarget).toMatchObject({
+      kind: "node",
+      nodeType: "section",
+    });
+    expect(headingTarget).toMatchObject({
+      kind: "node",
+      nodeType: "heading",
+    });
+
+    expect(documentQueries.targetCategory(document, documentTarget)).toBe(
+      "document",
+    );
+    expect(documentQueries.targetCategory(document, sectionTarget)).toBe(
+      "section",
+    );
+    expect(documentQueries.targetCategory(document, headingTarget)).toBe("node");
+
+    expect(documentQueries.resolveTarget(document, documentTarget)).toEqual({
+      category: "document",
+      target: documentTarget,
+    });
+    expect(documentQueries.resolveTarget(document, sectionTarget)).toEqual({
+      category: "section",
+      target: sectionTarget,
+      section,
+      sourceSlice: heading.source,
+    });
+    expect(documentQueries.resolveTarget(document, headingTarget)).toEqual({
+      category: "node",
+      target: headingTarget,
+      node: heading,
+      sourceSlice: heading.source,
+    });
+    expect(documentQueries.sourceSlice(document, documentTarget)).toBeUndefined();
+    expect(documentQueries.sourceSlice(document, sectionTarget)).toEqual(
+      heading.source,
+    );
+    expect(documentQueries.sourceSlice(document, headingTarget)).toEqual(
+      heading.source,
+    );
+    expect(
+      documentQueries.targetCategory(document, {
+        ...headingTarget,
+        id: "node:missing:heading",
+      }),
+    ).toBeUndefined();
   });
 
   it("keeps node targets deterministic when source locations are omitted", () => {
@@ -373,6 +434,24 @@ function requireNode(document: EngineDocument, targetId: string): EngineNode {
   }
 
   return node;
+}
+
+function requireDocumentTarget(document: EngineDocument): EngineNodeTarget {
+  if (document.target === undefined) {
+    throw new Error("Expected document target to be present.");
+  }
+
+  return document.target;
+}
+
+function requireFirstSection(document: EngineDocument): EngineSection {
+  const section = documentQueries.sections(document)[0];
+
+  if (section === undefined) {
+    throw new Error("Expected document section to be present.");
+  }
+
+  return section;
 }
 
 function requireTarget(node: EngineNode): EngineNodeTarget {

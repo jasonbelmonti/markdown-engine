@@ -9,6 +9,7 @@ import {
   type EngineDocument,
   type EngineDocumentQueries,
   type EngineNodeTarget,
+  type EngineTargetResolution,
   type SerializableEngineResult,
 } from "@jasonbelmonti/markdown-engine";
 
@@ -109,6 +110,36 @@ const queries = {
   tables: (document) => document.tables ?? [],
   lists: (document) => document.lists ?? [],
   links: (document) => document.links ?? [],
+  targetCategory: (document, target) => {
+    if (document.target?.id === target.id) {
+      return "document";
+    }
+
+    return document.children.some((node) => node.target?.id === target.id)
+      ? "node"
+      : undefined;
+  },
+  resolveTarget: (document, target): EngineTargetResolution | undefined => {
+    if (document.target?.id === target.id) {
+      return {
+        category: "document",
+        target: document.target,
+      };
+    }
+
+    const node = document.children.find((node) => node.target?.id === target.id);
+
+    if (node === undefined || node.target === undefined) {
+      return undefined;
+    }
+
+    return {
+      category: "node",
+      target: node.target,
+      node,
+      ...(node.source !== undefined ? { sourceSlice: node.source } : {}),
+    };
+  },
   sourceSlice: (document, target) =>
     document.children.find((node) => node.target?.id === target.id)?.source,
 } satisfies EngineDocumentQueries;
@@ -127,6 +158,14 @@ describe("1.0 document contract skeleton", () => {
     expect(document.version).toBe("1.0.0");
     expect(serializableResult.compatibility).toEqual(compatibility);
     expect(queries.nodes(document)).toHaveLength(1);
+    expect(queries.targetCategory(document, rootTarget)).toBe("document");
+    expect(queries.targetCategory(document, paragraphTarget)).toBe("node");
+    expect(queries.resolveTarget(document, paragraphTarget)).toEqual({
+      category: "node",
+      target: paragraphTarget,
+      node: document.children[0],
+      sourceSlice: document.children[0]?.source,
+    });
     expect(queries.textSpans(document)[0]).toMatchObject({
       text: "Mission",
       target: paragraphTarget,

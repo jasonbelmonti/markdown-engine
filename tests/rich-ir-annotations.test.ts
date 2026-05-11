@@ -22,10 +22,11 @@ const fixture = readFileSync(
 );
 
 describe("1.0 Rich IR annotation target validation", () => {
-  it("accepts node, section, and source targets while preserving opaque payloads", () => {
+  it("accepts document, node, section, and source targets while preserving opaque payloads", () => {
     const document = normalizeDraftFixture();
     const paragraph = firstNode(document, "paragraph");
     const section = documentQueries.sections(document)[0] ?? missing();
+    const documentTarget = document.target ?? missing();
     const paragraphTarget = requireTarget(paragraph);
     const sectionTarget = section.target;
     const paragraphSourceRange = requireSourceRange(paragraph);
@@ -35,6 +36,10 @@ describe("1.0 Rich IR annotation target validation", () => {
       nested: { stable: true },
     };
     const annotations = [
+      nodeAnnotation("annotation:document", documentTarget, {
+        callerOwnsMeaning: true,
+        reviewSignal: "document",
+      }),
       nodeAnnotation("annotation:node", paragraphTarget, payload),
       nodeAnnotation("annotation:section", sectionTarget, {
         callerOwnsMeaning: true,
@@ -49,11 +54,13 @@ describe("1.0 Rich IR annotation target validation", () => {
 
     const result = validateAnnotations(document, annotations);
     const nodeResultTarget = result.annotations[0]?.target;
-    const sectionResultTarget = result.annotations[1]?.target;
-    const sourceResultTarget = result.annotations[2]?.target;
+    const paragraphResultTarget = result.annotations[1]?.target;
+    const sectionResultTarget = result.annotations[2]?.target;
+    const sourceResultTarget = result.annotations[3]?.target;
 
     if (
       nodeResultTarget?.kind !== "node" ||
+      paragraphResultTarget?.kind !== "node" ||
       sectionResultTarget?.kind !== "node" ||
       sourceResultTarget?.kind !== "source"
     ) {
@@ -69,10 +76,11 @@ describe("1.0 Rich IR annotation target validation", () => {
     expect(result.annotations).not.toBe(annotations);
     expect(result.annotations[0]).not.toBe(annotations[0]);
     expect(nodeResultTarget).not.toBe(annotations[0]?.target);
-    expect(nodeResultTarget.nodeTarget).not.toBe(paragraphTarget);
+    expect(nodeResultTarget.nodeTarget).not.toBe(documentTarget);
+    expect(paragraphResultTarget.nodeTarget).not.toBe(paragraphTarget);
     expect(sectionResultTarget.nodeTarget).not.toBe(sectionTarget);
     expect(sourceResultTarget.sourceRange).not.toBe(paragraphSourceRange);
-    expect(result.annotations[0]?.payload).toEqual(payload);
+    expect(result.annotations[1]?.payload).toEqual(payload);
   });
 
   it("produces deterministic diagnostics for malformed and missing targets", () => {
