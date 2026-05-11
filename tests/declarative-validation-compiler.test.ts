@@ -38,16 +38,16 @@ describe("declarative validation compiler proof", () => {
         {
           ruleId: "table.ids",
           selector: {
-            target: "tableRow",
+            target: "tableCell",
             tableHeader: ["ID"],
-            where: { column: "State", equals: "ready" },
+            column: "ID",
+            rowWhere: { column: "State", equals: "ready" },
           },
           assertions: [
             {
               kind: "ids",
               unique: true,
               caseSensitive: false,
-              column: "ID",
               prefix: "REQ",
             },
           ],
@@ -104,35 +104,28 @@ describe("declarative validation compiler proof", () => {
     ]);
   });
 
-  it("rejects column-scoped assertions outside table selector targets", () => {
-    const invalidColumnAssertions = [
+  it("rejects removed assertion-level column modifiers before execution", () => {
+    const removedColumnAssertions = [
       {
         id: "section.column-text",
         assert: { text: { column: "State", contains: "ready" } },
-        message:
-          'Assertion "text" with a column option is compatible only with table or tableRow selectors.',
       },
       {
         id: "section.column-ids",
         assert: { ids: { unique: true, column: "ID" } },
-        message:
-          'Assertion "ids" with a column option is compatible only with table or tableRow selectors.',
       },
       {
         id: "section.column-occurrences",
         assert: {
           textOccurrenceCount: { text: "ready", count: 1, column: "State" },
         },
-        message:
-          'Assertion "textOccurrenceCount" with a column option is compatible only with table or tableRow selectors.',
       },
     ] satisfies {
       id: string;
-      assert: ValidationProfile["rules"][number]["assert"];
-      message: string;
+      assert: ValidationProfile["rules"][number]["assert"] & Record<string, unknown>;
     }[];
 
-    for (const { id, assert, message } of invalidColumnAssertions) {
+    for (const { id, assert } of removedColumnAssertions) {
       const result = compileValidationProfile({
         syntaxVersion: "markdown-engine.validation@v1",
         rules: [
@@ -147,9 +140,8 @@ describe("declarative validation compiler proof", () => {
       expect(result.plan).toBeUndefined();
       expect(result.diagnostics).toEqual([
         {
-          code: "profile.compile.incompatibleSelectorAssertion",
-          ruleId: id,
-          message,
+          code: "profile.config.unsupportedKey",
+          message: 'Unsupported validation profile key "column".',
           severity: "error",
         },
       ]);
@@ -227,13 +219,13 @@ const supportedProfile = {
     {
       id: "table.ids",
       select: {
-        target: "tableRow",
+        target: "tableCell",
         tableHeader: ["ID"],
-        where: { column: "State", equals: "ready" },
+        column: "ID",
+        rowWhere: { column: "State", equals: "ready" },
       },
       assert: {
         ids: {
-          column: "ID",
           prefix: "REQ",
           unique: true,
           caseSensitive: false,

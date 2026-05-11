@@ -14,15 +14,9 @@ const TEXT_SELECTOR_TARGETS = new Set<DeclarativeSelector["target"]>([
   "list",
 ]);
 
-const TABLE_SELECTOR_TARGETS = new Set<DeclarativeSelector["target"]>([
-  "table",
-  "tableRow",
-]);
-
 export function selectorAssertionCompatibilityError(
   assertionName: DeclarativeAssertionName,
   selector: DeclarativeSelector,
-  assertion: DeclarativeAssertion,
 ): string | undefined {
   switch (assertionName) {
     case "sectionsRequired":
@@ -37,19 +31,9 @@ export function selectorAssertionCompatibilityError(
         : selectorCompatibilityMessage(assertionName, "table");
 
     case "ids":
-      return assertion.ids?.column === undefined
-        ? textTargetCompatibility(assertionName, selector)
-        : tableTargetCompatibility(assertionName, selector);
-
     case "text":
-      return assertion.text?.column === undefined
-        ? textTargetCompatibility(assertionName, selector)
-        : tableTargetCompatibility(assertionName, selector);
-
     case "textOccurrenceCount":
-      return assertion.textOccurrenceCount?.column === undefined
-        ? textTargetCompatibility(assertionName, selector)
-        : tableTargetCompatibility(assertionName, selector);
+      return textTargetCompatibility(assertionName, selector);
 
     case "frontmatterRequired":
       if (selector.target === "document") {
@@ -69,15 +53,6 @@ function textTargetCompatibility(
   return TEXT_SELECTOR_TARGETS.has(selector.target)
     ? undefined
     : `Assertion "${assertionName}" is not compatible with frontmatter selectors.`;
-}
-
-function tableTargetCompatibility(
-  assertionName: DeclarativeAssertionName,
-  selector: DeclarativeSelector,
-): string | undefined {
-  return TABLE_SELECTOR_TARGETS.has(selector.target)
-    ? undefined
-    : `Assertion "${assertionName}" with a column option is compatible only with table or tableRow selectors.`;
 }
 
 function selectorCompatibilityMessage(

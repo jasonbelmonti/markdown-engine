@@ -38,7 +38,6 @@ export type CompiledDeclarativeAssertion =
       kind: "ids";
       unique: true;
       caseSensitive: boolean;
-      column?: string;
       prefix?: string;
     }
   | {
@@ -52,7 +51,6 @@ export type CompiledDeclarativeAssertion =
     }
   | {
       kind: "text";
-      column?: string;
       contains?: string;
       excludes?: readonly string[];
     }
@@ -60,7 +58,6 @@ export type CompiledDeclarativeAssertion =
       kind: "textOccurrenceCount";
       text: string;
       count: number;
-      column?: string;
     }
   | {
       kind: "frontmatterRequired";

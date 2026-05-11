@@ -84,7 +84,7 @@ function unsupportedEvaluatorMessage(
   assertionKind: CompiledDeclarativeAssertion["kind"],
 ): string {
   return assertionKind === "text"
-    ? 'Assertion "text" is compiled but only text.contains without a column is implemented by the assertion evaluator yet.'
+    ? 'Assertion "text" is compiled but only text.contains is implemented by the assertion evaluator yet.'
     : `Assertion "${assertionKind}" is compiled but not implemented by the assertion evaluator yet.`;
 }
 
