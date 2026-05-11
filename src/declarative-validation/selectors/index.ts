@@ -9,7 +9,6 @@ import type {
   EngineTableCell,
   EngineTextSpan,
 } from "../../api/document.js";
-import { hasOwnProperty, isPlainRecord } from "../../internal/plain-record.js";
 import type { DeclarativeSelector } from "../profile/index.js";
 import {
   nodeTextByTargetId,
@@ -86,12 +85,6 @@ export type DeclarativeSelectionTarget =
       list: EngineList;
       text: string;
       source?: EngineSourceSlice;
-    }
-  | {
-      kind: "frontmatter";
-      field?: string;
-      value: unknown;
-      text: string;
     };
 
 export function resolveDeclarativeSelector(
@@ -165,13 +158,6 @@ export function resolveDeclarativeSelector(
         document,
         selector,
         targets: listTargets(document, selector),
-      };
-
-    case "frontmatter":
-      return {
-        document,
-        selector,
-        targets: frontmatterTargets(document, selector),
       };
 
     default:
@@ -278,45 +264,4 @@ function listTargets(
       text: nodeTextByTargetId(document, list.target.id),
       ...sourceFromTarget(document, list.target),
     }));
-}
-
-function frontmatterTargets(
-  document: EngineDocument,
-  selector: Extract<DeclarativeSelector, { target: "frontmatter" }>,
-): DeclarativeSelectionTarget[] {
-  if (document.frontmatter === undefined) {
-    return [];
-  }
-
-  if (selector.field === undefined) {
-    return [
-      {
-        kind: "frontmatter",
-        value: document.frontmatter,
-        text: valueText(document.frontmatter),
-      },
-    ];
-  }
-
-  if (
-    !isPlainRecord(document.frontmatter) ||
-    !hasOwnProperty(document.frontmatter, selector.field)
-  ) {
-    return [];
-  }
-
-  const value = document.frontmatter[selector.field];
-
-  return [
-    {
-      kind: "frontmatter",
-      field: selector.field,
-      value,
-      text: valueText(value),
-    },
-  ];
-}
-
-function valueText(value: unknown): string {
-  return typeof value === "string" ? value : JSON.stringify(value);
 }

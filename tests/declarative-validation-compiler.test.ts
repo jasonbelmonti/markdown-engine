@@ -70,7 +70,7 @@ describe("declarative validation compiler proof", () => {
         },
         {
           ruleId: "frontmatter.required",
-          selector: { target: "frontmatter" },
+          selector: { target: "document" },
           assertions: [
             { kind: "frontmatterRequired", fields: ["title", "owner"] },
           ],
@@ -148,32 +148,31 @@ describe("declarative validation compiler proof", () => {
     }
   });
 
-  it("applies frontmatter selector compatibility before execution", () => {
-    for (const select of [
-      { target: "document" },
-      { target: "frontmatter" },
-    ] satisfies ValidationProfile["rules"][number]["select"][]) {
-      const result = compileValidationProfile({
-        syntaxVersion: "markdown-engine.validation@v1",
-        rules: [
-          {
-            id: "frontmatter.allowed",
-            select,
-            assert: { frontmatterRequired: { fields: ["title"] } },
-          },
-        ],
-      });
-
-      expect(result.diagnostics).toEqual([]);
-      expect(result.plan?.rules).toHaveLength(1);
-    }
-
+  it("keeps frontmatterRequired document-scoped before execution", () => {
     const result = compileValidationProfile({
       syntaxVersion: "markdown-engine.validation@v1",
       rules: [
         {
-          id: "frontmatter.filtered",
-          select: { target: "frontmatter", field: "title" },
+          id: "frontmatter.allowed",
+          select: { target: "document" },
+          assert: { frontmatterRequired: { fields: ["title"] } },
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([]);
+    expect(result.plan?.rules).toHaveLength(1);
+  });
+
+  it("rejects deferred frontmatter selectors before execution", () => {
+    const result = compileValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      rules: [
+        {
+          id: "frontmatter.deferred",
+          select: {
+            target: "frontmatter",
+          } as unknown as ValidationProfile["rules"][number]["select"],
           assert: { frontmatterRequired: { fields: ["title"] } },
         },
       ],
@@ -182,10 +181,8 @@ describe("declarative validation compiler proof", () => {
     expect(result.plan).toBeUndefined();
     expect(result.diagnostics).toEqual([
       {
-        code: "profile.compile.incompatibleSelectorAssertion",
-        ruleId: "frontmatter.filtered",
-        message:
-          'Assertion "frontmatterRequired" is compatible only with document selectors or unfiltered frontmatter selectors.',
+        code: "profile.compile.unsupportedSelector",
+        message: 'Unsupported selector target "frontmatter".',
         severity: "error",
       },
     ]);
@@ -249,7 +246,7 @@ const supportedProfile = {
     },
     {
       id: "frontmatter.required",
-      select: { target: "frontmatter" },
+      select: { target: "document" },
       assert: { frontmatterRequired: { fields: ["title", "owner"] } },
     },
   ],

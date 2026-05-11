@@ -50,7 +50,7 @@ describe("declarative validation selector proof", () => {
     ]);
   });
 
-  it("resolves heading, table, row, cell, span, link, list, and frontmatter selectors", () => {
+  it("resolves heading, table, row, cell, span, link, and list selectors", () => {
     const document = normalize(parse(richIrFixture, { path: richIrFixturePath }).parsed, {
       documentVersion: "1.0.0",
     }).document;
@@ -168,19 +168,6 @@ describe("declarative validation selector proof", () => {
       }),
     ]);
 
-    expect(
-      resolveDeclarativeSelector(document, {
-        target: "frontmatter",
-        field: "owner",
-      }).targets,
-    ).toEqual([
-      {
-        kind: "frontmatter",
-        field: "owner",
-        value: "markdown-engine",
-        text: "markdown-engine",
-      },
-    ]);
   });
 
   it("uses the selector compatibility substrate limits deterministically", () => {
@@ -192,18 +179,6 @@ describe("declarative validation selector proof", () => {
       resolveDeclarativeSelector(document, {
         target: "table",
         header: ["State", "Step"],
-      }).targets,
-    ).toEqual([]);
-    expect(
-      resolveDeclarativeSelector(document, {
-        target: "frontmatter",
-        field: "missing",
-      }).targets,
-    ).toEqual([]);
-    expect(
-      resolveDeclarativeSelector(document, {
-        target: "frontmatter",
-        field: "toString",
       }).targets,
     ).toEqual([]);
     expect(

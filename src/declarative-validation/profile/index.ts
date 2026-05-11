@@ -59,8 +59,7 @@ export type DeclarativeSelector =
       textIncludes?: string;
     }
   | { target: "link"; section?: string; text?: string; url?: string }
-  | { target: "list"; section?: string; ordered?: boolean; depth?: number }
-  | { target: "frontmatter"; field?: string };
+  | { target: "list"; section?: string; ordered?: boolean; depth?: number };
 
 export interface DeclarativeTableCellPredicate {
   column: string;

@@ -128,8 +128,5 @@ function targetSortKey(target: DeclarativeSelectionTarget | undefined): string {
 
     case "list":
       return `list:${target.list.target.id}`;
-
-    case "frontmatter":
-      return `frontmatter:${target.field ?? ""}:${target.text}`;
   }
 }

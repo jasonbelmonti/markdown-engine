@@ -381,7 +381,7 @@ describe("declarative validation compiler assertion proof", () => {
         assert: { frontmatterRequired: { fields: [] } },
         message:
           "frontmatterRequired.fields must be an array of non-empty strings.",
-        select: { target: "frontmatter" },
+        select: { target: "document" },
       },
     ] satisfies {
       assert: ValidationProfile["rules"][number]["assert"];

@@ -177,11 +177,6 @@ rules:
           },
           assert: { text: { contains: "Done" } },
         },
-        {
-          id: "select-frontmatter",
-          select: { target: "frontmatter", field: "title" },
-          assert: { text: { contains: "title" } },
-        },
       ],
     });
 
@@ -195,9 +190,36 @@ rules:
       "textSpan",
       "link",
       "list",
-      "frontmatter",
     ]);
     expect(result.diagnostics).toEqual([]);
+  });
+
+  it("rejects deferred frontmatter selectors", () => {
+    const result = parseValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "select-frontmatter",
+          select: { target: "frontmatter", field: "title" },
+          assert: { frontmatterRequired: { fields: ["title"] } },
+        },
+      ],
+    });
+
+    expect(result.profile).toBeUndefined();
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.config.unsupportedKey",
+        message: 'Unsupported validation profile key "field".',
+        severity: "error",
+      },
+      {
+        code: "profile.compile.unsupportedSelector",
+        message: 'Unsupported selector target "frontmatter".',
+        severity: "error",
+      },
+    ]);
   });
 
   it("rejects table selector predicates without a comparison", () => {
