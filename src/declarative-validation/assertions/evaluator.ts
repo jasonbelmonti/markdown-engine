@@ -7,6 +7,7 @@ import type { DeclarativeSelection } from "../selectors/index.js";
 import type { AssertionEvaluationContext } from "./context.js";
 import type { AssertionDiagnostic } from "./diagnostics.js";
 import { unsupportedEvaluatorDiagnostic } from "./diagnostics.js";
+import { evaluateFrontmatterRequired } from "./frontmatter-required.js";
 import { sortAssertionDiagnostics } from "./ordering.js";
 import { evaluateSectionsRequired } from "./sections-required.js";
 import { evaluateText } from "./text.js";
@@ -47,10 +48,12 @@ function evaluateAssertion(
     case "textOccurrenceCount":
       return evaluateTextOccurrenceCount(assertion, context);
 
+    case "frontmatterRequired":
+      return evaluateFrontmatterRequired(assertion, context);
+
     case "tableColumnsRequired":
     case "ids":
     case "references":
-    case "frontmatterRequired":
       return [
         unsupportedEvaluatorDiagnostic(
           assertion,

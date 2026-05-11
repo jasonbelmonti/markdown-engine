@@ -119,16 +119,6 @@ describe("declarative validation assertion proof", () => {
     const unsupportedCases = [
       {
         rule: {
-          id: "empty-selection.unsupported-text",
-          severity: "warning",
-          select: { target: "section", title: "Verification" },
-          assert: { text: { excludes: ["incomplete"] } },
-        },
-        message:
-          'Assertion "text" is compiled but only text.contains is implemented by the assertion evaluator yet.',
-      },
-      {
-        rule: {
           id: "empty-selection.unsupported-table-columns",
           severity: "warning",
           select: { target: "table" },
@@ -262,7 +252,7 @@ describe("declarative validation assertion proof", () => {
     ]);
   });
 
-  it("does not silently pass compiled text predicates outside the evaluator proof path", () => {
+  it("evaluates text excludes predicates without silently passing violations", () => {
     const sectionDocument = normalize(
       parse("# Objective\n\nalpha beta beta forbidden\n").parsed,
       {
@@ -270,32 +260,30 @@ describe("declarative validation assertion proof", () => {
       },
     ).document;
 
-    for (const assert of [
-      { text: { excludes: ["forbidden"] } },
-    ] satisfies ValidationProfile["rules"][number]["assert"][]) {
-      const result = validateWithProfile(sectionDocument, {
-        syntaxVersion: "markdown-engine.validation@v1",
-        documentVersion: "1.0.0",
-        rules: [
-          {
-            id: "text.unsupported-evaluator-path",
-            select: { target: "section", title: "Objective" },
-            assert,
-          },
-        ],
-      });
-
-      expect(result.valid).toBe(false);
-      expect(result.diagnostics).toEqual([
+    const result = validateWithProfile(sectionDocument, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
         {
-          code: "profile.validation.assertionUnsupported",
-          ruleId: "text.unsupported-evaluator-path",
-          message:
-            'Assertion "text" is compiled but only text.contains is implemented by the assertion evaluator yet.',
-          severity: "error",
+          id: "text.excludes",
+          select: { target: "section", title: "Objective" },
+          assert: { text: { excludes: ["forbidden", "missing"] } },
         },
-      ]);
-    }
+      ],
+    });
+
+    expect(result.valid).toBe(false);
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.textExcluded",
+        ruleId: "text.excludes",
+        message: 'Selected section text must not contain "forbidden".',
+        severity: "error",
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({ line: 1 }),
+        }),
+      }),
+    ]);
   });
 
   it("validates exact non-overlapping text occurrence counts per selected target", () => {
@@ -356,6 +344,191 @@ describe("declarative validation assertion proof", () => {
       },
     ]);
     expect(result.diagnostics).toEqual(result.ruleResults[0]?.diagnostics);
+  });
+
+  it("validates strict section order for reordered and duplicate-heading cases", () => {
+    const document = normalize(
+      parse("# Alpha\n\nReady.\n\n# Beta\n\nDone.\n").parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "sections.present",
+          select: { target: "document" },
+          assert: {
+            sectionsRequired: { headings: ["Alpha", "Beta"], order: "strict" },
+          },
+        },
+        {
+          id: "sections.reordered",
+          select: { target: "document" },
+          assert: {
+            sectionsRequired: { headings: ["Beta", "Alpha"], order: "strict" },
+          },
+        },
+        {
+          id: "sections.duplicate",
+          select: { target: "document" },
+          assert: {
+            sectionsRequired: { headings: ["Alpha", "Alpha"], order: "strict" },
+          },
+        },
+      ],
+    });
+
+    expect(result.ruleResults).toEqual([
+      {
+        ruleId: "sections.duplicate",
+        passed: false,
+        diagnostics: [
+          expect.objectContaining({
+            code: "profile.validation.sectionOrder",
+            message:
+              'Required section "Alpha" is not present after the previous required section.',
+            sourceRange: expect.objectContaining({
+              start: expect.objectContaining({ line: 1 }),
+            }),
+          }),
+        ],
+      },
+      {
+        ruleId: "sections.present",
+        passed: true,
+        diagnostics: [],
+      },
+      {
+        ruleId: "sections.reordered",
+        passed: false,
+        diagnostics: [
+          expect.objectContaining({
+            code: "profile.validation.sectionOrder",
+            message:
+              'Required section "Alpha" is not present after the previous required section.',
+            sourceRange: expect.objectContaining({
+              start: expect.objectContaining({ line: 1 }),
+            }),
+          }),
+        ],
+      },
+    ]);
+  });
+
+  it("evaluates frontmatter required fields for present, empty, and non-object frontmatter", () => {
+    const presentDocument = normalize(
+      parse("---\ntitle: \"\"\nowner: docs\n---\n# Body\n").parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const emptyDocument = normalize(parse("---\n---\n# Body\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    const nonObjectDocument = {
+      ...normalize(parse("# Body\n").parsed, {
+        documentVersion: "1.0.0",
+      }).document,
+      frontmatter: "title",
+    };
+    const profileForFields = (fields: readonly string[]): ValidationProfile => ({
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "frontmatter.required",
+          select: { target: "document" },
+          assert: { frontmatterRequired: { fields } },
+        },
+      ],
+    });
+
+    expect(
+      validateWithProfile(presentDocument, profileForFields(["title"])),
+    ).toMatchObject({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [
+        {
+          ruleId: "frontmatter.required",
+          passed: true,
+          diagnostics: [],
+        },
+      ],
+    });
+    expect(
+      validateWithProfile(emptyDocument, profileForFields(["title"])),
+    ).toMatchObject({
+      valid: false,
+      diagnostics: [
+        {
+          code: "profile.validation.frontmatterFieldMissing",
+          ruleId: "frontmatter.required",
+          message: 'Required frontmatter field "title" is missing.',
+          severity: "error",
+        },
+      ],
+    });
+    expect(
+      validateWithProfile(nonObjectDocument, profileForFields(["title", "owner"])),
+    ).toMatchObject({
+      valid: false,
+      diagnostics: [
+        {
+          code: "profile.validation.frontmatterFieldMissing",
+          ruleId: "frontmatter.required",
+          message: 'Required frontmatter field "title" is missing.',
+          severity: "error",
+        },
+        {
+          code: "profile.validation.frontmatterFieldMissing",
+          ruleId: "frontmatter.required",
+          message: 'Required frontmatter field "owner" is missing.',
+          severity: "error",
+        },
+      ],
+    });
+  });
+
+  it("omits source ranges when selected text targets have no source evidence", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Status",
+          "",
+          "| Step | Owner |",
+          "| --- | --- |",
+          "| Build | engine |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "row.excludes",
+          select: { target: "tableRow" },
+          assert: { text: { excludes: ["engine"] } },
+        },
+      ],
+    });
+
+    expect(result.valid).toBe(false);
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.validation.textExcluded",
+        ruleId: "row.excludes",
+        message: 'Selected tableRow text must not contain "engine".',
+        severity: "error",
+      },
+    ]);
   });
 
   it("rejects removed containsExactlyOne text assertions before rule evaluation", () => {
