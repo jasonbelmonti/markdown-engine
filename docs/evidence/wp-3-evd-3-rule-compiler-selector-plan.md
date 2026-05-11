@@ -16,7 +16,9 @@ selector vocabulary over normalized 1.0 `EngineDocument` structures.
 This evidence covers the WP-3 compiler and selector substrate:
 
 - v1 selector targets: `document`, `section`, `heading`, `table`, `tableRow`,
-  `tableCell`, `textSpan`, `link`, `list`, and `frontmatter`.
+  `tableCell`, `textSpan`, `link`, and `list`. BEL-1016 defers
+  `frontmatter` selectors from v1; document-scoped `frontmatterRequired`
+  remains the supported frontmatter policy path.
 - v1 compiled assertion plan records: `sectionsRequired`,
   `tableColumnsRequired`, `ids`, `references`, `text`,
   `textOccurrenceCount`, and `frontmatterRequired`. Ordered
@@ -24,8 +26,7 @@ This evidence covers the WP-3 compiler and selector substrate:
   `order: strict`, not by a standalone assertion plan record.
 - selector/assertion compatibility checks before rule evaluation.
 - table header ordered-subsequence matching, table row predicates, table cell
-  column selection, section-scoped rich IR selection, and frontmatter field
-  selection.
+  column selection, and section-scoped rich IR selection.
 
 This evidence does not claim WP-4 assertion evaluation completeness. The current
 assertion evaluator still implements the existing `sectionsRequired` and
@@ -76,8 +77,9 @@ tests:
 - removed assertion-level `column` modifiers on `text`, `ids`, and
   `textOccurrenceCount` reject before execution; column-specific checks use
   `tableCell` selectors.
-- frontmatter-required assertions allow document selectors and unfiltered
-  frontmatter selectors, but reject filtered frontmatter selectors.
+- frontmatter-required assertions allow only document selectors. `frontmatter`
+  selectors are deferred from v1 and reject with
+  `profile.compile.unsupportedSelector`.
 
 Unsupported selector targets still emit `profile.compile.unsupportedSelector`
 when a typed caller bypasses parser closure.
@@ -93,7 +95,8 @@ Selector resolution stays on the public 1.0 document substrate:
   `documentQueries.lists()` for span, link, and list selectors.
 - `documentQueries.nodes()` and `documentQueries.sourceSlice()` for section
   containment, selected text, and source slices.
-- `EngineDocument.frontmatter` for inert frontmatter selection.
+- `EngineDocument.frontmatter` for document-scoped `frontmatterRequired`
+  assertion evaluation.
 
 The implementation does not traverse raw parser AST, compile profile-provided
 regular expressions, execute callbacks, import plugins, read additional files,

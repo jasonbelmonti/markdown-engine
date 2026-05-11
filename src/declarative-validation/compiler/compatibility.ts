@@ -2,18 +2,6 @@ import type { DeclarativeAssertion, DeclarativeSelector } from "../profile/index
 
 export type DeclarativeAssertionName = keyof DeclarativeAssertion;
 
-const TEXT_SELECTOR_TARGETS = new Set<DeclarativeSelector["target"]>([
-  "document",
-  "section",
-  "heading",
-  "table",
-  "tableRow",
-  "tableCell",
-  "textSpan",
-  "link",
-  "list",
-]);
-
 export function selectorAssertionCompatibilityError(
   assertionName: DeclarativeAssertionName,
   selector: DeclarativeSelector,
@@ -33,26 +21,13 @@ export function selectorAssertionCompatibilityError(
     case "ids":
     case "text":
     case "textOccurrenceCount":
-      return textTargetCompatibility(assertionName, selector);
+      return undefined;
 
     case "frontmatterRequired":
-      if (selector.target === "document") {
-        return undefined;
-      }
-
-      return selector.target === "frontmatter" && selector.field === undefined
+      return selector.target === "document"
         ? undefined
-        : 'Assertion "frontmatterRequired" is compatible only with document selectors or unfiltered frontmatter selectors.';
+        : selectorCompatibilityMessage(assertionName, "document");
   }
-}
-
-function textTargetCompatibility(
-  assertionName: DeclarativeAssertionName,
-  selector: DeclarativeSelector,
-): string | undefined {
-  return TEXT_SELECTOR_TARGETS.has(selector.target)
-    ? undefined
-    : `Assertion "${assertionName}" is not compatible with frontmatter selectors.`;
 }
 
 function selectorCompatibilityMessage(

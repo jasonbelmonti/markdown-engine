@@ -137,13 +137,6 @@ export function selectorFromValue(
         ...optionalNumber(value, "depth", diagnostics),
       };
 
-    case "frontmatter":
-      unsupportedKeys(value, ["target", "field"], diagnostics);
-      return {
-        target: "frontmatter",
-        ...optionalSelectorString(value, "field", diagnostics),
-      };
-
     default:
       unsupportedKeys(value, ["target"], diagnostics);
       diagnostics.push(

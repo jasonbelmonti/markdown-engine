@@ -141,6 +141,11 @@ const tableCellPredicate = {
   column: "Status",
   equals: "Open",
 } satisfies DeclarativeTableCellPredicate;
+const removedFrontmatterSelector = {
+  // @ts-expect-error frontmatter selectors are deferred from v1.
+  target: "frontmatter",
+  field: "title",
+} satisfies DeclarativeSelector;
 
 describe("declarative validation public contract scaffold", () => {
   it("exports the public profile parser and validation execution entry point", () => {
@@ -358,5 +363,6 @@ void removedTextAssertion;
 void removedIdsColumnAssertion;
 void removedTextColumnAssertion;
 void removedOccurrenceColumnAssertion;
+void removedFrontmatterSelector;
 void idSource;
 void tableCellPredicate;
