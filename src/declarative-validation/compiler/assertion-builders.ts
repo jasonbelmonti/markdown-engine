@@ -33,7 +33,6 @@ export type AssertionBuilder = (
 
 export const ASSERTION_BUILDERS: readonly AssertionBuilder[] = [
   buildSectionsRequiredAssertion,
-  buildSectionOrderAssertion,
   buildTableColumnsRequiredAssertion,
   buildIdsAssertion,
   buildReferencesAssertion,
@@ -82,41 +81,6 @@ function buildSectionsRequiredAssertion(
       kind: "sectionsRequired",
       headings,
       order: assertion.sectionsRequired.order ?? "none",
-    };
-  }
-
-  return undefined;
-}
-
-function buildSectionOrderAssertion(
-  assertion: DeclarativeAssertion,
-  selector: DeclarativeSelector,
-  ruleId: string,
-  diagnostics: MarkdownDiagnostic[],
-): CompiledDeclarativeAssertion | undefined {
-  if (assertion.sectionOrder === undefined) {
-    return undefined;
-  }
-
-  let headings: readonly string[] | undefined;
-  if (
-    pushObjectDiagnostic("sectionOrder", assertion.sectionOrder, ruleId, diagnostics) &&
-    pushUnsupportedKeyDiagnostics(
-      assertion.sectionOrder,
-      ["headings"],
-      diagnostics,
-    ) &&
-    (headings = closedStringArray(
-      "sectionOrder.headings",
-      assertion.sectionOrder.headings,
-      ruleId,
-      diagnostics,
-    )) !== undefined &&
-    pushCompatibilityDiagnostic("sectionOrder", assertion, selector, ruleId, diagnostics)
-  ) {
-    return {
-      kind: "sectionOrder",
-      headings,
     };
   }
 

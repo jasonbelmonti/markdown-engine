@@ -19,7 +19,6 @@ import {
 
 const SUPPORTED_ASSERTION_KEYS = [
   "sectionsRequired",
-  "sectionOrder",
   "tableColumnsRequired",
   "ids",
   "references",
@@ -42,7 +41,6 @@ export function assertionFromValue(
 
   const assertion = {
     ...sectionsRequiredFromValue(value.sectionsRequired, diagnostics),
-    ...sectionOrderFromValue(value.sectionOrder, diagnostics),
     ...tableColumnsRequiredFromValue(value.tableColumnsRequired, diagnostics),
     ...idsFromValue(value.ids, diagnostics),
     ...referencesFromValue(value.references, diagnostics),
@@ -144,34 +142,6 @@ function sectionsRequiredFromValue(
       ...(value.order !== undefined ? { order: value.order } : {}),
     },
   };
-}
-
-function sectionOrderFromValue(
-  value: unknown,
-  diagnostics: MarkdownDiagnostic[],
-): Pick<DeclarativeAssertion, "sectionOrder"> {
-  if (value === undefined) {
-    return {};
-  }
-
-  if (!isPlainRecord(value)) {
-    diagnostics.push(invalidShape("sectionOrder must be an object."));
-
-    return {};
-  }
-
-  unsupportedKeys(value, ["headings"], diagnostics);
-
-  const headings = stringArray(value.headings);
-  if (headings === undefined) {
-    diagnostics.push(
-      invalidShape("sectionOrder.headings must be an array of non-empty strings."),
-    );
-
-    return {};
-  }
-
-  return { sectionOrder: { headings } };
 }
 
 function tableColumnsRequiredFromValue(

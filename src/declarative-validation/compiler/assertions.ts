@@ -9,7 +9,6 @@ import type { CompiledDeclarativeAssertion } from "./plan.js";
 
 const ASSERTION_KEYS = [
   "sectionsRequired",
-  "sectionOrder",
   "tableColumnsRequired",
   "ids",
   "references",

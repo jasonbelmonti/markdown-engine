@@ -194,18 +194,21 @@ describe("declarative validation assertion proof", () => {
   });
 
   it("treats unsupported evaluator paths as errors regardless of rule severity", () => {
-    const document = normalize(parse("# Objective\n\nReady.\n").parsed, {
-      documentVersion: "1.0.0",
-    }).document;
+    const document = normalize(
+      parse("| Column |\n| --- |\n| value |\n").parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
     const result = validateWithProfile(document, {
       syntaxVersion: "markdown-engine.validation@v1",
       documentVersion: "1.0.0",
       rules: [
         {
-          id: "section-order.unsupported-evaluator-path",
+          id: "table-columns.unsupported-evaluator-path",
           severity: "warning",
-          select: { target: "document" },
-          assert: { sectionOrder: { headings: ["Objective"] } },
+          select: { target: "table" },
+          assert: { tableColumnsRequired: { columns: ["Missing"] } },
         },
       ],
     });
@@ -214,15 +217,15 @@ describe("declarative validation assertion proof", () => {
     expect(result.diagnostics).toEqual([
       {
         code: "profile.validation.assertionUnsupported",
-        ruleId: "section-order.unsupported-evaluator-path",
+        ruleId: "table-columns.unsupported-evaluator-path",
         message:
-          'Assertion "sectionOrder" is compiled but not implemented by the assertion evaluator yet.',
+          'Assertion "tableColumnsRequired" is compiled but not implemented by the assertion evaluator yet.',
         severity: "error",
       },
     ]);
     expect(result.ruleResults).toEqual([
       {
-        ruleId: "section-order.unsupported-evaluator-path",
+        ruleId: "table-columns.unsupported-evaluator-path",
         passed: false,
         diagnostics: result.diagnostics,
       },

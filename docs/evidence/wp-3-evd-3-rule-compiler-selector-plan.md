@@ -17,9 +17,11 @@ This evidence covers the WP-3 compiler and selector substrate:
 
 - v1 selector targets: `document`, `section`, `heading`, `table`, `tableRow`,
   `tableCell`, `textSpan`, `link`, `list`, and `frontmatter`.
-- v1 compiled assertion plan records: `sectionsRequired`, `sectionOrder`,
+- v1 compiled assertion plan records: `sectionsRequired`,
   `tableColumnsRequired`, `ids`, `references`, `text`,
-  `textOccurrenceCount`, and `frontmatterRequired`.
+  `textOccurrenceCount`, and `frontmatterRequired`. Ordered
+  required-section validation remains represented by `sectionsRequired` with
+  `order: strict`, not by a standalone assertion plan record.
 - selector/assertion compatibility checks before rule evaluation.
 - table header ordered-subsequence matching, table row predicates, table cell
   column selection, section-scoped rich IR selection, and frontmatter field

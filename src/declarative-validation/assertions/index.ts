@@ -34,7 +34,6 @@ function evaluateAssertion(
     case "text":
       return evaluateText(rule, assertion, selection);
 
-    case "sectionOrder":
     case "tableColumnsRequired":
     case "ids":
     case "references":
