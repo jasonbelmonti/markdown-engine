@@ -10,6 +10,7 @@ import { unsupportedEvaluatorDiagnostic } from "./diagnostics.js";
 import { sortAssertionDiagnostics } from "./ordering.js";
 import { evaluateSectionsRequired } from "./sections-required.js";
 import { evaluateText } from "./text.js";
+import { evaluateTextOccurrenceCount } from "./text-occurrence-count.js";
 
 export function evaluateCompiledDeclarativeRule(
   rule: CompiledDeclarativeValidationRule,
@@ -43,10 +44,12 @@ function evaluateAssertion(
     case "text":
       return evaluateText(assertion, context);
 
+    case "textOccurrenceCount":
+      return evaluateTextOccurrenceCount(assertion, context);
+
     case "tableColumnsRequired":
     case "ids":
     case "references":
-    case "textOccurrenceCount":
     case "frontmatterRequired":
       return [
         unsupportedEvaluatorDiagnostic(
