@@ -73,9 +73,6 @@ export interface DeclarativeAssertion {
     headings: readonly string[];
     order?: DeclarativeSectionOrder;
   };
-  sectionOrder?: {
-    headings: readonly string[];
-  };
   tableColumnsRequired?: {
     columns: readonly string[];
   };

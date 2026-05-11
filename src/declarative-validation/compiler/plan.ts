@@ -31,10 +31,6 @@ export type CompiledDeclarativeAssertion =
       order: "none" | "strict";
     }
   | {
-      kind: "sectionOrder";
-      headings: readonly string[];
-    }
-  | {
       kind: "tableColumnsRequired";
       columns: readonly string[];
     }

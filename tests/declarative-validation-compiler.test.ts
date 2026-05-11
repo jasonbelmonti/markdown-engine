@@ -28,10 +28,6 @@ describe("declarative validation compiler proof", () => {
               headings: ["Objective", "Verification"],
               order: "strict",
             },
-            {
-              kind: "sectionOrder",
-              headings: ["Objective", "Verification"],
-            },
           ],
         },
         {
@@ -220,9 +216,6 @@ const supportedProfile = {
         sectionsRequired: {
           headings: ["Objective", "Verification"],
           order: "strict",
-        },
-        sectionOrder: {
-          headings: ["Objective", "Verification"],
         },
       },
     },

@@ -261,9 +261,6 @@ rules:
               headings: ["Objective", "Evidence"],
               order: "strict",
             },
-            sectionOrder: {
-              headings: ["Objective", "Evidence"],
-            },
             tableColumnsRequired: {
               columns: ["ID", "Requirement statement"],
             },
@@ -311,9 +308,6 @@ rules:
               sectionsRequired: {
                 headings: ["Objective", "Evidence"],
                 order: "strict",
-              },
-              sectionOrder: {
-                headings: ["Objective", "Evidence"],
               },
               tableColumnsRequired: {
                 columns: ["ID", "Requirement statement"],
@@ -400,6 +394,27 @@ rules:
         {
           code: "profile.config.unsupportedKey",
           message: 'Unsupported validation profile key "matches".',
+          severity: "error",
+        },
+      ],
+    });
+
+    expect(
+      parseValidationProfile({
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "removed-assertion",
+            select: { target: "document" },
+            assert: { sectionOrder: { headings: ["Objective"] } },
+          },
+        ],
+      }),
+    ).toEqual({
+      diagnostics: [
+        {
+          code: "profile.compile.unsupportedAssertion",
+          message: 'Unsupported assertion "sectionOrder".',
           severity: "error",
         },
       ],

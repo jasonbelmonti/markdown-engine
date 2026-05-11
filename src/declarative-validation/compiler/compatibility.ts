@@ -26,7 +26,6 @@ export function selectorAssertionCompatibilityError(
 ): string | undefined {
   switch (assertionName) {
     case "sectionsRequired":
-    case "sectionOrder":
     case "references":
       return selector.target === "document"
         ? undefined

@@ -287,11 +287,6 @@ describe("declarative validation compiler assertion proof", () => {
         select: { target: "document" },
       },
       {
-        assert: { sectionOrder: { headings: [] } },
-        message: "sectionOrder.headings must be an array of non-empty strings.",
-        select: { target: "document" },
-      },
-      {
         assert: { tableColumnsRequired: { columns: [] } },
         message:
           "tableColumnsRequired.columns must be an array of non-empty strings.",
@@ -336,6 +331,30 @@ describe("declarative validation compiler assertion proof", () => {
         },
       ]);
     }
+  });
+
+  it("rejects removed sectionOrder assertions before execution", () => {
+    const result = compileValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      rules: [
+        {
+          id: "section-order.removed",
+          select: { target: "document" },
+          assert: {
+            sectionOrder: { headings: ["Objective"] },
+          } as unknown as ValidationProfile["rules"][number]["assert"],
+        },
+      ],
+    });
+
+    expect(result.plan).toBeUndefined();
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.config.unsupportedKey",
+        message: 'Unsupported validation profile key "sectionOrder".',
+        severity: "error",
+      },
+    ]);
   });
 
   it("rejects direct typed empty assertion objects before execution", () => {
