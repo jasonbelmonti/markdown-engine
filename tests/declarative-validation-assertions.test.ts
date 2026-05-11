@@ -298,6 +298,96 @@ describe("declarative validation assertion proof", () => {
     }
   });
 
+  it("validates exact non-overlapping text occurrence counts per selected target", () => {
+    const document = normalize(
+      parse("# Objective\n\nMUST ready. shall shall. aaaa\n").parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "occurrence.exact-one",
+          select: { target: "section", title: "Objective" },
+          assert: { textOccurrenceCount: { text: "MUST", count: 1 } },
+        },
+        {
+          id: "occurrence.non-overlapping",
+          select: { target: "section", title: "Objective" },
+          assert: { textOccurrenceCount: { text: "aa", count: 2 } },
+        },
+        {
+          id: "occurrence.duplicate",
+          select: { target: "section", title: "Objective" },
+          assert: { textOccurrenceCount: { text: "shall", count: 1 } },
+        },
+      ],
+    });
+
+    expect(result.valid).toBe(false);
+    expect(result.ruleResults).toEqual([
+      {
+        ruleId: "occurrence.duplicate",
+        passed: false,
+        diagnostics: [
+          expect.objectContaining({
+            code: "profile.validation.assertionFailed",
+            ruleId: "occurrence.duplicate",
+            message:
+              'Selected section text must contain "shall" exactly 1 time(s); found 2.',
+            sourceRange: expect.objectContaining({
+              start: expect.objectContaining({ line: 1 }),
+            }),
+          }),
+        ],
+      },
+      {
+        ruleId: "occurrence.exact-one",
+        passed: true,
+        diagnostics: [],
+      },
+      {
+        ruleId: "occurrence.non-overlapping",
+        passed: true,
+        diagnostics: [],
+      },
+    ]);
+    expect(result.diagnostics).toEqual(result.ruleResults[0]?.diagnostics);
+  });
+
+  it("rejects removed containsExactlyOne text assertions before rule evaluation", () => {
+    const document = normalize(parse("# Objective\n\nMission ready.\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    const result = validateWithProfile(
+      document,
+      {
+        syntaxVersion: "markdown-engine.validation@v1",
+        documentVersion: "1.0.0",
+        rules: [
+          {
+            id: "text.removed-exact-one",
+            select: { target: "section", title: "Objective" },
+            assert: { text: { containsExactlyOne: "Mission" } },
+          },
+        ],
+      } as unknown as ValidationProfile,
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.ruleResults).toEqual([]);
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.config.unsupportedKey",
+        message: 'Unsupported validation profile key "containsExactlyOne".',
+        severity: "error",
+      },
+    ]);
+  });
+
   it("rejects removed assertion column modifiers before rule evaluation", () => {
     const document = normalize(
       parse([
