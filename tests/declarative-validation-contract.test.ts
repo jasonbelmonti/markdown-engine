@@ -108,6 +108,12 @@ const missingSelectorTargetProfile = {
 } as const;
 const unsupportedSelector = { target: "section" } satisfies DeclarativeSelector;
 const publicAssertion = { ids: { unique: true } } satisfies DeclarativeAssertion;
+const exactOneTextAssertion = {
+  textOccurrenceCount: {
+    text: "shall",
+    count: 1,
+  },
+} satisfies DeclarativeAssertion;
 const removedTextAssertion = {
   text: {
     // @ts-expect-error containsExactlyOne was removed from public text assertion syntax.
@@ -336,6 +342,71 @@ describe("declarative validation public contract scaffold", () => {
     });
   });
 
+  it("accepts the public exact-one text occurrence spelling", () => {
+    const exactOneProfile = {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "text-exact-one-contract",
+          select: {
+            target: "tableCell",
+            tableHeader: ["ID", "Requirement statement"],
+            column: "Requirement statement",
+          },
+          assert: {
+            textOccurrenceCount: {
+              text: "shall",
+              count: 1,
+            },
+          },
+        },
+      ],
+    } satisfies ValidationProfile;
+
+    expect(parseValidationProfile(exactOneProfile)).toEqual({
+      profile: exactOneProfile,
+      diagnostics: [],
+    });
+  });
+
+  it("rejects the removed exact-one text spelling from parsed profiles", () => {
+    expect(
+      parseValidationProfile({
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "removed-exact-one-text-contract",
+            select: { target: "document" },
+            assert: {
+              text: {
+                containsExactlyOne: "shall",
+              },
+            },
+          },
+        ],
+      }),
+    ).toEqual({
+      diagnostics: [
+        {
+          code: "profile.config.unsupportedKey",
+          message: 'Unsupported validation profile key "containsExactlyOne".',
+          severity: "error",
+        },
+        {
+          code: "profile.config.invalidShape",
+          message: "text must include contains or a non-empty excludes array.",
+          severity: "error",
+        },
+        {
+          code: "profile.config.invalidShape",
+          message: "Rule assert must include at least one supported assertion.",
+          severity: "error",
+        },
+      ],
+    });
+  });
+
   it("registers required declarative validation gate script names", () => {
     const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8")) as {
       scripts?: Record<string, string>;
@@ -359,6 +430,7 @@ void (undefined as unknown as CompiledDeclarativeValidationPlan);
 void (undefined as unknown as DeclarativeValidationCompileResult);
 void unsupportedSelector;
 void publicAssertion;
+void exactOneTextAssertion;
 void removedTextAssertion;
 void removedIdsColumnAssertion;
 void removedTextColumnAssertion;

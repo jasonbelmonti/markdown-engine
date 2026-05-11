@@ -29,11 +29,12 @@ This evidence covers the WP-3 compiler and selector substrate:
   column selection, and section-scoped rich IR selection.
 
 This evidence does not claim WP-4 assertion evaluation completeness. The current
-assertion evaluator still implements the existing `sectionsRequired` and
-`text.contains` proof paths. Other compiled assertion records, plus
-`text.excludes`, return a deterministic
-unsupported-evaluator diagnostic if routed through `validateWithProfile` before
-WP-4 rather than silently passing.
+assertion evaluator implements the existing `sectionsRequired` and
+`text.contains` proof paths plus the exact text occurrence-count path. Remaining
+compiled assertion records not yet implemented by the evaluator, plus
+`text.excludes`, return a deterministic unsupported-evaluator diagnostic if
+routed through `validateWithProfile` before their implementation slices rather
+than silently passing.
 
 ## Private Plan Closure
 
@@ -111,6 +112,26 @@ Commands run from
 - `npm run test:validation:compiler`: pass, 1 file and 24 tests.
 - `npm run test:validation:selectors`: pass, 1 file and 5 tests.
 - `npm run test:validation:assertions`: pass, 1 file and 12 tests.
+
+BEL-1020 final exact-one syntax validation update from
+`.worktrees/BEL-1020-docs-evidence-validation` on 2026-05-11:
+
+- Public exact-one authoring syntax is
+  `textOccurrenceCount: { text: "shall", count: 1 }`.
+- Contract coverage verifies both the public spelling and parsed removed-spelling
+  diagnostics in `tests/declarative-validation-contract.test.ts`.
+- A repository search for the removed exact-one key is expected to match only
+  intentional removal or negative coverage in tests; public docs and examples
+  should have no matches.
+- Repository search result: pass; matches are limited to intentional negative
+  coverage in `tests/declarative-validation-profile.test.ts`,
+  `tests/declarative-validation-contract.test.ts`,
+  `tests/declarative-validation-assertions.test.ts`, and
+  `tests/declarative-validation-compiler-assertions.ts`.
+- `npm run test:validation:profile`: pass, 1 file and 35 tests.
+- `npm run test:validation:compiler`: pass, 1 file and 28 tests.
+- `npm run test:validation:assertions`: pass, 1 file and 20 tests.
+- `npm run test:validation:contract`: pass, 1 file and 13 tests.
 
 ## Result
 
