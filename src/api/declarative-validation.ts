@@ -2,7 +2,10 @@ import type { EngineDocument } from "./document.js";
 import type { MarkdownDiagnostic } from "./diagnostics.js";
 import type { ValidationRuleResult } from "./validate.js";
 import { cloneDiagnostics, hasErrorDiagnostic } from "../diagnostics/index.js";
-import { evaluateCompiledDeclarativeRule } from "../declarative-validation/assertions/index.js";
+import {
+  evaluateCompiledDeclarativeRule,
+  sortValidationRuleResults,
+} from "../declarative-validation/assertions/index.js";
 import { compileValidationProfile } from "../declarative-validation/compiler/index.js";
 import { createDeclarativeValidationEvidence } from "../declarative-validation/evidence/index.js";
 import { parseValidationProfileInput } from "../declarative-validation/profile/index.js";
@@ -97,13 +100,14 @@ export function validateWithProfile(
   }
 
   const compileResult = compileValidationProfile(materializedProfile.profile);
-  const ruleResults =
+  const ruleResults = sortValidationRuleResults(
     compileResult.plan?.rules.map((rule) =>
       evaluateCompiledDeclarativeRule(
         rule,
         resolveDeclarativeSelector(document, rule.selector),
       ),
-    ) ?? [];
+    ) ?? [],
+  );
   const diagnostics = [
     ...compileResult.diagnostics,
     ...ruleResults.flatMap((result) => result.diagnostics),
