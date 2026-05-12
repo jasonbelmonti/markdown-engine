@@ -804,6 +804,252 @@ describe("declarative validation assertion proof", () => {
     ]);
   });
 
+  it("detects duplicate prefixed IDs in table cells with source evidence", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "| SYS-1 | Ignore non-requirement IDs |",
+          "| REQ-1 | Launch safely |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "ids.table-cells",
+          select: { target: "tableCell", column: "ID" },
+          assert: { ids: { unique: true, prefix: "REQ" } },
+        },
+      ],
+    });
+
+    expect(result.valid).toBe(false);
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.duplicateId",
+        ruleId: "ids.table-cells",
+        message: 'ID "REQ-1" duplicates earlier ID "REQ-1".',
+        severity: "error",
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({ line: 7 }),
+        }),
+      }),
+    ]);
+    expect(result.ruleResults).toEqual([
+      {
+        ruleId: "ids.table-cells",
+        passed: false,
+        diagnostics: result.diagnostics,
+      },
+    ]);
+  });
+
+  it("honors case-sensitive and case-insensitive ID policies", () => {
+    const document = normalize(
+      parse("# Requirements\n\nREQ-1 is ready.\n\nreq-1 repeats.\n").parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "ids.case-insensitive",
+          select: { target: "section", title: "Requirements" },
+          assert: { ids: { unique: true, prefix: "req", caseSensitive: false } },
+        },
+        {
+          id: "ids.case-sensitive",
+          select: { target: "section", title: "Requirements" },
+          assert: { ids: { unique: true, prefix: "REQ" } },
+        },
+      ],
+    });
+
+    expect(result.ruleResults).toEqual([
+      {
+        ruleId: "ids.case-insensitive",
+        passed: false,
+        diagnostics: [
+          expect.objectContaining({
+            code: "profile.validation.duplicateId",
+            message: 'ID "req-1" duplicates earlier ID "REQ-1".',
+            sourceRange: expect.objectContaining({
+              start: expect.objectContaining({ line: 5 }),
+            }),
+          }),
+        ],
+      },
+      {
+        ruleId: "ids.case-sensitive",
+        passed: true,
+        diagnostics: [],
+      },
+    ]);
+    expect(result.diagnostics).toEqual(result.ruleResults[0]?.diagnostics);
+  });
+
+  it("emits empty-selection diagnostics for ID assertions", () => {
+    const document = normalize(parse("# Objective\n\nReady.\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "ids.empty-selection",
+          select: { target: "section", title: "Requirements" },
+          assert: { ids: { unique: true, prefix: "REQ" } },
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.validation.emptySelection",
+        ruleId: "ids.empty-selection",
+        message: "Rule selector did not match any document targets.",
+        severity: "error",
+      },
+    ]);
+    expect(result.ruleResults).toEqual([
+      {
+        ruleId: "ids.empty-selection",
+        passed: false,
+        diagnostics: result.diagnostics,
+      },
+    ]);
+  });
+
+  it("does not duplicate child section IDs through overlapping section targets", () => {
+    const document = normalize(
+      parse("# Parent\n\n## Child\n\nREQ-1 is defined here.\n").parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "ids.section-overlap",
+          select: { target: "section" },
+          assert: { ids: { unique: true, prefix: "REQ" } },
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [
+        {
+          ruleId: "ids.section-overlap",
+          passed: true,
+          diagnostics: [],
+        },
+      ],
+    });
+  });
+
+  it("evaluates IDs across document, list, and link structural targets", () => {
+    const document = normalize(
+      parse(
+        [
+          "# REQ-1",
+          "",
+          "Document repeats REQ-1.",
+          "",
+          "- ITEM-1",
+          "- ITEM-1",
+          "",
+          "[LINK-1](https://example.com/a)",
+          "[LINK-1](https://example.com/b)",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "ids.document",
+          select: { target: "document" },
+          assert: { ids: { unique: true, prefix: "REQ" } },
+        },
+        {
+          id: "ids.links",
+          select: { target: "link" },
+          assert: { ids: { unique: true, prefix: "LINK" } },
+        },
+        {
+          id: "ids.lists",
+          select: { target: "list" },
+          assert: { ids: { unique: true, prefix: "ITEM" } },
+        },
+      ],
+    });
+
+    expect(result.ruleResults).toEqual([
+      {
+        ruleId: "ids.document",
+        passed: false,
+        diagnostics: [
+          expect.objectContaining({
+            code: "profile.validation.duplicateId",
+            message: 'ID "REQ-1" duplicates earlier ID "REQ-1".',
+            sourceRange: expect.objectContaining({
+              start: expect.objectContaining({ line: 3 }),
+            }),
+          }),
+        ],
+      },
+      {
+        ruleId: "ids.links",
+        passed: false,
+        diagnostics: [
+          expect.objectContaining({
+            code: "profile.validation.duplicateId",
+            message: 'ID "LINK-1" duplicates earlier ID "LINK-1".',
+            sourceRange: expect.objectContaining({
+              start: expect.objectContaining({ line: 9 }),
+            }),
+          }),
+        ],
+      },
+      {
+        ruleId: "ids.lists",
+        passed: false,
+        diagnostics: [
+          expect.objectContaining({
+            code: "profile.validation.duplicateId",
+            message: 'ID "ITEM-1" duplicates earlier ID "ITEM-1".',
+            sourceRange: expect.objectContaining({
+              start: expect.objectContaining({ line: 6 }),
+            }),
+          }),
+        ],
+      },
+    ]);
+  });
+
   it("returns deterministic diagnostics for typed profile accessors", () => {
     const document = normalize(parse("# Objective\n\nReady.\n").parsed, {
       documentVersion: "1.0.0",
