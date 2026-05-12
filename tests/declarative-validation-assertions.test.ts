@@ -112,50 +112,38 @@ describe("declarative validation assertion proof", () => {
     ]);
   });
 
-  it("reports unsupported evaluator paths even when selectors are empty", () => {
+  it("emits empty-selection diagnostics for table assertions with no table targets", () => {
     const document = normalize(parse("# Objective\n\nReady.\n").parsed, {
       documentVersion: "1.0.0",
     }).document;
-    const unsupportedCases = [
+    const rule = {
+      id: "empty-selection.table-columns",
+      severity: "warning",
+      select: { target: "table" },
+      assert: { tableColumnsRequired: { columns: ["Status"] } },
+    } satisfies ValidationProfile["rules"][number];
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [rule],
+    });
+
+    expect(result.valid).toBe(true);
+    expect(result.diagnostics).toEqual([
       {
-        rule: {
-          id: "empty-selection.unsupported-table-columns",
-          severity: "warning",
-          select: { target: "table" },
-          assert: { tableColumnsRequired: { columns: ["Status"] } },
-        },
-        message:
-          'Assertion "tableColumnsRequired" is compiled but not implemented by the assertion evaluator yet.',
+        code: "profile.validation.emptySelection",
+        ruleId: rule.id,
+        message: "Rule selector did not match any document targets.",
+        severity: "warning",
       },
-    ] satisfies {
-      rule: ValidationProfile["rules"][number];
-      message: string;
-    }[];
-
-    for (const { rule, message } of unsupportedCases) {
-      const result = validateWithProfile(document, {
-        syntaxVersion: "markdown-engine.validation@v1",
-        documentVersion: "1.0.0",
-        rules: [rule],
-      });
-
-      expect(result.valid).toBe(false);
-      expect(result.diagnostics).toEqual([
-        {
-          code: "profile.validation.assertionUnsupported",
-          ruleId: rule.id,
-          message,
-          severity: "error",
-        },
-      ]);
-      expect(result.ruleResults).toEqual([
-        {
-          ruleId: rule.id,
-          passed: false,
-          diagnostics: result.diagnostics,
-        },
-      ]);
-    }
+    ]);
+    expect(result.ruleResults).toEqual([
+      {
+        ruleId: rule.id,
+        passed: false,
+        diagnostics: result.diagnostics,
+      },
+    ]);
   });
 
   it("sorts rule results and diagnostics deterministically by rule id", () => {
@@ -675,9 +663,17 @@ describe("declarative validation assertion proof", () => {
     ]);
   });
 
-  it("treats unsupported evaluator paths as errors regardless of rule severity", () => {
+  it("detects missing required table columns with table source evidence", () => {
     const document = normalize(
-      parse("| Column |\n| --- |\n| value |\n").parsed,
+      parse(
+        [
+          "# Status",
+          "",
+          "| Step | State |",
+          "| --- | --- |",
+          "| Build | ready |",
+        ].join("\n"),
+      ).parsed,
       {
         documentVersion: "1.0.0",
       },
@@ -687,27 +683,121 @@ describe("declarative validation assertion proof", () => {
       documentVersion: "1.0.0",
       rules: [
         {
-          id: "table-columns.unsupported-evaluator-path",
-          severity: "warning",
+          id: "table-columns.required",
           select: { target: "table" },
-          assert: { tableColumnsRequired: { columns: ["Missing"] } },
+          assert: { tableColumnsRequired: { columns: ["Owner", "State"] } },
         },
       ],
     });
 
     expect(result.valid).toBe(false);
     expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.assertionFailed",
+        ruleId: "table-columns.required",
+        message: 'Selected table must include column "Owner".',
+        severity: "error",
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({ line: 3 }),
+        }),
+      }),
+    ]);
+    expect(result.ruleResults).toEqual([
       {
-        code: "profile.validation.assertionUnsupported",
-        ruleId: "table-columns.unsupported-evaluator-path",
-        message:
-          'Assertion "tableColumnsRequired" is compiled but not implemented by the assertion evaluator yet.',
+        ruleId: "table-columns.required",
+        passed: false,
+        diagnostics: result.diagnostics,
+      },
+    ]);
+  });
+
+  it("preserves declared missing table column order when source ranges match", () => {
+    const document = normalize(
+      parse("| Step |\n| --- |\n| Build |\n").parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "table-columns.order",
+          select: { target: "table" },
+          assert: {
+            tableColumnsRequired: {
+              columns: [
+                "Column 01",
+                "Column 02",
+                "Column 03",
+                "Column 04",
+                "Column 05",
+                "Column 06",
+                "Column 07",
+                "Column 08",
+                "Column 09",
+                "Column 10",
+                "Column 11",
+              ],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result.diagnostics.map((diagnostic) => diagnostic.message)).toEqual([
+      'Selected table must include column "Column 01".',
+      'Selected table must include column "Column 02".',
+      'Selected table must include column "Column 03".',
+      'Selected table must include column "Column 04".',
+      'Selected table must include column "Column 05".',
+      'Selected table must include column "Column 06".',
+      'Selected table must include column "Column 07".',
+      'Selected table must include column "Column 08".',
+      'Selected table must include column "Column 09".',
+      'Selected table must include column "Column 10".',
+      'Selected table must include column "Column 11".',
+    ]);
+  });
+
+  it("omits source ranges for table column diagnostics without table source evidence", () => {
+    const sourceDocument = normalize(
+      parse("| Step | State |\n| --- | --- |\n| Build | ready |\n").parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(
+      {
+        ...sourceDocument,
+        children: [],
+      },
+      {
+        syntaxVersion: "markdown-engine.validation@v1",
+        documentVersion: "1.0.0",
+        rules: [
+          {
+            id: "table-columns.sourceless",
+            select: { target: "table" },
+            assert: { tableColumnsRequired: { columns: ["Owner"] } },
+          },
+        ],
+      },
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.validation.assertionFailed",
+        ruleId: "table-columns.sourceless",
+        message: 'Selected table must include column "Owner".',
         severity: "error",
       },
     ]);
     expect(result.ruleResults).toEqual([
       {
-        ruleId: "table-columns.unsupported-evaluator-path",
+        ruleId: "table-columns.sourceless",
         passed: false,
         diagnostics: result.diagnostics,
       },

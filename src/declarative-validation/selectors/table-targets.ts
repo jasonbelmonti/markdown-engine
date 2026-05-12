@@ -10,6 +10,7 @@ import type {
 } from "../profile/index.js";
 import type { DeclarativeSelectionTarget } from "./index.js";
 import { sourceFromTarget, targetMatchesSection } from "./source.js";
+import { tableRowText, tableText } from "./table-text.js";
 
 export function tableTargets(
   document: EngineDocument,
@@ -36,7 +37,7 @@ export function tableRowTargets(
           table,
           rowIndex: row.rowIndex,
           cells: row.cells,
-          text: rowText(row.cells),
+          text: tableRowText(row.cells),
         })),
   );
 }
@@ -148,30 +149,12 @@ function columnIndexForHeader(
   return headerCells(table).find((cell) => cell.text === column)?.columnIndex;
 }
 
-function tableText(table: EngineTable): string {
-  return dataRowsWithHeader(table).map((cells) => rowText(cells)).join("\n");
-}
-
-function dataRowsWithHeader(table: EngineTable): readonly (readonly EngineTableCell[])[] {
-  const rowIndexes = [...new Set(table.cells.map((cell) => cell.rowIndex))].sort(
-    numericSort,
-  );
-
-  return rowIndexes.map((rowIndex) =>
-    sortCellsByColumn(table.cells.filter((cell) => cell.rowIndex === rowIndex)),
-  );
-}
-
 function sortCellsByColumn(cells: EngineTableCell[]): EngineTableCell[] {
   return [...cells].sort((left, right) => left.columnIndex - right.columnIndex);
 }
 
 function numericSort(left: number, right: number): number {
   return left - right;
-}
-
-function rowText(cells: readonly EngineTableCell[]): string {
-  return cells.map((cell) => cell.text).join("\t");
 }
 
 function orderedSubsequence(

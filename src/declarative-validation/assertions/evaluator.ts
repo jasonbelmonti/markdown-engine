@@ -10,6 +10,7 @@ import { unsupportedEvaluatorDiagnostic } from "./diagnostics.js";
 import { evaluateFrontmatterRequired } from "./frontmatter-required.js";
 import { sortAssertionDiagnostics } from "./ordering.js";
 import { evaluateSectionsRequired } from "./sections-required.js";
+import { evaluateTableColumnsRequired } from "./table-columns-required.js";
 import { evaluateText } from "./text.js";
 import { evaluateTextOccurrenceCount } from "./text-occurrence-count.js";
 
@@ -52,6 +53,8 @@ function evaluateAssertion(
       return evaluateFrontmatterRequired(assertion, context);
 
     case "tableColumnsRequired":
+      return evaluateTableColumnsRequired(assertion, context);
+
     case "ids":
     case "references":
       return [
