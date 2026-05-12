@@ -190,6 +190,52 @@ describe("declarative validation selector proof", () => {
     ).toEqual([]);
   });
 
+  it("serializes table selector targets with stable table, row, and cell text", () => {
+    const document = normalize(parse(richIrFixture).parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+
+    expect(
+      resolveDeclarativeSelector(document, {
+        target: "table",
+        header: ["Step", "Owner", "State"],
+      }).targets,
+    ).toEqual([
+      expect.objectContaining({
+        kind: "table",
+        text: [
+          "Step\tOwner\tState",
+          "Design\tdocs\tready",
+          "Build\tengine\tblocked",
+        ].join("\n"),
+      }),
+    ]);
+    expect(
+      resolveDeclarativeSelector(document, {
+        target: "tableRow",
+        tableHeader: ["Step", "Owner", "State"],
+        where: { column: "State", equals: "blocked" },
+      }).targets,
+    ).toEqual([
+      expect.objectContaining({
+        kind: "tableRow",
+        text: "Build\tengine\tblocked",
+      }),
+    ]);
+    expect(
+      resolveDeclarativeSelector(document, {
+        target: "tableCell",
+        column: "Owner",
+        rowWhere: { column: "State", equals: "ready" },
+      }).targets,
+    ).toEqual([
+      expect.objectContaining({
+        kind: "tableCell",
+        text: "docs",
+      }),
+    ]);
+  });
+
   it("matches inline heading targets when scoped to their section", () => {
     const document = normalize(
       parse("# Alpha [heading link](./heading.md)\n\nBody text.\n").parsed,
