@@ -1,6 +1,8 @@
 import { validateWithProfile } from "../api/declarative-validation.js";
 import type { MarkdownDiagnostic } from "../api/diagnostics.js";
+import type { EngineDocument } from "../api/document.js";
 import { compileValidationProfile } from "../declarative-validation/compiler/index.js";
+import { createDeclarativeValidationEvidence } from "../declarative-validation/evidence/index.js";
 import { parseValidationProfileInput } from "../declarative-validation/profile/index.js";
 import type {
   DeclarativeOutputFormat,
@@ -9,8 +11,9 @@ import type {
 import type {
   DeclarativeValidationCliJsonResult,
   DeclarativeValidationConfigErrorResult,
+  DeclarativeValidationResult,
 } from "../declarative-validation/results/index.js";
-import { hasErrorDiagnostic } from "../diagnostics/index.js";
+import { cloneDiagnostics, hasErrorDiagnostic } from "../diagnostics/index.js";
 import { normalizeStableJsonValue } from "../internal/stable-json.js";
 import { readCliFile } from "./files.js";
 import { normalizeMarkdown } from "./normalize-markdown.js";
@@ -74,15 +77,31 @@ export async function runDeclarativeValidationCli(
     markdown: markdown.content,
     path: input.filePath,
   });
+
+  if (hasErrorDiagnostic(normalizeResult.diagnostics)) {
+    return outputResult(
+      documentDiagnosticsResult(
+        normalizeResult.document,
+        profileResult.profile,
+        normalizeResult.diagnostics,
+      ),
+      1,
+    );
+  }
+
   const validationResult = validateWithProfile(
     normalizeResult.document,
     profileResult.profile,
     { includeEvidence: true },
   );
+  const result = mergeDocumentDiagnostics(
+    validationResult,
+    normalizeResult.diagnostics,
+  );
 
   return outputResult(
-    validationResult,
-    hasErrorDiagnostic(validationResult.diagnostics) ? 1 : 0,
+    result,
+    hasErrorDiagnostic(result.diagnostics) ? 1 : 0,
   );
 }
 
@@ -100,6 +119,59 @@ function profileStageResult(
     stage: "profile",
     diagnostics,
     ruleResults: [],
+  };
+}
+
+function documentDiagnosticsResult(
+  document: EngineDocument,
+  profile: ValidationProfile,
+  diagnostics: readonly MarkdownDiagnostic[],
+): DeclarativeValidationResult {
+  const clonedDiagnostics = cloneDiagnostics(diagnostics);
+
+  return {
+    valid: !hasErrorDiagnostic(clonedDiagnostics),
+    diagnostics: clonedDiagnostics,
+    ruleResults: [],
+    profile: {
+      syntaxVersion: profile.syntaxVersion,
+      documentVersion: profile.documentVersion ?? document.version,
+      ruleCount: profile.rules.length,
+    },
+    evidence: createDeclarativeValidationEvidence(
+      document,
+      profile,
+      [],
+      clonedDiagnostics,
+    ),
+  };
+}
+
+function mergeDocumentDiagnostics(
+  validationResult: DeclarativeValidationResult,
+  documentDiagnostics: readonly MarkdownDiagnostic[],
+): DeclarativeValidationResult {
+  if (documentDiagnostics.length === 0) {
+    return validationResult;
+  }
+
+  const diagnostics = cloneDiagnostics([
+    ...documentDiagnostics,
+    ...validationResult.diagnostics,
+  ]);
+
+  return {
+    ...validationResult,
+    valid: !hasErrorDiagnostic(diagnostics),
+    diagnostics,
+    ...(validationResult.evidence !== undefined
+      ? {
+          evidence: {
+            ...validationResult.evidence,
+            diagnostics: cloneDiagnostics(diagnostics),
+          },
+        }
+      : {}),
   };
 }
 

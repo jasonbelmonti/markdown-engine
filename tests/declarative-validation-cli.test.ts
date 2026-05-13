@@ -18,6 +18,14 @@ const failingMarkdown = `# Mission Brief
 
 No required text here.
 `;
+const invalidFrontmatterMarkdown = `---
+title: [
+---
+
+# Mission Brief
+
+REQ-1 is ready.
+`;
 const validProfile = `syntaxVersion: markdown-engine.validation@v1
 rules:
   - id: sections.present
@@ -164,6 +172,47 @@ describe("declarative validation CLI", () => {
       valid: false,
     });
     expect(result.evidence).toBeDefined();
+  });
+
+  it("emits validation JSON and exits 1 for Markdown normalization diagnostics", async () => {
+    const cwd = await makeTempDir();
+    await writeFile(join(cwd, "mission.md"), invalidFrontmatterMarkdown);
+    await writeFile(join(cwd, "profile.yaml"), validProfile);
+
+    const { exitCode, stderr, stdout } = await runCliWithOutput({
+      args: [
+        "validate",
+        "--file",
+        "mission.md",
+        "--profile",
+        "profile.yaml",
+      ],
+      cwd,
+    });
+
+    expect(exitCode).toBe(1);
+    expect(stderr.text()).toBe("");
+
+    const result = parseStdout(stdout.text());
+    expect(result).toMatchObject({
+      diagnostics: [
+        expect.objectContaining({
+          code: "frontmatter.yaml.invalid",
+          severity: "error",
+        }),
+      ],
+      profile: {
+        documentVersion: "1.0.0",
+        ruleCount: 1,
+      },
+      ruleResults: [],
+      valid: false,
+    });
+    expect(result).not.toHaveProperty("stage");
+    expect(result.evidence).toMatchObject({
+      diagnostics: result.diagnostics,
+      ruleResults: [],
+    });
   });
 
   it("emits profile-stage JSON for invalid YAML without reading Markdown", async () => {

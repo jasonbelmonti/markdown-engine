@@ -28,6 +28,11 @@ Options:
   --profile <profile-file>       Declarative validation profile to apply.
   --format json                  Output JSON. This is the default and only supported format.
   -h, --help                     Show this help message.
+
+Exit status:
+  0                              Validation completed with no error diagnostics.
+  1                              Profile/config/compile or validation diagnostics failed.
+  2                              Usage, unsupported format, unknown args, or file read error.
 `;
 
 export function parseValidateCliArgs(args: string[]): ValidateCliArgsResult {

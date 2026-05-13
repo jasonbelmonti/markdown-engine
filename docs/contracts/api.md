@@ -548,6 +548,23 @@ repeated `--document-version` selectors exit with code `2` and usage text; an
 empty assignment-form selector is treated as missing. Directory traversal
 remains unsupported.
 
+Declarative validation is exposed through a separate subcommand:
+
+```sh
+markdown-engine validate --file mission.md --profile profile.yaml
+```
+
+The validate subcommand always normalizes the Markdown document as
+`document.version` `"1.0.0"` and does not accept `--document-version`.
+`--format json` is the default and only supported validation format. It reads,
+parses, and compile-preflights the profile before reading the Markdown file.
+Profile parse/config/compile failures exit with code `1` and emit JSON with
+`stage: "profile"`, empty `ruleResults`, no `profile`, and no `evidence`.
+Usage errors, unsupported formats, unknown arguments, and local file read errors
+exit with code `2`. Validation success exits with code `0`; validation or
+normalization error diagnostics exit with code `1`. Validation JSON includes
+`profile`, `ruleResults`, `diagnostics`, and `evidence`.
+
 Semver classification: this is a breaking CLI output-shape change for consumers
 that parse default CLI JSON. Migration is to either consume the rich IR fields or
 pin `--document-version 0.0.0` until the downstream consumer is ready. API
