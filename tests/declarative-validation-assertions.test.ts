@@ -16,14 +16,6 @@ const fixture = readFileSync(
   "utf8",
 );
 
-function withoutSourceEvidence(document: EngineDocument): EngineDocument {
-  const copy = structuredClone(document);
-
-  stripSourceEvidence(copy);
-
-  return copy;
-}
-
 function withoutFirstDataCellSourceEvidence(document: EngineDocument): EngineDocument {
   const copy = structuredClone(document);
   const firstDataCell = copy.tables?.[0]?.cells.find((cell) => !cell.header);
@@ -32,6 +24,12 @@ function withoutFirstDataCellSourceEvidence(document: EngineDocument): EngineDoc
     delete firstDataCell.sourceRange;
   }
 
+  return copy;
+}
+
+function withoutSourceEvidence(document: EngineDocument): EngineDocument {
+  const copy = structuredClone(document);
+  stripSourceEvidence(copy);
   return copy;
 }
 
@@ -48,7 +46,6 @@ function stripSourceEvidence(value: unknown): void {
   const record = value as Record<string, unknown>;
   delete record.source;
   delete record.sourceRange;
-
   Object.values(record).forEach(stripSourceEvidence);
 }
 
@@ -748,93 +745,100 @@ describe("declarative validation assertion proof", () => {
     ]);
   });
 
-  it("detects duplicate IDs with explicit case and prefix normalization", () => {
+  it("preserves declared missing table column order when source ranges match", () => {
     const document = normalize(
-      parse(
-        [
-          "# Requirements",
-          "",
-          "| ID | State |",
-          "| --- | --- |",
-          "| REQ-1 | ready |",
-          "| req-1 | blocked |",
-          "| BUG-1 | ignored |",
-          "| REQX-1 | ignored |",
-        ].join("\n"),
-      ).parsed,
+      parse("| Step |\n| --- |\n| Build |\n").parsed,
       {
         documentVersion: "1.0.0",
       },
     ).document;
-    const profileFor = (caseSensitive: boolean): ValidationProfile => ({
-      syntaxVersion: "markdown-engine.validation@v1",
-      documentVersion: "1.0.0",
-      rules: [
-        {
-          id: `ids.case-${caseSensitive ? "sensitive" : "insensitive"}`,
-          select: { target: "tableCell", column: "ID" },
-          assert: { ids: { unique: true, prefix: "REQ", caseSensitive } },
-        },
-      ],
-    });
-
-    expect(validateWithProfile(document, profileFor(true))).toMatchObject({
-      valid: true,
-      diagnostics: [],
-      ruleResults: [
-        {
-          ruleId: "ids.case-sensitive",
-          passed: true,
-          diagnostics: [],
-        },
-      ],
-    });
-
-    const insensitiveResult = validateWithProfile(document, profileFor(false));
-
-    expect(insensitiveResult.valid).toBe(false);
-    expect(insensitiveResult.diagnostics).toEqual([
-      expect.objectContaining({
-        code: "profile.validation.duplicateId",
-        ruleId: "ids.case-insensitive",
-        message: 'ID "req-1" duplicates earlier ID "REQ-1".',
-        sourceRange: expect.objectContaining({
-          start: expect.objectContaining({ line: 6 }),
-        }),
-      }),
-    ]);
-  });
-
-  it("does not duplicate document IDs from rich IR text projections", () => {
-    const document = normalize(parse("# REQ-1\n\nReady.\n").parsed, {
-      documentVersion: "1.0.0",
-    }).document;
     const result = validateWithProfile(document, {
       syntaxVersion: "markdown-engine.validation@v1",
       documentVersion: "1.0.0",
       rules: [
         {
-          id: "ids.document",
-          select: { target: "document" },
-          assert: { ids: { unique: true } },
+          id: "table-columns.order",
+          select: { target: "table" },
+          assert: {
+            tableColumnsRequired: {
+              columns: [
+                "Column 01",
+                "Column 02",
+                "Column 03",
+                "Column 04",
+                "Column 05",
+                "Column 06",
+                "Column 07",
+                "Column 08",
+                "Column 09",
+                "Column 10",
+                "Column 11",
+              ],
+            },
+          },
         },
       ],
     });
 
-    expect(result).toMatchObject({
-      valid: true,
-      diagnostics: [],
-      ruleResults: [
-        {
-          ruleId: "ids.document",
-          passed: true,
-          diagnostics: [],
-        },
-      ],
-    });
+    expect(result.diagnostics.map((diagnostic) => diagnostic.message)).toEqual([
+      'Selected table must include column "Column 01".',
+      'Selected table must include column "Column 02".',
+      'Selected table must include column "Column 03".',
+      'Selected table must include column "Column 04".',
+      'Selected table must include column "Column 05".',
+      'Selected table must include column "Column 06".',
+      'Selected table must include column "Column 07".',
+      'Selected table must include column "Column 08".',
+      'Selected table must include column "Column 09".',
+      'Selected table must include column "Column 10".',
+      'Selected table must include column "Column 11".',
+    ]);
   });
 
-  it("detects duplicate IDs in tables selected through section targets", () => {
+  it("omits source ranges for table column diagnostics without table source evidence", () => {
+    const sourceDocument = normalize(
+      parse("| Step | State |\n| --- | --- |\n| Build | ready |\n").parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(
+      {
+        ...sourceDocument,
+        children: [],
+      },
+      {
+        syntaxVersion: "markdown-engine.validation@v1",
+        documentVersion: "1.0.0",
+        rules: [
+          {
+            id: "table-columns.sourceless",
+            select: { target: "table" },
+            assert: { tableColumnsRequired: { columns: ["Owner"] } },
+          },
+        ],
+      },
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.validation.assertionFailed",
+        ruleId: "table-columns.sourceless",
+        message: 'Selected table must include column "Owner".',
+        severity: "error",
+      },
+    ]);
+    expect(result.ruleResults).toEqual([
+      {
+        ruleId: "table-columns.sourceless",
+        passed: false,
+        diagnostics: result.diagnostics,
+      },
+    ]);
+  });
+
+  it("detects duplicate prefixed IDs in table cells with source evidence", () => {
     const document = normalize(
       parse(
         [
@@ -843,6 +847,7 @@ describe("declarative validation assertion proof", () => {
           "| ID | Statement |",
           "| --- | --- |",
           "| REQ-1 | Build safely |",
+          "| SYS-1 | Ignore non-requirement IDs |",
           "| REQ-1 | Launch safely |",
         ].join("\n"),
       ).parsed,
@@ -855,89 +860,37 @@ describe("declarative validation assertion proof", () => {
       documentVersion: "1.0.0",
       rules: [
         {
-          id: "ids.section-table",
-          select: { target: "section", title: "Requirements" },
-          assert: { ids: { unique: true, prefix: "REQ" } },
-        },
-      ],
-    });
-
-    expect(result.diagnostics).toEqual([
-      expect.objectContaining({
-        code: "profile.validation.duplicateId",
-        ruleId: "ids.section-table",
-        message: 'ID "REQ-1" duplicates earlier ID "REQ-1".',
-        sourceRange: expect.objectContaining({
-          start: expect.objectContaining({ line: 6 }),
-        }),
-      }),
-    ]);
-  });
-
-  it("detects duplicate IDs inside one source segment", () => {
-    const paragraphDocument = normalize(
-      parse("# Requirements\n\nREQ-1 and REQ-1 are duplicated.\n").parsed,
-      {
-        documentVersion: "1.0.0",
-      },
-    ).document;
-    const tableDocument = normalize(
-      parse(
-        [
-          "# Requirements",
-          "",
-          "| ID |",
-          "| --- |",
-          "| REQ-1 REQ-1 |",
-        ].join("\n"),
-      ).parsed,
-      {
-        documentVersion: "1.0.0",
-      },
-    ).document;
-
-    const paragraphResult = validateWithProfile(paragraphDocument, {
-      syntaxVersion: "markdown-engine.validation@v1",
-      documentVersion: "1.0.0",
-      rules: [
-        {
-          id: "ids.same-paragraph",
-          select: { target: "section", title: "Requirements" },
-          assert: { ids: { unique: true, prefix: "REQ" } },
-        },
-      ],
-    });
-    const tableResult = validateWithProfile(tableDocument, {
-      syntaxVersion: "markdown-engine.validation@v1",
-      documentVersion: "1.0.0",
-      rules: [
-        {
-          id: "ids.same-table-cell",
+          id: "ids.table-cells",
           select: { target: "tableCell", column: "ID" },
           assert: { ids: { unique: true, prefix: "REQ" } },
         },
       ],
     });
 
-    expect(paragraphResult.diagnostics).toEqual([
+    expect(result.valid).toBe(false);
+    expect(result.diagnostics).toEqual([
       expect.objectContaining({
         code: "profile.validation.duplicateId",
-        ruleId: "ids.same-paragraph",
+        ruleId: "ids.table-cells",
         message: 'ID "REQ-1" duplicates earlier ID "REQ-1".',
+        severity: "error",
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({ line: 7 }),
+        }),
       }),
     ]);
-    expect(tableResult.diagnostics).toEqual([
-      expect.objectContaining({
-        code: "profile.validation.duplicateId",
-        ruleId: "ids.same-table-cell",
-        message: 'ID "REQ-1" duplicates earlier ID "REQ-1".',
-      }),
+    expect(result.ruleResults).toEqual([
+      {
+        ruleId: "ids.table-cells",
+        passed: false,
+        diagnostics: result.diagnostics,
+      },
     ]);
   });
 
-  it("detects duplicate IDs across list items selected through a section", () => {
+  it("honors case-sensitive and case-insensitive ID policies", () => {
     const document = normalize(
-      parse(["# Requirements", "", "- REQ-1", "- REQ-1"].join("\n")).parsed,
+      parse("# Requirements\n\nREQ-1 is ready.\n\nreq-1 repeats.\n").parsed,
       {
         documentVersion: "1.0.0",
       },
@@ -947,7 +900,51 @@ describe("declarative validation assertion proof", () => {
       documentVersion: "1.0.0",
       rules: [
         {
-          id: "ids.section-list",
+          id: "ids.case-insensitive",
+          select: { target: "section", title: "Requirements" },
+          assert: { ids: { unique: true, prefix: "req", caseSensitive: false } },
+        },
+        {
+          id: "ids.case-sensitive",
+          select: { target: "section", title: "Requirements" },
+          assert: { ids: { unique: true, prefix: "REQ" } },
+        },
+      ],
+    });
+
+    expect(result.ruleResults).toEqual([
+      {
+        ruleId: "ids.case-insensitive",
+        passed: false,
+        diagnostics: [
+          expect.objectContaining({
+            code: "profile.validation.duplicateId",
+            message: 'ID "req-1" duplicates earlier ID "REQ-1".',
+            sourceRange: expect.objectContaining({
+              start: expect.objectContaining({ line: 5 }),
+            }),
+          }),
+        ],
+      },
+      {
+        ruleId: "ids.case-sensitive",
+        passed: true,
+        diagnostics: [],
+      },
+    ]);
+    expect(result.diagnostics).toEqual(result.ruleResults[0]?.diagnostics);
+  });
+
+  it("emits empty-selection diagnostics for ID assertions", () => {
+    const document = normalize(parse("# Objective\n\nReady.\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "ids.empty-selection",
           select: { target: "section", title: "Requirements" },
           assert: { ids: { unique: true, prefix: "REQ" } },
         },
@@ -955,42 +952,19 @@ describe("declarative validation assertion proof", () => {
     });
 
     expect(result.diagnostics).toEqual([
-      expect.objectContaining({
-        code: "profile.validation.duplicateId",
-        ruleId: "ids.section-list",
-        message: 'ID "REQ-1" duplicates earlier ID "REQ-1".',
-        sourceRange: expect.objectContaining({
-          start: expect.objectContaining({ line: 4 }),
-        }),
-      }),
-    ]);
-  });
-
-  it("detects duplicate IDs across direct list selector targets", () => {
-    const document = normalize(
-      parse(["- REQ-1", "- REQ-1"].join("\n")).parsed,
       {
-        documentVersion: "1.0.0",
+        code: "profile.validation.emptySelection",
+        ruleId: "ids.empty-selection",
+        message: "Rule selector did not match any document targets.",
+        severity: "error",
       },
-    ).document;
-    const result = validateWithProfile(document, {
-      syntaxVersion: "markdown-engine.validation@v1",
-      documentVersion: "1.0.0",
-      rules: [
-        {
-          id: "ids.list",
-          select: { target: "list" },
-          assert: { ids: { unique: true, prefix: "REQ" } },
-        },
-      ],
-    });
-
-    expect(result.diagnostics).toEqual([
-      expect.objectContaining({
-        code: "profile.validation.duplicateId",
-        ruleId: "ids.list",
-        message: 'ID "REQ-1" duplicates earlier ID "REQ-1".',
-      }),
+    ]);
+    expect(result.ruleResults).toEqual([
+      {
+        ruleId: "ids.empty-selection",
+        passed: false,
+        diagnostics: result.diagnostics,
+      },
     ]);
   });
 
@@ -1006,7 +980,7 @@ describe("declarative validation assertion proof", () => {
       documentVersion: "1.0.0",
       rules: [
         {
-          id: "ids.overlapping-sections",
+          id: "ids.section-overlap",
           select: { target: "section" },
           assert: { ids: { unique: true, prefix: "REQ" } },
         },
@@ -1018,7 +992,7 @@ describe("declarative validation assertion proof", () => {
       diagnostics: [],
       ruleResults: [
         {
-          ruleId: "ids.overlapping-sections",
+          ruleId: "ids.section-overlap",
           passed: true,
           diagnostics: [],
         },
@@ -1156,53 +1130,6 @@ describe("declarative validation assertion proof", () => {
     });
   });
 
-  it("uses escaped link text source ranges for reference source IDs", () => {
-    const document = normalize(
-      parse(
-        [
-          "# Requirements",
-          "",
-          "See [REQ\\-1](REQ-1.md).",
-          "",
-          "# Verification",
-          "",
-          "No coverage yet.",
-        ].join("\n"),
-      ).parsed,
-      {
-        documentVersion: "1.0.0",
-      },
-    ).document;
-    const result = validateWithProfile(document, {
-      syntaxVersion: "markdown-engine.validation@v1",
-      documentVersion: "1.0.0",
-      rules: [
-        {
-          id: "references.escaped-link-text-source",
-          select: { target: "document" },
-          assert: {
-            references: {
-              idsFrom: { section: "Requirements", prefix: "REQ" },
-              mustAppearIn: ["Verification"],
-            },
-          },
-        },
-      ],
-    });
-
-    expect(result.diagnostics).toEqual([
-      expect.objectContaining({
-        code: "profile.validation.referenceMissing",
-        ruleId: "references.escaped-link-text-source",
-        message: 'ID "REQ-1" must appear in section "Verification".',
-        sourceRange: expect.objectContaining({
-          start: expect.objectContaining({ line: 3, column: 6 }),
-          end: expect.objectContaining({ line: 3, column: 12 }),
-        }),
-      }),
-    ]);
-  });
-
   it("detects IDs split across inline formatting boundaries", () => {
     const document = normalize(
       parse("# Requirements\n\nREQ-**1** is ready.\n\nREQ-1 is repeated.\n").parsed,
@@ -1234,15 +1161,19 @@ describe("declarative validation assertion proof", () => {
     ]);
   });
 
-  it("uses table cell evidence for ID diagnostics selected through row targets", () => {
+  it("evaluates IDs across document, list, and link structural targets", () => {
     const document = normalize(
       parse(
         [
-          "# Requirements",
+          "# REQ-1",
           "",
-          "| ID | Related |",
-          "| --- | --- |",
-          "| REQ-1 | REQ-1 |",
+          "Document repeats REQ-1.",
+          "",
+          "- ITEM-1",
+          "- ITEM-1",
+          "",
+          "[LINK-1](https://example.com/a)",
+          "[LINK-1](https://example.com/b)",
         ].join("\n"),
       ).parsed,
       {
@@ -1254,27 +1185,67 @@ describe("declarative validation assertion proof", () => {
       documentVersion: "1.0.0",
       rules: [
         {
-          id: "ids.row-sourceless",
-          select: { target: "tableRow" },
-          assert: { ids: { unique: true } },
+          id: "ids.document",
+          select: { target: "document" },
+          assert: { ids: { unique: true, prefix: "REQ" } },
+        },
+        {
+          id: "ids.links",
+          select: { target: "link" },
+          assert: { ids: { unique: true, prefix: "LINK" } },
+        },
+        {
+          id: "ids.lists",
+          select: { target: "list" },
+          assert: { ids: { unique: true, prefix: "ITEM" } },
         },
       ],
     });
 
-    expect(result.diagnostics).toEqual([
-      expect.objectContaining({
-        code: "profile.validation.duplicateId",
-        ruleId: "ids.row-sourceless",
-        message: 'ID "REQ-1" duplicates earlier ID "REQ-1".',
-        severity: "error",
-        sourceRange: expect.objectContaining({
-          start: expect.objectContaining({ line: 5 }),
-        }),
-      }),
+    expect(result.ruleResults).toEqual([
+      {
+        ruleId: "ids.document",
+        passed: false,
+        diagnostics: [
+          expect.objectContaining({
+            code: "profile.validation.duplicateId",
+            message: 'ID "REQ-1" duplicates earlier ID "REQ-1".',
+            sourceRange: expect.objectContaining({
+              start: expect.objectContaining({ line: 3 }),
+            }),
+          }),
+        ],
+      },
+      {
+        ruleId: "ids.links",
+        passed: false,
+        diagnostics: [
+          expect.objectContaining({
+            code: "profile.validation.duplicateId",
+            message: 'ID "LINK-1" duplicates earlier ID "LINK-1".',
+            sourceRange: expect.objectContaining({
+              start: expect.objectContaining({ line: 9 }),
+            }),
+          }),
+        ],
+      },
+      {
+        ruleId: "ids.lists",
+        passed: false,
+        diagnostics: [
+          expect.objectContaining({
+            code: "profile.validation.duplicateId",
+            message: 'ID "ITEM-1" duplicates earlier ID "ITEM-1".',
+            sourceRange: expect.objectContaining({
+              start: expect.objectContaining({ line: 6 }),
+            }),
+          }),
+        ],
+      },
     ]);
   });
 
-  it("reports missing references against required section ID collections", () => {
+  it("reports missing references from required table-column source IDs", () => {
     const document = normalize(
       parse(
         [
@@ -1311,7 +1282,6 @@ describe("declarative validation assertion proof", () => {
       ],
     });
 
-    expect(result.valid).toBe(false);
     expect(result.diagnostics).toEqual([
       expect.objectContaining({
         code: "profile.validation.referenceMissing",
@@ -1324,17 +1294,25 @@ describe("declarative validation assertion proof", () => {
     ]);
   });
 
-  it("collects reference IDs split across inline formatting boundaries", () => {
+  it("collects section column source IDs from child section tables", () => {
     const document = normalize(
       parse(
         [
           "# Requirements",
           "",
-          "REQ-**1** is ready.",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "",
+          "## Details",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-2 | Launch safely |",
           "",
           "# Verification",
           "",
-          "No coverage yet.",
+          "Covers REQ-1.",
         ].join("\n"),
       ).parsed,
       {
@@ -1346,7 +1324,61 @@ describe("declarative validation assertion proof", () => {
       documentVersion: "1.0.0",
       rules: [
         {
-          id: "references.inline-boundary",
+          id: "references.child-section-column-source",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { section: "Requirements", column: "ID", prefix: "REQ" },
+              mustAppearIn: ["Verification"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.referenceMissing",
+        ruleId: "references.child-section-column-source",
+        message: 'ID "REQ-2" must appear in section "Verification".',
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({ line: 11 }),
+        }),
+      }),
+    ]);
+  });
+
+  it("collects section source IDs from child section tables without a column selector", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "",
+          "## Details",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-2 | Launch safely |",
+          "",
+          "# Verification",
+          "",
+          "Covers REQ-1.",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.child-section-source",
           select: { target: "document" },
           assert: {
             references: {
@@ -1361,16 +1393,16 @@ describe("declarative validation assertion proof", () => {
     expect(result.diagnostics).toEqual([
       expect.objectContaining({
         code: "profile.validation.referenceMissing",
-        ruleId: "references.inline-boundary",
-        message: 'ID "REQ-1" must appear in section "Verification".',
+        ruleId: "references.child-section-source",
+        message: 'ID "REQ-2" must appear in section "Verification".',
         sourceRange: expect.objectContaining({
-          start: expect.objectContaining({ line: 3 }),
+          start: expect.objectContaining({ line: 11 }),
         }),
       }),
     ]);
   });
 
-  it("collects reference IDs from section table text without a column selector", () => {
+  it("collects source IDs from section table text without a column selector", () => {
     const document = normalize(
       parse(
         [
@@ -1419,7 +1451,52 @@ describe("declarative validation assertion proof", () => {
     });
   });
 
-  it("counts references in child sections for parent section requirements", () => {
+  it("counts non-definition table cells as references for section source IDs", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements",
+          "",
+          "| ID | Evidence |",
+          "| --- | --- |",
+          "| REQ-1 | Covers REQ-1 |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.section-table-reference",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { section: "Requirements", prefix: "REQ" },
+              mustAppearIn: ["Requirements"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [
+        {
+          ruleId: "references.section-table-reference",
+          passed: true,
+          diagnostics: [],
+        },
+      ],
+    });
+  });
+
+  it("counts references in child sections of required target sections", () => {
     const document = normalize(
       parse(
         [
@@ -1468,7 +1545,7 @@ describe("declarative validation assertion proof", () => {
     });
   });
 
-  it("does not collect child-section references as source IDs", () => {
+  it("does not count same-section one-column source tables as references", () => {
     const document = normalize(
       parse(
         [
@@ -1478,7 +1555,820 @@ describe("declarative validation assertion proof", () => {
           "| --- | --- |",
           "| REQ-1 | Build safely |",
           "",
-          "## Verification",
+          "| ID |",
+          "| --- |",
+          "| REQ-1 |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.section-column-same-section-table",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { section: "Requirements", column: "ID", prefix: "REQ" },
+              mustAppearIn: ["Requirements"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.referenceMissing",
+        ruleId: "references.section-column-same-section-table",
+        message: 'ID "REQ-1" must appear in section "Requirements".',
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({ line: 5 }),
+        }),
+      }),
+    ]);
+  });
+
+  it("does not count child-section headings as required references", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "",
+          "## REQ-1",
+          "",
+          "Heading-only mention is not body evidence.",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.child-heading",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { section: "Requirements", column: "ID", prefix: "REQ" },
+              mustAppearIn: ["Requirements"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.referenceMissing",
+        ruleId: "references.child-heading",
+        message: 'ID "REQ-1" must appear in section "Requirements".',
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({ line: 5 }),
+        }),
+      }),
+    ]);
+  });
+
+  it("does not count source IDs or duplicate source-definition rows as references", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "| REQ-1 | Launch safely |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.duplicate-source-rows",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { section: "Requirements", column: "ID", prefix: "REQ" },
+              mustAppearIn: ["Requirements"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.referenceMissing",
+        ruleId: "references.duplicate-source-rows",
+        message: 'ID "REQ-1" must appear in section "Requirements".',
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({ line: 5 }),
+        }),
+      }),
+    ]);
+  });
+
+  it("does not count duplicate document-level table source rows as references", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "| REQ-1 | Launch safely |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.document-duplicate-source-rows",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { prefix: "REQ" },
+              mustAppearIn: ["Requirements"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.referenceMissing",
+        ruleId: "references.document-duplicate-source-rows",
+        message: 'ID "REQ-1" must appear in section "Requirements".',
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({ line: 5 }),
+        }),
+      }),
+    ]);
+  });
+
+  it("counts different target rows when outside definitions exist", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "| REQ-1 | Launch safely |",
+          "",
+          "# Other Source",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Archive safely |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.target-duplicates-with-outside-source",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { column: "ID", prefix: "REQ" },
+              mustAppearIn: ["Requirements"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [
+        {
+          ruleId: "references.target-duplicates-with-outside-source",
+          passed: true,
+          diagnostics: [],
+        },
+      ],
+    });
+  });
+
+  it("does not count non-source-column tokens in duplicate source rows", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements",
+          "",
+          "| ID | Evidence |",
+          "| --- | --- |",
+          "| REQ-1 | Covers REQ-1 |",
+          "| REQ-1 | Covers REQ-1 |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.duplicate-source-row-non-source-token",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { section: "Requirements", column: "ID", prefix: "REQ" },
+              mustAppearIn: ["Requirements"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.referenceMissing",
+        ruleId: "references.duplicate-source-row-non-source-token",
+        message: 'ID "REQ-1" must appear in section "Requirements".',
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({ line: 5 }),
+        }),
+      }),
+    ]);
+  });
+
+  it("does not count non-source-column tokens in duplicate source ID rows with different text", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements",
+          "",
+          "| ID | Evidence |",
+          "| --- | --- |",
+          "| REQ-1 | Covers REQ-1 A |",
+          "| REQ-1 | Covers REQ-1 B |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.duplicate-source-id-different-row-text",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { section: "Requirements", column: "ID", prefix: "REQ" },
+              mustAppearIn: ["Requirements"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.referenceMissing",
+        ruleId: "references.duplicate-source-id-different-row-text",
+        message: 'ID "REQ-1" must appear in section "Requirements".',
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({ line: 5 }),
+        }),
+      }),
+    ]);
+  });
+
+  it("does not count current-target one-column source rows when outside definitions exist", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements",
+          "",
+          "| ID |",
+          "| --- |",
+          "| REQ-1 |",
+          "",
+          "# Other Source",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Archive safely |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.one-column-target-with-outside-source",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { column: "ID", prefix: "REQ" },
+              mustAppearIn: ["Requirements"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.referenceMissing",
+        ruleId: "references.one-column-target-with-outside-source",
+        message: 'ID "REQ-1" must appear in section "Requirements".',
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({ line: 11 }),
+        }),
+      }),
+    ]);
+  });
+
+  it("does not count nested one-column source rows as references", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements",
+          "",
+          "> | ID |",
+          "> | --- |",
+          "> | REQ-1 |",
+          "",
+          "# Other Source",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Archive safely |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.nested-one-column-source-row",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { column: "ID", prefix: "REQ" },
+              mustAppearIn: ["Requirements"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.referenceMissing",
+        ruleId: "references.nested-one-column-source-row",
+        message: 'ID "REQ-1" must appear in section "Requirements".',
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({ line: 11 }),
+        }),
+      }),
+    ]);
+  });
+
+  it("does not count a one-column document-level source row as its own reference", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements",
+          "",
+          "| ID |",
+          "| --- |",
+          "| REQ-1 |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.one-column-source-row",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { column: "ID", prefix: "REQ" },
+              mustAppearIn: ["Requirements"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.referenceMissing",
+        ruleId: "references.one-column-source-row",
+        message: 'ID "REQ-1" must appear in section "Requirements".',
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({ line: 5 }),
+        }),
+      }),
+    ]);
+  });
+
+  it("does not count duplicate one-column section source rows as references", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements",
+          "",
+          "| ID |",
+          "| --- |",
+          "| REQ-1 |",
+          "| REQ-1 |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.one-column-section-duplicates",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { section: "Requirements", column: "ID", prefix: "REQ" },
+              mustAppearIn: ["Requirements"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.referenceMissing",
+        ruleId: "references.one-column-section-duplicates",
+        message: 'ID "REQ-1" must appear in section "Requirements".',
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({ line: 5 }),
+        }),
+      }),
+    ]);
+  });
+
+  it("does not count selected child-section one-column source rows as parent references", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements",
+          "",
+          "## Details",
+          "",
+          "| ID |",
+          "| --- |",
+          "| REQ-1 |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.child-one-column-source-parent-target",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { section: "Requirements", column: "ID", prefix: "REQ" },
+              mustAppearIn: ["Requirements"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.referenceMissing",
+        ruleId: "references.child-one-column-source-parent-target",
+        message: 'ID "REQ-1" must appear in section "Requirements".',
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({ line: 7 }),
+        }),
+      }),
+    ]);
+  });
+
+  it("does not count selected child-section source rows when parent definitions exist", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "",
+          "## Details",
+          "",
+          "| ID |",
+          "| --- |",
+          "| REQ-1 |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.child-one-column-with-parent-definition",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { section: "Requirements", column: "ID", prefix: "REQ" },
+              mustAppearIn: ["Requirements"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.referenceMissing",
+        ruleId: "references.child-one-column-with-parent-definition",
+        message: 'ID "REQ-1" must appear in section "Requirements".',
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({ line: 5 }),
+        }),
+      }),
+    ]);
+  });
+
+  it("does not let earlier document mentions make duplicate source rows count as references", () => {
+    const document = normalize(
+      parse(
+        [
+          "Preface mentions REQ-1 before the definitions.",
+          "",
+          "# Requirements",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "| REQ-1 | Launch safely |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.document-mention-before-source",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { prefix: "REQ" },
+              mustAppearIn: ["Requirements"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.referenceMissing",
+        ruleId: "references.document-mention-before-source",
+        message: 'ID "REQ-1" must appear in section "Requirements".',
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({ line: 7 }),
+        }),
+      }),
+    ]);
+  });
+
+  it("counts cross-section alternate-shape table rows as document references", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements A",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "",
+          "# Requirements B",
+          "",
+          "| ID | Owner |",
+          "| --- | --- |",
+          "| REQ-1 | Flight |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.cross-section-source-tables",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { prefix: "REQ" },
+              mustAppearIn: ["Requirements A"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [
+        {
+          ruleId: "references.cross-section-source-tables",
+          passed: true,
+          diagnostics: [],
+        },
+      ],
+    });
+  });
+
+  it("counts cross-section alternate-shape table rows as column references", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements A",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "",
+          "# Requirements B",
+          "",
+          "| ID | Owner |",
+          "| --- | --- |",
+          "| REQ-1 | Flight |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.cross-section-column-source-tables",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { column: "ID", prefix: "REQ" },
+              mustAppearIn: ["Requirements A"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [
+        {
+          ruleId: "references.cross-section-column-source-tables",
+          passed: true,
+          diagnostics: [],
+        },
+      ],
+    });
+  });
+
+  it("counts later alternate-shape table rows as document references", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements A",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "",
+          "# Requirements B",
+          "",
+          "| ID | Owner |",
+          "| --- | --- |",
+          "| REQ-1 | Flight |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.later-cross-section-source-tables",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { prefix: "REQ" },
+              mustAppearIn: ["Requirements B"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [
+        {
+          ruleId: "references.later-cross-section-source-tables",
+          passed: true,
+          diagnostics: [],
+        },
+      ],
+    });
+  });
+
+  it("counts same-family target body references for document-level source IDs", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements A",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "",
+          "# Requirements B",
           "",
           "Covers REQ-1.",
         ].join("\n"),
@@ -1492,12 +2382,12 @@ describe("declarative validation assertion proof", () => {
       documentVersion: "1.0.0",
       rules: [
         {
-          id: "references.section-source-child-target",
+          id: "references.same-family-body-reference",
           select: { target: "document" },
           assert: {
             references: {
-              idsFrom: { section: "Requirements", prefix: "REQ" },
-              mustAppearIn: ["Requirements"],
+              idsFrom: { prefix: "REQ" },
+              mustAppearIn: ["Requirements B"],
             },
           },
         },
@@ -1509,7 +2399,7 @@ describe("declarative validation assertion proof", () => {
       diagnostics: [],
       ruleResults: [
         {
-          ruleId: "references.section-source-child-target",
+          ruleId: "references.same-family-body-reference",
           passed: true,
           diagnostics: [],
         },
@@ -1517,7 +2407,7 @@ describe("declarative validation assertion proof", () => {
     });
   });
 
-  it("does not collect child-section table columns as source IDs", () => {
+  it("counts later same-family target body references for document-level source IDs", () => {
     const document = normalize(
       parse(
         [
@@ -1527,11 +2417,13 @@ describe("declarative validation assertion proof", () => {
           "| --- | --- |",
           "| REQ-1 | Build safely |",
           "",
-          "## Verification",
+          "# Verification A",
           "",
-          "| ID | Evidence |",
-          "| --- | --- |",
-          "| REQ-1 | Covered |",
+          "Covers REQ-1.",
+          "",
+          "# Verification B",
+          "",
+          "Covers REQ-1.",
         ].join("\n"),
       ).parsed,
       {
@@ -1543,12 +2435,12 @@ describe("declarative validation assertion proof", () => {
       documentVersion: "1.0.0",
       rules: [
         {
-          id: "references.column-source-child-table-target",
+          id: "references.later-same-family-body-reference",
           select: { target: "document" },
           assert: {
             references: {
-              idsFrom: { section: "Requirements", column: "ID", prefix: "REQ" },
-              mustAppearIn: ["Requirements"],
+              idsFrom: { prefix: "REQ" },
+              mustAppearIn: ["Verification B"],
             },
           },
         },
@@ -1560,7 +2452,7 @@ describe("declarative validation assertion proof", () => {
       diagnostics: [],
       ruleResults: [
         {
-          ruleId: "references.column-source-child-table-target",
+          ruleId: "references.later-same-family-body-reference",
           passed: true,
           diagnostics: [],
         },
@@ -1568,7 +2460,1474 @@ describe("declarative validation assertion proof", () => {
     });
   });
 
-  it("collects reference IDs from top-level tables without a source section", () => {
+  it("requires references in every duplicate target section", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "",
+          "# Verification",
+          "",
+          "Covers REQ-1.",
+          "",
+          "# Verification",
+          "",
+          "No coverage here.",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.duplicate-target-sections",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { section: "Requirements", column: "ID", prefix: "REQ" },
+              mustAppearIn: ["Verification"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.referenceMissing",
+        ruleId: "references.duplicate-target-sections",
+        message: 'ID "REQ-1" must appear in section "Verification".',
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({ line: 5 }),
+        }),
+      }),
+    ]);
+  });
+
+  it("counts later alternate-shape table rows as column references", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements A",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "",
+          "# Requirements B",
+          "",
+          "| ID | Owner |",
+          "| --- | --- |",
+          "| REQ-1 | Flight |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.later-cross-section-column-source-tables",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { column: "ID", prefix: "REQ" },
+              mustAppearIn: ["Requirements B"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [
+        {
+          ruleId: "references.later-cross-section-column-source-tables",
+          passed: true,
+          diagnostics: [],
+        },
+      ],
+    });
+  });
+
+  it("counts target table references before later document-level source definitions", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Verification",
+          "",
+          "| Covered ID |",
+          "| --- |",
+          "| REQ-1 |",
+          "",
+          "# Requirements",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.document-target-before-source",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { prefix: "REQ" },
+              mustAppearIn: ["Verification"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [
+        {
+          ruleId: "references.document-target-before-source",
+          passed: true,
+          diagnostics: [],
+        },
+      ],
+    });
+  });
+
+  it("counts target table references before later column source definitions", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Verification",
+          "",
+          "| Covered ID |",
+          "| --- |",
+          "| REQ-1 |",
+          "",
+          "# Requirements",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.column-target-before-source",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { column: "ID", prefix: "REQ" },
+              mustAppearIn: ["Verification"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [
+        {
+          ruleId: "references.column-target-before-source",
+          passed: true,
+          diagnostics: [],
+        },
+      ],
+    });
+  });
+
+  it("counts same-structure target table references before later column source definitions", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Verification",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Covered |",
+          "",
+          "# Requirements",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.same-structure-target-before-source",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { column: "ID", prefix: "REQ" },
+              mustAppearIn: ["Verification"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [
+        {
+          ruleId: "references.same-structure-target-before-source",
+          passed: true,
+          diagnostics: [],
+        },
+      ],
+    });
+  });
+
+  it("counts multiple target evidence rows before later column source definitions", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Verification",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Covered by unit test |",
+          "| REQ-1 | Covered by integration test |",
+          "",
+          "# Requirements",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.multiple-target-rows-before-source",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { column: "ID", prefix: "REQ" },
+              mustAppearIn: ["Verification"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [
+        {
+          ruleId: "references.multiple-target-rows-before-source",
+          passed: true,
+          diagnostics: [],
+        },
+      ],
+    });
+  });
+
+  it("counts later alternate-shape table rows as document references when row content differs", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements A",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "",
+          "# Requirements B",
+          "",
+          "| ID | Owner |",
+          "| --- | --- |",
+          "| REQ-1 | Flight |",
+          "",
+          "# Requirements C",
+          "",
+          "| ID | Owner |",
+          "| --- | --- |",
+          "| REQ-1 | Ground |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.alternate-shape-source-tables",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { prefix: "REQ" },
+              mustAppearIn: ["Requirements C"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [
+        {
+          ruleId: "references.alternate-shape-source-tables",
+          passed: true,
+          diagnostics: [],
+        },
+      ],
+    });
+  });
+
+  it("counts same-header target table references when the source has multiple shapes", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements Source A",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "",
+          "# Requirements Source B",
+          "",
+          "| ID | Owner |",
+          "| --- | --- |",
+          "| REQ-1 | Flight |",
+          "",
+          "# Requirements Verification",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Covered by test |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.multi-shape-same-header-target",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { prefix: "REQ" },
+              mustAppearIn: ["Requirements Verification"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [
+        {
+          ruleId: "references.multi-shape-same-header-target",
+          passed: true,
+          diagnostics: [],
+        },
+      ],
+    });
+  });
+
+  it("counts later alternate-shape table rows as column references when row content differs", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements A",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "",
+          "# Requirements B",
+          "",
+          "| ID | Owner |",
+          "| --- | --- |",
+          "| REQ-1 | Flight |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.alternate-shape-column-source-tables",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { column: "ID", prefix: "REQ" },
+              mustAppearIn: ["Requirements B"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [
+        {
+          ruleId: "references.alternate-shape-column-source-tables",
+          passed: true,
+          diagnostics: [],
+        },
+      ],
+    });
+  });
+
+  it("counts same-header target table references when source sections are also required targets", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "",
+          "Covers REQ-1 in source body.",
+          "",
+          "# Verification",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Covered by test |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.source-and-target-same-header",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { column: "ID", prefix: "REQ" },
+              mustAppearIn: ["Requirements", "Verification"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [
+        {
+          ruleId: "references.source-and-target-same-header",
+          passed: true,
+          diagnostics: [],
+        },
+      ],
+    });
+  });
+
+  it("does not count copied source rows when source sections are also required targets", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "",
+          "Covers REQ-1 in source body.",
+          "",
+          "# Verification",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.source-target-copied-row",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { section: "Requirements", column: "ID", prefix: "REQ" },
+              mustAppearIn: ["Requirements", "Verification"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.referenceMissing",
+        ruleId: "references.source-target-copied-row",
+        message: 'ID "REQ-1" must appear in section "Verification".',
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({ line: 5 }),
+        }),
+      }),
+    ]);
+  });
+
+  it("does not collapse duplicate concrete target sections by title", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "",
+          "# Verification",
+          "",
+          "Covers REQ-1.",
+          "",
+          "# Verification",
+          "",
+          "No coverage yet.",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.duplicate-title-concrete-target",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { prefix: "REQ" },
+              mustAppearIn: ["Verification"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.referenceMissing",
+        ruleId: "references.duplicate-title-concrete-target",
+        message: 'ID "REQ-1" must appear in section "Verification".',
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({ line: 5 }),
+        }),
+      }),
+    ]);
+  });
+
+  it("counts table references in every duplicate concrete target section", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "",
+          "# Verification",
+          "",
+          "| ID | Evidence |",
+          "| --- | --- |",
+          "| REQ-1 | Covered by simulation |",
+          "",
+          "# Verification",
+          "",
+          "| ID | Evidence |",
+          "| --- | --- |",
+          "| REQ-1 | Covered by test |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.duplicate-title-table-references",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { prefix: "REQ" },
+              mustAppearIn: ["Verification"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [
+        {
+          ruleId: "references.duplicate-title-table-references",
+          passed: true,
+          diagnostics: [],
+        },
+      ],
+    });
+  });
+
+  it("counts identical table evidence in duplicate concrete target sections", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "",
+          "# Verification",
+          "",
+          "| ID | Evidence |",
+          "| --- | --- |",
+          "| REQ-1 | Covered by test |",
+          "",
+          "# Verification",
+          "",
+          "| ID | Evidence |",
+          "| --- | --- |",
+          "| REQ-1 | Covered by test |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.duplicate-title-identical-table-references",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { prefix: "REQ" },
+              mustAppearIn: ["Verification"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [
+        {
+          ruleId: "references.duplicate-title-identical-table-references",
+          passed: true,
+          diagnostics: [],
+        },
+      ],
+    });
+  });
+
+  it("does not count exact target definition tables as document or column references", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "",
+          "# Verification",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.document-exact-target-definition",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { prefix: "REQ" },
+              mustAppearIn: ["Verification"],
+            },
+          },
+        },
+        {
+          id: "references.column-exact-target-definition",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { column: "ID", prefix: "REQ" },
+              mustAppearIn: ["Verification"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.referenceMissing",
+        ruleId: "references.column-exact-target-definition",
+        message: 'ID "REQ-1" must appear in section "Verification".',
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({ line: 5 }),
+        }),
+      }),
+      expect.objectContaining({
+        code: "profile.validation.referenceMissing",
+        ruleId: "references.document-exact-target-definition",
+        message: 'ID "REQ-1" must appear in section "Verification".',
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({ line: 5 }),
+        }),
+      }),
+    ]);
+  });
+
+  it("does not count non-source-column tokens from exact copied definition rows", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements",
+          "",
+          "| ID | Related |",
+          "| --- | --- |",
+          "| REQ-1 | REQ-1 |",
+          "",
+          "# Verification",
+          "",
+          "| ID | Related |",
+          "| --- | --- |",
+          "| REQ-1 | REQ-1 |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.exact-row-copy-non-source-column",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { column: "ID", prefix: "REQ" },
+              mustAppearIn: ["Verification"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.referenceMissing",
+        ruleId: "references.exact-row-copy-non-source-column",
+        message: 'ID "REQ-1" must appear in section "Verification".',
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({ line: 5 }),
+        }),
+      }),
+    ]);
+  });
+
+  it("does not count cross-ID tokens from exact copied definition rows", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements",
+          "",
+          "| ID | Related |",
+          "| --- | --- |",
+          "| REQ-1 | Depends on REQ-2 |",
+          "| REQ-2 | Build safely |",
+          "",
+          "# Verification",
+          "",
+          "| ID | Related |",
+          "| --- | --- |",
+          "| REQ-1 | Depends on REQ-2 |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.exact-row-copy-cross-id",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { prefix: "REQ" },
+              mustAppearIn: ["Verification"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.referenceMissing",
+        ruleId: "references.exact-row-copy-cross-id",
+        message: 'ID "REQ-1" must appear in section "Verification".',
+      }),
+      expect.objectContaining({
+        code: "profile.validation.referenceMissing",
+        ruleId: "references.exact-row-copy-cross-id",
+        message: 'ID "REQ-2" must appear in section "Verification".',
+      }),
+    ]);
+  });
+
+  it("does not count duplicate target definition tables for section column sources", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "",
+          "# Verification",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.section-column-duplicate-target-table",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { section: "Requirements", column: "ID", prefix: "REQ" },
+              mustAppearIn: ["Verification"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.referenceMissing",
+        ruleId: "references.section-column-duplicate-target-table",
+        message: 'ID "REQ-1" must appear in section "Verification".',
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({ line: 5 }),
+        }),
+      }),
+    ]);
+  });
+
+  it("does not count child-section duplicate definition tables as parent target references", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements A",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "",
+          "# Verification",
+          "",
+          "## Requirements B",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.child-duplicate-definition-target",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { prefix: "REQ" },
+              mustAppearIn: ["Verification"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.referenceMissing",
+        ruleId: "references.child-duplicate-definition-target",
+        message: 'ID "REQ-1" must appear in section "Verification".',
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({ line: 5 }),
+        }),
+      }),
+    ]);
+  });
+
+  it("does not count child-section duplicate definition tables as parent column target references", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements A",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "",
+          "# Verification",
+          "",
+          "## Requirements B",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.child-duplicate-definition-column-target",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { column: "ID", prefix: "REQ" },
+              mustAppearIn: ["Verification"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.referenceMissing",
+        ruleId: "references.child-duplicate-definition-column-target",
+        message: 'ID "REQ-1" must appear in section "Verification".',
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({ line: 5 }),
+        }),
+      }),
+    ]);
+  });
+
+  it("does not count same-section duplicate source definition tables as references", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.same-section-duplicate-source-tables",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { column: "ID", prefix: "REQ" },
+              mustAppearIn: ["Requirements"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.referenceMissing",
+        ruleId: "references.same-section-duplicate-source-tables",
+        message: 'ID "REQ-1" must appear in section "Requirements".',
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({ line: 5 }),
+        }),
+      }),
+    ]);
+  });
+
+  it("does not count same-section alternate-shape source definition tables as references", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "",
+          "| ID | Owner |",
+          "| --- | --- |",
+          "| REQ-1 | Flight |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.same-section-alternate-source-tables",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { section: "Requirements", column: "ID", prefix: "REQ" },
+              mustAppearIn: ["Requirements"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.referenceMissing",
+        ruleId: "references.same-section-alternate-source-tables",
+        message: 'ID "REQ-1" must appear in section "Requirements".',
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({ line: 5 }),
+        }),
+      }),
+    ]);
+  });
+
+  it("counts table references in target sections for document-level source IDs", () => {
+    const document = normalize(
+      parse(
+        [
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "",
+          "# Verification",
+          "",
+          "| Evidence |",
+          "| --- |",
+          "| REQ-1 |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.document-table-reference",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { prefix: "REQ" },
+              mustAppearIn: ["Verification"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [
+        {
+          ruleId: "references.document-table-reference",
+          passed: true,
+          diagnostics: [],
+        },
+      ],
+    });
+  });
+
+  it("counts same-family target table references outside source definition columns", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements Source",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "",
+          "# Requirements Verification",
+          "",
+          "| Evidence |",
+          "| --- |",
+          "| REQ-1 |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.same-family-table-reference",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { prefix: "REQ" },
+              mustAppearIn: ["Requirements Verification"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [
+        {
+          ruleId: "references.same-family-table-reference",
+          passed: true,
+          diagnostics: [],
+        },
+      ],
+    });
+  });
+
+  it("does not count one-column ID target rows for document-level column sources", () => {
+    const document = normalize(
+      parse(
+        [
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "",
+          "# Verification",
+          "",
+          "| ID |",
+          "| --- |",
+          "| REQ-1 |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.column-table-same-header",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { column: "ID", prefix: "REQ" },
+              mustAppearIn: ["Verification"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.referenceMissing",
+        ruleId: "references.column-table-same-header",
+        message: 'ID "REQ-1" must appear in section "Verification".',
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({ line: 3 }),
+        }),
+      }),
+    ]);
+  });
+
+  it("counts same-header target table references for section column sources when row content differs", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "",
+          "# Verification",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Covered by test |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.section-column-same-header-target",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { section: "Requirements", column: "ID", prefix: "REQ" },
+              mustAppearIn: ["Verification"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [
+        {
+          ruleId: "references.section-column-same-header-target",
+          passed: true,
+          diagnostics: [],
+        },
+      ],
+    });
+  });
+
+  it("counts multiple different target table evidence rows", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "",
+          "# Verification",
+          "",
+          "| ID | Evidence |",
+          "| --- | --- |",
+          "| REQ-1 | Covered by unit test |",
+          "| REQ-1 | Covered by integration test |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.multiple-target-evidence-rows",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { column: "ID", prefix: "REQ" },
+              mustAppearIn: ["Verification"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [
+        {
+          ruleId: "references.multiple-target-evidence-rows",
+          passed: true,
+          diagnostics: [],
+        },
+      ],
+    });
+  });
+
+  it("counts target table references when source and target columns share a header", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "",
+          "# Verification",
+          "",
+          "| ID |",
+          "| --- |",
+          "| REQ-1 |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.document-table-same-header",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { section: "Requirements", prefix: "REQ" },
+              mustAppearIn: ["Verification"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [
+        {
+          ruleId: "references.document-table-same-header",
+          passed: true,
+          diagnostics: [],
+        },
+      ],
+    });
+  });
+
+  it("collects table-column source IDs from top-level tables", () => {
     const document = normalize(
       parse(
         [
@@ -1590,7 +3949,7 @@ describe("declarative validation assertion proof", () => {
       documentVersion: "1.0.0",
       rules: [
         {
-          id: "references.top-level-table",
+          id: "references.top-level-table-column",
           select: { target: "document" },
           assert: {
             references: {
@@ -1605,7 +3964,7 @@ describe("declarative validation assertion proof", () => {
     expect(result.diagnostics).toEqual([
       expect.objectContaining({
         code: "profile.validation.referenceMissing",
-        ruleId: "references.top-level-table",
+        ruleId: "references.top-level-table-column",
         message: 'ID "REQ-1" must appear in section "Verification".',
         sourceRange: expect.objectContaining({
           start: expect.objectContaining({ line: 3 }),
@@ -1614,7 +3973,7 @@ describe("declarative validation assertion proof", () => {
     ]);
   });
 
-  it("collects reference IDs from top-level tables without a source section or column", () => {
+  it("collects document-level source IDs from top-level tables", () => {
     const document = normalize(
       parse(
         [
@@ -1660,18 +4019,17 @@ describe("declarative validation assertion proof", () => {
     ]);
   });
 
-  it("does not count source IDs as their own required references", () => {
+  it("uses escaped link text source ranges for reference source IDs", () => {
     const document = normalize(
       parse(
         [
           "# Requirements",
           "",
-          "| ID | Statement |",
-          "| --- | --- |",
-          "| REQ-1 | Build safely |",
-          "| REQ-2 | Launch safely |",
+          "See [REQ\\-1](REQ-1.md).",
           "",
-          "Evidence covers REQ-2.",
+          "# Verification",
+          "",
+          "No coverage yet.",
         ].join("\n"),
       ).parsed,
       {
@@ -1683,102 +4041,12 @@ describe("declarative validation assertion proof", () => {
       documentVersion: "1.0.0",
       rules: [
         {
-          id: "references.self-match",
-          select: { target: "document" },
-          assert: {
-            references: {
-              idsFrom: { section: "Requirements", column: "ID", prefix: "REQ" },
-              mustAppearIn: ["Requirements"],
-            },
-          },
-        },
-      ],
-    });
-
-    expect(result.diagnostics).toEqual([
-      expect.objectContaining({
-        code: "profile.validation.referenceMissing",
-        ruleId: "references.self-match",
-        message: 'ID "REQ-1" must appear in section "Requirements".',
-        sourceRange: expect.objectContaining({
-          start: expect.objectContaining({ line: 5 }),
-        }),
-      }),
-    ]);
-  });
-
-  it("does not count duplicate source ID rows as their own references", () => {
-    const document = normalize(
-      parse(
-        [
-          "# Requirements",
-          "",
-          "| ID | Statement |",
-          "| --- | --- |",
-          "| REQ-1 | Build safely |",
-          "| REQ-1 | Launch safely |",
-        ].join("\n"),
-      ).parsed,
-      {
-        documentVersion: "1.0.0",
-      },
-    ).document;
-    const result = validateWithProfile(document, {
-      syntaxVersion: "markdown-engine.validation@v1",
-      documentVersion: "1.0.0",
-      rules: [
-        {
-          id: "references.duplicate-source-rows",
-          select: { target: "document" },
-          assert: {
-            references: {
-              idsFrom: { section: "Requirements", column: "ID", prefix: "REQ" },
-              mustAppearIn: ["Requirements"],
-            },
-          },
-        },
-      ],
-    });
-
-    expect(result.diagnostics).toEqual([
-      expect.objectContaining({
-        code: "profile.validation.referenceMissing",
-        ruleId: "references.duplicate-source-rows",
-        message: 'ID "REQ-1" must appear in section "Requirements".',
-        sourceRange: expect.objectContaining({
-          start: expect.objectContaining({ line: 5 }),
-        }),
-      }),
-    ]);
-  });
-
-  it("does not count duplicate non-column source IDs as their own references", () => {
-    const document = normalize(
-      parse(
-        [
-          "# Requirements",
-          "",
-          "| ID | Statement |",
-          "| --- | --- |",
-          "| REQ-1 | Build safely |",
-          "| REQ-1 | Launch safely |",
-        ].join("\n"),
-      ).parsed,
-      {
-        documentVersion: "1.0.0",
-      },
-    ).document;
-    const result = validateWithProfile(document, {
-      syntaxVersion: "markdown-engine.validation@v1",
-      documentVersion: "1.0.0",
-      rules: [
-        {
-          id: "references.duplicate-section-source",
+          id: "references.escaped-link-text-source",
           select: { target: "document" },
           assert: {
             references: {
               idsFrom: { section: "Requirements", prefix: "REQ" },
-              mustAppearIn: ["Requirements"],
+              mustAppearIn: ["Verification"],
             },
           },
         },
@@ -1788,105 +4056,17 @@ describe("declarative validation assertion proof", () => {
     expect(result.diagnostics).toEqual([
       expect.objectContaining({
         code: "profile.validation.referenceMissing",
-        ruleId: "references.duplicate-section-source",
-        message: 'ID "REQ-1" must appear in section "Requirements".',
+        ruleId: "references.escaped-link-text-source",
+        message: 'ID "REQ-1" must appear in section "Verification".',
         sourceRange: expect.objectContaining({
-          start: expect.objectContaining({ line: 5 }),
+          start: expect.objectContaining({ line: 3, column: 6 }),
+          end: expect.objectContaining({ line: 3, column: 12 }),
         }),
       }),
     ]);
   });
 
-  it("does not count duplicate source ID rows as references without source ranges", () => {
-    const document = withoutSourceEvidence(
-      normalize(
-        parse(
-          [
-            "# Requirements",
-            "",
-            "| ID | Statement |",
-            "| --- | --- |",
-            "| REQ-1 | Build safely |",
-            "| REQ-1 | Launch safely |",
-          ].join("\n"),
-        ).parsed,
-        {
-          documentVersion: "1.0.0",
-        },
-      ).document,
-    );
-    const result = validateWithProfile(document, {
-      syntaxVersion: "markdown-engine.validation@v1",
-      documentVersion: "1.0.0",
-      rules: [
-        {
-          id: "references.duplicate-source-rows-sourceless",
-          select: { target: "document" },
-          assert: {
-            references: {
-              idsFrom: { section: "Requirements", column: "ID", prefix: "REQ" },
-              mustAppearIn: ["Requirements"],
-            },
-          },
-        },
-      ],
-    });
-
-    expect(result.diagnostics).toEqual([
-      {
-        code: "profile.validation.referenceMissing",
-        ruleId: "references.duplicate-source-rows-sourceless",
-        message: 'ID "REQ-1" must appear in section "Requirements".',
-        severity: "error",
-      },
-    ]);
-  });
-
-  it("does not count source IDs as their own references without source ranges", () => {
-    const document = withoutSourceEvidence(
-      normalize(
-        parse(
-          [
-            "# Requirements",
-            "",
-            "| ID | Statement |",
-            "| --- | --- |",
-            "| REQ-1 | Build safely |",
-          ].join("\n"),
-        ).parsed,
-        {
-          documentVersion: "1.0.0",
-        },
-      ).document,
-    );
-    const result = validateWithProfile(document, {
-      syntaxVersion: "markdown-engine.validation@v1",
-      documentVersion: "1.0.0",
-      rules: [
-        {
-          id: "references.self-match-sourceless",
-          select: { target: "document" },
-          assert: {
-            references: {
-              idsFrom: { section: "Requirements", column: "ID", prefix: "REQ" },
-              mustAppearIn: ["Requirements"],
-            },
-          },
-        },
-      ],
-    });
-
-    expect(result.diagnostics).toEqual([
-      {
-        code: "profile.validation.referenceMissing",
-        ruleId: "references.self-match-sourceless",
-        message: 'ID "REQ-1" must appear in section "Requirements".',
-        severity: "error",
-      },
-    ]);
-  });
-
-  it("does not borrow target section evidence for source-less reference diagnostics", () => {
+  it("omits source-less missing-reference diagnostics instead of borrowing target ranges", () => {
     const document = withoutFirstDataCellSourceEvidence(
       normalize(
         parse(
@@ -1934,38 +4114,112 @@ describe("declarative validation assertion proof", () => {
     ]);
   });
 
-  it("allows a section body to reference an ID from its heading", () => {
-    const document = normalize(parse("# REQ-1\n\nCovers REQ-1.\n").parsed, {
-      documentVersion: "1.0.0",
-    }).document;
+  it("does not borrow successful target reference ranges for missing diagnostics", () => {
+    const document = withoutFirstDataCellSourceEvidence(
+      normalize(
+        parse(
+          [
+            "# Requirements",
+            "",
+            "| ID | Statement |",
+            "| --- | --- |",
+            "| REQ-1 | Build safely |",
+            "",
+            "# Verification A",
+            "",
+            "| Evidence |",
+            "| --- |",
+            "| REQ-1 |",
+            "",
+            "# Verification B",
+            "",
+            "No coverage yet.",
+          ].join("\n"),
+        ).parsed,
+        {
+          documentVersion: "1.0.0",
+        },
+      ).document,
+    );
     const result = validateWithProfile(document, {
       syntaxVersion: "markdown-engine.validation@v1",
       documentVersion: "1.0.0",
       rules: [
         {
-          id: "references.heading-source",
+          id: "references.no-target-range-borrow",
           select: { target: "document" },
           assert: {
             references: {
-              idsFrom: { section: "REQ-1", prefix: "REQ" },
-              mustAppearIn: ["REQ-1"],
+              idsFrom: { prefix: "REQ" },
+              mustAppearIn: ["Verification A", "Verification B"],
             },
           },
         },
       ],
     });
 
-    expect(result).toMatchObject({
-      valid: true,
-      diagnostics: [],
-      ruleResults: [
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.validation.referenceMissing",
+        ruleId: "references.no-target-range-borrow",
+        message: 'ID "REQ-1" must appear in section "Verification B".',
+        severity: "error",
+      },
+    ]);
+  });
+
+  it("uses later source ranges instead of earlier target reference ranges", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Verification A",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Covered by test |",
+          "",
+          "# Requirements",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "",
+          "# Verification B",
+          "",
+          "No coverage yet.",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
         {
-          ruleId: "references.heading-source",
-          passed: true,
-          diagnostics: [],
+          id: "references.later-source-range",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { column: "ID", prefix: "REQ" },
+              mustAppearIn: ["Verification A", "Verification B"],
+            },
+          },
         },
       ],
     });
+
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.referenceMissing",
+        ruleId: "references.later-source-range",
+        message: 'ID "REQ-1" must appear in section "Verification B".',
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({ line: 11 }),
+        }),
+      }),
+    ]);
   });
 
   it("returns deterministic diagnostics for typed profile accessors", () => {

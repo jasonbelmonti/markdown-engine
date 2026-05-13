@@ -22,12 +22,11 @@ export function extractIdTokens(
   const caseSensitive = options.caseSensitive ?? true;
   const tokens = [...text.matchAll(ID_TOKEN_PATTERN)].map((match) => {
     const value = match[0] ?? "";
-    const textOffset = match.index ?? 0;
 
     return {
       value,
       comparisonValue: comparisonValue(value, caseSensitive),
-      textOffset,
+      textOffset: match.index ?? 0,
       ...(options.sourceRange !== undefined
         ? { sourceRange: options.sourceRange }
         : {}),
@@ -36,11 +35,13 @@ export function extractIdTokens(
 
   const prefix = options.prefix;
 
-  return prefix === undefined
-    ? tokens
-    : tokens.filter((token) =>
-        tokenMatchesPrefix(token.value, prefix, caseSensitive),
-      );
+  if (prefix === undefined) {
+    return tokens;
+  }
+
+  return tokens.filter((token) =>
+    tokenMatchesPrefix(token.value, prefix, caseSensitive),
+  );
 }
 
 export function comparisonValue(value: string, caseSensitive: boolean): string {
@@ -52,9 +53,7 @@ function tokenMatchesPrefix(
   prefix: string,
   caseSensitive: boolean,
 ): boolean {
-  const expectedPrefix = `${prefix}-`;
-  const candidate = comparisonValue(token, caseSensitive);
-  const expected = comparisonValue(expectedPrefix, caseSensitive);
-
-  return candidate.startsWith(expected);
+  return comparisonValue(token, caseSensitive).startsWith(
+    comparisonValue(`${prefix}-`, caseSensitive),
+  );
 }

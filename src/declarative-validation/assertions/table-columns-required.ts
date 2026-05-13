@@ -13,6 +13,11 @@ type TableColumnsRequiredAssertion = Extract<
   { kind: "tableColumnsRequired" }
 >;
 
+type TableSelectionTarget = Extract<
+  DeclarativeSelectionTarget,
+  { kind: "table" }
+>;
+
 export function evaluateTableColumnsRequired(
   assertion: TableColumnsRequiredAssertion,
   context: AssertionEvaluationContext,
@@ -31,13 +36,15 @@ export function evaluateTableColumnsRequired(
 function missingColumnDiagnostics(
   assertion: TableColumnsRequiredAssertion,
   context: AssertionEvaluationContext,
-  target: Extract<DeclarativeSelectionTarget, { kind: "table" }>,
+  target: TableSelectionTarget,
   targetOrder: number,
 ): AssertionDiagnostic[] {
-  const availableColumns = headerCells(target.table).map((cell) => cell.text);
+  const availableColumns = new Set(
+    headerCells(target.table).map((cell) => cell.text),
+  );
 
   return assertion.columns
-    .filter((column) => !availableColumns.includes(column))
+    .filter((column) => !availableColumns.has(column))
     .map((column, diagnosticOrder) =>
       validationDiagnostic(
         "profile.validation.assertionFailed",
@@ -65,5 +72,7 @@ function tableColumnSortKey(
   diagnosticOrder: number,
   column: string,
 ): string {
-  return `table:${table.target.id}:column:${diagnosticOrder}:${column}`;
+  const paddedDiagnosticOrder = String(diagnosticOrder).padStart(6, "0");
+
+  return `table:${table.target.id}:column:${paddedDiagnosticOrder}:${column}`;
 }

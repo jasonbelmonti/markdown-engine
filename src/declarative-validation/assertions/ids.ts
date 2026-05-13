@@ -32,22 +32,16 @@ export function evaluateIds(
     });
 
     for (const [tokenOrder, token] of tokens.entries()) {
-      const occurrenceKey = idOccurrenceKey(token);
-
-      if (occurrenceKey !== undefined && seenOccurrences.has(occurrenceKey)) {
+      if (seenOccurrences.has(token.occurrenceKey)) {
         continue;
       }
 
-      if (occurrenceKey !== undefined) {
-        seenOccurrences.add(occurrenceKey);
-      }
+      seenOccurrences.add(token.occurrenceKey);
 
       const firstSeen = seenIds.get(token.comparisonValue);
 
       if (firstSeen === undefined) {
-        seenIds.set(token.comparisonValue, {
-          value: token.value,
-        });
+        seenIds.set(token.comparisonValue, { value: token.value });
         continue;
       }
 
@@ -72,12 +66,6 @@ export function evaluateIds(
   }
 
   return diagnostics;
-}
-
-function idOccurrenceKey(
-  token: ReturnType<typeof extractTargetIdTokens>[number],
-): string | undefined {
-  return token.occurrenceKey;
 }
 
 function duplicateIdSortKey(comparisonValue: string, targetOrder: number): string {

@@ -9,7 +9,6 @@ import type {
 } from "../../api/document.js";
 import type { SourceRange } from "../../api/diagnostics.js";
 import type { DeclarativeSelectionTarget } from "../selectors/index.js";
-import { nodeTextByTargetId } from "../selectors/source.js";
 import { extractIdTokens, type IdTokenOptions } from "./id-tokens.js";
 import { sourceRangeForNormalizedText } from "./normalized-source-ranges.js";
 
@@ -17,31 +16,39 @@ export interface TargetIdToken {
   value: string;
   comparisonValue: string;
   textOffset: number;
-  occurrenceKey?: string;
-  documentTextOffset?: number;
-  segmentTargetId?: string;
+  occurrenceKey: string;
+  definitionColumnKey?: string;
+  definitionColumnHeader?: string;
+  definitionColumnSignature?: string;
+  definitionSourceRowKey?: string;
+  definitionRowSignature?: string;
+  definitionTableHeaderCount?: number;
+  definitionTableKey?: string;
+  sectionTitle?: string;
   sectionTargetId?: string;
   sourceRange?: SourceRange;
-  sourceRangeCoversToken?: boolean;
 }
 
-export interface TableColumnSource {
+export interface TableColumnIdSource {
   section?: string;
   column: string;
 }
 
 interface IdTextSegment {
   text: string;
+  occurrenceScope: string;
   documentTextOffset?: number;
-  segmentTargetId?: string;
+  definitionColumnKey?: string;
+  definitionColumnHeader?: string;
+  definitionColumnSignature?: string;
+  definitionSourceRowKey?: string;
+  definitionRowSignature?: string;
+  definitionTableHeaderCount?: number;
+  definitionTableKey?: string;
+  sectionTitle?: string;
   sectionTargetId?: string;
   sourceRange?: SourceRange;
   sourceText?: string;
-}
-
-interface TokenSourceRange {
-  sourceRange?: SourceRange;
-  coversToken: boolean;
 }
 
 export function extractTargetIdTokens(
@@ -49,7 +56,7 @@ export function extractTargetIdTokens(
   target: DeclarativeSelectionTarget,
   options: IdTokenOptions = {},
 ): TargetIdToken[] {
-  return extractSegmentIdTokens(
+  return extractIdTokensForSegments(
     idTextSegmentsForSelectionTarget(document, target),
     options,
   );
@@ -60,83 +67,50 @@ export function extractSectionBodyIdTokens(
   section: EngineSection,
   options: IdTokenOptions = {},
 ): TargetIdToken[] {
-  return extractSegmentIdTokens(
-    sectionBodySegments(document, section, true),
+  return extractIdTokensForSegments(
+    sectionBodySegments(document, section, { includeChildSections: true }),
+    options,
+  );
+}
+
+export function extractSectionIdTokens(
+  document: EngineDocument,
+  section: EngineSection,
+  options: IdTokenOptions = {},
+): TargetIdToken[] {
+  return extractIdTokensForSegments(
+    sectionSegments(document, section, {
+      includeHeading: true,
+      includeChildSections: true,
+    }),
     options,
   );
 }
 
 export function extractTableColumnIdTokens(
   document: EngineDocument,
-  source: TableColumnSource,
+  source: TableColumnIdSource,
   options: IdTokenOptions = {},
 ): TargetIdToken[] {
-  return extractSegmentIdTokens(tableColumnSegments(document, source), options);
+  return extractIdTokensForSegments(tableColumnSegments(document, source), options);
 }
 
-export function sectionContainsSection(
-  document: EngineDocument,
-  parent: EngineSection,
-  targetSectionId: string,
-): boolean {
-  if (parent.target.id === targetSectionId) {
-    return true;
-  }
-
-  return parent.childSections.some((childTarget) => {
-    const childSection = documentQueries.sections(document, {
-      targetId: childTarget.id,
-    })[0];
-
-    return (
-      childSection !== undefined &&
-      sectionContainsSection(document, childSection, targetSectionId)
-    );
-  });
-}
-
-function extractSegmentIdTokens(
+function extractIdTokensForSegments(
   segments: readonly IdTextSegment[],
   options: IdTokenOptions,
 ): TargetIdToken[] {
-  return segments.flatMap((segment) => {
-    const tokens = extractIdTokens(segment.text, {
-      ...options,
-      ...sourceRangeOption(segment),
-    });
-    const tokenSourceRanges = sourceRangesForTokens(segment, tokens);
-
-    return tokens.map((token, tokenIndex) => {
-      const tokenSourceRange = tokenSourceRanges[tokenIndex];
-      const sourceRange = tokenSourceRange?.sourceRange ?? token.sourceRange;
-      const documentTextOffset = tokenDocumentTextOffset(
-        segment,
-        token.textOffset,
-      );
-      const occurrenceKey = tokenOccurrenceKey({
-        comparisonValue: token.comparisonValue,
-        textOffset: token.textOffset,
-        documentTextOffset,
-        segmentTargetId: segment.segmentTargetId,
-        sourceRange,
-        sourceRangeCoversToken: tokenSourceRange?.coversToken === true,
-      });
-
-      return {
-        value: token.value,
-        comparisonValue: token.comparisonValue,
-        textOffset: token.textOffset,
-        ...(occurrenceKey !== undefined ? { occurrenceKey } : {}),
-        ...(documentTextOffset !== undefined ? { documentTextOffset } : {}),
-        ...segmentTargetIdProperty(segment),
-        ...sectionTargetIdProperty(segment),
-        ...(sourceRange !== undefined ? { sourceRange } : {}),
-        ...(tokenSourceRange?.coversToken === true
-          ? { sourceRangeCoversToken: true }
-          : {}),
-      };
-    });
-  });
+  return segments.flatMap((segment) =>
+    extractIdTokens(segment.text, options).map((token) => ({
+      value: token.value,
+      comparisonValue: token.comparisonValue,
+      textOffset: token.textOffset,
+      occurrenceKey: idOccurrenceKey(segment, token.comparisonValue, token.textOffset),
+      ...definitionColumnProperties(segment),
+      ...sectionTitleProperty(segment),
+      ...sectionTargetIdProperty(segment),
+      ...tokenSourceRangeProperty(segment, token.textOffset, token.value.length),
+    })),
+  );
 }
 
 function idTextSegmentsForSelectionTarget(
@@ -145,7 +119,9 @@ function idTextSegmentsForSelectionTarget(
 ): IdTextSegment[] {
   switch (target.kind) {
     case "document":
-      return document.children.flatMap((node) => topLevelNodeSegments(document, node));
+      return document.children.flatMap((node, nodeIndex) =>
+        topLevelNodeSegments(document, node, nodeIndex),
+      );
 
     case "section":
       return sectionSegments(document, target.section, {
@@ -154,69 +130,76 @@ function idTextSegmentsForSelectionTarget(
       });
 
     case "heading":
-      return textSegment(
-        target.text,
-        target.section.target.id,
-        targetSourceRange(target),
-        target.section.headingTarget.id,
-        targetSourceText(target),
-        documentTextOffsetForTarget(document, target.section.headingTarget.id),
-      );
+      return [
+        textSegmentFromSource(
+          target.text,
+          target.section.headingTarget.id,
+          target.source?.range,
+          target.source?.text,
+          documentTextOffsetForTarget(document, target.section.headingTarget.id),
+        ),
+      ];
 
     case "table":
-      return tableCellSegments(document, target.table);
+      return tableCellSegments(target.table, sectionForTable(document, target.table));
 
     case "tableRow":
-      return tableCellsSegments(document, target.table, target.cells);
+      return tableCellsSegments(
+        target.table,
+        target.cells,
+        sectionForTable(document, target.table),
+      );
 
     case "tableCell":
-      return textSegment(
-        target.cell.text,
-        sectionTargetIdForNodeTarget(document, target.table.target),
-        targetSourceRange(target),
-        target.cell.target.id,
-        targetSourceText(target),
-        documentTextOffsetForTarget(document, target.cell.target.id),
-      );
+      return [
+        tableCellSegment(
+          target.table,
+          target.cell,
+          sectionForTable(document, target.table),
+        ),
+      ];
 
     case "textSpan":
-      return textSegment(
-        target.span.text,
-        sectionTargetIdForNodeTarget(document, target.span.target),
-        targetSourceRange(target),
-        target.span.target.id,
-        targetSourceText(target),
-        documentTextOffsetForTarget(document, target.span.target.id),
-      );
+      return [
+        textSegmentFromSource(
+          target.text,
+          target.span.target.id,
+          target.source?.range,
+          target.source?.text,
+          documentTextOffsetForTarget(document, target.span.target.id),
+        ),
+      ];
 
     case "link":
-      return textSegment(
-        target.link.text,
-        sectionTargetIdForNodeTarget(document, target.link.target),
-        targetSourceRange(target),
-        target.link.target.id,
-        targetSourceText(target),
-        documentTextOffsetForTarget(document, target.link.target.id),
-      );
+      return [
+        textSegmentFromSource(
+          target.text,
+          target.link.target.id,
+          target.source?.range,
+          target.source?.text,
+          documentTextOffsetForTarget(document, target.link.target.id),
+        ),
+      ];
 
     case "list":
-      return nodeTargetSegments(
-        document,
-        target.list.target,
-        sectionTargetIdForNodeTarget(document, target.list.target),
-      );
+      return nodeTargetSegments(document, target.list.target);
   }
 }
 
 function topLevelNodeSegments(
   document: EngineDocument,
   node: EngineNode,
+  nodeIndex: number,
 ): IdTextSegment[] {
   if (node.target === undefined) {
-    return [];
+    return nodeTextSegments(document, node, `document-node:${nodeIndex}`);
   }
 
-  return nodeTargetSegments(document, node.target, sectionTargetIdForTopLevelNode(document, node));
+  return nodeTargetSegments(
+    document,
+    node.target,
+    sectionForNodeTarget(document, node.target),
+  );
 }
 
 function sectionSegments(
@@ -229,29 +212,33 @@ function sectionSegments(
 ): IdTextSegment[] {
   return [
     ...(options.includeHeading
-      ? textSegment(
-          section.title,
-          section.target.id,
-          documentQueries.sourceSlice(document, section.headingTarget)?.range,
-          section.headingTarget.id,
-          documentQueries.sourceSlice(document, section.headingTarget)?.text,
-          documentTextOffsetForTarget(document, section.headingTarget.id),
-        )
+      ? [
+          textSegmentFromSource(
+            section.title,
+            section.headingTarget.id,
+            documentQueries.sourceSlice(document, section.headingTarget)?.range,
+            documentQueries.sourceSlice(document, section.headingTarget)?.text,
+            documentTextOffsetForTarget(document, section.headingTarget.id),
+            section,
+          ),
+        ]
       : []),
-    ...sectionBodySegments(document, section, options.includeChildSections),
+    ...sectionBodySegments(document, section, {
+      includeChildSections: options.includeChildSections,
+    }),
   ];
 }
 
 function sectionBodySegments(
   document: EngineDocument,
   section: EngineSection,
-  includeChildSections: boolean,
+  options: { includeChildSections: boolean },
 ): IdTextSegment[] {
   return [
-    ...section.bodyTargets.flatMap((target) =>
-      nodeTargetSegments(document, target, section.target.id),
+    ...section.bodyTargets.flatMap((bodyTarget) =>
+      nodeTargetSegments(document, bodyTarget, section),
     ),
-    ...(includeChildSections ? childSectionSegments(document, section) : []),
+    ...(options.includeChildSections ? childSectionSegments(document, section) : []),
   ];
 }
 
@@ -259,15 +246,15 @@ function childSectionSegments(
   document: EngineDocument,
   section: EngineSection,
 ): IdTextSegment[] {
-  return section.childSections.flatMap((target) => {
+  return section.childSections.flatMap((childTarget) => {
     const childSection = documentQueries.sections(document, {
-      targetId: target.id,
+      targetId: childTarget.id,
     })[0];
 
     return childSection === undefined
       ? []
       : sectionSegments(document, childSection, {
-          includeHeading: true,
+          includeHeading: false,
           includeChildSections: true,
         });
   });
@@ -276,138 +263,182 @@ function childSectionSegments(
 function nodeTargetSegments(
   document: EngineDocument,
   target: EngineNodeTarget,
-  sectionTargetId: string | undefined,
+  section?: EngineSection,
 ): IdTextSegment[] {
   const table = documentQueries.tables(document, { targetId: target.id })[0];
 
   if (table !== undefined) {
-    return tableCellSegments(document, table);
+    return tableCellSegments(table, section);
   }
 
   const node = documentQueries.nodes(document, { targetId: target.id })[0];
 
-  return node === undefined
-    ? textSegment(
-        nodeTextByTargetId(document, target.id),
-        sectionTargetId,
-        documentQueries.sourceSlice(document, target)?.range,
-        target.id,
-        documentQueries.sourceSlice(document, target)?.text,
-        documentTextOffsetForTarget(document, target.id),
-      )
-    : nodeTextSegments(document, node, sectionTargetId);
+  if (node !== undefined) {
+    return nodeTextSegments(document, node, `target:${target.id}`, section);
+  }
+
+  return [];
 }
 
 function nodeTextSegments(
   document: EngineDocument,
   node: EngineNode,
-  sectionTargetId: string | undefined,
+  fallbackScope: string,
+  section?: EngineSection,
 ): IdTextSegment[] {
   if (node.type === "table" && node.target !== undefined) {
-    const table = documentQueries.tables(document, {
-      targetId: node.target.id,
-    })[0];
+    const table = documentQueries.tables(document, { targetId: node.target.id })[0];
 
-    return table === undefined ? [] : tableCellSegments(document, table);
+    return table === undefined ? [] : tableCellSegments(table, section);
   }
 
   if (node.text !== undefined) {
-    return textSegment(
-      node.text,
-      sectionTargetId,
-      nodeSourceRange(node),
-      node.target?.id,
-      node.source?.text,
-      node.target === undefined
-        ? undefined
-        : documentTextOffsetForTarget(document, node.target.id),
-    );
+    return [
+      textSegmentFromSource(
+        node.text,
+        node.target?.id ?? fallbackScope,
+        node.source?.range ?? node.sourceRange,
+        node.source?.text,
+        node.target === undefined
+          ? undefined
+          : documentTextOffsetForTarget(document, node.target.id),
+        section,
+      ),
+    ];
   }
 
-  return (node.children ?? []).flatMap((child) =>
-    nodeTextSegments(document, child, sectionTargetId),
-  );
-}
-
-function tableCellSegments(
-  document: EngineDocument,
-  table: EngineTable,
-): IdTextSegment[] {
-  return tableCellsSegments(document, table, table.cells);
-}
-
-function tableCellsSegments(
-  document: EngineDocument,
-  table: EngineTable,
-  cells: readonly EngineTableCell[],
-): IdTextSegment[] {
-  const sectionTargetId = sectionTargetIdForNodeTarget(document, table.target);
-
-  return [...cells]
-    .sort(compareCells)
-    .flatMap((cell) => {
-      const sourceSlice = documentQueries.sourceSlice(document, cell.target);
-
-      return textSegment(
-        cell.text,
-        sectionTargetId,
-        cell.sourceRange,
-        cell.target.id,
-        sourceSlice?.text,
-        documentTextOffsetForTarget(document, cell.target.id),
-      );
-    });
-}
-
-function tableColumnSegments(
-  document: EngineDocument,
-  source: TableColumnSource,
-): IdTextSegment[] {
-  return source.section === undefined
-    ? allTableColumnSegments(document, source.column)
-    : sourceSections(document, source.section).flatMap((section) =>
-        section.bodyTargets.flatMap((target) => {
-          const table = documentQueries.tables(document, { targetId: target.id })[0];
-
-          return table === undefined
-            ? []
-            : tableDataColumnSegments(
-                document,
-                table,
-                section.target.id,
-                columnIndexForHeader(table, source.column),
-              );
-        }),
-      );
-}
-
-function allTableColumnSegments(
-  document: EngineDocument,
-  column: string,
-): IdTextSegment[] {
-  return documentQueries.tables(document).flatMap((table) =>
-    tableDataColumnSegments(
+  return (node.children ?? []).flatMap((child, childIndex) =>
+    nodeTextSegments(
       document,
-      table,
-      sectionTargetIdForNodeTarget(document, table.target),
-      columnIndexForHeader(table, column),
+      child,
+      `${fallbackScope}/child:${childIndex}`,
+      section,
     ),
   );
 }
 
-function sourceSections(
+function tableCellSegments(
+  table: EngineTable,
+  section?: EngineSection,
+): IdTextSegment[] {
+  return tableCellsSegments(table, table.cells, section);
+}
+
+function tableCellsSegments(
+  table: EngineTable,
+  cells: readonly EngineTableCell[],
+  section?: EngineSection,
+): IdTextSegment[] {
+  return [...cells]
+    .sort(compareCells)
+    .map((cell) => tableCellSegment(table, cell, section));
+}
+
+function tableCellSegment(
+  table: EngineTable,
+  cell: EngineTableCell,
+  section?: EngineSection,
+): IdTextSegment {
+  return textSegment(
+    cell.text,
+    cell.target.id,
+    cell.sourceRange,
+    section,
+    tableCellDefinitionColumnKey(table, cell),
+    tableCellDefinitionColumnHeader(table, cell),
+    tableCellDefinitionColumnSignature(table, cell),
+    tableCellDefinitionSourceRowKey(table, cell),
+    tableCellDefinitionRowSignature(table, cell),
+    tableCellDefinitionTableHeaderCount(table, cell),
+    table.target.id,
+  );
+}
+
+function tableColumnSegments(
   document: EngineDocument,
-  sectionTitle: string,
-): readonly EngineSection[] {
-  return documentQueries.sections(document, { title: sectionTitle });
+  source: TableColumnIdSource,
+): IdTextSegment[] {
+  if (source.section !== undefined) {
+    return documentQueries
+      .sections(document, { title: source.section })
+      .flatMap((section) => sectionTableColumnSegments(document, section, source.column));
+  }
+
+  return documentQueries
+    .tables(document)
+    .flatMap((table) =>
+      tableDataColumnSegments(
+        table,
+        source.column,
+        sectionForTable(document, table),
+      ),
+    );
+}
+
+function sectionTableColumnSegments(
+  document: EngineDocument,
+  section: EngineSection,
+  column: string,
+): IdTextSegment[] {
+  return [
+    ...directSectionTableColumnSegments(document, section, column),
+    ...section.childSections.flatMap((childTarget) => {
+      const childSection = documentQueries.sections(document, {
+        targetId: childTarget.id,
+      })[0];
+
+      return childSection === undefined
+        ? []
+        : sectionTableColumnSegments(document, childSection, column);
+    }),
+  ];
+}
+
+function directSectionTableColumnSegments(
+  document: EngineDocument,
+  section: EngineSection,
+  column: string,
+): IdTextSegment[] {
+  return section.bodyTargets.flatMap((bodyTarget) =>
+    nodeTableColumnSegments(
+      document,
+      documentQueries.nodes(document, { targetId: bodyTarget.id })[0],
+      column,
+      section,
+    ),
+  );
+}
+
+function nodeTableColumnSegments(
+  document: EngineDocument,
+  node: EngineNode | undefined,
+  column: string,
+  section: EngineSection,
+): IdTextSegment[] {
+  if (node === undefined) {
+    return [];
+  }
+
+  if (node.type === "table" && node.target !== undefined) {
+    const table = documentQueries.tables(document, { targetId: node.target.id })[0];
+
+    return table === undefined
+      ? []
+      : tableDataColumnSegments(table, column, section);
+  }
+
+  return (node.children ?? []).flatMap((child) =>
+    nodeTableColumnSegments(document, child, column, section),
+  );
 }
 
 function tableDataColumnSegments(
-  document: EngineDocument,
   table: EngineTable,
-  sectionTargetId: string | undefined,
-  columnIndex: number | undefined,
+  column: string,
+  section?: EngineSection,
 ): IdTextSegment[] {
+  const columnIndex = columnIndexForHeader(table, column);
+
   if (columnIndex === undefined) {
     return [];
   }
@@ -415,95 +446,94 @@ function tableDataColumnSegments(
   return table.cells
     .filter((cell) => !cell.header && cell.columnIndex === columnIndex)
     .sort(compareCells)
-    .flatMap((cell) => {
-      const sourceSlice = documentQueries.sourceSlice(document, cell.target);
-
-      return textSegment(
-        cell.text,
-        sectionTargetId,
-        cell.sourceRange,
-        cell.target.id,
-        sourceSlice?.text,
-        documentTextOffsetForTarget(document, cell.target.id),
-      );
-    });
+    .map((cell) => tableCellSegment(table, cell, section));
 }
 
 function columnIndexForHeader(
   table: EngineTable,
   column: string,
 ): number | undefined {
-  return [...table.cells]
+  return table.cells
     .filter((cell) => cell.header)
     .sort(compareCells)
     .find((cell) => cell.text === column)?.columnIndex;
 }
 
-function sectionTargetIdForTopLevelNode(
-  document: EngineDocument,
-  node: EngineNode,
-): string | undefined {
-  if (node.target === undefined) {
-    return undefined;
-  }
+function textSegment(
+  text: string,
+  occurrenceScope: string,
+  sourceRange: SourceRange | undefined,
+  section?: EngineSection,
+  definitionColumnKey?: string,
+  definitionColumnHeader?: string,
+  definitionColumnSignature?: string,
+  definitionSourceRowKey?: string,
+  definitionRowSignature?: string,
+  definitionTableHeaderCount?: number,
+  definitionTableKey?: string,
+  documentTextOffset?: number,
+  sourceText?: string,
+): IdTextSegment {
+  return {
+    text,
+    occurrenceScope,
+    ...(documentTextOffset !== undefined ? { documentTextOffset } : {}),
+    ...(definitionColumnKey !== undefined ? { definitionColumnKey } : {}),
+    ...(definitionColumnHeader !== undefined ? { definitionColumnHeader } : {}),
+    ...(definitionColumnSignature !== undefined
+      ? { definitionColumnSignature }
+      : {}),
+    ...(definitionSourceRowKey !== undefined
+      ? { definitionSourceRowKey }
+      : {}),
+    ...(definitionRowSignature !== undefined ? { definitionRowSignature } : {}),
+    ...(definitionTableHeaderCount !== undefined
+      ? { definitionTableHeaderCount }
+      : {}),
+    ...(definitionTableKey !== undefined ? { definitionTableKey } : {}),
+    ...(section !== undefined
+      ? { sectionTitle: section.title, sectionTargetId: section.target.id }
+      : {}),
+    ...(sourceRange !== undefined ? { sourceRange } : {}),
+    ...(sourceText !== undefined ? { sourceText } : {}),
+  };
+}
 
-  const headingSection = documentQueries.sections(document, {
-    headingTargetId: node.target.id,
-  })[0];
-
-  return (
-    headingSection?.target.id ??
-    sectionTargetIdForNodeTarget(document, node.target)
+function textSegmentFromSource(
+  text: string,
+  occurrenceScope: string,
+  sourceRange: SourceRange | undefined,
+  sourceText: string | undefined,
+  documentTextOffset: number | undefined,
+  section?: EngineSection,
+): IdTextSegment {
+  return textSegment(
+    text,
+    occurrenceScope,
+    sourceRange,
+    section,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    documentTextOffset,
+    sourceText,
   );
 }
 
-function sectionTargetIdForNodeTarget(
-  document: EngineDocument,
-  target: EngineNodeTarget,
-): string | undefined {
-  return documentQueries
-    .sections(document)
-    .find((section) =>
-      section.bodyTargets.some((bodyTarget) => bodyTarget.id === target.id),
-    )?.target.id;
-}
-
-function textSegment(
-  text: string,
-  sectionTargetId: string | undefined,
-  sourceRange: SourceRange | undefined,
-  segmentTargetId: string | undefined,
-  sourceText?: string,
-  documentTextOffset?: number,
-): IdTextSegment[] {
-  if (text.length === 0) {
-    return [];
+function idOccurrenceKey(
+  segment: IdTextSegment,
+  comparisonValue: string,
+  textOffset: number,
+): string {
+  if (segment.documentTextOffset !== undefined) {
+    return `${comparisonValue}:document:${segment.documentTextOffset + textOffset}`;
   }
 
-  return [
-    {
-      text,
-      ...(segmentTargetId !== undefined ? { segmentTargetId } : {}),
-      ...(sectionTargetId !== undefined ? { sectionTargetId } : {}),
-      ...(sourceRange !== undefined ? { sourceRange } : {}),
-      ...(sourceText !== undefined ? { sourceText } : {}),
-      ...(documentTextOffset !== undefined ? { documentTextOffset } : {}),
-    },
-  ];
-}
-
-function nodeSourceRange(node: EngineNode): SourceRange | undefined {
-  return node.source?.range ?? node.sourceRange;
-}
-
-function targetSourceRange(
-  target: DeclarativeSelectionTarget,
-): SourceRange | undefined {
-  return "source" in target ? target.source?.range : undefined;
-}
-
-function targetSourceText(target: DeclarativeSelectionTarget): string | undefined {
-  return "source" in target ? target.source?.text : undefined;
+  return `${comparisonValue}:${segment.occurrenceScope}:${textOffset}`;
 }
 
 function documentTextOffsetForTarget(
@@ -557,102 +587,78 @@ function normalizedNodeText(node: EngineNode): string {
   return (node.children ?? []).map((child) => normalizedNodeText(child)).join("");
 }
 
-function sourceRangesForTokens(
+function tokenSourceRangeProperty(
   segment: IdTextSegment,
-  tokens: readonly ReturnType<typeof extractIdTokens>[number][],
-): TokenSourceRange[] {
-  const segmentSourceRange = segment.sourceRange;
-  const sourceText = segment.sourceText;
-
-  if (segmentSourceRange === undefined || sourceText === undefined) {
-    return tokens.map((token) =>
-      token.sourceRange === undefined
-        ? { coversToken: false }
-        : { sourceRange: token.sourceRange, coversToken: false },
-    );
-  }
-
-  return tokens.map((token) => {
-    const sourceRange = sourceRangeForNormalizedText(
-      segmentSourceRange,
-      sourceText,
-      segment.text,
-      token.textOffset,
-      token.value.length,
-    );
-
-    if (sourceRange === undefined) {
-      return token.sourceRange === undefined
-        ? { coversToken: false }
-        : { sourceRange: token.sourceRange, coversToken: false };
-    }
-
-    return {
-      sourceRange,
-      coversToken: true,
-    };
-  });
-}
-
-function sourceRangeOption(
-  segment: IdTextSegment,
+  textOffset: number,
+  textLength: number,
 ): { sourceRange: SourceRange } | Record<string, never> {
-  return segment.sourceRange === undefined ? {} : { sourceRange: segment.sourceRange };
+  if (segment.sourceRange === undefined) {
+    return {};
+  }
+
+  if (segment.sourceText === undefined) {
+    return { sourceRange: segment.sourceRange };
+  }
+
+  const sourceRange = sourceRangeForNormalizedText(
+    segment.sourceRange,
+    segment.sourceText,
+    segment.text,
+    textOffset,
+    textLength,
+  );
+
+  return sourceRange === undefined
+    ? { sourceRange: segment.sourceRange }
+    : { sourceRange };
 }
 
-function tokenDocumentTextOffset(
+function definitionColumnProperties(
   segment: IdTextSegment,
-  tokenTextOffset: number,
-): number | undefined {
-  return segment.documentTextOffset === undefined
-    ? undefined
-    : segment.documentTextOffset + tokenTextOffset;
-}
-
-function tokenOccurrenceKey(options: {
-  comparisonValue: string;
-  textOffset: number;
-  documentTextOffset: number | undefined;
-  segmentTargetId: string | undefined;
-  sourceRange: SourceRange | undefined;
-  sourceRangeCoversToken: boolean;
-}): string | undefined {
-  if (options.documentTextOffset !== undefined) {
-    return `${options.comparisonValue}:document:${options.documentTextOffset}`;
+):
+  | {
+      definitionColumnKey: string;
+      definitionColumnHeader?: string;
+      definitionColumnSignature?: string;
+      definitionSourceRowKey?: string;
+      definitionRowSignature?: string;
+      definitionTableHeaderCount?: number;
+      definitionTableKey?: string;
+    }
+  | Record<string, never> {
+  if (segment.definitionColumnKey === undefined) {
+    return {};
   }
 
-  if (options.segmentTargetId !== undefined) {
-    return `${options.comparisonValue}:segment:${options.segmentTargetId}:${options.textOffset}`;
-  }
-
-  if (
-    options.sourceRange !== undefined &&
-    options.sourceRangeCoversToken === true
-  ) {
-    return `${options.comparisonValue}:${sourceRangeKey(options.sourceRange)}`;
-  }
-
-  return undefined;
+  return {
+    definitionColumnKey: segment.definitionColumnKey,
+    ...(segment.definitionColumnHeader !== undefined
+      ? { definitionColumnHeader: segment.definitionColumnHeader }
+      : {}),
+    ...(segment.definitionColumnSignature !== undefined
+      ? { definitionColumnSignature: segment.definitionColumnSignature }
+      : {}),
+    ...(segment.definitionSourceRowKey !== undefined
+      ? { definitionSourceRowKey: segment.definitionSourceRowKey }
+      : {}),
+    ...(segment.definitionRowSignature !== undefined
+      ? { definitionRowSignature: segment.definitionRowSignature }
+      : {}),
+    ...(segment.definitionTableHeaderCount !== undefined
+      ? { definitionTableHeaderCount: segment.definitionTableHeaderCount }
+      : {}),
+    ...(segment.definitionTableKey !== undefined
+      ? { definitionTableKey: segment.definitionTableKey }
+      : {}),
+  };
 }
 
-function sourceRangeKey(sourceRange: SourceRange): string {
-  return [
-    "source",
-    sourceRange.start.line,
-    sourceRange.start.column,
-    sourceRange.start.offset ?? "",
-    sourceRange.end.line,
-    sourceRange.end.column,
-    sourceRange.end.offset ?? "",
-  ].join(":");
-}
-
-function segmentTargetIdProperty(
+function sectionTitleProperty(
   segment: IdTextSegment,
-): { segmentTargetId: string } | Record<string, never> {
-  return segment.segmentTargetId === undefined
+): { sectionTitle: string } | Record<string, never> {
+  return segment.sectionTitle === undefined
     ? {}
-    : { segmentTargetId: segment.segmentTargetId };
+    : { sectionTitle: segment.sectionTitle };
 }
 
 function sectionTargetIdProperty(
@@ -661,6 +667,150 @@ function sectionTargetIdProperty(
   return segment.sectionTargetId === undefined
     ? {}
     : { sectionTargetId: segment.sectionTargetId };
+}
+
+function tableCellDefinitionColumnKey(
+  table: EngineTable,
+  cell: EngineTableCell,
+): string | undefined {
+  const header = tableHeaderForColumn(table, cell.columnIndex);
+
+  if (header === undefined) {
+    return undefined;
+  }
+
+  return `${table.target.id}:column:${cell.columnIndex}`;
+}
+
+function tableCellDefinitionColumnHeader(
+  table: EngineTable,
+  cell: EngineTableCell,
+): string | undefined {
+  return tableHeaderForColumn(table, cell.columnIndex)?.text;
+}
+
+function tableCellDefinitionColumnSignature(
+  table: EngineTable,
+  cell: EngineTableCell,
+): string | undefined {
+  const header = tableHeaderForColumn(table, cell.columnIndex);
+
+  if (header === undefined) {
+    return undefined;
+  }
+
+  return `column:${cell.columnIndex}:headers:${tableHeaderSignature(table)}`;
+}
+
+function tableCellDefinitionSourceRowKey(
+  table: EngineTable,
+  cell: EngineTableCell,
+): string | undefined {
+  const header = tableHeaderForColumn(table, cell.columnIndex);
+
+  if (header === undefined) {
+    return undefined;
+  }
+
+  return `table:${table.target.id}:row:${cell.rowIndex}`;
+}
+
+function tableCellDefinitionRowSignature(
+  table: EngineTable,
+  cell: EngineTableCell,
+): string | undefined {
+  const header = tableHeaderForColumn(table, cell.columnIndex);
+
+  if (header === undefined) {
+    return undefined;
+  }
+
+  return `headers:${tableHeaderSignature(table)}:row:${tableRowSignature(
+    table,
+    cell.rowIndex,
+  )}`;
+}
+
+function tableCellDefinitionTableHeaderCount(
+  table: EngineTable,
+  cell: EngineTableCell,
+): number | undefined {
+  return tableHeaderForColumn(table, cell.columnIndex) === undefined
+    ? undefined
+    : tableHeaderCount(table);
+}
+
+function tableHeaderForColumn(
+  table: EngineTable,
+  columnIndex: number,
+): EngineTableCell | undefined {
+  return table.cells
+    .filter((candidate) => candidate.header && candidate.columnIndex === columnIndex)
+    .sort(compareCells)[0];
+}
+
+function tableHeaderCount(table: EngineTable): number {
+  return table.cells.filter((cell) => cell.header).length;
+}
+
+function tableHeaderSignature(table: EngineTable): string {
+  return table.cells
+    .filter((cell) => cell.header)
+    .sort(compareCells)
+    .map((cell) => `${cell.columnIndex}:${cell.text}`)
+    .join("|");
+}
+
+function tableRowSignature(table: EngineTable, rowIndex: number): string {
+  return table.cells
+    .filter((cell) => cell.rowIndex === rowIndex)
+    .sort(compareCells)
+    .map((cell) => `${cell.columnIndex}:${cell.text}`)
+    .join("|");
+}
+
+function sectionForTable(
+  document: EngineDocument,
+  table: EngineTable,
+): EngineSection | undefined {
+  return sectionForNodeTarget(document, table.target);
+}
+
+function sectionForNodeTarget(
+  document: EngineDocument,
+  nodeTarget: EngineNodeTarget,
+): EngineSection | undefined {
+  return documentQueries
+    .sections(document)
+    .find((section) => sectionOwnsNodeTarget(document, section, nodeTarget.id));
+}
+
+function sectionOwnsNodeTarget(
+  document: EngineDocument,
+  section: EngineSection,
+  targetId: string,
+): boolean {
+  return section.bodyTargets.some((bodyTarget) => {
+    if (bodyTarget.id === targetId) {
+      return true;
+    }
+
+    return nodeContainsTarget(
+      documentQueries.nodes(document, { targetId: bodyTarget.id })[0],
+      targetId,
+    );
+  });
+}
+
+function nodeContainsTarget(
+  node: EngineNode | undefined,
+  targetId: string,
+): boolean {
+  if (node?.target?.id === targetId) {
+    return true;
+  }
+
+  return (node?.children ?? []).some((child) => nodeContainsTarget(child, targetId));
 }
 
 function compareCells(left: EngineTableCell, right: EngineTableCell): number {
