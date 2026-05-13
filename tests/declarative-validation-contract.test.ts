@@ -26,6 +26,7 @@ const requiredScriptNames = [
   "test:validation:assertions",
   "test:validation:diagnostics",
   "test:validation:cli",
+  "test:validation:examples",
   "test:validation:repeatability",
   "test:validation:downstream",
   "audit:declarative-validation-boundary",
