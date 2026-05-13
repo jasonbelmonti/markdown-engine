@@ -461,6 +461,19 @@ CLI invocation:
 markdown-engine validate --file docs/mission.md --profile validation-profile.yaml
 ```
 
+Reader-facing operational spec, release checklist, and requirements
+traceability examples live under
+`fixtures/declarative-validation/examples/**`. After building from the
+repository root, run one passing and one intentionally failing example with:
+
+```sh
+node dist/cli/index.js validate --file fixtures/declarative-validation/examples/operational-spec/pass.md --profile fixtures/declarative-validation/examples/operational-spec/profile.yaml
+node dist/cli/index.js validate --file fixtures/declarative-validation/examples/operational-spec/fail.md --profile fixtures/declarative-validation/examples/operational-spec/profile.yaml
+```
+
+The passing command exits `0`; the intentionally failing command exits `1` and
+emits validation JSON with representative diagnostics and evidence.
+
 ## Boundary And Non-Goals
 
 Declarative validation remains inside the `markdown-engine` deterministic local

@@ -1,0 +1,119 @@
+syntaxVersion: markdown-engine.validation@v1
+documentVersion: 1.0.0
+rules:
+  - id: frontmatter.required
+    select:
+      target: document
+    assert:
+      frontmatterRequired:
+        fields:
+          - title
+          - owner
+          - status
+
+  - id: sections.required
+    select:
+      target: document
+    assert:
+      sectionsRequired:
+        order: strict
+        headings:
+          - Requirements
+          - Evidence Matrix
+          - Traceability
+
+  - id: requirements.table.columns
+    select:
+      target: table
+      section: Requirements
+      header:
+        - ID
+        - Requirement statement
+        - Source
+    assert:
+      tableColumnsRequired:
+        columns:
+          - ID
+          - Requirement statement
+          - Source
+
+  - id: evidence.table.columns
+    select:
+      target: table
+      section: Evidence Matrix
+      header:
+        - ID
+        - Requirement
+    assert:
+      tableColumnsRequired:
+        columns:
+          - ID
+          - Requirement
+          - Evidence
+
+  - id: requirement.ids.unique
+    select:
+      target: tableCell
+      section: Requirements
+      column: ID
+    assert:
+      ids:
+        prefix: REQ
+        unique: true
+
+  - id: evidence.ids.unique
+    select:
+      target: tableCell
+      section: Evidence Matrix
+      column: ID
+    assert:
+      ids:
+        prefix: EVD
+        unique: true
+
+  - id: requirement.text
+    select:
+      target: tableCell
+      section: Requirements
+      column: Requirement statement
+      rowWhere:
+        column: ID
+        equals: REQ-2
+    assert:
+      text:
+        contains: shall
+        excludes:
+          - TBD
+
+  - id: requirements.shall.count
+    select:
+      target: section
+      title: Requirements
+    assert:
+      textOccurrenceCount:
+        text: shall
+        count: 3
+
+  - id: traceability.requirements
+    select:
+      target: document
+    assert:
+      references:
+        idsFrom:
+          section: Requirements
+          column: ID
+          prefix: REQ
+        mustAppearIn:
+          - Traceability
+
+  - id: traceability.evidence
+    select:
+      target: document
+    assert:
+      references:
+        idsFrom:
+          section: Evidence Matrix
+          column: ID
+          prefix: EVD
+        mustAppearIn:
+          - Traceability

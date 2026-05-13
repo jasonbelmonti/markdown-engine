@@ -147,6 +147,18 @@ Successful validation exits with code `0`; validation or normalization error
 diagnostics exit with code `1`. Validation JSON includes `profile`,
 `ruleResults`, `diagnostics`, and `evidence`.
 
+Reader-facing declarative validation examples live under
+`fixtures/declarative-validation/examples/**`. After building, run one passing
+and one intentionally failing example with:
+
+```sh
+node dist/cli/index.js validate --file fixtures/declarative-validation/examples/operational-spec/pass.md --profile fixtures/declarative-validation/examples/operational-spec/profile.yaml
+node dist/cli/index.js validate --file fixtures/declarative-validation/examples/operational-spec/fail.md --profile fixtures/declarative-validation/examples/operational-spec/profile.yaml
+```
+
+The passing example exits `0`; the failing example exits `1` and prints JSON
+diagnostics for review.
+
 BEL-952 classifies the default CLI output change as breaking for consumers that
 parse CLI JSON without selecting `--document-version 0.0.0`. Migration is to
 either consume the rich IR fields (`target`, `sections`, `textSpans`, `tables`,
@@ -192,6 +204,7 @@ Validation records include:
 - [EVD-9 merge readiness](docs/evidence/wp-6-evd-9-merge-readiness.md)
 - [EVD-10 rollback containment](docs/evidence/wp-6-evd-10-rollback-containment.md)
 - [EVD-11 downstream handoff](docs/evidence/wp-6-evd-11-downstream-handoff.md)
+- [BEL-1025 declarative validation example suite](docs/evidence/bel-1025-declarative-validation-example-suite.md)
 
 Snapshot baseline updates are operational changes, not routine test-output
 cleanup. Use the [testing and snapshot operations](docs/testing.md) guide before
