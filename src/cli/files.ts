@@ -9,6 +9,13 @@ export async function readMarkdownFile(
   targetPath: string,
   cwd: string,
 ): Promise<string> {
+  return readCliFile(targetPath, cwd);
+}
+
+export async function readCliFile(
+  targetPath: string,
+  cwd: string,
+): Promise<string> {
   const absolutePath = resolve(cwd, targetPath);
   const targetStat = await readTargetStat(absolutePath, targetPath);
 
