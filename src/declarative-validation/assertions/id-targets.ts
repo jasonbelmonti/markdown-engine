@@ -9,6 +9,7 @@ import type {
 } from "../../api/document.js";
 import type { SourceRange } from "../../api/diagnostics.js";
 import type { DeclarativeSelectionTarget } from "../selectors/index.js";
+import { documentTextOffsetForTarget } from "./document-text-offsets.js";
 import { extractIdTokens, type IdTokenOptions } from "./id-tokens.js";
 import { sourceRangeForNormalizedText } from "./normalized-source-ranges.js";
 
@@ -49,6 +50,32 @@ interface IdTextSegment {
   sectionTargetId?: string;
   sourceRange?: SourceRange;
   sourceText?: string;
+}
+
+interface IdTextSegmentInput {
+  text: string;
+  occurrenceScope: string;
+  documentTextOffset?: number | undefined;
+  definitionColumnKey?: string | undefined;
+  definitionColumnHeader?: string | undefined;
+  definitionColumnSignature?: string | undefined;
+  definitionSourceRowKey?: string | undefined;
+  definitionRowSignature?: string | undefined;
+  definitionTableHeaderCount?: number | undefined;
+  definitionTableKey?: string | undefined;
+  section?: EngineSection | undefined;
+  sourceRange?: SourceRange | undefined;
+  sourceText?: string | undefined;
+}
+
+interface SourceBackedTextSegmentInput {
+  document: EngineDocument;
+  text: string;
+  occurrenceScope: string;
+  sourceTargetId?: string | undefined;
+  section?: EngineSection | undefined;
+  sourceRange?: SourceRange | undefined;
+  sourceText?: string | undefined;
 }
 
 export function extractTargetIdTokens(
@@ -131,13 +158,14 @@ function idTextSegmentsForSelectionTarget(
 
     case "heading":
       return [
-        textSegmentFromSource(
-          target.text,
-          target.section.headingTarget.id,
-          target.source?.range,
-          target.source?.text,
-          documentTextOffsetForTarget(document, target.section.headingTarget.id),
-        ),
+        sourceBackedTextSegment({
+          document,
+          text: target.text,
+          occurrenceScope: target.section.headingTarget.id,
+          sourceTargetId: target.section.headingTarget.id,
+          sourceRange: target.source?.range,
+          sourceText: target.source?.text,
+        }),
       ];
 
     case "table":
@@ -161,24 +189,26 @@ function idTextSegmentsForSelectionTarget(
 
     case "textSpan":
       return [
-        textSegmentFromSource(
-          target.text,
-          target.span.target.id,
-          target.source?.range,
-          target.source?.text,
-          documentTextOffsetForTarget(document, target.span.target.id),
-        ),
+        sourceBackedTextSegment({
+          document,
+          text: target.text,
+          occurrenceScope: target.span.target.id,
+          sourceTargetId: target.span.target.id,
+          sourceRange: target.source?.range,
+          sourceText: target.source?.text,
+        }),
       ];
 
     case "link":
       return [
-        textSegmentFromSource(
-          target.text,
-          target.link.target.id,
-          target.source?.range,
-          target.source?.text,
-          documentTextOffsetForTarget(document, target.link.target.id),
-        ),
+        sourceBackedTextSegment({
+          document,
+          text: target.text,
+          occurrenceScope: target.link.target.id,
+          sourceTargetId: target.link.target.id,
+          sourceRange: target.source?.range,
+          sourceText: target.source?.text,
+        }),
       ];
 
     case "list":
@@ -212,16 +242,7 @@ function sectionSegments(
 ): IdTextSegment[] {
   return [
     ...(options.includeHeading
-      ? [
-          textSegmentFromSource(
-            section.title,
-            section.headingTarget.id,
-            documentQueries.sourceSlice(document, section.headingTarget)?.range,
-            documentQueries.sourceSlice(document, section.headingTarget)?.text,
-            documentTextOffsetForTarget(document, section.headingTarget.id),
-            section,
-          ),
-        ]
+      ? [sectionHeadingSegment(document, section)]
       : []),
     ...sectionBodySegments(document, section, {
       includeChildSections: options.includeChildSections,
@@ -294,16 +315,15 @@ function nodeTextSegments(
 
   if (node.text !== undefined) {
     return [
-      textSegmentFromSource(
-        node.text,
-        node.target?.id ?? fallbackScope,
-        node.source?.range ?? node.sourceRange,
-        node.source?.text,
-        node.target === undefined
-          ? undefined
-          : documentTextOffsetForTarget(document, node.target.id),
+      sourceBackedTextSegment({
+        document,
+        text: node.text,
+        occurrenceScope: node.target?.id ?? fallbackScope,
+        sourceTargetId: node.target?.id,
+        sourceRange: node.source?.range ?? node.sourceRange,
+        sourceText: node.source?.text,
         section,
-      ),
+      }),
     ];
   }
 
@@ -339,19 +359,19 @@ function tableCellSegment(
   cell: EngineTableCell,
   section?: EngineSection,
 ): IdTextSegment {
-  return textSegment(
-    cell.text,
-    cell.target.id,
-    cell.sourceRange,
+  return textSegment({
+    text: cell.text,
+    occurrenceScope: cell.target.id,
+    sourceRange: cell.sourceRange,
     section,
-    tableCellDefinitionColumnKey(table, cell),
-    tableCellDefinitionColumnHeader(table, cell),
-    tableCellDefinitionColumnSignature(table, cell),
-    tableCellDefinitionSourceRowKey(table, cell),
-    tableCellDefinitionRowSignature(table, cell),
-    tableCellDefinitionTableHeaderCount(table, cell),
-    table.target.id,
-  );
+    definitionColumnKey: tableCellDefinitionColumnKey(table, cell),
+    definitionColumnHeader: tableCellDefinitionColumnHeader(table, cell),
+    definitionColumnSignature: tableCellDefinitionColumnSignature(table, cell),
+    definitionSourceRowKey: tableCellDefinitionSourceRowKey(table, cell),
+    definitionRowSignature: tableCellDefinitionRowSignature(table, cell),
+    definitionTableHeaderCount: tableCellDefinitionTableHeaderCount(table, cell),
+    definitionTableKey: table.target.id,
+  });
 }
 
 function tableColumnSegments(
@@ -459,69 +479,76 @@ function columnIndexForHeader(
     .find((cell) => cell.text === column)?.columnIndex;
 }
 
-function textSegment(
-  text: string,
-  occurrenceScope: string,
-  sourceRange: SourceRange | undefined,
-  section?: EngineSection,
-  definitionColumnKey?: string,
-  definitionColumnHeader?: string,
-  definitionColumnSignature?: string,
-  definitionSourceRowKey?: string,
-  definitionRowSignature?: string,
-  definitionTableHeaderCount?: number,
-  definitionTableKey?: string,
-  documentTextOffset?: number,
-  sourceText?: string,
+function sectionHeadingSegment(
+  document: EngineDocument,
+  section: EngineSection,
 ): IdTextSegment {
-  return {
-    text,
-    occurrenceScope,
-    ...(documentTextOffset !== undefined ? { documentTextOffset } : {}),
-    ...(definitionColumnKey !== undefined ? { definitionColumnKey } : {}),
-    ...(definitionColumnHeader !== undefined ? { definitionColumnHeader } : {}),
-    ...(definitionColumnSignature !== undefined
-      ? { definitionColumnSignature }
-      : {}),
-    ...(definitionSourceRowKey !== undefined
-      ? { definitionSourceRowKey }
-      : {}),
-    ...(definitionRowSignature !== undefined ? { definitionRowSignature } : {}),
-    ...(definitionTableHeaderCount !== undefined
-      ? { definitionTableHeaderCount }
-      : {}),
-    ...(definitionTableKey !== undefined ? { definitionTableKey } : {}),
-    ...(section !== undefined
-      ? { sectionTitle: section.title, sectionTargetId: section.target.id }
-      : {}),
-    ...(sourceRange !== undefined ? { sourceRange } : {}),
-    ...(sourceText !== undefined ? { sourceText } : {}),
-  };
+  const headingSource = documentQueries.sourceSlice(document, section.headingTarget);
+
+  return sourceBackedTextSegment({
+    document,
+    text: section.title,
+    occurrenceScope: section.headingTarget.id,
+    sourceTargetId: section.headingTarget.id,
+    sourceRange: headingSource?.range,
+    sourceText: headingSource?.text,
+    section,
+  });
 }
 
-function textSegmentFromSource(
-  text: string,
-  occurrenceScope: string,
-  sourceRange: SourceRange | undefined,
-  sourceText: string | undefined,
-  documentTextOffset: number | undefined,
-  section?: EngineSection,
+function sourceBackedTextSegment(
+  input: SourceBackedTextSegmentInput,
 ): IdTextSegment {
-  return textSegment(
-    text,
-    occurrenceScope,
-    sourceRange,
-    section,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    documentTextOffset,
-    sourceText,
-  );
+  return textSegment({
+    text: input.text,
+    occurrenceScope: input.occurrenceScope,
+    sourceRange: input.sourceRange,
+    sourceText: input.sourceText,
+    documentTextOffset:
+      input.sourceTargetId === undefined
+        ? undefined
+        : documentTextOffsetForTarget(input.document, input.sourceTargetId),
+    section: input.section,
+  });
+}
+
+function textSegment(input: IdTextSegmentInput): IdTextSegment {
+  return {
+    text: input.text,
+    occurrenceScope: input.occurrenceScope,
+    ...(input.documentTextOffset !== undefined
+      ? { documentTextOffset: input.documentTextOffset }
+      : {}),
+    ...(input.definitionColumnKey !== undefined
+      ? { definitionColumnKey: input.definitionColumnKey }
+      : {}),
+    ...(input.definitionColumnHeader !== undefined
+      ? { definitionColumnHeader: input.definitionColumnHeader }
+      : {}),
+    ...(input.definitionColumnSignature !== undefined
+      ? { definitionColumnSignature: input.definitionColumnSignature }
+      : {}),
+    ...(input.definitionSourceRowKey !== undefined
+      ? { definitionSourceRowKey: input.definitionSourceRowKey }
+      : {}),
+    ...(input.definitionRowSignature !== undefined
+      ? { definitionRowSignature: input.definitionRowSignature }
+      : {}),
+    ...(input.definitionTableHeaderCount !== undefined
+      ? { definitionTableHeaderCount: input.definitionTableHeaderCount }
+      : {}),
+    ...(input.definitionTableKey !== undefined
+      ? { definitionTableKey: input.definitionTableKey }
+      : {}),
+    ...(input.section !== undefined
+      ? {
+          sectionTitle: input.section.title,
+          sectionTargetId: input.section.target.id,
+        }
+      : {}),
+    ...(input.sourceRange !== undefined ? { sourceRange: input.sourceRange } : {}),
+    ...(input.sourceText !== undefined ? { sourceText: input.sourceText } : {}),
+  };
 }
 
 function idOccurrenceKey(
@@ -534,57 +561,6 @@ function idOccurrenceKey(
   }
 
   return `${comparisonValue}:${segment.occurrenceScope}:${textOffset}`;
-}
-
-function documentTextOffsetForTarget(
-  document: EngineDocument,
-  targetId: string,
-): number | undefined {
-  let offset = 0;
-
-  for (const node of document.children) {
-    const targetOffset = nodeDocumentTextOffset(node, targetId, offset);
-
-    if (targetOffset !== undefined) {
-      return targetOffset;
-    }
-
-    offset += normalizedNodeText(node).length + 1;
-  }
-
-  return undefined;
-}
-
-function nodeDocumentTextOffset(
-  node: EngineNode,
-  targetId: string,
-  offset: number,
-): number | undefined {
-  if (node.target?.id === targetId) {
-    return offset;
-  }
-
-  let childOffset = offset;
-
-  for (const child of node.children ?? []) {
-    const targetOffset = nodeDocumentTextOffset(child, targetId, childOffset);
-
-    if (targetOffset !== undefined) {
-      return targetOffset;
-    }
-
-    childOffset += normalizedNodeText(child).length;
-  }
-
-  return undefined;
-}
-
-function normalizedNodeText(node: EngineNode): string {
-  if (node.text !== undefined) {
-    return node.text;
-  }
-
-  return (node.children ?? []).map((child) => normalizedNodeText(child)).join("");
 }
 
 function tokenSourceRangeProperty(
