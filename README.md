@@ -175,6 +175,7 @@ npm publish --dry-run --access public
 Validation records include:
 
 - [EVD-6 rich IR contract docs](docs/evidence/wp-5-evd-6-rich-ir-contract.md)
+- [EVD-6 declarative validation repeatability](docs/evidence/wp-5-evd-6-declarative-validation-repeatability.md)
 - [EVD-8 compatibility and CLI impact](docs/evidence/wp-5-evd-8-compatibility-cli-impact.md)
 - [EVD-9 1.0 downstream exercise](docs/evidence/wp-6-evd-9-downstream-exercise.md)
 - [EVD-10 1.0 release readiness](docs/evidence/wp-6-evd-10-release-readiness.md)
