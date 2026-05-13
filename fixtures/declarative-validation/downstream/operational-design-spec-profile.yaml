@@ -1,0 +1,153 @@
+syntaxVersion: markdown-engine.validation@v1
+documentVersion: 1.0.0
+rules:
+  - id: frontmatter.required
+    select:
+      target: document
+    assert:
+      frontmatterRequired:
+        fields:
+          - title
+          - owner
+          - status
+
+  - id: objective.text
+    select:
+      target: section
+      title: Objective
+    assert:
+      text:
+        contains: "operational design spec structural fixture"
+
+  - id: constraints.text
+    select:
+      target: section
+      title: Context / Constraints
+    assert:
+      text:
+        contains: "generic validation over Markdown headings, tables, IDs"
+
+  - id: sections.required
+    select:
+      target: document
+    assert:
+      sectionsRequired:
+        order: strict
+        headings:
+          - Objective
+          - Context / Constraints
+          - Functional Requirements
+          - Validation Matrix
+          - Traceability
+          - Decision Log
+
+  - id: requirements.table.columns
+    select:
+      target: table
+      section: Functional Requirements
+      header:
+        - ID
+        - Statement
+        - Source
+    assert:
+      tableColumnsRequired:
+        columns:
+          - ID
+          - Statement
+          - Source
+
+  - id: validation.matrix.columns
+    select:
+      target: table
+      section: Validation Matrix
+      header:
+        - ID
+        - Evidence
+        - Status
+    assert:
+      tableColumnsRequired:
+        columns:
+          - ID
+          - Evidence
+          - Status
+
+  - id: decision.log.columns
+    select:
+      target: table
+      section: Decision Log
+      header:
+        - ID
+        - Decision
+        - Rationale
+    assert:
+      tableColumnsRequired:
+        columns:
+          - ID
+          - Decision
+          - Rationale
+
+  - id: requirements.ids.unique
+    select:
+      target: tableCell
+      section: Functional Requirements
+      column: ID
+    assert:
+      ids:
+        prefix: ODS-REQ
+        unique: true
+
+  - id: validation.ids.unique
+    select:
+      target: tableCell
+      section: Validation Matrix
+      column: ID
+    assert:
+      ids:
+        prefix: ODS-VAL
+        unique: true
+
+  - id: decision.ids.unique
+    select:
+      target: tableCell
+      section: Decision Log
+      column: ID
+    assert:
+      ids:
+        prefix: ODS-DEC
+        unique: true
+
+  - id: requirements.text.heading-policy
+    select:
+      target: tableCell
+      section: Functional Requirements
+      column: Statement
+      rowWhere:
+        column: ID
+        equals: ODS-REQ-1
+    assert:
+      text:
+        contains: "required headings"
+
+  - id: traceability.requirements
+    select:
+      target: document
+    assert:
+      references:
+        idsFrom:
+          section: Functional Requirements
+          column: ID
+          prefix: ODS-REQ
+        mustAppearIn:
+          - Traceability
+
+  - id: traceability.validation
+    select:
+      target: document
+    assert:
+      references:
+        idsFrom:
+          section: Validation Matrix
+          column: ID
+          prefix: ODS-VAL
+        mustAppearIn:
+          - Traceability

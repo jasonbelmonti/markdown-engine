@@ -67,7 +67,7 @@
     "test:validation:diagnostics": "npm run build && vitest run tests/declarative-validation-diagnostics.test.ts \"--exclude=.worktrees/**\"",
     "test:validation:cli": "npm run build && vitest run tests/declarative-validation-cli.test.ts \"--exclude=.worktrees/**\"",
     "test:validation:repeatability": "npm run build && vitest run tests/declarative-validation-repeatability.test.ts \"--exclude=.worktrees/**\" && node scripts/prove-declarative-validation-repeatability.mjs --runs 10",
-    "test:validation:downstream": "node scripts/gate-placeholder.mjs test:validation:downstream",
+    "test:validation:downstream": "npm run build && vitest run tests/declarative-validation-downstream.test.ts \"--exclude=.worktrees/**\"",
     "audit:declarative-validation-boundary": "node scripts/check-declarative-validation-boundary.mjs",
     "docs:declarative-validation-contract": "node scripts/check-declarative-validation-contract-docs.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
