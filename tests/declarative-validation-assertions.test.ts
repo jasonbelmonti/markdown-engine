@@ -27,6 +27,28 @@ function withoutFirstDataCellSourceEvidence(document: EngineDocument): EngineDoc
   return copy;
 }
 
+function withoutSourceEvidence(document: EngineDocument): EngineDocument {
+  const copy = structuredClone(document);
+  stripSourceEvidence(copy);
+  return copy;
+}
+
+function stripSourceEvidence(value: unknown): void {
+  if (Array.isArray(value)) {
+    value.forEach(stripSourceEvidence);
+    return;
+  }
+
+  if (value === null || typeof value !== "object") {
+    return;
+  }
+
+  const record = value as Record<string, unknown>;
+  delete record.source;
+  delete record.sourceRange;
+  Object.values(record).forEach(stripSourceEvidence);
+}
+
 describe("declarative validation assertion proof", () => {
   it("evaluates the minimal text assertion path and emits source-targeted diagnostics", () => {
     const document = normalize(parse(fixture, { path: fixturePath }).parsed, {
@@ -976,6 +998,167 @@ describe("declarative validation assertion proof", () => {
         },
       ],
     });
+  });
+
+  it("does not duplicate IDs across overlapping textSpan projections", () => {
+    const document = normalize(
+      parse("# Requirements\n\nIntro **REQ-1** is ready.\n").parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "ids.text-span-overlap",
+          select: { target: "textSpan" },
+          assert: { ids: { unique: true, prefix: "REQ" } },
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [
+        {
+          ruleId: "ids.text-span-overlap",
+          passed: true,
+          diagnostics: [],
+        },
+      ],
+    });
+  });
+
+  it("does not duplicate IDs across source-less overlapping textSpan projections", () => {
+    const document = withoutSourceEvidence(
+      normalize(
+        parse("# Requirements\n\nIntro **REQ-1** is ready.\n").parsed,
+        {
+          documentVersion: "1.0.0",
+        },
+      ).document,
+    );
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "ids.text-span-overlap-sourceless",
+          select: { target: "textSpan" },
+          assert: { ids: { unique: true, prefix: "REQ" } },
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [
+        {
+          ruleId: "ids.text-span-overlap-sourceless",
+          passed: true,
+          diagnostics: [],
+        },
+      ],
+    });
+  });
+
+  it("does not duplicate escaped IDs across overlapping textSpan projections", () => {
+    const document = normalize(
+      parse("# Requirements\n\nIntro **REQ\\-1** is ready.\n").parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "ids.text-span-overlap-escaped",
+          select: { target: "textSpan" },
+          assert: { ids: { unique: true, prefix: "REQ" } },
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [
+        {
+          ruleId: "ids.text-span-overlap-escaped",
+          passed: true,
+          diagnostics: [],
+        },
+      ],
+    });
+  });
+
+  it("does not bind escaped link text IDs to matching URL source syntax", () => {
+    const document = normalize(
+      parse("# Requirements\n\nSee [REQ\\-1](REQ-1.md).\n").parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "ids.escaped-link-text-overlap",
+          select: { target: "textSpan" },
+          assert: { ids: { unique: true, prefix: "REQ" } },
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [
+        {
+          ruleId: "ids.escaped-link-text-overlap",
+          passed: true,
+          diagnostics: [],
+        },
+      ],
+    });
+  });
+
+  it("detects IDs split across inline formatting boundaries", () => {
+    const document = normalize(
+      parse("# Requirements\n\nREQ-**1** is ready.\n\nREQ-1 is repeated.\n").parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "ids.inline-boundary",
+          select: { target: "section", title: "Requirements" },
+          assert: { ids: { unique: true, prefix: "REQ" } },
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.duplicateId",
+        ruleId: "ids.inline-boundary",
+        message: 'ID "REQ-1" duplicates earlier ID "REQ-1".',
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({ line: 5 }),
+        }),
+      }),
+    ]);
   });
 
   it("evaluates IDs across document, list, and link structural targets", () => {
@@ -3831,6 +4014,53 @@ describe("declarative validation assertion proof", () => {
         message: 'ID "REQ-1" must appear in section "Verification".',
         sourceRange: expect.objectContaining({
           start: expect.objectContaining({ line: 3 }),
+        }),
+      }),
+    ]);
+  });
+
+  it("uses escaped link text source ranges for reference source IDs", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements",
+          "",
+          "See [REQ\\-1](REQ-1.md).",
+          "",
+          "# Verification",
+          "",
+          "No coverage yet.",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "references.escaped-link-text-source",
+          select: { target: "document" },
+          assert: {
+            references: {
+              idsFrom: { section: "Requirements", prefix: "REQ" },
+              mustAppearIn: ["Verification"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.referenceMissing",
+        ruleId: "references.escaped-link-text-source",
+        message: 'ID "REQ-1" must appear in section "Verification".',
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({ line: 3, column: 6 }),
+          end: expect.objectContaining({ line: 3, column: 12 }),
         }),
       }),
     ]);
