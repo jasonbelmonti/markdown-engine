@@ -86,8 +86,9 @@ serialization gates can require it with `compatibilityMode: "legacy-0.1"`.
 ## CLI
 
 The package includes a minimal local CLI for experimenting with one Markdown
-file at a time. It runs parse and normalization, then writes the normalized
-result as pretty JSON.
+file at a time. The default command runs parse and normalization, then writes
+the normalized result as pretty JSON. The `validate` subcommand runs one
+declarative validation profile against one Markdown file and writes pretty JSON.
 
 After building, run:
 
@@ -127,6 +128,22 @@ values are `1.0.0` and `0.0.0`. Missing, invalid, or repeated
 `--document-version` selectors exit with code `2` and usage text; an empty
 assignment-form selector is treated as missing. Directory traversal is not
 supported by this CLI slice.
+
+Declarative validation uses the 1.0 document contract and does not accept
+`--document-version`:
+
+```sh
+markdown-engine validate --file fixtures/representative.md --profile profile.yaml
+```
+
+`--format json` is accepted for validation, is the default, and is the only
+supported format. The validation command reads and checks the profile before
+reading the Markdown file. Profile parse/config/compile failures exit with code
+`1` and emit JSON with `stage: "profile"`, empty `ruleResults`, no `profile`,
+and no `evidence`. Markdown read errors and usage errors exit with code `2`.
+Successful validation exits with code `0`; validation or normalization error
+diagnostics exit with code `1`. Validation JSON includes `profile`,
+`ruleResults`, `diagnostics`, and `evidence`.
 
 BEL-952 classifies the default CLI output change as breaking for consumers that
 parse CLI JSON without selecting `--document-version 0.0.0`. Migration is to
