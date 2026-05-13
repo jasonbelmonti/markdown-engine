@@ -1,19 +1,19 @@
-import type { MarkdownDiagnostic } from "../../api/diagnostics.js";
-import { normalizeMarkdown } from "../../cli/normalize-markdown.js";
-import { readCliFile } from "../../cli/files.js";
-import { hasErrorDiagnostic } from "../../diagnostics/index.js";
-import { normalizeStableJsonValue } from "../../internal/stable-json.js";
-import { compileValidationProfile } from "../compiler/index.js";
-import { parseValidationProfileInput } from "../profile/index.js";
+import { validateWithProfile } from "../api/declarative-validation.js";
+import type { MarkdownDiagnostic } from "../api/diagnostics.js";
+import { compileValidationProfile } from "../declarative-validation/compiler/index.js";
+import { parseValidationProfileInput } from "../declarative-validation/profile/index.js";
 import type {
   DeclarativeOutputFormat,
   ValidationProfile,
-} from "../profile/index.js";
+} from "../declarative-validation/profile/index.js";
 import type {
   DeclarativeValidationCliJsonResult,
   DeclarativeValidationConfigErrorResult,
-} from "../results/index.js";
-import { validateWithProfile } from "../../api/declarative-validation.js";
+} from "../declarative-validation/results/index.js";
+import { hasErrorDiagnostic } from "../diagnostics/index.js";
+import { normalizeStableJsonValue } from "../internal/stable-json.js";
+import { readCliFile } from "./files.js";
+import { normalizeMarkdown } from "./normalize-markdown.js";
 
 /** @internal Declarative validation CLI behavior is not part of the package API. */
 export interface DeclarativeValidationCliAdapterOptions {

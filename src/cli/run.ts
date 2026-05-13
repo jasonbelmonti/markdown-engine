@@ -1,7 +1,7 @@
 import { serialize } from "../api/contracts.js";
 import { parseCliArgs } from "./args.js";
+import { runDeclarativeValidationCli } from "./declarative-validation.js";
 import { compatibilityModeForDocumentVersion } from "./document-version.js";
-import { runDeclarativeValidationCli } from "../declarative-validation/cli/index.js";
 import { readMarkdownFile } from "./files.js";
 import { normalizeMarkdown } from "./normalize-markdown.js";
 
