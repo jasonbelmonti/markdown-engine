@@ -205,6 +205,9 @@ diagnostics. `valid` is controlled by error-severity diagnostics only.
 
 ## Declarative Validation
 
+The complete declarative validation syntax, CLI, diagnostic, evidence, and
+boundary contract is defined in `docs/contracts/declarative-validation.md`.
+
 Signatures:
 
 ```ts

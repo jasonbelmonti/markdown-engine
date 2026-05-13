@@ -36,6 +36,8 @@ The package root exports:
 - `serialize(result, options?)`
 - `documentQueries`
 - `validateAnnotations(document, annotations)`
+- `parseValidationProfile(input, options?)`
+- `validateWithProfile(document, profile, options?)`
 
 Example:
 
@@ -155,6 +157,7 @@ not a `0.1.x` patch.
 Contract references:
 
 - [Public API contract](docs/contracts/api.md)
+- [Declarative validation contract](docs/contracts/declarative-validation.md)
 - [Frontmatter contract](docs/contracts/frontmatter.md)
 - [Markdown Engine 1.0 Rich IR design](docs/design/markdown-engine-1.0-rich-ir-operational-design-spec.md)
 - [Testing and snapshot operations](docs/testing.md)
@@ -167,6 +170,8 @@ Run the release-readiness gates from the repository root:
 
 ```sh
 npm run docs:rich-ir-contract
+npm run docs:declarative-validation-contract
+npm run audit:declarative-validation-boundary
 npm run release:verify
 npm pack --dry-run
 npm publish --dry-run --access public
@@ -176,6 +181,8 @@ Validation records include:
 
 - [EVD-6 rich IR contract docs](docs/evidence/wp-5-evd-6-rich-ir-contract.md)
 - [EVD-6 declarative validation repeatability](docs/evidence/wp-5-evd-6-declarative-validation-repeatability.md)
+- [EVD-7 declarative validation contract review](docs/evidence/wp-5-evd-7-declarative-validation-contract-review.md)
+- [EVD-8 declarative validation boundary audit](docs/evidence/wp-5-evd-8-declarative-validation-boundary-audit.md)
 - [EVD-8 compatibility and CLI impact](docs/evidence/wp-5-evd-8-compatibility-cli-impact.md)
 - [EVD-9 1.0 downstream exercise](docs/evidence/wp-6-evd-9-downstream-exercise.md)
 - [EVD-10 1.0 release readiness](docs/evidence/wp-6-evd-10-release-readiness.md)
