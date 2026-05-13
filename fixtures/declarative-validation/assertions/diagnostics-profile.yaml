@@ -1,0 +1,43 @@
+syntaxVersion: markdown-engine.validation@v1
+documentVersion: 1.0.0
+rules:
+  - id: a.empty-selection
+    select:
+      target: section
+      title: Missing
+    assert:
+      text:
+        contains: complete
+  - id: b.missing-column
+    select:
+      target: table
+    assert:
+      tableColumnsRequired:
+        columns:
+          - Owner
+  - id: c.duplicate-id
+    select:
+      target: tableCell
+      column: ID
+    assert:
+      ids:
+        unique: true
+        prefix: REQ
+  - id: d.missing-reference
+    select:
+      target: document
+    assert:
+      references:
+        idsFrom:
+          section: Requirements
+          column: ID
+          prefix: REQ
+        mustAppearIn:
+          - Verification
+  - id: e.source-targeted
+    select:
+      target: section
+      title: Evidence
+    assert:
+      text:
+        contains: complete

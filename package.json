@@ -64,7 +64,7 @@
     "test:validation:compiler": "npm run build && vitest run tests/declarative-validation-compiler.test.ts \"--exclude=.worktrees/**\"",
     "test:validation:selectors": "npm run build && vitest run tests/declarative-validation-selectors.test.ts \"--exclude=.worktrees/**\"",
     "test:validation:assertions": "npm run build && vitest run tests/declarative-validation-assertions.test.ts \"--exclude=.worktrees/**\"",
-    "test:validation:diagnostics": "node scripts/gate-placeholder.mjs test:validation:diagnostics",
+    "test:validation:diagnostics": "npm run build && vitest run tests/declarative-validation-diagnostics.test.ts \"--exclude=.worktrees/**\"",
     "test:validation:cli": "node scripts/gate-placeholder.mjs test:validation:cli",
     "test:validation:repeatability": "node scripts/gate-placeholder.mjs test:validation:repeatability",
     "test:validation:downstream": "node scripts/gate-placeholder.mjs test:validation:downstream",
