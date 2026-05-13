@@ -2,6 +2,8 @@ import type {
   EngineDocument,
   EngineDocumentQueries,
   EngineLink,
+  EngineLinkReference,
+  EngineLinkReferenceQuery,
   EngineLinkQuery,
   EngineList,
   EngineListQuery,
@@ -27,6 +29,7 @@ export const documentQueries: EngineDocumentQueries = {
   tables,
   lists,
   links,
+  linkReferences,
   targetCategory,
   resolveTarget,
   sourceSlice,
@@ -143,6 +146,56 @@ function links(
     }
 
     return query.text === undefined || link.text === query.text;
+  });
+}
+
+function linkReferences(
+  document: EngineDocument,
+  query: EngineLinkReferenceQuery = {},
+): readonly EngineLinkReference[] {
+  return (document.linkReferences ?? []).filter((reference) => {
+    if (query.targetId !== undefined && reference.target.id !== query.targetId) {
+      return false;
+    }
+
+    if (query.kind !== undefined && reference.kind !== query.kind) {
+      return false;
+    }
+
+    if (query.url !== undefined && reference.url !== query.url) {
+      return false;
+    }
+
+    if (query.text !== undefined && reference.text !== query.text) {
+      return false;
+    }
+
+    if (query.alt !== undefined && reference.alt !== query.alt) {
+      return false;
+    }
+
+    if (query.label !== undefined && reference.label !== query.label) {
+      return false;
+    }
+
+    if (
+      query.identifier !== undefined &&
+      reference.identifier !== query.identifier
+    ) {
+      return false;
+    }
+
+    if (
+      query.referenceType !== undefined &&
+      reference.referenceType !== query.referenceType
+    ) {
+      return false;
+    }
+
+    return (
+      query.definitionTargetId === undefined ||
+      reference.definitionTarget?.id === query.definitionTargetId
+    );
   });
 }
 

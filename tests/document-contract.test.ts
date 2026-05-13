@@ -98,6 +98,7 @@ const document = {
   tables: [],
   lists: [],
   links: [],
+  linkReferences: [],
   annotations: [annotation],
   compatibility,
 } satisfies EngineDocument;
@@ -110,6 +111,7 @@ const queries = {
   tables: (document) => document.tables ?? [],
   lists: (document) => document.lists ?? [],
   links: (document) => document.links ?? [],
+  linkReferences: (document) => document.linkReferences ?? [],
   targetCategory: (document, target) => {
     if (document.target?.id === target.id) {
       return "document";

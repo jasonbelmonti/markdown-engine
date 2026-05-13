@@ -1,4 +1,5 @@
 import type { EngineDocument } from "../api/document.js";
+import { collectLinkReferences } from "./document-link-reference-views.js";
 import { collectLinks } from "./document-link-views.js";
 import { collectLists } from "./document-list-views.js";
 import { buildSections } from "./document-sections.js";
@@ -32,5 +33,6 @@ export function buildDocumentViews(
     tables: collectTables(children),
     lists: collectLists(children),
     links: collectLinks(children),
+    linkReferences: collectLinkReferences(children),
   };
 }
