@@ -13,6 +13,10 @@ import type {
   DeclarativeProfileParseResult,
   JsonSafeValue,
 } from "./index.js";
+import {
+  closeProfileDataTree,
+  DATA_CLOSURE_FAILED,
+} from "./data-closure.js";
 import { validationProfileFromValue } from "./schema.js";
 
 type MaterializedProfileInput =
@@ -38,9 +42,16 @@ export function parseValidationProfileInput(
 }
 
 function materializeInput(input: string | JsonSafeValue): MaterializedProfileInput {
-  return typeof input === "string"
-    ? parseYaml(input)
-    : { parsed: true, value: input, diagnostics: [] };
+  if (typeof input === "string") {
+    return parseYaml(input);
+  }
+
+  const diagnostics: MarkdownDiagnostic[] = [];
+  const closedInput = closeProfileDataTree(input, "Profile", diagnostics);
+
+  return closedInput === DATA_CLOSURE_FAILED
+    ? { parsed: false, diagnostics }
+    : { parsed: true, value: closedInput as JsonSafeValue, diagnostics };
 }
 
 function parseYaml(raw: string): MaterializedProfileInput {

@@ -97,6 +97,175 @@ rules:
     );
   });
 
+  it("rejects unsafe direct profile objects before schema traversal", () => {
+    let accessorRead = false;
+    const accessorProfile = {
+      syntaxVersion: "markdown-engine.validation@v1",
+    };
+    Object.defineProperty(accessorProfile, "rules", {
+      enumerable: true,
+      get() {
+        accessorRead = true;
+        throw new Error("profile accessor must not execute");
+      },
+    });
+
+    let proxyTrapExecuted = false;
+    const proxyProfile = new Proxy(
+      {},
+      {
+        getOwnPropertyDescriptor() {
+          proxyTrapExecuted = true;
+          throw new Error("profile proxy trap must not execute");
+        },
+        ownKeys() {
+          proxyTrapExecuted = true;
+          throw new Error("profile proxy trap must not execute");
+        },
+      },
+    );
+
+    const sparseRules = [];
+    sparseRules.length = 1;
+
+    const cyclicProfile: Record<string, unknown> = {
+      syntaxVersion: "markdown-engine.validation@v1",
+      rules: [],
+    };
+    cyclicProfile.self = cyclicProfile;
+
+    const protoPayload = {
+      syntaxVersion: "markdown-engine.validation@v1",
+      rules: [],
+    };
+    Object.defineProperty(protoPayload, "__proto__", {
+      enumerable: true,
+      value: {},
+    });
+
+    const cases: readonly {
+      input: unknown;
+      message: string;
+    }[] = [
+      {
+        input: accessorProfile,
+        message: "Profile.rules must contain only JSON-safe data properties.",
+      },
+      {
+        input: proxyProfile,
+        message: "Profile must contain only JSON-safe data properties.",
+      },
+      {
+        input: {
+          syntaxVersion: "markdown-engine.validation@v1",
+          documentVersion: undefined,
+          rules: [],
+        },
+        message:
+          "Profile.documentVersion must contain only JSON-safe data properties.",
+      },
+      {
+        input: {
+          syntaxVersion: "markdown-engine.validation@v1",
+          rules: sparseRules,
+        },
+        message: "Profile.rules[0] must contain only JSON-safe data properties.",
+      },
+      {
+        input: cyclicProfile,
+        message: "Profile.self must contain only JSON-safe data properties.",
+      },
+      {
+        input: {
+          syntaxVersion: "markdown-engine.validation@v1",
+          rules: [
+            {
+              id: "function-payload",
+              select: { target: "document" },
+              assert: { text: { contains: () => "Mission" } },
+            },
+          ],
+        },
+        message:
+          "Profile.rules[0].assert.text.contains must contain only JSON-safe data properties.",
+      },
+      {
+        input: {
+          syntaxVersion: "markdown-engine.validation@v1",
+          rules: [
+            {
+              id: "nan-payload",
+              select: { target: "section", depth: Number.NaN },
+              assert: { text: { contains: "Mission" } },
+            },
+          ],
+        },
+        message:
+          "Profile.rules[0].select.depth must contain only JSON-safe data properties.",
+      },
+      {
+        input: {
+          syntaxVersion: "markdown-engine.validation@v1",
+          rules: [
+            {
+              id: "infinite-payload",
+              select: { target: "section", depth: Number.POSITIVE_INFINITY },
+              assert: { text: { contains: "Mission" } },
+            },
+          ],
+        },
+        message:
+          "Profile.rules[0].select.depth must contain only JSON-safe data properties.",
+      },
+      {
+        input: protoPayload,
+        message: "Profile.__proto__ must contain only JSON-safe data properties.",
+      },
+    ];
+
+    for (const { input, message } of cases) {
+      const result = parseValidationProfile(input as ProfileInput);
+
+      expect(result.profile).toBeUndefined();
+      expect(result.diagnostics).toContainEqual(
+        expect.objectContaining({
+          code: "profile.config.invalidShape",
+          message,
+          severity: "error",
+        }),
+      );
+    }
+
+    expect(accessorRead).toBe(false);
+    expect(proxyTrapExecuted).toBe(false);
+  });
+
+  it("does not use caller-owned array iteration for direct profile inputs", () => {
+    let iteratorRead = false;
+    const rules = [
+      {
+        id: "safe-rule",
+        select: { target: "document" },
+        assert: { text: { contains: "Mission" } },
+      },
+    ];
+    Object.defineProperty(rules, Symbol.iterator, {
+      get() {
+        iteratorRead = true;
+        throw new Error("profile array iterator must not execute");
+      },
+    });
+
+    const result = parseValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      rules,
+    } as ProfileInput);
+
+    expect(result.diagnostics).toEqual([]);
+    expect(result.profile?.rules).toHaveLength(1);
+    expect(iteratorRead).toBe(false);
+  });
+
   it("accepts every public selector target", () => {
     const result = parseValidationProfile({
       syntaxVersion: "markdown-engine.validation@v1",

@@ -30,12 +30,15 @@ const validationConfig = {
 } satisfies ValidationConfig;
 
 describe("BEL-948 rich IR compatibility contract gate", () => {
-  it("preserves the legacy parse, normalize, validate, and serialize flow without an explicit mode", () => {
+  it("uses the 1.0 rich IR document contract by default in the 2.0 package", () => {
     const parseResult = parse(markdown, { path: fixturePath });
     const normalizeResult = normalize(parseResult.parsed);
     const validationResult = validate(normalizeResult.document, validationConfig);
 
-    expect(normalizeResult.document.version).toBe("0.0.0");
+    expect(normalizeResult.document.version).toBe("1.0.0");
+    expect(normalizeResult.document.compatibility).toMatchObject({
+      mode: "default",
+    });
     expect(validationResult).toEqual({
       valid: true,
       diagnostics: [],
@@ -63,7 +66,9 @@ describe("BEL-948 rich IR compatibility contract gate", () => {
 
   it("accepts explicit legacy mode for 0.1-compatible document-bearing results", () => {
     const parseResult = parse(markdown, { path: fixturePath });
-    const normalizeResult = normalize(parseResult.parsed);
+    const normalizeResult = normalize(parseResult.parsed, {
+      documentVersion: "0.0.0",
+    });
 
     expect(
       JSON.parse(serialize(parseResult, { compatibilityMode: "legacy-0.1" })),
@@ -99,7 +104,9 @@ describe("BEL-948 rich IR compatibility contract gate", () => {
   });
 
   it("rejects default mode when the document-bearing result is legacy", () => {
-    const legacyDocument = normalize(parse(markdown).parsed).document;
+    const legacyDocument = normalize(parse(markdown).parsed, {
+      documentVersion: "0.0.0",
+    }).document;
 
     expectCompatibilityError(
       () => serialize(legacyDocument, { compatibilityMode: "default" }),

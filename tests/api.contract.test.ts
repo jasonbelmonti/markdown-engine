@@ -64,7 +64,7 @@ describe("public API", () => {
     expect(normalizeResult).toMatchObject({
       document: {
         kind: "markdown-document",
-        version: "0.0.0",
+        version: "1.0.0",
         path: contractPath,
         frontmatter: contractFrontmatter,
       },

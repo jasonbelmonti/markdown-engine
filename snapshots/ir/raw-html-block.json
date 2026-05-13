@@ -3,6 +3,21 @@
   "document": {
     "children": [
       {
+        "source": {
+          "range": {
+            "end": {
+              "column": 11,
+              "line": 3,
+              "offset": 73
+            },
+            "start": {
+              "column": 1,
+              "line": 1,
+              "offset": 0
+            }
+          },
+          "text": "<section data-engine=\"inert\">\n  <strong>Raw HTML data</strong>\n</section>"
+        },
         "sourceRange": {
           "end": {
             "column": 11,
@@ -15,12 +30,40 @@
             "offset": 0
           }
         },
+        "target": {
+          "id": "node:0:html",
+          "kind": "node",
+          "nodeType": "html",
+          "path": [
+            0
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 11,
+              "line": 3,
+              "offset": 73
+            },
+            "start": {
+              "column": 1,
+              "line": 1,
+              "offset": 0
+            }
+          }
+        },
         "text": "<section data-engine=\"inert\">\n  <strong>Raw HTML data</strong>\n</section>",
         "type": "html"
       }
     ],
+    "compatibility": {
+      "mode": "default",
+      "reason": "1.0 document contract"
+    },
     "kind": "markdown-document",
+    "linkReferences": [],
+    "links": [],
+    "lists": [],
     "path": "fixtures/parser/21-raw-html-block.md",
+    "sections": [],
     "sourceRange": {
       "end": {
         "column": 1,
@@ -33,6 +76,62 @@
         "offset": 0
       }
     },
-    "version": "0.0.0"
+    "tables": [],
+    "target": {
+      "id": "node:root:document",
+      "kind": "node",
+      "nodeType": "document",
+      "path": [],
+      "sourceRange": {
+        "end": {
+          "column": 1,
+          "line": 4,
+          "offset": 74
+        },
+        "start": {
+          "column": 1,
+          "line": 1,
+          "offset": 0
+        }
+      }
+    },
+    "textSpans": [
+      {
+        "sourceRange": {
+          "end": {
+            "column": 11,
+            "line": 3,
+            "offset": 73
+          },
+          "start": {
+            "column": 1,
+            "line": 1,
+            "offset": 0
+          }
+        },
+        "target": {
+          "id": "node:0:html",
+          "kind": "node",
+          "nodeType": "html",
+          "path": [
+            0
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 11,
+              "line": 3,
+              "offset": 73
+            },
+            "start": {
+              "column": 1,
+              "line": 1,
+              "offset": 0
+            }
+          }
+        },
+        "text": "<section data-engine=\"inert\">\n  <strong>Raw HTML data</strong>\n</section>"
+      }
+    ],
+    "version": "1.0.0"
   }
 }

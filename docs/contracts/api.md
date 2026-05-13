@@ -1,12 +1,13 @@
 # Public API Contract
 
-Status: 1.0.0 public contract
-Last updated: 2026-05-11
+Status: package 2.0.0, document contract 1.0.0
+Last updated: 2026-05-13
 
 This document defines the public `@jasonbelmonti/markdown-engine` package
-contract for the `1.0.0` release. The stable public surface is the package
-export from `@jasonbelmonti/markdown-engine`, not internal adapter modules or
-raw parser output. The 1.0 rich IR design is tracked in
+contract for the `2.0.0` package release. The serialized rich IR document
+contract remains `documentVersion: "1.0.0"`. The stable public surface is the
+package export from `@jasonbelmonti/markdown-engine`, not internal adapter
+modules or raw parser output. The 1.0 rich IR design is tracked in
 `docs/design/markdown-engine-1.0-rich-ir-operational-design-spec.md`.
 
 ## Exported Surface
@@ -70,9 +71,10 @@ Signature:
 normalize(parsed: ParsedMarkdown, options?: NormalizeOptions): NormalizeResult
 ```
 
-`NormalizeOptions.documentVersion` selects the document contract version. The
-final 1.0 rich IR path is `"1.0.0"`. The retained `0.1.0`-compatible path is
-`"0.0.0"`.
+`NormalizeOptions.documentVersion` selects the document contract version.
+Package 2.0 defaults omitted `documentVersion` to the rich IR
+`"1.0.0"` contract. The retained `0.1.0`-compatible path is `"0.0.0"` and must
+be requested explicitly.
 
 `NormalizeOptions.preserveSourceLocations` defaults to `true`. When set to
 `false`, source ranges and source slices are omitted from the normalized
@@ -307,10 +309,12 @@ code nodes with `kind: "fenced"`. Raw parser node objects are not public.
 
 ## 1.0 Contract
 
-The final 1.0 contract is selected as `documentVersion: "1.0.0"` and checked
-with `compatibilityMode: "default"`.
+The final 1.0 document contract is selected by default in package 2.0, remains
+available explicitly as `documentVersion: "1.0.0"`, and is checked with
+`compatibilityMode: "default"`.
 
-Callers select the 1.0 contract with:
+Callers select the 1.0 contract with either `normalize(parsed)` or an explicit
+selector:
 
 ```ts
 const parsed = parse(markdown, { path: "mission.md" });
@@ -532,8 +536,10 @@ serialization behavior.
 
 ### Compatibility And Migration
 
-The current package version is `1.0.0`. The 1.0 contract is selected with
-`normalize(..., { documentVersion: "1.0.0" })` and checked at serialization
+The current package version is `2.0.0`. The serialized document contract
+version remains `"1.0.0"`. Package 2.0 selects that rich IR contract by
+default for `normalize(parsed)`; callers may also request it explicitly with
+`normalize(..., { documentVersion: "1.0.0" })`. Serialization gates check it
 with `compatibilityMode: "default"`.
 
 The retained compatibility selector is `compatibilityMode: "legacy-0.1"`,
@@ -541,10 +547,11 @@ which accepts document-bearing public results with `version: "0.0.0"`. This is
 the documented 0.1.x-compatible behavior gate. Consumers should not infer
 compatibility from the absence of rich IR fields.
 
-Migration from the `0.1.0` document shape to the 1.0 shape requires
-consumers to:
+Migration from the `0.1.0` document shape, or from pre-2.0 API callers that
+depended on implicit legacy normalization, requires consumers to:
 
-- request `documentVersion: "1.0.0"` during normalization;
+- use package 2.0's default `normalize(parsed)` rich IR output or request
+  `documentVersion: "1.0.0"` during normalization;
 - read `target`, `sections`, `textSpans`, `tables`, `lists`, `links`,
   `linkReferences`, and `source` from the normalized document instead of
   re-deriving them from raw Markdown;
@@ -602,12 +609,13 @@ exit with code `2`. Validation success exits with code `0`; validation or
 normalization error diagnostics exit with code `1`. Validation JSON includes
 `profile`, `ruleResults`, `diagnostics`, and `evidence`.
 
-Semver classification: this is a breaking CLI output-shape change for consumers
-that parse default CLI JSON. Migration is to either consume the rich IR fields or
-pin `--document-version 0.0.0` until the downstream consumer is ready. API
-consumers migrating to rich IR should continue to use the `documentVersion` and
-`compatibilityMode` selectors documented above. The CLI default-output cutover
-is carried in the 1.0 release lane, not as a `0.1.x` patch.
+Semver classification: package 2.0 makes the rich IR contract the default API
+normalization output while retaining the document contract version
+`"1.0.0"`. This is breaking for API consumers that call `normalize(parsed)` and
+expect the legacy `0.0.0` document shape. Migration is to either consume the
+rich IR fields or pin `documentVersion: "0.0.0"` until the downstream consumer
+is ready. CLI consumers can still pin `--document-version 0.0.0` for explicit
+legacy output.
 
 ### Non-Goals And Limits
 

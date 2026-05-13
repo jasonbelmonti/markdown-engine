@@ -33,10 +33,6 @@ function closeProfileDataTreeValue(
     return value;
   }
 
-  if (value === undefined) {
-    return undefined;
-  }
-
   if (nodeTypes.isProxy(value)) {
     pushDataClosureDiagnostic(fieldName, diagnostics, ruleId);
 
