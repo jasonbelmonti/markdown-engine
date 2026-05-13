@@ -351,6 +351,7 @@ includes deterministic derived structural views:
 - `tables`: `EngineTable[]` with flattened table-cell coordinates.
 - `lists`: `EngineList[]` with list item coordinates.
 - `links`: `EngineLink[]`.
+- `linkReferences`: `EngineLinkReference[]`.
 - `annotations`: optional caller-owned annotations if a caller attaches a
   validated annotation result to the document.
 
@@ -428,7 +429,36 @@ GFM header row is row index `0`; body rows continue at `1`, `2`, and so on.
 `checked`, and optional `sourceRange`.
 
 `links` contains `EngineLink` records with `target`, `url`, normalized `text`,
-optional `title`, and optional `sourceRange`.
+optional `title`, and optional `sourceRange`. It remains scoped to inline
+Markdown links.
+
+`linkReferences` contains additive `EngineLinkReference` records for public,
+source-located URL and reference extraction. Records use preorder depth-first
+document order for node-backed constructs and include:
+
+- `target`: target for the Markdown construct location.
+- `kind`: one of `"link"`, `"image"`, `"definition"`, `"linkReference"`, or
+  `"imageReference"`.
+- `url`: direct URL for inline links, images, and definitions; resolved
+  definition URL for reference usages when a matching definition is known.
+- `title`: direct or resolved optional title when available.
+- `text`: user-visible text for links and link reference usages when available.
+- `alt`: user-visible alt text for images and image reference usages when
+  available.
+- `label`: Markdown label for definitions and reference usages when available.
+- `identifier`: normalized Markdown identifier for definitions and reference
+  usages when available.
+- `referenceType`: reference usage type, such as `"full"`, `"collapsed"`, or
+  `"shortcut"`, when available.
+- `definitionTarget`: target of the matched link definition for resolved
+  reference usages.
+- `sourceRange`: optional construct source range.
+
+Reference usages and definitions are represented as separate records. Reference
+usage records are joined to the first matching definition target and URL when
+the parsed Markdown structure provides a match. The view only reports Markdown
+constructs present in the normalized engine node tree; reference syntax that the
+parser treats as plain text is not reported.
 
 ### Query Helpers
 
@@ -446,6 +476,9 @@ optional `title`, and optional `sourceRange`.
 - `lists(document, query?)` filters list views by target ID, ordered state, or
   item depth.
 - `links(document, query?)` filters link views by target ID, URL, or text.
+- `linkReferences(document, query?)` filters link-like reference views by target
+  ID, kind, URL, text, alt text, label, identifier, reference type, or
+  definition target ID.
 - `targetCategory(document, target)` returns `"document"`, `"node"`,
   `"section"`, or `undefined` for targets that do not resolve in the document.
 - `resolveTarget(document, target)` returns a category-specific resolution:
@@ -509,9 +542,9 @@ Migration from the `0.1.0` document shape to the 1.0 shape requires
 consumers to:
 
 - request `documentVersion: "1.0.0"` during normalization;
-- read `target`, `sections`, `textSpans`, `tables`, `lists`, `links`, and
-  `source` from the normalized document instead of re-deriving them from raw
-  Markdown;
+- read `target`, `sections`, `textSpans`, `tables`, `lists`, `links`,
+  `linkReferences`, and `source` from the normalized document instead of
+  re-deriving them from raw Markdown;
 - use `documentQueries` for structural access rather than depending on internal
   traversal helpers;
 - use `validateAnnotations` for caller-owned node and source annotations;
@@ -527,7 +560,8 @@ pretty JSON. BEL-952 changes the CLI default output to the 1.0 rich IR
 contract: `--file` and `--path` emit a normalized result whose
 `document.version` is `"1.0.0"` and whose document includes derived rich
 IR views such as `target`, `sections`, `textSpans`, `tables`, `lists`, and
-`links` when present.
+`links` when present. The document also exposes `linkReferences` for
+URL-bearing links, images, definitions, and source-located reference usages.
 
 Legacy CLI output remains explicit:
 

@@ -80,6 +80,27 @@ export interface EngineLink {
   sourceRange?: SourceRange;
 }
 
+export type EngineLinkReferenceKind =
+  | "definition"
+  | "image"
+  | "imageReference"
+  | "link"
+  | "linkReference";
+
+export interface EngineLinkReference {
+  target: EngineNodeTarget;
+  kind: EngineLinkReferenceKind;
+  url?: string;
+  title?: string;
+  text?: string;
+  alt?: string;
+  label?: string;
+  identifier?: string;
+  referenceType?: string;
+  definitionTarget?: EngineNodeTarget;
+  sourceRange?: SourceRange;
+}
+
 export type EngineAnnotationTarget =
   | { kind: "node"; nodeTarget: EngineNodeTarget }
   | { kind: "source"; sourceRange: SourceRange };
@@ -112,6 +133,7 @@ export interface EngineDocument {
   tables?: readonly EngineTable[];
   lists?: readonly EngineList[];
   links?: readonly EngineLink[];
+  linkReferences?: readonly EngineLinkReference[];
   annotations?: readonly EngineAnnotation[];
   compatibility?: EngineCompatibilityGate;
 }
@@ -152,6 +174,18 @@ export interface EngineLinkQuery {
   text?: string;
 }
 
+export interface EngineLinkReferenceQuery {
+  targetId?: string;
+  kind?: EngineLinkReferenceKind;
+  url?: string;
+  text?: string;
+  alt?: string;
+  label?: string;
+  identifier?: string;
+  referenceType?: string;
+  definitionTargetId?: string;
+}
+
 export type EngineTargetCategory = "document" | "node" | "section";
 
 export type EngineTargetResolution =
@@ -185,6 +219,10 @@ export interface EngineDocumentQueries {
   tables(document: EngineDocument, query?: EngineTableQuery): readonly EngineTable[];
   lists(document: EngineDocument, query?: EngineListQuery): readonly EngineList[];
   links(document: EngineDocument, query?: EngineLinkQuery): readonly EngineLink[];
+  linkReferences(
+    document: EngineDocument,
+    query?: EngineLinkReferenceQuery,
+  ): readonly EngineLinkReference[];
   targetCategory(
     document: EngineDocument,
     target: EngineNodeTarget,

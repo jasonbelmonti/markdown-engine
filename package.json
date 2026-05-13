@@ -46,12 +46,12 @@
     "release:check-clean": "git diff --check HEAD -- && git diff --exit-code HEAD --",
     "snapshots:update:parser": "npm run build && vitest run tests/parser-fixtures.test.ts -u \"--exclude=.worktrees/**\"",
     "snapshots:update:rules": "npm run build && vitest run tests/rules.test.ts -u \"--exclude=.worktrees/**\"",
-    "snapshots:update:rich-ir": "npm run build && vitest run tests/rich-ir-targets.test.ts tests/rich-ir-queries.test.ts -u \"--exclude=.worktrees/**\"",
+    "snapshots:update:rich-ir": "npm run build && vitest run tests/rich-ir-targets.test.ts tests/rich-ir-queries.test.ts tests/rich-ir-link-references.test.ts -u \"--exclude=.worktrees/**\"",
     "snapshots:update:serialization": "npm run build && vitest run tests/serialization-repeatability.test.ts tests/boundary-inspection.test.ts -u \"--exclude=.worktrees/**\"",
     "test:rich-ir:proving": "npm run build && vitest run tests/rich-ir-proving.test.ts \"--exclude=.worktrees/**\"",
     "test:rich-ir:contract": "npm run build && tsc -p tsconfig.document-contract.json && vitest run tests/document-contract.test.ts \"--exclude=.worktrees/**\"",
     "test:rich-ir:targets": "npm run build && vitest run tests/rich-ir-targets.test.ts \"--exclude=.worktrees/**\"",
-    "test:rich-ir:queries": "npm run build && vitest run tests/rich-ir-queries.test.ts \"--exclude=.worktrees/**\"",
+    "test:rich-ir:queries": "npm run build && vitest run tests/rich-ir-queries.test.ts tests/rich-ir-link-references.test.ts \"--exclude=.worktrees/**\"",
     "test:rich-ir:annotations": "npm run build && vitest run tests/rich-ir-annotations.test.ts \"--exclude=.worktrees/**\"",
     "test:rich-ir:compat": "npm run build && vitest run tests/rich-ir-compat.test.ts \"--exclude=.worktrees/**\"",
     "test:rich-ir:repeatability": "npm run build && vitest run tests/rich-ir-repeatability.test.ts \"--exclude=.worktrees/**\"",
@@ -72,7 +72,7 @@
     "docs:declarative-validation-contract": "node scripts/gate-placeholder.mjs docs:declarative-validation-contract",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "npm run build && vitest run \"--exclude=.worktrees/**\"",
-    "test:snapshots": "npm run build && vitest run tests/parser-fixtures.test.ts tests/rules.test.ts tests/rich-ir-targets.test.ts tests/rich-ir-queries.test.ts tests/serialization-repeatability.test.ts \"--exclude=.worktrees/**\""
+    "test:snapshots": "npm run build && vitest run tests/parser-fixtures.test.ts tests/rules.test.ts tests/rich-ir-targets.test.ts tests/rich-ir-queries.test.ts tests/rich-ir-link-references.test.ts tests/serialization-repeatability.test.ts \"--exclude=.worktrees/**\""
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
