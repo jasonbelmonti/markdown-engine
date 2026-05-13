@@ -36,6 +36,16 @@ rules:
         headings:
           - Mission Brief
 `;
+const warningProfile = `syntaxVersion: !custom markdown-engine.validation@v1
+rules:
+  - id: sections.present
+    select:
+      target: document
+    assert:
+      sectionsRequired:
+        headings:
+          - Mission Brief
+`;
 const failingProfile = `syntaxVersion: markdown-engine.validation@v1
 rules:
   - id: text.required
@@ -132,6 +142,47 @@ describe("declarative validation CLI", () => {
     expect(result.evidence.profileHash).toMatch(/^[0-9a-f]{64}$/);
   });
 
+  it("carries executable profile warnings into validation JSON and evidence", async () => {
+    const cwd = await makeTempDir();
+    await writeFile(join(cwd, "mission.md"), validMarkdown);
+    await writeFile(join(cwd, "profile.yaml"), warningProfile);
+
+    const { exitCode, stderr, stdout } = await runCliWithOutput({
+      args: [
+        "validate",
+        "--file",
+        "mission.md",
+        "--profile",
+        "profile.yaml",
+      ],
+      cwd,
+    });
+
+    expect(exitCode).toBe(0);
+    expect(stderr.text()).toBe("");
+
+    const result = parseStdout(stdout.text());
+    expect(result).toMatchObject({
+      diagnostics: [
+        expect.objectContaining({
+          code: "profile.config.yamlWarning",
+          severity: "warning",
+        }),
+      ],
+      ruleResults: [
+        {
+          passed: true,
+          ruleId: "sections.present",
+        },
+      ],
+      valid: true,
+    });
+    expect(result.evidence).toMatchObject({
+      diagnostics: result.diagnostics,
+      ruleResults: result.ruleResults,
+    });
+  });
+
   it("emits validation JSON and exits 1 for assertion failures", async () => {
     const cwd = await makeTempDir();
     await writeFile(join(cwd, "mission.md"), failingMarkdown);
@@ -209,6 +260,50 @@ describe("declarative validation CLI", () => {
       valid: false,
     });
     expect(result).not.toHaveProperty("stage");
+    expect(result.evidence).toMatchObject({
+      diagnostics: result.diagnostics,
+      ruleResults: [],
+    });
+  });
+
+  it("combines Markdown normalization diagnostics with document-version mismatch", async () => {
+    const cwd = await makeTempDir();
+    await writeFile(join(cwd, "mission.md"), invalidFrontmatterMarkdown);
+    await writeFile(join(cwd, "profile.yaml"), versionMismatchProfile);
+
+    const { exitCode, stderr, stdout } = await runCliWithOutput({
+      args: [
+        "validate",
+        "--file",
+        "mission.md",
+        "--profile",
+        "profile.yaml",
+      ],
+      cwd,
+    });
+
+    expect(exitCode).toBe(1);
+    expect(stderr.text()).toBe("");
+
+    const result = parseStdout(stdout.text());
+    expect(result).toMatchObject({
+      diagnostics: expect.arrayContaining([
+        expect.objectContaining({
+          code: "frontmatter.yaml.invalid",
+          severity: "error",
+        }),
+        expect.objectContaining({
+          code: "profile.config.documentVersionMismatch",
+          severity: "error",
+        }),
+      ]),
+      profile: {
+        documentVersion: "0.0.0",
+        ruleCount: 1,
+      },
+      ruleResults: [],
+      valid: false,
+    });
     expect(result.evidence).toMatchObject({
       diagnostics: result.diagnostics,
       ruleResults: [],

@@ -1,6 +1,6 @@
 import { validateWithProfile } from "../api/declarative-validation.js";
 import type { MarkdownDiagnostic } from "../api/diagnostics.js";
-import type { EngineDocument } from "../api/document.js";
+import type { EngineDocument, EngineDocumentVersion } from "../api/document.js";
 import { compileValidationProfile } from "../declarative-validation/compiler/index.js";
 import { createDeclarativeValidationEvidence } from "../declarative-validation/evidence/index.js";
 import { parseValidationProfileInput } from "../declarative-validation/profile/index.js";
@@ -77,13 +77,23 @@ export async function runDeclarativeValidationCli(
     markdown: markdown.content,
     path: input.filePath,
   });
+  const documentDiagnostics = [
+    ...profileResult.diagnostics,
+    ...normalizeResult.diagnostics,
+  ];
 
   if (hasErrorDiagnostic(normalizeResult.diagnostics)) {
     return outputResult(
       documentDiagnosticsResult(
         normalizeResult.document,
         profileResult.profile,
-        normalizeResult.diagnostics,
+        [
+          ...documentDiagnostics,
+          ...documentVersionDiagnostics(
+            profileResult.profile,
+            normalizeResult.document.version,
+          ),
+        ],
       ),
       1,
     );
@@ -96,7 +106,7 @@ export async function runDeclarativeValidationCli(
   );
   const result = mergeDocumentDiagnostics(
     validationResult,
-    normalizeResult.diagnostics,
+    documentDiagnostics,
   );
 
   return outputResult(
@@ -109,6 +119,23 @@ function compileProfileForCli(
   profile: ValidationProfile,
 ): readonly MarkdownDiagnostic[] {
   return compileValidationProfile(profile).diagnostics;
+}
+
+function documentVersionDiagnostics(
+  profile: ValidationProfile,
+  documentVersion: EngineDocumentVersion,
+): readonly MarkdownDiagnostic[] {
+  const profileDocumentVersion = profile.documentVersion ?? documentVersion;
+
+  return profileDocumentVersion === documentVersion
+    ? []
+    : [
+        {
+          code: "profile.config.documentVersionMismatch",
+          message: `Profile documentVersion "${profileDocumentVersion}" does not match document version "${documentVersion}".`,
+          severity: "error" as const,
+        },
+      ];
 }
 
 function profileStageResult(
