@@ -38,6 +38,17 @@ const forbiddenPublicApiTerms = [
   "unified",
 ] as const;
 const packageJsonPath = join(process.cwd(), "package.json");
+const packagedExampleFixturePaths = [
+  "fixtures/declarative-validation/examples/operational-spec/fail.md",
+  "fixtures/declarative-validation/examples/operational-spec/pass.md",
+  "fixtures/declarative-validation/examples/operational-spec/profile.yaml",
+  "fixtures/declarative-validation/examples/release-checklist/fail.md",
+  "fixtures/declarative-validation/examples/release-checklist/pass.md",
+  "fixtures/declarative-validation/examples/release-checklist/profile.yaml",
+  "fixtures/declarative-validation/examples/requirements-traceability/fail.md",
+  "fixtures/declarative-validation/examples/requirements-traceability/pass.md",
+  "fixtures/declarative-validation/examples/requirements-traceability/profile.yaml",
+] as const;
 const document = {
   kind: "markdown-document",
   version: "1.0.0",
@@ -423,6 +434,18 @@ describe("declarative validation public contract scaffold", () => {
       if (script.includes("scripts/gate-placeholder.mjs")) {
         expect(releaseVerifyScript).not.toContain(scriptName);
       }
+    }
+  });
+
+  it("packages the documented declarative validation example fixtures", () => {
+    const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8")) as {
+      files?: readonly string[];
+    };
+
+    expect(packageJson.files).toContain("fixtures/declarative-validation/examples");
+
+    for (const fixturePath of packagedExampleFixturePaths) {
+      expect(readFileSync(fixturePath, "utf8").length).toBeGreaterThan(0);
     }
   });
 });

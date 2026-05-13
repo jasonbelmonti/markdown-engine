@@ -31,6 +31,7 @@
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
+    "fixtures/declarative-validation/examples",
     "CHANGELOG.md",
     "SECURITY.md"
   ],

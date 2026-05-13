@@ -99,7 +99,7 @@ PASS: npm run test:validation:cli
 
 PASS: npm run test:validation:contract
   Test Files 1 passed (1)
-  Tests 13 passed (13)
+  Tests 14 passed (14)
 
 PASS: npm run docs:declarative-validation-contract
   Declarative validation contract documentation gate PASS
@@ -109,6 +109,15 @@ PASS: npm run audit:declarative-validation-boundary
 
 PASS: npm run typecheck
 PASS: npm run build
+```
+
+Package fixture availability check:
+
+```text
+PASS: npm pack --dry-run --json --ignore-scripts
+  Package entry count: 466
+  Expected example fixture files: 9
+  Missing example fixture files: 0
 ```
 
 Direct CLI spot check:
