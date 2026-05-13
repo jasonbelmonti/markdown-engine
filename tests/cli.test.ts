@@ -39,6 +39,19 @@ describe("CLI", () => {
     expectMissionBriefRichIrOutput(result);
   });
 
+  it("accepts assignment-form --file as a single-file target", async () => {
+    const cwd = await makeTempDir();
+    await writeFile(join(cwd, "mission.md"), missionBriefMarkdown);
+    const { exitCode, stderr, stdout } = await runCliWithOutput({
+      args: ["--file=mission.md"],
+      cwd,
+    });
+
+    expect(exitCode).toBe(0);
+    expect(stderr.text()).toBe("");
+    expectMissionBriefRichIrOutput(JSON.parse(stdout.text()));
+  });
+
   it("accepts --path as a single-file target", async () => {
     const cwd = await makeTempDir();
     await writeFile(join(cwd, "notes.md"), "# Notes\n");
@@ -96,6 +109,27 @@ describe("CLI", () => {
 
   it.each([
     {
+      args: ["--help"],
+      usage: "Usage: markdown-engine",
+    },
+    {
+      args: ["-h"],
+      usage: "Usage: markdown-engine",
+    },
+  ])("writes normalize help to stdout: $args", async ({ args, usage }) => {
+    const { exitCode, stderr, stdout } = await runCliWithOutput({
+      args,
+      cwd: "/",
+    });
+
+    expect(exitCode).toBe(0);
+    expect(stdout.text()).toContain(usage);
+    expect(stdout.text()).toContain("Usage: markdown-engine validate");
+    expect(stderr.text()).toBe("");
+  });
+
+  it.each([
+    {
       args: ["--document-version", "1.0.0-draft", "--file", "notes.md"],
       message: "Invalid document version: 1.0.0-draft.",
     },
@@ -134,6 +168,46 @@ describe("CLI", () => {
     },
   ])(
     "rejects invalid document-version selector input: $message",
+    async ({ args, message }) => {
+      const { exitCode, stderr, stdout } = await runCliWithOutput({
+        args,
+        cwd: "/",
+      });
+
+      expect(exitCode).toBe(2);
+      expect(stdout.text()).toBe("");
+      expect(stderr.text()).toContain(message);
+      expect(stderr.text()).toContain("Usage: markdown-engine");
+    },
+  );
+
+  it.each([
+    {
+      args: [],
+      message: "Expected exactly one of --file or --path.",
+    },
+    {
+      args: ["--bogus"],
+      message: "Unknown argument: --bogus",
+    },
+    {
+      args: ["--file"],
+      message: "Missing value for --file.",
+    },
+    {
+      args: ["--path"],
+      message: "Missing value for --path.",
+    },
+    {
+      args: ["--file="],
+      message: "Target path cannot be empty.",
+    },
+    {
+      args: ["--file", "a.md", "--path", "b.md"],
+      message: "Expected one Markdown file target, received multiple.",
+    },
+  ])(
+    "returns usage errors with exit code 2: $message",
     async ({ args, message }) => {
       const { exitCode, stderr, stdout } = await runCliWithOutput({
         args,
