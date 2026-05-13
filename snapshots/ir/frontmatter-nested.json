@@ -8,6 +8,21 @@
         },
         "children": [
           {
+            "source": {
+              "range": {
+                "end": {
+                  "column": 14,
+                  "line": 11,
+                  "offset": 119
+                },
+                "start": {
+                  "column": 3,
+                  "line": 11,
+                  "offset": 108
+                }
+              },
+              "text": "Nested Body"
+            },
             "sourceRange": {
               "end": {
                 "column": 14,
@@ -20,10 +35,46 @@
                 "offset": 108
               }
             },
+            "target": {
+              "id": "node:0.0:text",
+              "kind": "node",
+              "nodeType": "text",
+              "path": [
+                0,
+                0
+              ],
+              "sourceRange": {
+                "end": {
+                  "column": 14,
+                  "line": 11,
+                  "offset": 119
+                },
+                "start": {
+                  "column": 3,
+                  "line": 11,
+                  "offset": 108
+                }
+              }
+            },
             "text": "Nested Body",
             "type": "text"
           }
         ],
+        "source": {
+          "range": {
+            "end": {
+              "column": 14,
+              "line": 11,
+              "offset": 119
+            },
+            "start": {
+              "column": 1,
+              "line": 11,
+              "offset": 106
+            }
+          },
+          "text": "# Nested Body"
+        },
         "sourceRange": {
           "end": {
             "column": 14,
@@ -36,10 +87,34 @@
             "offset": 106
           }
         },
+        "target": {
+          "id": "node:0:heading",
+          "kind": "node",
+          "nodeType": "heading",
+          "path": [
+            0
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 14,
+              "line": 11,
+              "offset": 119
+            },
+            "start": {
+              "column": 1,
+              "line": 11,
+              "offset": 106
+            }
+          }
+        },
         "text": "Nested Body",
         "type": "heading"
       }
     ],
+    "compatibility": {
+      "mode": "default",
+      "reason": "1.0 document contract"
+    },
     "frontmatter": {
       "owners": {
         "backup": "validation",
@@ -52,7 +127,58 @@
       "title": "Nested frontmatter"
     },
     "kind": "markdown-document",
+    "linkReferences": [],
+    "links": [],
+    "lists": [],
     "path": "fixtures/parser/29-frontmatter-nested.md",
+    "sections": [
+      {
+        "bodyTargets": [],
+        "childSections": [],
+        "depth": 1,
+        "headingTarget": {
+          "id": "node:0:heading",
+          "kind": "node",
+          "nodeType": "heading",
+          "path": [
+            0
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 14,
+              "line": 11,
+              "offset": 119
+            },
+            "start": {
+              "column": 1,
+              "line": 11,
+              "offset": 106
+            }
+          }
+        },
+        "target": {
+          "id": "section:node:0:heading",
+          "kind": "node",
+          "nodeType": "section",
+          "path": [
+            0
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 14,
+              "line": 11,
+              "offset": 119
+            },
+            "start": {
+              "column": 1,
+              "line": 11,
+              "offset": 106
+            }
+          }
+        },
+        "title": "Nested Body"
+      }
+    ],
     "sourceRange": {
       "end": {
         "column": 1,
@@ -65,6 +191,98 @@
         "offset": 105
       }
     },
-    "version": "0.0.0"
+    "tables": [],
+    "target": {
+      "id": "node:root:document",
+      "kind": "node",
+      "nodeType": "document",
+      "path": [],
+      "sourceRange": {
+        "end": {
+          "column": 1,
+          "line": 12,
+          "offset": 120
+        },
+        "start": {
+          "column": 1,
+          "line": 10,
+          "offset": 105
+        }
+      }
+    },
+    "textSpans": [
+      {
+        "sourceRange": {
+          "end": {
+            "column": 14,
+            "line": 11,
+            "offset": 119
+          },
+          "start": {
+            "column": 1,
+            "line": 11,
+            "offset": 106
+          }
+        },
+        "target": {
+          "id": "node:0:heading",
+          "kind": "node",
+          "nodeType": "heading",
+          "path": [
+            0
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 14,
+              "line": 11,
+              "offset": 119
+            },
+            "start": {
+              "column": 1,
+              "line": 11,
+              "offset": 106
+            }
+          }
+        },
+        "text": "Nested Body"
+      },
+      {
+        "sourceRange": {
+          "end": {
+            "column": 14,
+            "line": 11,
+            "offset": 119
+          },
+          "start": {
+            "column": 3,
+            "line": 11,
+            "offset": 108
+          }
+        },
+        "target": {
+          "id": "node:0.0:text",
+          "kind": "node",
+          "nodeType": "text",
+          "path": [
+            0,
+            0
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 14,
+              "line": 11,
+              "offset": 119
+            },
+            "start": {
+              "column": 3,
+              "line": 11,
+              "offset": 108
+            }
+          }
+        },
+        "text": "Nested Body"
+      }
+    ],
+    "version": "1.0.0"
   }
 }

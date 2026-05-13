@@ -1,6 +1,6 @@
 # Declarative Validation Contract
 
-Status: 1.0.0 public contract
+Status: package 2.0.0, v1 profile syntax, document contract 1.0.0
 Last updated: 2026-05-13
 
 This document defines the public declarative validation contract for
@@ -9,6 +9,11 @@ the v1 profile syntax, the CLI validation command, diagnostic codes, serialized
 result shapes, and evidence fields. Internal parser output, compiled rule-plan
 records, selector target records, and evaluator implementation modules are not
 public contracts.
+
+Package 2.0 does not introduce `documentVersion: "2.0.0"` or
+`markdown-engine.validation@v2`. Declarative validation continues to use the v1
+profile syntax against the existing `documentVersion: "1.0.0"` rich IR
+document contract.
 
 ## 1.0 Contract
 
@@ -87,6 +92,12 @@ documentVersion: 1.0.0
 Supported profile `documentVersion` values are `"0.0.0"` and `"1.0.0"`.
 Omission is allowed. `parseValidationProfile` preserves omission and does not
 inject a default into the parsed profile.
+
+Direct object inputs to `parseValidationProfile` are closed as JSON-safe data
+before schema traversal. Accessors, proxies, cyclic values, sparse arrays,
+functions, non-finite numbers, explicit `undefined`, and `__proto__` data
+properties are rejected with inert diagnostics rather than being executed or
+compiled.
 
 `validateWithProfile` resolves an omitted profile `documentVersion` to the
 supplied `EngineDocument.version`. The returned
@@ -332,6 +343,10 @@ serialization of the resolved `ValidationProfile` after applying the resolved
 `documentVersion` and an explicit matching `documentVersion` therefore produce
 the same profile hash for the same document version and rules.
 
+`engineVersion` records the package version that produced the evidence. In the
+2.0 release line this is `"2.0.0"` even though `documentVersion` remains
+`"1.0.0"`.
+
 Raw Markdown bytes, raw YAML bytes, YAML comments, caller file paths, and
 `includeEvidence` itself are not part of either evidence hash.
 
@@ -393,9 +408,9 @@ Validation-result JSON is used after profile compilation succeeds. It contains
 ## Compatibility And Migration
 
 The v1 declarative validation syntax is a durable authoring contract for the
-1.0 release lane. Changes to profile syntax names, selector names, assertion
-names, result fields, diagnostic codes, CLI flags, CLI JSON shape, or evidence
-hash inputs require explicit compatibility review.
+2.0 package release line. Changes to profile syntax names, selector names,
+assertion names, result fields, diagnostic codes, CLI flags, CLI JSON shape, or
+evidence hash inputs require explicit compatibility review.
 
 Migration notes:
 

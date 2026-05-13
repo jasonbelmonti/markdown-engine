@@ -14,7 +14,7 @@ export function normalizeParsedMarkdown(
   const preserveSourceLocations = options.preserveSourceLocations ?? true;
   const document = parsed.document;
   const path = document.path ?? parsed.path;
-  const version = options.documentVersion ?? document.version;
+  const version = options.documentVersion ?? "1.0.0";
 
   const normalizedDocument: EngineDocument = {
     kind: "markdown-document",

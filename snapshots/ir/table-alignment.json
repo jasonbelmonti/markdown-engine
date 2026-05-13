@@ -16,6 +16,21 @@
               {
                 "children": [
                   {
+                    "source": {
+                      "range": {
+                        "end": {
+                          "column": 8,
+                          "line": 1,
+                          "offset": 7
+                        },
+                        "start": {
+                          "column": 3,
+                          "line": 1,
+                          "offset": 2
+                        }
+                      },
+                      "text": "Phase"
+                    },
                     "sourceRange": {
                       "end": {
                         "column": 8,
@@ -28,10 +43,48 @@
                         "offset": 2
                       }
                     },
+                    "target": {
+                      "id": "node:0.0.0.0:text",
+                      "kind": "node",
+                      "nodeType": "text",
+                      "path": [
+                        0,
+                        0,
+                        0,
+                        0
+                      ],
+                      "sourceRange": {
+                        "end": {
+                          "column": 8,
+                          "line": 1,
+                          "offset": 7
+                        },
+                        "start": {
+                          "column": 3,
+                          "line": 1,
+                          "offset": 2
+                        }
+                      }
+                    },
                     "text": "Phase",
                     "type": "text"
                   }
                 ],
+                "source": {
+                  "range": {
+                    "end": {
+                      "column": 9,
+                      "line": 1,
+                      "offset": 8
+                    },
+                    "start": {
+                      "column": 1,
+                      "line": 1,
+                      "offset": 0
+                    }
+                  },
+                  "text": "| Phase "
+                },
                 "sourceRange": {
                   "end": {
                     "column": 9,
@@ -44,11 +97,48 @@
                     "offset": 0
                   }
                 },
+                "target": {
+                  "id": "node:0.0.0:tableCell",
+                  "kind": "node",
+                  "nodeType": "tableCell",
+                  "path": [
+                    0,
+                    0,
+                    0
+                  ],
+                  "sourceRange": {
+                    "end": {
+                      "column": 9,
+                      "line": 1,
+                      "offset": 8
+                    },
+                    "start": {
+                      "column": 1,
+                      "line": 1,
+                      "offset": 0
+                    }
+                  }
+                },
                 "type": "tableCell"
               },
               {
                 "children": [
                   {
+                    "source": {
+                      "range": {
+                        "end": {
+                          "column": 16,
+                          "line": 1,
+                          "offset": 15
+                        },
+                        "start": {
+                          "column": 11,
+                          "line": 1,
+                          "offset": 10
+                        }
+                      },
+                      "text": "Owner"
+                    },
                     "sourceRange": {
                       "end": {
                         "column": 16,
@@ -61,10 +151,48 @@
                         "offset": 10
                       }
                     },
+                    "target": {
+                      "id": "node:0.0.1.0:text",
+                      "kind": "node",
+                      "nodeType": "text",
+                      "path": [
+                        0,
+                        0,
+                        1,
+                        0
+                      ],
+                      "sourceRange": {
+                        "end": {
+                          "column": 16,
+                          "line": 1,
+                          "offset": 15
+                        },
+                        "start": {
+                          "column": 11,
+                          "line": 1,
+                          "offset": 10
+                        }
+                      }
+                    },
                     "text": "Owner",
                     "type": "text"
                   }
                 ],
+                "source": {
+                  "range": {
+                    "end": {
+                      "column": 17,
+                      "line": 1,
+                      "offset": 16
+                    },
+                    "start": {
+                      "column": 9,
+                      "line": 1,
+                      "offset": 8
+                    }
+                  },
+                  "text": "| Owner "
+                },
                 "sourceRange": {
                   "end": {
                     "column": 17,
@@ -77,11 +205,48 @@
                     "offset": 8
                   }
                 },
+                "target": {
+                  "id": "node:0.0.1:tableCell",
+                  "kind": "node",
+                  "nodeType": "tableCell",
+                  "path": [
+                    0,
+                    0,
+                    1
+                  ],
+                  "sourceRange": {
+                    "end": {
+                      "column": 17,
+                      "line": 1,
+                      "offset": 16
+                    },
+                    "start": {
+                      "column": 9,
+                      "line": 1,
+                      "offset": 8
+                    }
+                  }
+                },
                 "type": "tableCell"
               },
               {
                 "children": [
                   {
+                    "source": {
+                      "range": {
+                        "end": {
+                          "column": 25,
+                          "line": 1,
+                          "offset": 24
+                        },
+                        "start": {
+                          "column": 19,
+                          "line": 1,
+                          "offset": 18
+                        }
+                      },
+                      "text": "Status"
+                    },
                     "sourceRange": {
                       "end": {
                         "column": 25,
@@ -94,10 +259,48 @@
                         "offset": 18
                       }
                     },
+                    "target": {
+                      "id": "node:0.0.2.0:text",
+                      "kind": "node",
+                      "nodeType": "text",
+                      "path": [
+                        0,
+                        0,
+                        2,
+                        0
+                      ],
+                      "sourceRange": {
+                        "end": {
+                          "column": 25,
+                          "line": 1,
+                          "offset": 24
+                        },
+                        "start": {
+                          "column": 19,
+                          "line": 1,
+                          "offset": 18
+                        }
+                      }
+                    },
                     "text": "Status",
                     "type": "text"
                   }
                 ],
+                "source": {
+                  "range": {
+                    "end": {
+                      "column": 27,
+                      "line": 1,
+                      "offset": 26
+                    },
+                    "start": {
+                      "column": 17,
+                      "line": 1,
+                      "offset": 16
+                    }
+                  },
+                  "text": "| Status |"
+                },
                 "sourceRange": {
                   "end": {
                     "column": 27,
@@ -110,9 +313,46 @@
                     "offset": 16
                   }
                 },
+                "target": {
+                  "id": "node:0.0.2:tableCell",
+                  "kind": "node",
+                  "nodeType": "tableCell",
+                  "path": [
+                    0,
+                    0,
+                    2
+                  ],
+                  "sourceRange": {
+                    "end": {
+                      "column": 27,
+                      "line": 1,
+                      "offset": 26
+                    },
+                    "start": {
+                      "column": 17,
+                      "line": 1,
+                      "offset": 16
+                    }
+                  }
+                },
                 "type": "tableCell"
               }
             ],
+            "source": {
+              "range": {
+                "end": {
+                  "column": 27,
+                  "line": 1,
+                  "offset": 26
+                },
+                "start": {
+                  "column": 1,
+                  "line": 1,
+                  "offset": 0
+                }
+              },
+              "text": "| Phase | Owner | Status |"
+            },
             "sourceRange": {
               "end": {
                 "column": 27,
@@ -125,6 +365,27 @@
                 "offset": 0
               }
             },
+            "target": {
+              "id": "node:0.0:tableRow",
+              "kind": "node",
+              "nodeType": "tableRow",
+              "path": [
+                0,
+                0
+              ],
+              "sourceRange": {
+                "end": {
+                  "column": 27,
+                  "line": 1,
+                  "offset": 26
+                },
+                "start": {
+                  "column": 1,
+                  "line": 1,
+                  "offset": 0
+                }
+              }
+            },
             "type": "tableRow"
           },
           {
@@ -132,6 +393,21 @@
               {
                 "children": [
                   {
+                    "source": {
+                      "range": {
+                        "end": {
+                          "column": 7,
+                          "line": 3,
+                          "offset": 59
+                        },
+                        "start": {
+                          "column": 3,
+                          "line": 3,
+                          "offset": 55
+                        }
+                      },
+                      "text": "WP-3"
+                    },
                     "sourceRange": {
                       "end": {
                         "column": 7,
@@ -144,10 +420,48 @@
                         "offset": 55
                       }
                     },
+                    "target": {
+                      "id": "node:0.1.0.0:text",
+                      "kind": "node",
+                      "nodeType": "text",
+                      "path": [
+                        0,
+                        1,
+                        0,
+                        0
+                      ],
+                      "sourceRange": {
+                        "end": {
+                          "column": 7,
+                          "line": 3,
+                          "offset": 59
+                        },
+                        "start": {
+                          "column": 3,
+                          "line": 3,
+                          "offset": 55
+                        }
+                      }
+                    },
                     "text": "WP-3",
                     "type": "text"
                   }
                 ],
+                "source": {
+                  "range": {
+                    "end": {
+                      "column": 8,
+                      "line": 3,
+                      "offset": 60
+                    },
+                    "start": {
+                      "column": 1,
+                      "line": 3,
+                      "offset": 53
+                    }
+                  },
+                  "text": "| WP-3 "
+                },
                 "sourceRange": {
                   "end": {
                     "column": 8,
@@ -160,11 +474,48 @@
                     "offset": 53
                   }
                 },
+                "target": {
+                  "id": "node:0.1.0:tableCell",
+                  "kind": "node",
+                  "nodeType": "tableCell",
+                  "path": [
+                    0,
+                    1,
+                    0
+                  ],
+                  "sourceRange": {
+                    "end": {
+                      "column": 8,
+                      "line": 3,
+                      "offset": 60
+                    },
+                    "start": {
+                      "column": 1,
+                      "line": 3,
+                      "offset": 53
+                    }
+                  }
+                },
                 "type": "tableCell"
               },
               {
                 "children": [
                   {
+                    "source": {
+                      "range": {
+                        "end": {
+                          "column": 16,
+                          "line": 3,
+                          "offset": 68
+                        },
+                        "start": {
+                          "column": 10,
+                          "line": 3,
+                          "offset": 62
+                        }
+                      },
+                      "text": "engine"
+                    },
                     "sourceRange": {
                       "end": {
                         "column": 16,
@@ -177,10 +528,48 @@
                         "offset": 62
                       }
                     },
+                    "target": {
+                      "id": "node:0.1.1.0:text",
+                      "kind": "node",
+                      "nodeType": "text",
+                      "path": [
+                        0,
+                        1,
+                        1,
+                        0
+                      ],
+                      "sourceRange": {
+                        "end": {
+                          "column": 16,
+                          "line": 3,
+                          "offset": 68
+                        },
+                        "start": {
+                          "column": 10,
+                          "line": 3,
+                          "offset": 62
+                        }
+                      }
+                    },
                     "text": "engine",
                     "type": "text"
                   }
                 ],
+                "source": {
+                  "range": {
+                    "end": {
+                      "column": 17,
+                      "line": 3,
+                      "offset": 69
+                    },
+                    "start": {
+                      "column": 8,
+                      "line": 3,
+                      "offset": 60
+                    }
+                  },
+                  "text": "| engine "
+                },
                 "sourceRange": {
                   "end": {
                     "column": 17,
@@ -193,11 +582,48 @@
                     "offset": 60
                   }
                 },
+                "target": {
+                  "id": "node:0.1.1:tableCell",
+                  "kind": "node",
+                  "nodeType": "tableCell",
+                  "path": [
+                    0,
+                    1,
+                    1
+                  ],
+                  "sourceRange": {
+                    "end": {
+                      "column": 17,
+                      "line": 3,
+                      "offset": 69
+                    },
+                    "start": {
+                      "column": 8,
+                      "line": 3,
+                      "offset": 60
+                    }
+                  }
+                },
                 "type": "tableCell"
               },
               {
                 "children": [
                   {
+                    "source": {
+                      "range": {
+                        "end": {
+                          "column": 25,
+                          "line": 3,
+                          "offset": 77
+                        },
+                        "start": {
+                          "column": 19,
+                          "line": 3,
+                          "offset": 71
+                        }
+                      },
+                      "text": "active"
+                    },
                     "sourceRange": {
                       "end": {
                         "column": 25,
@@ -210,10 +636,48 @@
                         "offset": 71
                       }
                     },
+                    "target": {
+                      "id": "node:0.1.2.0:text",
+                      "kind": "node",
+                      "nodeType": "text",
+                      "path": [
+                        0,
+                        1,
+                        2,
+                        0
+                      ],
+                      "sourceRange": {
+                        "end": {
+                          "column": 25,
+                          "line": 3,
+                          "offset": 77
+                        },
+                        "start": {
+                          "column": 19,
+                          "line": 3,
+                          "offset": 71
+                        }
+                      }
+                    },
                     "text": "active",
                     "type": "text"
                   }
                 ],
+                "source": {
+                  "range": {
+                    "end": {
+                      "column": 27,
+                      "line": 3,
+                      "offset": 79
+                    },
+                    "start": {
+                      "column": 17,
+                      "line": 3,
+                      "offset": 69
+                    }
+                  },
+                  "text": "| active |"
+                },
                 "sourceRange": {
                   "end": {
                     "column": 27,
@@ -226,9 +690,46 @@
                     "offset": 69
                   }
                 },
+                "target": {
+                  "id": "node:0.1.2:tableCell",
+                  "kind": "node",
+                  "nodeType": "tableCell",
+                  "path": [
+                    0,
+                    1,
+                    2
+                  ],
+                  "sourceRange": {
+                    "end": {
+                      "column": 27,
+                      "line": 3,
+                      "offset": 79
+                    },
+                    "start": {
+                      "column": 17,
+                      "line": 3,
+                      "offset": 69
+                    }
+                  }
+                },
                 "type": "tableCell"
               }
             ],
+            "source": {
+              "range": {
+                "end": {
+                  "column": 27,
+                  "line": 3,
+                  "offset": 79
+                },
+                "start": {
+                  "column": 1,
+                  "line": 3,
+                  "offset": 53
+                }
+              },
+              "text": "| WP-3 | engine | active |"
+            },
             "sourceRange": {
               "end": {
                 "column": 27,
@@ -241,9 +742,45 @@
                 "offset": 53
               }
             },
+            "target": {
+              "id": "node:0.1:tableRow",
+              "kind": "node",
+              "nodeType": "tableRow",
+              "path": [
+                0,
+                1
+              ],
+              "sourceRange": {
+                "end": {
+                  "column": 27,
+                  "line": 3,
+                  "offset": 79
+                },
+                "start": {
+                  "column": 1,
+                  "line": 3,
+                  "offset": 53
+                }
+              }
+            },
             "type": "tableRow"
           }
         ],
+        "source": {
+          "range": {
+            "end": {
+              "column": 27,
+              "line": 3,
+              "offset": 79
+            },
+            "start": {
+              "column": 1,
+              "line": 1,
+              "offset": 0
+            }
+          },
+          "text": "| Phase | Owner | Status |\n| :---- | :---: | ----: |\n| WP-3 | engine | active |"
+        },
         "sourceRange": {
           "end": {
             "column": 27,
@@ -256,11 +793,39 @@
             "offset": 0
           }
         },
+        "target": {
+          "id": "node:0:table",
+          "kind": "node",
+          "nodeType": "table",
+          "path": [
+            0
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 27,
+              "line": 3,
+              "offset": 79
+            },
+            "start": {
+              "column": 1,
+              "line": 1,
+              "offset": 0
+            }
+          }
+        },
         "type": "table"
       }
     ],
+    "compatibility": {
+      "mode": "default",
+      "reason": "1.0 document contract"
+    },
     "kind": "markdown-document",
+    "linkReferences": [],
+    "links": [],
+    "lists": [],
     "path": "fixtures/parser/20-table-alignment.md",
+    "sections": [],
     "sourceRange": {
       "end": {
         "column": 1,
@@ -273,6 +838,520 @@
         "offset": 0
       }
     },
-    "version": "0.0.0"
+    "tables": [
+      {
+        "cells": [
+          {
+            "columnIndex": 0,
+            "header": true,
+            "rowIndex": 0,
+            "sourceRange": {
+              "end": {
+                "column": 9,
+                "line": 1,
+                "offset": 8
+              },
+              "start": {
+                "column": 1,
+                "line": 1,
+                "offset": 0
+              }
+            },
+            "target": {
+              "id": "node:0.0.0:tableCell",
+              "kind": "node",
+              "nodeType": "tableCell",
+              "path": [
+                0,
+                0,
+                0
+              ],
+              "sourceRange": {
+                "end": {
+                  "column": 9,
+                  "line": 1,
+                  "offset": 8
+                },
+                "start": {
+                  "column": 1,
+                  "line": 1,
+                  "offset": 0
+                }
+              }
+            },
+            "text": "Phase"
+          },
+          {
+            "columnIndex": 1,
+            "header": true,
+            "rowIndex": 0,
+            "sourceRange": {
+              "end": {
+                "column": 17,
+                "line": 1,
+                "offset": 16
+              },
+              "start": {
+                "column": 9,
+                "line": 1,
+                "offset": 8
+              }
+            },
+            "target": {
+              "id": "node:0.0.1:tableCell",
+              "kind": "node",
+              "nodeType": "tableCell",
+              "path": [
+                0,
+                0,
+                1
+              ],
+              "sourceRange": {
+                "end": {
+                  "column": 17,
+                  "line": 1,
+                  "offset": 16
+                },
+                "start": {
+                  "column": 9,
+                  "line": 1,
+                  "offset": 8
+                }
+              }
+            },
+            "text": "Owner"
+          },
+          {
+            "columnIndex": 2,
+            "header": true,
+            "rowIndex": 0,
+            "sourceRange": {
+              "end": {
+                "column": 27,
+                "line": 1,
+                "offset": 26
+              },
+              "start": {
+                "column": 17,
+                "line": 1,
+                "offset": 16
+              }
+            },
+            "target": {
+              "id": "node:0.0.2:tableCell",
+              "kind": "node",
+              "nodeType": "tableCell",
+              "path": [
+                0,
+                0,
+                2
+              ],
+              "sourceRange": {
+                "end": {
+                  "column": 27,
+                  "line": 1,
+                  "offset": 26
+                },
+                "start": {
+                  "column": 17,
+                  "line": 1,
+                  "offset": 16
+                }
+              }
+            },
+            "text": "Status"
+          },
+          {
+            "columnIndex": 0,
+            "header": false,
+            "rowIndex": 1,
+            "sourceRange": {
+              "end": {
+                "column": 8,
+                "line": 3,
+                "offset": 60
+              },
+              "start": {
+                "column": 1,
+                "line": 3,
+                "offset": 53
+              }
+            },
+            "target": {
+              "id": "node:0.1.0:tableCell",
+              "kind": "node",
+              "nodeType": "tableCell",
+              "path": [
+                0,
+                1,
+                0
+              ],
+              "sourceRange": {
+                "end": {
+                  "column": 8,
+                  "line": 3,
+                  "offset": 60
+                },
+                "start": {
+                  "column": 1,
+                  "line": 3,
+                  "offset": 53
+                }
+              }
+            },
+            "text": "WP-3"
+          },
+          {
+            "columnIndex": 1,
+            "header": false,
+            "rowIndex": 1,
+            "sourceRange": {
+              "end": {
+                "column": 17,
+                "line": 3,
+                "offset": 69
+              },
+              "start": {
+                "column": 8,
+                "line": 3,
+                "offset": 60
+              }
+            },
+            "target": {
+              "id": "node:0.1.1:tableCell",
+              "kind": "node",
+              "nodeType": "tableCell",
+              "path": [
+                0,
+                1,
+                1
+              ],
+              "sourceRange": {
+                "end": {
+                  "column": 17,
+                  "line": 3,
+                  "offset": 69
+                },
+                "start": {
+                  "column": 8,
+                  "line": 3,
+                  "offset": 60
+                }
+              }
+            },
+            "text": "engine"
+          },
+          {
+            "columnIndex": 2,
+            "header": false,
+            "rowIndex": 1,
+            "sourceRange": {
+              "end": {
+                "column": 27,
+                "line": 3,
+                "offset": 79
+              },
+              "start": {
+                "column": 17,
+                "line": 3,
+                "offset": 69
+              }
+            },
+            "target": {
+              "id": "node:0.1.2:tableCell",
+              "kind": "node",
+              "nodeType": "tableCell",
+              "path": [
+                0,
+                1,
+                2
+              ],
+              "sourceRange": {
+                "end": {
+                  "column": 27,
+                  "line": 3,
+                  "offset": 79
+                },
+                "start": {
+                  "column": 17,
+                  "line": 3,
+                  "offset": 69
+                }
+              }
+            },
+            "text": "active"
+          }
+        ],
+        "target": {
+          "id": "node:0:table",
+          "kind": "node",
+          "nodeType": "table",
+          "path": [
+            0
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 27,
+              "line": 3,
+              "offset": 79
+            },
+            "start": {
+              "column": 1,
+              "line": 1,
+              "offset": 0
+            }
+          }
+        }
+      }
+    ],
+    "target": {
+      "id": "node:root:document",
+      "kind": "node",
+      "nodeType": "document",
+      "path": [],
+      "sourceRange": {
+        "end": {
+          "column": 1,
+          "line": 4,
+          "offset": 80
+        },
+        "start": {
+          "column": 1,
+          "line": 1,
+          "offset": 0
+        }
+      }
+    },
+    "textSpans": [
+      {
+        "sourceRange": {
+          "end": {
+            "column": 8,
+            "line": 1,
+            "offset": 7
+          },
+          "start": {
+            "column": 3,
+            "line": 1,
+            "offset": 2
+          }
+        },
+        "target": {
+          "id": "node:0.0.0.0:text",
+          "kind": "node",
+          "nodeType": "text",
+          "path": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 8,
+              "line": 1,
+              "offset": 7
+            },
+            "start": {
+              "column": 3,
+              "line": 1,
+              "offset": 2
+            }
+          }
+        },
+        "text": "Phase"
+      },
+      {
+        "sourceRange": {
+          "end": {
+            "column": 16,
+            "line": 1,
+            "offset": 15
+          },
+          "start": {
+            "column": 11,
+            "line": 1,
+            "offset": 10
+          }
+        },
+        "target": {
+          "id": "node:0.0.1.0:text",
+          "kind": "node",
+          "nodeType": "text",
+          "path": [
+            0,
+            0,
+            1,
+            0
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 16,
+              "line": 1,
+              "offset": 15
+            },
+            "start": {
+              "column": 11,
+              "line": 1,
+              "offset": 10
+            }
+          }
+        },
+        "text": "Owner"
+      },
+      {
+        "sourceRange": {
+          "end": {
+            "column": 25,
+            "line": 1,
+            "offset": 24
+          },
+          "start": {
+            "column": 19,
+            "line": 1,
+            "offset": 18
+          }
+        },
+        "target": {
+          "id": "node:0.0.2.0:text",
+          "kind": "node",
+          "nodeType": "text",
+          "path": [
+            0,
+            0,
+            2,
+            0
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 25,
+              "line": 1,
+              "offset": 24
+            },
+            "start": {
+              "column": 19,
+              "line": 1,
+              "offset": 18
+            }
+          }
+        },
+        "text": "Status"
+      },
+      {
+        "sourceRange": {
+          "end": {
+            "column": 7,
+            "line": 3,
+            "offset": 59
+          },
+          "start": {
+            "column": 3,
+            "line": 3,
+            "offset": 55
+          }
+        },
+        "target": {
+          "id": "node:0.1.0.0:text",
+          "kind": "node",
+          "nodeType": "text",
+          "path": [
+            0,
+            1,
+            0,
+            0
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 7,
+              "line": 3,
+              "offset": 59
+            },
+            "start": {
+              "column": 3,
+              "line": 3,
+              "offset": 55
+            }
+          }
+        },
+        "text": "WP-3"
+      },
+      {
+        "sourceRange": {
+          "end": {
+            "column": 16,
+            "line": 3,
+            "offset": 68
+          },
+          "start": {
+            "column": 10,
+            "line": 3,
+            "offset": 62
+          }
+        },
+        "target": {
+          "id": "node:0.1.1.0:text",
+          "kind": "node",
+          "nodeType": "text",
+          "path": [
+            0,
+            1,
+            1,
+            0
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 16,
+              "line": 3,
+              "offset": 68
+            },
+            "start": {
+              "column": 10,
+              "line": 3,
+              "offset": 62
+            }
+          }
+        },
+        "text": "engine"
+      },
+      {
+        "sourceRange": {
+          "end": {
+            "column": 25,
+            "line": 3,
+            "offset": 77
+          },
+          "start": {
+            "column": 19,
+            "line": 3,
+            "offset": 71
+          }
+        },
+        "target": {
+          "id": "node:0.1.2.0:text",
+          "kind": "node",
+          "nodeType": "text",
+          "path": [
+            0,
+            1,
+            2,
+            0
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 25,
+              "line": 3,
+              "offset": 77
+            },
+            "start": {
+              "column": 19,
+              "line": 3,
+              "offset": 71
+            }
+          }
+        },
+        "text": "active"
+      }
+    ],
+    "version": "1.0.0"
   }
 }

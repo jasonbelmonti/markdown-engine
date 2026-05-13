@@ -6,9 +6,10 @@ profile and runtime work.
 Current package release:
 
 - package name: `@jasonbelmonti/markdown-engine`
-- version: `1.0.0`
-- release focus: feature-complete rich IR, structural query helpers, source
-  targeting, table/list models, annotations, and deterministic serialization
+- version: `2.0.0`
+- release focus: package-level 2.0 hardening with the existing
+  `documentVersion: "1.0.0"` rich IR contract as the default API and CLI
+  document shape
 - design reference:
   [Markdown Engine 1.0 Rich IR design](docs/design/markdown-engine-1.0-rich-ir-operational-design-spec.md)
 
@@ -78,8 +79,10 @@ console.log(validationResult.valid);
 console.log(serialize(validationResult, { pretty: true }));
 ```
 
-The 1.0 release exposes the rich IR contract through
-`normalize(parsed, { documentVersion: "1.0.0" })`. That path adds
+Package 2.0 keeps the serialized document contract at
+`documentVersion: "1.0.0"` and makes that rich IR path the default for
+`normalize(parsed)`. Callers may still pass
+`normalize(parsed, { documentVersion: "1.0.0" })` explicitly. That path adds
 deterministic targets, structural views, source slices, query helpers, and
 caller-owned annotation target validation. The retained `0.1.0`-compatible
 document path remains selectable as `documentVersion: "0.0.0"` and
@@ -159,12 +162,13 @@ node dist/cli/index.js validate --file fixtures/declarative-validation/examples/
 The passing example exits `0`; the failing example exits `1` and prints JSON
 diagnostics for review.
 
-BEL-952 classifies the default CLI output change as breaking for consumers that
-parse CLI JSON without selecting `--document-version 0.0.0`. Migration is to
-either consume the rich IR fields (`target`, `sections`, `textSpans`, `tables`,
-`lists`, and `links`) or pin the explicit legacy selector until the downstream
-consumer is ready. This default-output cutover belongs to the 1.0 release lane,
-not a `0.1.x` patch.
+Package 2.0 classifies the API normalization default as breaking for consumers
+that call `normalize(parsed)` and expect the legacy `0.0.0` shape. Migration is
+to either consume the rich IR fields (`target`, `sections`, `textSpans`,
+`tables`, `lists`, and `links`) or pin
+`normalize(parsed, { documentVersion: "0.0.0" })` until the downstream consumer
+is ready. The CLI already defaults to the rich IR document contract and keeps
+`--document-version 0.0.0` for explicit legacy output.
 
 Contract references:
 
@@ -210,22 +214,23 @@ Snapshot baseline updates are operational changes, not routine test-output
 cleanup. Use the [testing and snapshot operations](docs/testing.md) guide before
 updating files under `snapshots/**`.
 
-## 1.0 Release Gate
+## 2.0 Release Gate
 
-Do not tag or publish the 1.0 release until approval is recorded with:
+Do not tag or publish the 2.0 release until approval is recorded with:
 
-- semver classification and package version decision
+- semver classification distinguishing package version `2.0.0` from document
+  contract version `1.0.0`
 - release/tag decision
 - rollback and containment notes
 - downstream profile/runtime consumer confirmation
 - complete evidence links from EVD-1 through EVD-11
 
-Current release decision: BEL-965 promotes the package metadata and public rich
-IR document contract to `1.0.0` after BEL-956 child audit tracks completed and
-the release gates passed. The `v1.0.0` git tag must point only at a commit that
-passes the validation commands above.
+Current release decision: package `2.0.0` retains the public rich IR document
+contract at `documentVersion: "1.0.0"`, makes that contract the default API
+normalization output, and hardens declarative profile ingestion. The `v2.0.0`
+git tag must point only at a commit that passes the validation commands above.
 
-When 1.0 is approved, publish the package as:
+When 2.0 is approved, publish the package as:
 
 ```sh
 npm publish --access public

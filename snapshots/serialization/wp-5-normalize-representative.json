@@ -8,6 +8,21 @@
         },
         "children": [
           {
+            "source": {
+              "range": {
+                "end": {
+                  "column": 16,
+                  "line": 10,
+                  "offset": 131
+                },
+                "start": {
+                  "column": 3,
+                  "line": 10,
+                  "offset": 118
+                }
+              },
+              "text": "Mission Brief"
+            },
             "sourceRange": {
               "end": {
                 "column": 16,
@@ -20,10 +35,46 @@
                 "offset": 118
               }
             },
+            "target": {
+              "id": "node:0.0:text",
+              "kind": "node",
+              "nodeType": "text",
+              "path": [
+                0,
+                0
+              ],
+              "sourceRange": {
+                "end": {
+                  "column": 16,
+                  "line": 10,
+                  "offset": 131
+                },
+                "start": {
+                  "column": 3,
+                  "line": 10,
+                  "offset": 118
+                }
+              }
+            },
             "text": "Mission Brief",
             "type": "text"
           }
         ],
+        "source": {
+          "range": {
+            "end": {
+              "column": 16,
+              "line": 10,
+              "offset": 131
+            },
+            "start": {
+              "column": 1,
+              "line": 10,
+              "offset": 116
+            }
+          },
+          "text": "# Mission Brief"
+        },
         "sourceRange": {
           "end": {
             "column": 16,
@@ -36,12 +87,47 @@
             "offset": 116
           }
         },
+        "target": {
+          "id": "node:0:heading",
+          "kind": "node",
+          "nodeType": "heading",
+          "path": [
+            0
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 16,
+              "line": 10,
+              "offset": 131
+            },
+            "start": {
+              "column": 1,
+              "line": 10,
+              "offset": 116
+            }
+          }
+        },
         "text": "Mission Brief",
         "type": "heading"
       },
       {
         "children": [
           {
+            "source": {
+              "range": {
+                "end": {
+                  "column": 5,
+                  "line": 12,
+                  "offset": 137
+                },
+                "start": {
+                  "column": 1,
+                  "line": 12,
+                  "offset": 133
+                }
+              },
+              "text": "Use "
+            },
             "sourceRange": {
               "end": {
                 "column": 5,
@@ -54,6 +140,27 @@
                 "offset": 133
               }
             },
+            "target": {
+              "id": "node:1.0:text",
+              "kind": "node",
+              "nodeType": "text",
+              "path": [
+                1,
+                0
+              ],
+              "sourceRange": {
+                "end": {
+                  "column": 5,
+                  "line": 12,
+                  "offset": 137
+                },
+                "start": {
+                  "column": 1,
+                  "line": 12,
+                  "offset": 133
+                }
+              }
+            },
             "text": "Use ",
             "type": "text"
           },
@@ -63,6 +170,21 @@
             },
             "children": [
               {
+                "source": {
+                  "range": {
+                    "end": {
+                      "column": 21,
+                      "line": 12,
+                      "offset": 153
+                    },
+                    "start": {
+                      "column": 6,
+                      "line": 12,
+                      "offset": 138
+                    }
+                  },
+                  "text": "markdown-engine"
+                },
                 "sourceRange": {
                   "end": {
                     "column": 21,
@@ -75,10 +197,47 @@
                     "offset": 138
                   }
                 },
+                "target": {
+                  "id": "node:1.1.0:text",
+                  "kind": "node",
+                  "nodeType": "text",
+                  "path": [
+                    1,
+                    1,
+                    0
+                  ],
+                  "sourceRange": {
+                    "end": {
+                      "column": 21,
+                      "line": 12,
+                      "offset": 153
+                    },
+                    "start": {
+                      "column": 6,
+                      "line": 12,
+                      "offset": 138
+                    }
+                  }
+                },
                 "text": "markdown-engine",
                 "type": "text"
               }
             ],
+            "source": {
+              "range": {
+                "end": {
+                  "column": 59,
+                  "line": 12,
+                  "offset": 191
+                },
+                "start": {
+                  "column": 5,
+                  "line": 12,
+                  "offset": 137
+                }
+              },
+              "text": "[markdown-engine](https://example.com/markdown-engine)"
+            },
             "sourceRange": {
               "end": {
                 "column": 59,
@@ -91,10 +250,46 @@
                 "offset": 137
               }
             },
+            "target": {
+              "id": "node:1.1:link",
+              "kind": "node",
+              "nodeType": "link",
+              "path": [
+                1,
+                1
+              ],
+              "sourceRange": {
+                "end": {
+                  "column": 59,
+                  "line": 12,
+                  "offset": 191
+                },
+                "start": {
+                  "column": 5,
+                  "line": 12,
+                  "offset": 137
+                }
+              }
+            },
             "text": "markdown-engine",
             "type": "link"
           },
           {
+            "source": {
+              "range": {
+                "end": {
+                  "column": 76,
+                  "line": 12,
+                  "offset": 208
+                },
+                "start": {
+                  "column": 59,
+                  "line": 12,
+                  "offset": 191
+                }
+              },
+              "text": " to prove intake."
+            },
             "sourceRange": {
               "end": {
                 "column": 76,
@@ -107,10 +302,46 @@
                 "offset": 191
               }
             },
+            "target": {
+              "id": "node:1.2:text",
+              "kind": "node",
+              "nodeType": "text",
+              "path": [
+                1,
+                2
+              ],
+              "sourceRange": {
+                "end": {
+                  "column": 76,
+                  "line": 12,
+                  "offset": 208
+                },
+                "start": {
+                  "column": 59,
+                  "line": 12,
+                  "offset": 191
+                }
+              }
+            },
             "text": " to prove intake.",
             "type": "text"
           }
         ],
+        "source": {
+          "range": {
+            "end": {
+              "column": 76,
+              "line": 12,
+              "offset": 208
+            },
+            "start": {
+              "column": 1,
+              "line": 12,
+              "offset": 133
+            }
+          },
+          "text": "Use [markdown-engine](https://example.com/markdown-engine) to prove intake."
+        },
         "sourceRange": {
           "end": {
             "column": 76,
@@ -121,6 +352,26 @@
             "column": 1,
             "line": 12,
             "offset": 133
+          }
+        },
+        "target": {
+          "id": "node:1:paragraph",
+          "kind": "node",
+          "nodeType": "paragraph",
+          "path": [
+            1
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 76,
+              "line": 12,
+              "offset": 208
+            },
+            "start": {
+              "column": 1,
+              "line": 12,
+              "offset": 133
+            }
           }
         },
         "text": "Use markdown-engine to prove intake.",
@@ -141,6 +392,21 @@
               {
                 "children": [
                   {
+                    "source": {
+                      "range": {
+                        "end": {
+                          "column": 33,
+                          "line": 14,
+                          "offset": 242
+                        },
+                        "start": {
+                          "column": 7,
+                          "line": 14,
+                          "offset": 216
+                        }
+                      },
+                      "text": "Parse a GFM task-list item"
+                    },
                     "sourceRange": {
                       "end": {
                         "column": 33,
@@ -153,10 +419,48 @@
                         "offset": 216
                       }
                     },
+                    "target": {
+                      "id": "node:2.0.0.0:text",
+                      "kind": "node",
+                      "nodeType": "text",
+                      "path": [
+                        2,
+                        0,
+                        0,
+                        0
+                      ],
+                      "sourceRange": {
+                        "end": {
+                          "column": 33,
+                          "line": 14,
+                          "offset": 242
+                        },
+                        "start": {
+                          "column": 7,
+                          "line": 14,
+                          "offset": 216
+                        }
+                      }
+                    },
                     "text": "Parse a GFM task-list item",
                     "type": "text"
                   }
                 ],
+                "source": {
+                  "range": {
+                    "end": {
+                      "column": 33,
+                      "line": 14,
+                      "offset": 242
+                    },
+                    "start": {
+                      "column": 7,
+                      "line": 14,
+                      "offset": 216
+                    }
+                  },
+                  "text": "Parse a GFM task-list item"
+                },
                 "sourceRange": {
                   "end": {
                     "column": 33,
@@ -169,10 +473,47 @@
                     "offset": 216
                   }
                 },
+                "target": {
+                  "id": "node:2.0.0:paragraph",
+                  "kind": "node",
+                  "nodeType": "paragraph",
+                  "path": [
+                    2,
+                    0,
+                    0
+                  ],
+                  "sourceRange": {
+                    "end": {
+                      "column": 33,
+                      "line": 14,
+                      "offset": 242
+                    },
+                    "start": {
+                      "column": 7,
+                      "line": 14,
+                      "offset": 216
+                    }
+                  }
+                },
                 "text": "Parse a GFM task-list item",
                 "type": "paragraph"
               }
             ],
+            "source": {
+              "range": {
+                "end": {
+                  "column": 33,
+                  "line": 14,
+                  "offset": 242
+                },
+                "start": {
+                  "column": 1,
+                  "line": 14,
+                  "offset": 210
+                }
+              },
+              "text": "- [x] Parse a GFM task-list item"
+            },
             "sourceRange": {
               "end": {
                 "column": 33,
@@ -185,9 +526,45 @@
                 "offset": 210
               }
             },
+            "target": {
+              "id": "node:2.0:listItem",
+              "kind": "node",
+              "nodeType": "listItem",
+              "path": [
+                2,
+                0
+              ],
+              "sourceRange": {
+                "end": {
+                  "column": 33,
+                  "line": 14,
+                  "offset": 242
+                },
+                "start": {
+                  "column": 1,
+                  "line": 14,
+                  "offset": 210
+                }
+              }
+            },
             "type": "listItem"
           }
         ],
+        "source": {
+          "range": {
+            "end": {
+              "column": 33,
+              "line": 14,
+              "offset": 242
+            },
+            "start": {
+              "column": 1,
+              "line": 14,
+              "offset": 210
+            }
+          },
+          "text": "- [x] Parse a GFM task-list item"
+        },
         "sourceRange": {
           "end": {
             "column": 33,
@@ -200,12 +577,47 @@
             "offset": 210
           }
         },
+        "target": {
+          "id": "node:2:list",
+          "kind": "node",
+          "nodeType": "list",
+          "path": [
+            2
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 33,
+              "line": 14,
+              "offset": 242
+            },
+            "start": {
+              "column": 1,
+              "line": 14,
+              "offset": 210
+            }
+          }
+        },
         "type": "list"
       },
       {
         "attributes": {
           "kind": "fenced",
           "lang": "ts"
+        },
+        "source": {
+          "range": {
+            "end": {
+              "column": 4,
+              "line": 18,
+              "offset": 281
+            },
+            "start": {
+              "column": 1,
+              "line": 16,
+              "offset": 244
+            }
+          },
+          "text": "```ts\nexport const signal = \"go\";\n```"
         },
         "sourceRange": {
           "end": {
@@ -219,8 +631,761 @@
             "offset": 244
           }
         },
+        "target": {
+          "id": "node:3:code",
+          "kind": "node",
+          "nodeType": "code",
+          "path": [
+            3
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 4,
+              "line": 18,
+              "offset": 281
+            },
+            "start": {
+              "column": 1,
+              "line": 16,
+              "offset": 244
+            }
+          }
+        },
         "text": "export const signal = \"go\";",
         "type": "code"
+      },
+      {
+        "source": {
+          "range": {
+            "end": {
+              "column": 45,
+              "line": 20,
+              "offset": 327
+            },
+            "start": {
+              "column": 1,
+              "line": 20,
+              "offset": 283
+            }
+          },
+          "text": "<div data-engine=\"inert\">Raw HTML data</div>"
+        },
+        "sourceRange": {
+          "end": {
+            "column": 45,
+            "line": 20,
+            "offset": 327
+          },
+          "start": {
+            "column": 1,
+            "line": 20,
+            "offset": 283
+          }
+        },
+        "target": {
+          "id": "node:4:html",
+          "kind": "node",
+          "nodeType": "html",
+          "path": [
+            4
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 45,
+              "line": 20,
+              "offset": 327
+            },
+            "start": {
+              "column": 1,
+              "line": 20,
+              "offset": 283
+            }
+          }
+        },
+        "text": "<div data-engine=\"inert\">Raw HTML data</div>",
+        "type": "html"
+      }
+    ],
+    "compatibility": {
+      "mode": "default",
+      "reason": "1.0 document contract"
+    },
+    "frontmatter": {
+      "owner": "markdown-engine",
+      "status": "draft",
+      "tags": [
+        "parser",
+        "frontmatter"
+      ],
+      "title": "Representative parser fixture"
+    },
+    "kind": "markdown-document",
+    "linkReferences": [
+      {
+        "kind": "link",
+        "sourceRange": {
+          "end": {
+            "column": 59,
+            "line": 12,
+            "offset": 191
+          },
+          "start": {
+            "column": 5,
+            "line": 12,
+            "offset": 137
+          }
+        },
+        "target": {
+          "id": "node:1.1:link",
+          "kind": "node",
+          "nodeType": "link",
+          "path": [
+            1,
+            1
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 59,
+              "line": 12,
+              "offset": 191
+            },
+            "start": {
+              "column": 5,
+              "line": 12,
+              "offset": 137
+            }
+          }
+        },
+        "text": "markdown-engine",
+        "url": "https://example.com/markdown-engine"
+      }
+    ],
+    "links": [
+      {
+        "sourceRange": {
+          "end": {
+            "column": 59,
+            "line": 12,
+            "offset": 191
+          },
+          "start": {
+            "column": 5,
+            "line": 12,
+            "offset": 137
+          }
+        },
+        "target": {
+          "id": "node:1.1:link",
+          "kind": "node",
+          "nodeType": "link",
+          "path": [
+            1,
+            1
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 59,
+              "line": 12,
+              "offset": 191
+            },
+            "start": {
+              "column": 5,
+              "line": 12,
+              "offset": 137
+            }
+          }
+        },
+        "text": "markdown-engine",
+        "url": "https://example.com/markdown-engine"
+      }
+    ],
+    "lists": [
+      {
+        "items": [
+          {
+            "checked": true,
+            "depth": 0,
+            "itemIndex": 0,
+            "sourceRange": {
+              "end": {
+                "column": 33,
+                "line": 14,
+                "offset": 242
+              },
+              "start": {
+                "column": 1,
+                "line": 14,
+                "offset": 210
+              }
+            },
+            "target": {
+              "id": "node:2.0:listItem",
+              "kind": "node",
+              "nodeType": "listItem",
+              "path": [
+                2,
+                0
+              ],
+              "sourceRange": {
+                "end": {
+                  "column": 33,
+                  "line": 14,
+                  "offset": 242
+                },
+                "start": {
+                  "column": 1,
+                  "line": 14,
+                  "offset": 210
+                }
+              }
+            }
+          }
+        ],
+        "ordered": false,
+        "target": {
+          "id": "node:2:list",
+          "kind": "node",
+          "nodeType": "list",
+          "path": [
+            2
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 33,
+              "line": 14,
+              "offset": 242
+            },
+            "start": {
+              "column": 1,
+              "line": 14,
+              "offset": 210
+            }
+          }
+        }
+      }
+    ],
+    "path": "fixtures/representative.md",
+    "sections": [
+      {
+        "bodyTargets": [
+          {
+            "id": "node:1:paragraph",
+            "kind": "node",
+            "nodeType": "paragraph",
+            "path": [
+              1
+            ],
+            "sourceRange": {
+              "end": {
+                "column": 76,
+                "line": 12,
+                "offset": 208
+              },
+              "start": {
+                "column": 1,
+                "line": 12,
+                "offset": 133
+              }
+            }
+          },
+          {
+            "id": "node:2:list",
+            "kind": "node",
+            "nodeType": "list",
+            "path": [
+              2
+            ],
+            "sourceRange": {
+              "end": {
+                "column": 33,
+                "line": 14,
+                "offset": 242
+              },
+              "start": {
+                "column": 1,
+                "line": 14,
+                "offset": 210
+              }
+            }
+          },
+          {
+            "id": "node:3:code",
+            "kind": "node",
+            "nodeType": "code",
+            "path": [
+              3
+            ],
+            "sourceRange": {
+              "end": {
+                "column": 4,
+                "line": 18,
+                "offset": 281
+              },
+              "start": {
+                "column": 1,
+                "line": 16,
+                "offset": 244
+              }
+            }
+          },
+          {
+            "id": "node:4:html",
+            "kind": "node",
+            "nodeType": "html",
+            "path": [
+              4
+            ],
+            "sourceRange": {
+              "end": {
+                "column": 45,
+                "line": 20,
+                "offset": 327
+              },
+              "start": {
+                "column": 1,
+                "line": 20,
+                "offset": 283
+              }
+            }
+          }
+        ],
+        "childSections": [],
+        "depth": 1,
+        "headingTarget": {
+          "id": "node:0:heading",
+          "kind": "node",
+          "nodeType": "heading",
+          "path": [
+            0
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 16,
+              "line": 10,
+              "offset": 131
+            },
+            "start": {
+              "column": 1,
+              "line": 10,
+              "offset": 116
+            }
+          }
+        },
+        "target": {
+          "id": "section:node:0:heading",
+          "kind": "node",
+          "nodeType": "section",
+          "path": [
+            0
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 16,
+              "line": 10,
+              "offset": 131
+            },
+            "start": {
+              "column": 1,
+              "line": 10,
+              "offset": 116
+            }
+          }
+        },
+        "title": "Mission Brief"
+      }
+    ],
+    "sourceRange": {
+      "end": {
+        "column": 1,
+        "line": 21,
+        "offset": 328
+      },
+      "start": {
+        "column": 1,
+        "line": 9,
+        "offset": 115
+      }
+    },
+    "tables": [],
+    "target": {
+      "id": "node:root:document",
+      "kind": "node",
+      "nodeType": "document",
+      "path": [],
+      "sourceRange": {
+        "end": {
+          "column": 1,
+          "line": 21,
+          "offset": 328
+        },
+        "start": {
+          "column": 1,
+          "line": 9,
+          "offset": 115
+        }
+      }
+    },
+    "textSpans": [
+      {
+        "sourceRange": {
+          "end": {
+            "column": 16,
+            "line": 10,
+            "offset": 131
+          },
+          "start": {
+            "column": 1,
+            "line": 10,
+            "offset": 116
+          }
+        },
+        "target": {
+          "id": "node:0:heading",
+          "kind": "node",
+          "nodeType": "heading",
+          "path": [
+            0
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 16,
+              "line": 10,
+              "offset": 131
+            },
+            "start": {
+              "column": 1,
+              "line": 10,
+              "offset": 116
+            }
+          }
+        },
+        "text": "Mission Brief"
+      },
+      {
+        "sourceRange": {
+          "end": {
+            "column": 16,
+            "line": 10,
+            "offset": 131
+          },
+          "start": {
+            "column": 3,
+            "line": 10,
+            "offset": 118
+          }
+        },
+        "target": {
+          "id": "node:0.0:text",
+          "kind": "node",
+          "nodeType": "text",
+          "path": [
+            0,
+            0
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 16,
+              "line": 10,
+              "offset": 131
+            },
+            "start": {
+              "column": 3,
+              "line": 10,
+              "offset": 118
+            }
+          }
+        },
+        "text": "Mission Brief"
+      },
+      {
+        "sourceRange": {
+          "end": {
+            "column": 76,
+            "line": 12,
+            "offset": 208
+          },
+          "start": {
+            "column": 1,
+            "line": 12,
+            "offset": 133
+          }
+        },
+        "target": {
+          "id": "node:1:paragraph",
+          "kind": "node",
+          "nodeType": "paragraph",
+          "path": [
+            1
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 76,
+              "line": 12,
+              "offset": 208
+            },
+            "start": {
+              "column": 1,
+              "line": 12,
+              "offset": 133
+            }
+          }
+        },
+        "text": "Use markdown-engine to prove intake."
+      },
+      {
+        "sourceRange": {
+          "end": {
+            "column": 5,
+            "line": 12,
+            "offset": 137
+          },
+          "start": {
+            "column": 1,
+            "line": 12,
+            "offset": 133
+          }
+        },
+        "target": {
+          "id": "node:1.0:text",
+          "kind": "node",
+          "nodeType": "text",
+          "path": [
+            1,
+            0
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 5,
+              "line": 12,
+              "offset": 137
+            },
+            "start": {
+              "column": 1,
+              "line": 12,
+              "offset": 133
+            }
+          }
+        },
+        "text": "Use "
+      },
+      {
+        "sourceRange": {
+          "end": {
+            "column": 59,
+            "line": 12,
+            "offset": 191
+          },
+          "start": {
+            "column": 5,
+            "line": 12,
+            "offset": 137
+          }
+        },
+        "target": {
+          "id": "node:1.1:link",
+          "kind": "node",
+          "nodeType": "link",
+          "path": [
+            1,
+            1
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 59,
+              "line": 12,
+              "offset": 191
+            },
+            "start": {
+              "column": 5,
+              "line": 12,
+              "offset": 137
+            }
+          }
+        },
+        "text": "markdown-engine"
+      },
+      {
+        "sourceRange": {
+          "end": {
+            "column": 21,
+            "line": 12,
+            "offset": 153
+          },
+          "start": {
+            "column": 6,
+            "line": 12,
+            "offset": 138
+          }
+        },
+        "target": {
+          "id": "node:1.1.0:text",
+          "kind": "node",
+          "nodeType": "text",
+          "path": [
+            1,
+            1,
+            0
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 21,
+              "line": 12,
+              "offset": 153
+            },
+            "start": {
+              "column": 6,
+              "line": 12,
+              "offset": 138
+            }
+          }
+        },
+        "text": "markdown-engine"
+      },
+      {
+        "sourceRange": {
+          "end": {
+            "column": 76,
+            "line": 12,
+            "offset": 208
+          },
+          "start": {
+            "column": 59,
+            "line": 12,
+            "offset": 191
+          }
+        },
+        "target": {
+          "id": "node:1.2:text",
+          "kind": "node",
+          "nodeType": "text",
+          "path": [
+            1,
+            2
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 76,
+              "line": 12,
+              "offset": 208
+            },
+            "start": {
+              "column": 59,
+              "line": 12,
+              "offset": 191
+            }
+          }
+        },
+        "text": " to prove intake."
+      },
+      {
+        "sourceRange": {
+          "end": {
+            "column": 33,
+            "line": 14,
+            "offset": 242
+          },
+          "start": {
+            "column": 7,
+            "line": 14,
+            "offset": 216
+          }
+        },
+        "target": {
+          "id": "node:2.0.0:paragraph",
+          "kind": "node",
+          "nodeType": "paragraph",
+          "path": [
+            2,
+            0,
+            0
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 33,
+              "line": 14,
+              "offset": 242
+            },
+            "start": {
+              "column": 7,
+              "line": 14,
+              "offset": 216
+            }
+          }
+        },
+        "text": "Parse a GFM task-list item"
+      },
+      {
+        "sourceRange": {
+          "end": {
+            "column": 33,
+            "line": 14,
+            "offset": 242
+          },
+          "start": {
+            "column": 7,
+            "line": 14,
+            "offset": 216
+          }
+        },
+        "target": {
+          "id": "node:2.0.0.0:text",
+          "kind": "node",
+          "nodeType": "text",
+          "path": [
+            2,
+            0,
+            0,
+            0
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 33,
+              "line": 14,
+              "offset": 242
+            },
+            "start": {
+              "column": 7,
+              "line": 14,
+              "offset": 216
+            }
+          }
+        },
+        "text": "Parse a GFM task-list item"
+      },
+      {
+        "sourceRange": {
+          "end": {
+            "column": 4,
+            "line": 18,
+            "offset": 281
+          },
+          "start": {
+            "column": 1,
+            "line": 16,
+            "offset": 244
+          }
+        },
+        "target": {
+          "id": "node:3:code",
+          "kind": "node",
+          "nodeType": "code",
+          "path": [
+            3
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 4,
+              "line": 18,
+              "offset": 281
+            },
+            "start": {
+              "column": 1,
+              "line": 16,
+              "offset": 244
+            }
+          }
+        },
+        "text": "export const signal = \"go\";"
       },
       {
         "sourceRange": {
@@ -235,33 +1400,29 @@
             "offset": 283
           }
         },
-        "text": "<div data-engine=\"inert\">Raw HTML data</div>",
-        "type": "html"
+        "target": {
+          "id": "node:4:html",
+          "kind": "node",
+          "nodeType": "html",
+          "path": [
+            4
+          ],
+          "sourceRange": {
+            "end": {
+              "column": 45,
+              "line": 20,
+              "offset": 327
+            },
+            "start": {
+              "column": 1,
+              "line": 20,
+              "offset": 283
+            }
+          }
+        },
+        "text": "<div data-engine=\"inert\">Raw HTML data</div>"
       }
     ],
-    "frontmatter": {
-      "owner": "markdown-engine",
-      "status": "draft",
-      "tags": [
-        "parser",
-        "frontmatter"
-      ],
-      "title": "Representative parser fixture"
-    },
-    "kind": "markdown-document",
-    "path": "fixtures/representative.md",
-    "sourceRange": {
-      "end": {
-        "column": 1,
-        "line": 21,
-        "offset": 328
-      },
-      "start": {
-        "column": 1,
-        "line": 9,
-        "offset": 115
-      }
-    },
-    "version": "0.0.0"
+    "version": "1.0.0"
   }
 }

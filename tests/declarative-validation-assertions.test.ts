@@ -4266,7 +4266,7 @@ describe("declarative validation assertion proof", () => {
       syntaxVersion: "markdown-engine.validation@v1",
       documentVersion: "1.0.0",
       rules: [],
-      plugin: () => "mission-control",
+      plugin: "mission-control",
     } as const;
     const diagnostics = [
       {
@@ -4305,7 +4305,7 @@ describe("declarative validation assertion proof", () => {
               id: "rule.notes",
               select: { target: "document" },
               assert: { sectionsRequired: { headings: ["Objective"] } },
-              notes: () => "not part of the public profile contract",
+              notes: "not part of the public profile contract",
             },
           ],
         },

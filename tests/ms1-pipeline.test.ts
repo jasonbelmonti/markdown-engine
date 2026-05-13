@@ -32,7 +32,7 @@ describe("MS-1 proving pipeline", () => {
     expect(normalizeResult.diagnostics).toEqual([]);
     expect(normalizeResult.document).toMatchObject({
       kind: "markdown-document",
-      version: "0.0.0",
+      version: "1.0.0",
       path: fixturePath,
       frontmatter: {
         title: "Representative parser fixture",

@@ -2,9 +2,11 @@
 
 ## Supported Versions
 
-`@jasonbelmonti/markdown-engine` is pre-1.0 software. Security fixes are
-expected to target the latest published minor version unless a release note
-states otherwise.
+Security fixes target the latest published major version of
+`@jasonbelmonti/markdown-engine`. As of the 2.0 release line, fixes are expected
+to land on the latest `2.x` package unless a release note states otherwise.
+Older `0.x` and `1.x` lines are not maintained unless an explicit backport is
+announced.
 
 ## Reporting A Vulnerability
 

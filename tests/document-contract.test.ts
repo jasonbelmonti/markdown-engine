@@ -154,6 +154,10 @@ describe("1.0 document contract skeleton", () => {
     for (const scriptName of requiredScriptNames) {
       expect(packageJson.scripts).toHaveProperty(scriptName);
     }
+
+    expect(packageJson.scripts?.["release:verify"]).toContain(
+      "npm run docs:rich-ir-contract",
+    );
   });
 
   it("types the 1.0 document, targets, queries, annotations, and compatibility gate", () => {

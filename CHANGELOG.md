@@ -4,6 +4,26 @@
 
 No unreleased changes.
 
+## 2.0.0 - 2026-05-13
+
+### Changed
+
+- Promoted package metadata to `@jasonbelmonti/markdown-engine@2.0.0` while
+  retaining the serialized rich IR document contract at
+  `documentVersion: "1.0.0"`.
+- Changed `normalize(parsed)` to default to the rich IR `1.0.0` document shape.
+  Callers that still need the retained `0.1.0`-compatible shape must pass
+  `documentVersion: "0.0.0"` explicitly.
+- Added `docs/contracts/**` to the npm package artifact and included the rich
+  IR contract documentation gate in `release:verify`.
+
+### Fixed
+
+- Closed the direct-object `parseValidationProfile(...)` ingestion path before
+  schema traversal so unsafe accessors, proxies, cyclic values, sparse arrays,
+  functions, non-finite numbers, explicit `undefined`, and `__proto__` payloads
+  are rejected as inert profile data instead of being read by schema logic.
+
 ## 1.0.0 - 2026-05-07
 
 ### Added
