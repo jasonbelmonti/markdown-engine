@@ -1,7 +1,11 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-import { parse } from "@jasonbelmonti/markdown-engine";
+import {
+  documentQueries,
+  normalize,
+  parse,
+} from "@jasonbelmonti/markdown-engine";
 import type { EngineDocument, EngineNode } from "@jasonbelmonti/markdown-engine";
 
 const fixture = readFileSync(
@@ -144,6 +148,55 @@ describe("parser and frontmatter adapters", () => {
           offset: 1,
         },
       },
+    });
+  });
+
+  it("remaps BOM plus CRLF frontmatter source positions to original offsets", () => {
+    const markdown = "\uFEFF---\r\ntitle: CRLF\r\n---\r\n# Body\r\n";
+    const result = parse(markdown);
+    const normalized = normalize(result.parsed, { documentVersion: "1.0.0" });
+    const heading = normalized.document.children[0];
+
+    expect(result.diagnostics).toEqual([]);
+    expect(result.parsed.frontmatter).toEqual({
+      title: "CRLF",
+    });
+    expect(result.parsed.body).toBe("# Body\r\n");
+    expect(result.parsed.document.children[0]).toMatchObject({
+      type: "heading",
+      text: "Body",
+      sourceRange: {
+        start: {
+          line: 4,
+          column: 1,
+          offset: 24,
+        },
+        end: {
+          line: 4,
+          column: 7,
+          offset: 30,
+        },
+      },
+    });
+    expect(heading?.target).toBeDefined();
+    expect(
+      heading?.target === undefined
+        ? undefined
+        : documentQueries.sourceSlice(normalized.document, heading.target),
+    ).toEqual({
+      range: {
+        start: {
+          line: 4,
+          column: 1,
+          offset: 24,
+        },
+        end: {
+          line: 4,
+          column: 7,
+          offset: 30,
+        },
+      },
+      text: "# Body",
     });
   });
 
@@ -341,6 +394,54 @@ title: Second
         },
       },
     ]);
+  });
+
+  it.each([
+    {
+      name: "boolean",
+      yaml: "true: yes",
+    },
+    {
+      name: "null",
+      yaml: "null: none",
+    },
+    {
+      name: "sequence",
+      yaml: "? [not, string]\n: value",
+    },
+    {
+      name: "mapping",
+      yaml: "? {not: string}\n: value",
+    },
+  ])("rejects $name YAML mapping keys before JavaScript key coercion", ({ yaml }) => {
+    const result = parse(`---\n${yaml}\n---\n# Body\n`);
+
+    expect(result.parsed.frontmatter).toBeUndefined();
+    expect(result.parsed.diagnostics).toEqual(result.diagnostics);
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "frontmatter.yaml.invalid",
+        message: "YAML frontmatter mapping keys must be strings.",
+        severity: "error",
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({
+            line: expect.any(Number),
+            column: expect.any(Number),
+            offset: expect.any(Number),
+          }),
+          end: expect.objectContaining({
+            line: expect.any(Number),
+            column: expect.any(Number),
+            offset: expect.any(Number),
+          }),
+        }),
+      }),
+    ]);
+    expect(findNode(result.parsed.document, (node) => node.type === "heading")).toMatchObject(
+      {
+        text: "Body",
+      },
+    );
   });
 
   it("warns and preserves explicit YAML 1.1 known tags as JSON-safe strings", () => {
