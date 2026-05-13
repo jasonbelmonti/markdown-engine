@@ -186,6 +186,7 @@ Validation records include:
 - [BEL-986 declarative validation MS-2 approval](docs/evidence/bel-986-ms-2-approval.md)
 - [EVD-8 compatibility and CLI impact](docs/evidence/wp-5-evd-8-compatibility-cli-impact.md)
 - [EVD-9 1.0 downstream exercise](docs/evidence/wp-6-evd-9-downstream-exercise.md)
+- [EVD-10 declarative validation release-readiness handoff](docs/evidence/wp-6-evd-10-declarative-validation-release-readiness.md)
 - [EVD-10 1.0 release readiness](docs/evidence/wp-6-evd-10-release-readiness.md)
 - [EVD-7 release readiness](docs/evidence/wp-6-evd-7-release-readiness.md)
 - [EVD-9 merge readiness](docs/evidence/wp-6-evd-9-merge-readiness.md)
