@@ -313,7 +313,7 @@ REQ-3 is covered by EVD-3.`,
     story:
       "A platform team wants skill files to tell agents when to use a capability, what sequence to follow, what inputs are required, and how to validate the output. Markdown Engine can treat SKILL.md as a profile-backed document instead of free-form agent guidance.",
     profilePath: "profile-patterns/skill-md/profile.yaml",
-    documentPath: "SKILL.md",
+    documentPath: "release-note-writer/SKILL.md",
     outcomes: [
       "Frontmatter includes name and description.",
       "Required skill sections appear in strict order.",
@@ -362,7 +362,7 @@ rules:
         contains: Run the smallest check that proves the skill output`,
     document: `---
 name: release-note-writer
-description: Draft release notes from merged pull requests and changelog entries.
+description: Draft release notes from merged pull requests and changelog entries. Use when preparing release notes for a versioned package release.
 ---
 
 # When to use
