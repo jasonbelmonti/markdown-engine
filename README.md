@@ -95,17 +95,19 @@ file at a time. The default command runs parse and normalization, then writes
 the normalized result as pretty JSON. The `validate` subcommand runs one
 declarative validation profile against one Markdown file and writes pretty JSON.
 
-After building, run:
+From the repository or package root after building, run:
 
 ```sh
 npm run build
-node dist/cli/index.js --file fixtures/representative.md
+node dist/cli/index.js --file fixtures/declarative-validation/examples/operational-spec/pass.md
 ```
 
-The package binary accepts `--file` or `--path` as aliases for a single file:
+The package binary accepts `--file` or `--path` as aliases for a single file.
+For an npm install in the current project, point at the bundled examples through
+`node_modules/@jasonbelmonti/markdown-engine`:
 
 ```sh
-markdown-engine --path fixtures/representative.md
+markdown-engine --path node_modules/@jasonbelmonti/markdown-engine/fixtures/declarative-validation/examples/operational-spec/pass.md
 ```
 
 By default, CLI output uses the 1.0 rich IR contract:
@@ -124,7 +126,7 @@ Use `--document-version 0.0.0` when a caller still needs the legacy
 `0.1.0`-compatible document shape without rich derived views:
 
 ```sh
-markdown-engine --document-version 0.0.0 --file fixtures/representative.md
+markdown-engine --document-version 0.0.0 --file node_modules/@jasonbelmonti/markdown-engine/fixtures/declarative-validation/examples/operational-spec/pass.md
 ```
 
 The selector accepts spaced or assignment-form syntax, such as
@@ -138,7 +140,7 @@ Declarative validation uses the 1.0 document contract and does not accept
 `--document-version`:
 
 ```sh
-markdown-engine validate --file fixtures/representative.md --profile profile.yaml
+markdown-engine validate --file node_modules/@jasonbelmonti/markdown-engine/fixtures/declarative-validation/examples/operational-spec/pass.md --profile node_modules/@jasonbelmonti/markdown-engine/fixtures/declarative-validation/examples/operational-spec/profile.yaml
 ```
 
 `--format json` is accepted for validation, is the default, and is the only
@@ -151,8 +153,8 @@ diagnostics exit with code `1`. Validation JSON includes `profile`,
 `ruleResults`, `diagnostics`, and `evidence`.
 
 Reader-facing declarative validation examples live under
-`fixtures/declarative-validation/examples/**`. After building, run one passing
-and one intentionally failing example with:
+`fixtures/declarative-validation/examples/**`. From the repository or package
+root after building, run one passing and one intentionally failing example with:
 
 ```sh
 node dist/cli/index.js validate --file fixtures/declarative-validation/examples/operational-spec/pass.md --profile fixtures/declarative-validation/examples/operational-spec/profile.yaml

@@ -123,8 +123,58 @@ const supportedAssertionFamilies = [
   "text",
   "textOccurrenceCount",
 ] as const;
+const packagedExamplesRoot = "fixtures/declarative-validation/examples";
+const installedExamplesRoot =
+  "node_modules/@jasonbelmonti/markdown-engine/fixtures/declarative-validation/examples";
+const intentionalPackageFiles = [
+  "dist",
+  "docs/contracts",
+  packagedExamplesRoot,
+  "CHANGELOG.md",
+  "SECURITY.md",
+] as const;
 
 describe("declarative validation example suite", () => {
+  it("keeps reader-facing example fixtures inside package files", () => {
+    const packageJson = readPackageJson();
+
+    expect(packageJson.files).toEqual([...intentionalPackageFiles]);
+
+    for (const example of examples) {
+      expect(example.profilePath.startsWith(packagedExamplesRoot), example.domain)
+        .toBe(true);
+      expect(example.passingPath.startsWith(packagedExamplesRoot), example.domain)
+        .toBe(true);
+      expect(example.failingPath.startsWith(packagedExamplesRoot), example.domain)
+        .toBe(true);
+    }
+  });
+
+  it("uses packaged example fixtures in README CLI commands", () => {
+    const cliSection = readReadmeCliSection();
+
+    expect(cliSection).toContain(
+      "node dist/cli/index.js --file fixtures/declarative-validation/examples/operational-spec/pass.md",
+    );
+    expect(cliSection).toContain(
+      "From the repository or package root after building",
+    );
+    expect(cliSection).toContain(
+      `markdown-engine --path ${installedExamplesRoot}/operational-spec/pass.md`,
+    );
+    expect(cliSection).toContain(
+      `markdown-engine --document-version 0.0.0 --file ${installedExamplesRoot}/operational-spec/pass.md`,
+    );
+    expect(cliSection).toContain(
+      `markdown-engine validate --file ${installedExamplesRoot}/operational-spec/pass.md --profile ${installedExamplesRoot}/operational-spec/profile.yaml`,
+    );
+    expect(cliSection).not.toContain("fixtures/representative.md");
+    expect(cliSection).not.toContain("--profile profile.yaml");
+    expect(cliSection).not.toContain(
+      "markdown-engine --path fixtures/declarative-validation/examples",
+    );
+  });
+
   it("covers the supported v1 selector and assertion vocabulary", () => {
     const selectorTargets = new Set<string>();
     const assertionFamilies = new Set<string>();
@@ -286,6 +336,21 @@ async function runValidationCli(markdownPath: string, profilePath: string) {
 
 function readRepoFile(path: string): string {
   return readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+}
+
+function readPackageJson(): { files: string[] } {
+  return JSON.parse(readRepoFile("package.json")) as { files: string[] };
+}
+
+function readReadmeCliSection(): string {
+  const readme = readRepoFile("README.md");
+  const cliStart = readme.indexOf("## CLI");
+  const cliEnd = readme.indexOf("\n## ", cliStart + 1);
+
+  expect(cliStart).not.toBe(-1);
+  expect(cliEnd).not.toBe(-1);
+
+  return readme.slice(cliStart, cliEnd);
 }
 
 function codes(diagnostics: readonly { code: string }[]): string[] {
