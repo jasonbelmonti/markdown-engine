@@ -50,6 +50,73 @@ describe("declarative validation compiler assertion proof", () => {
     ]);
   });
 
+  it("rejects typed textLength assertions with invalid bounds before execution", () => {
+    const invalidTextLengthAssertions = [
+      {
+        assert: { textLength: { min: -1 } },
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            ruleId: "text-length.invalid-bound",
+            message: "textLength.min must be a non-negative integer when provided.",
+            severity: "error",
+          },
+        ],
+      },
+      {
+        assert: { textLength: { max: 2.5 } },
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            ruleId: "text-length.invalid-bound",
+            message: "textLength.max must be a non-negative integer when provided.",
+            severity: "error",
+          },
+        ],
+      },
+      {
+        assert: { textLength: { min: 10, max: 3 } },
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            ruleId: "text-length.invalid-bound",
+            message: "textLength.min must be less than or equal to textLength.max.",
+            severity: "error",
+          },
+        ],
+      },
+      {
+        assert: { textLength: { min: 1, unit: "words" } },
+        diagnostics: [
+          {
+            code: "profile.config.unsupportedKey",
+            message: 'Unsupported validation profile key "unit".',
+            severity: "error",
+          },
+        ],
+      },
+    ] satisfies {
+      assert: ValidationProfile["rules"][number]["assert"] & Record<string, unknown>;
+      diagnostics: unknown[];
+    }[];
+
+    for (const { assert, diagnostics } of invalidTextLengthAssertions) {
+      const result = compileValidationProfile({
+        syntaxVersion: "markdown-engine.validation@v1",
+        rules: [
+          {
+            id: "text-length.invalid-bound",
+            select: { target: "section", title: "Objective" },
+            assert,
+          },
+        ],
+      });
+
+      expect(result.plan).toBeUndefined();
+      expect(result.diagnostics).toEqual(diagnostics);
+    }
+  });
+
   it("rejects ids assertions without explicit unique true before execution", () => {
     const invalidIdAssertions = [
       { ids: {}, select: { target: "document" } },

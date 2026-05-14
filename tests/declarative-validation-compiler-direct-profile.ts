@@ -472,6 +472,26 @@ describe("declarative validation compiler direct profile proof", () => {
           },
         ],
       },
+      {
+        profile: {
+          syntaxVersion: "markdown-engine.validation@v1",
+          rules: [
+            {
+              id: "text-length.non-finite",
+              select: { target: "section", title: "Objective" },
+              assert: { textLength: { min: Number.POSITIVE_INFINITY } },
+            },
+          ],
+        },
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            message:
+              "Profile.rules[0].assert.textLength.min must contain only JSON-safe data properties.",
+            severity: "error",
+          },
+        ],
+      },
     ] satisfies {
       profile: unknown;
       diagnostics: unknown[];

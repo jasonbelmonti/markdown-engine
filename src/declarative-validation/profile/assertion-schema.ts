@@ -10,7 +10,6 @@ import {
   invalidShape,
   isFiniteNumber,
   optionalBooleanField,
-  optionalNumberField,
   optionalStringArrayField,
   optionalStringField,
   requiredNonEmptyStringField,
@@ -325,14 +324,25 @@ function textLengthFromValue(
 
   unsupportedKeys(value, ["min", "max"], diagnostics);
 
+  const diagnosticCountBeforeBounds = diagnostics.length;
   const textLength = {
-    ...optionalNumber(value, "min", diagnostics),
-    ...optionalNumber(value, "max", diagnostics),
+    ...optionalTextLengthBound(value, "min", diagnostics),
+    ...optionalTextLengthBound(value, "max", diagnostics),
   };
 
   if (!hasTextLengthBound(textLength)) {
+    if (diagnostics.length === diagnosticCountBeforeBounds) {
+      diagnostics.push(
+        invalidShape("textLength must include min, max, or both."),
+      );
+    }
+
+    return {};
+  }
+
+  if (!hasValidTextLengthRange(textLength)) {
     diagnostics.push(
-      invalidShape("textLength must include min, max, or both."),
+      invalidShape("textLength.min must be less than or equal to textLength.max."),
     );
 
     return {};
@@ -428,17 +438,36 @@ function optionalBoolean(
   );
 }
 
-function optionalNumber(
+function optionalTextLengthBound(
   record: Record<string, unknown>,
-  key: string,
+  key: "min" | "max",
   diagnostics: MarkdownDiagnostic[],
-): Partial<Record<string, number>> {
-  return optionalNumberField(
-    record,
-    key,
-    diagnostics,
-    (field) => `textLength.${field} must be a number when provided.`,
-  );
+): Partial<Record<"min" | "max", number>> {
+  const value = record[key];
+
+  if (value === undefined) {
+    return {};
+  }
+
+  if (!isFiniteNumber(value)) {
+    diagnostics.push(
+      invalidShape(`textLength.${key} must be a number when provided.`),
+    );
+
+    return {};
+  }
+
+  if (!isTextLengthBound(value)) {
+    diagnostics.push(
+      invalidShape(
+        `textLength.${key} must be a non-negative integer when provided.`,
+      ),
+    );
+
+    return {};
+  }
+
+  return { [key]: value } as Partial<Record<"min" | "max", number>>;
 }
 
 function requiredAssertionString(
@@ -462,4 +491,18 @@ function hasTextLengthBound(
   textLength: DeclarativeAssertion["textLength"],
 ): boolean {
   return textLength?.min !== undefined || textLength?.max !== undefined;
+}
+
+function hasValidTextLengthRange(
+  textLength: DeclarativeAssertion["textLength"],
+): boolean {
+  return (
+    textLength?.min === undefined ||
+    textLength.max === undefined ||
+    textLength.min <= textLength.max
+  );
+}
+
+function isTextLengthBound(value: number): boolean {
+  return Number.isInteger(value) && value >= 0;
 }
