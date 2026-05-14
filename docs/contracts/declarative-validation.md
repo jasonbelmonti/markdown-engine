@@ -191,6 +191,7 @@ Supported assertion members are:
 
 ```ts
 interface DeclarativeAssertion {
+  exists?: true;
   sectionsRequired?: {
     headings: readonly string[];
     order?: "none" | "strict";
@@ -236,6 +237,7 @@ Selector/assertion compatibility is part of the public contract:
 
 | Assertion | Compatible selector targets |
 | --- | --- |
+| `exists` | all supported selector targets |
 | `sectionsRequired` | `document` |
 | `tableColumnsRequired` | `table` |
 | `ids` | all supported selector targets |
@@ -247,6 +249,10 @@ Selector/assertion compatibility is part of the public contract:
 
 Incompatible supported selector/assertion pairs emit
 `profile.compile.incompatibleSelectorAssertion`.
+
+`exists` must be `true`. It passes when the selector resolves at least one
+target and fails with `profile.validation.emptySelection` when the selector
+resolves zero targets.
 
 `sectionsRequired.order` defaults to `none`. `strict` checks that configured
 headings appear as an ordered subsequence in the normalized section tree
@@ -264,10 +270,10 @@ integers, `min` must be less than or equal to `max` when both are present, and
 evaluation uses JavaScript string `.length` for each selected target's
 normalized text.
 
-Empty selector results produce `profile.validation.emptySelection` for table,
-ID, reference, text, occurrence, and text-length assertions. Document-scoped
-required-section and required-frontmatter assertions evaluate against the
-document.
+Empty selector results produce `profile.validation.emptySelection` for exists,
+table, ID, reference, text, occurrence, and text-length assertions.
+Document-scoped required-section and required-frontmatter assertions evaluate
+against the document.
 
 ## Diagnostics
 
@@ -453,6 +459,21 @@ rules:
       sectionsRequired:
         headings:
           - Mission Brief
+```
+
+Link existence profile:
+
+```yaml
+syntaxVersion: markdown-engine.validation@v1
+rules:
+  - id: rollback-link.exists
+    select:
+      target: link
+      section: Escalation
+      text: rollback guide
+      url: ./rollback-guide.md
+    assert:
+      exists: true
 ```
 
 Table cell text profile:

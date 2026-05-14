@@ -68,6 +68,7 @@ export interface DeclarativeTableCellPredicate {
 }
 
 export interface DeclarativeAssertion {
+  exists?: true;
   sectionsRequired?: {
     headings: readonly string[];
     order?: DeclarativeSectionOrder;

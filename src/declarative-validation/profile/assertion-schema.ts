@@ -18,6 +18,7 @@ import {
 } from "./schema-values.js";
 
 const SUPPORTED_ASSERTION_KEYS = [
+  "exists",
   "sectionsRequired",
   "tableColumnsRequired",
   "ids",
@@ -41,6 +42,7 @@ export function assertionFromValue(
   const hasUnsupportedVocabulary = unsupportedAssertionKeys(value, diagnostics);
 
   const assertion = {
+    ...existsFromValue(value.exists, diagnostics),
     ...sectionsRequiredFromValue(value.sectionsRequired, diagnostics),
     ...tableColumnsRequiredFromValue(value.tableColumnsRequired, diagnostics),
     ...idsFromValue(value.ids, diagnostics),
@@ -96,6 +98,23 @@ function unsupportedAssertionKeys(
 }
 
 type SupportedAssertionKey = (typeof SUPPORTED_ASSERTION_KEYS)[number];
+
+function existsFromValue(
+  value: unknown,
+  diagnostics: MarkdownDiagnostic[],
+): Pick<DeclarativeAssertion, "exists"> {
+  if (value === undefined) {
+    return {};
+  }
+
+  if (value !== true) {
+    diagnostics.push(invalidShape("exists must be true."));
+
+    return {};
+  }
+
+  return { exists: true };
+}
 
 function sectionsRequiredFromValue(
   value: unknown,

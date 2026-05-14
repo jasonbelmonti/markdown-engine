@@ -8,6 +8,7 @@ import { pushUnsupportedKeyDiagnostics } from "./assertion-shapes.js";
 import type { CompiledDeclarativeAssertion } from "./plan.js";
 
 const ASSERTION_KEYS = [
+  "exists",
   "sectionsRequired",
   "tableColumnsRequired",
   "ids",

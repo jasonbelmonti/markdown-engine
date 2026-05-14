@@ -299,6 +299,42 @@ rules:
     }
   });
 
+  it("parses exists assertions", () => {
+    const result = parseValidationProfile(`
+syntaxVersion: markdown-engine.validation@v1
+documentVersion: 1.0.0
+rules:
+  - id: rollback-link.exists
+    select:
+      target: link
+      section: Escalation
+      text: rollback guide
+      url: ./rollback-guide.md
+    assert:
+      exists: true
+`);
+
+    expect(result).toEqual({
+      profile: {
+        syntaxVersion: "markdown-engine.validation@v1",
+        documentVersion: "1.0.0",
+        rules: [
+          {
+            id: "rollback-link.exists",
+            select: {
+              target: "link",
+              section: "Escalation",
+              text: "rollback guide",
+              url: "./rollback-guide.md",
+            },
+            assert: { exists: true },
+          },
+        ],
+      },
+      diagnostics: [],
+    });
+  });
+
   it("returns invalidYaml diagnostics for invalid YAML strings", () => {
     const result = parseValidationProfile(`
 syntaxVersion: markdown-engine.validation@v1
@@ -678,6 +714,7 @@ rules:
           id: "public-assertions",
           select: { target: "document" },
           assert: {
+            exists: true,
             sectionsRequired: {
               headings: ["Objective", "Evidence"],
               order: "strict",
@@ -722,6 +759,7 @@ rules:
             id: "public-assertions",
             select: { target: "document" },
             assert: {
+              exists: true,
               sectionsRequired: {
                 headings: ["Objective", "Evidence"],
                 order: "strict",
@@ -758,6 +796,27 @@ rules:
       },
       diagnostics: [],
     });
+  });
+
+  it("rejects exists assertions with values other than true", () => {
+    const result = parseValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      rules: [
+        {
+          id: "exists.false",
+          select: { target: "document" },
+          assert: { exists: false },
+        },
+      ],
+    });
+
+    expect(result.profile).toBeUndefined();
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "profile.config.invalidShape",
+        message: "exists must be true.",
+      }),
+    );
   });
 
   it("rejects ineffective id assertion payloads", () => {

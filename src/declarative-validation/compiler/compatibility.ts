@@ -7,6 +7,9 @@ export function selectorAssertionCompatibilityError(
   selector: DeclarativeSelector,
 ): string | undefined {
   switch (assertionName) {
+    case "exists":
+      return undefined;
+
     case "sectionsRequired":
     case "references":
       return selector.target === "document"

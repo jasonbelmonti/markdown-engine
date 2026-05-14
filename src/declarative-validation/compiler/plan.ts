@@ -26,6 +26,9 @@ export interface DeclarativeValidationCompileResult {
 /** @internal */
 export type CompiledDeclarativeAssertion =
   | {
+      kind: "exists";
+    }
+  | {
       kind: "sectionsRequired";
       headings: readonly string[];
       order: "none" | "strict";

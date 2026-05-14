@@ -119,5 +119,4 @@ rules:
       text: "handoff packet"
       url: "./handoff-packet.md"
     assert:
-      text:
-        contains: "handoff packet"
+      exists: true

@@ -14,6 +14,17 @@ describe("declarative validation compiler proof", () => {
     expect(result.plan).toMatchObject({
       rules: [
         {
+          ruleId: "rollback-link.exists",
+          severity: "error",
+          selector: {
+            target: "link",
+            section: "Escalation",
+            text: "rollback guide",
+            url: "./rollback-guide.md",
+          },
+          assertions: [{ kind: "exists" }],
+        },
+        {
           ruleId: "objective.contains",
           severity: "error",
           selector: { target: "section", title: "Objective" },
@@ -198,6 +209,16 @@ const supportedProfile = {
   syntaxVersion: "markdown-engine.validation@v1",
   documentVersion: "1.0.0",
   rules: [
+    {
+      id: "rollback-link.exists",
+      select: {
+        target: "link",
+        section: "Escalation",
+        text: "rollback guide",
+        url: "./rollback-guide.md",
+      },
+      assert: { exists: true },
+    },
     {
       id: "objective.contains",
       select: { target: "section", title: "Objective" },

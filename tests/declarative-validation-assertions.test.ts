@@ -180,6 +180,64 @@ describe("declarative validation assertion proof", () => {
     ]);
   });
 
+  it("evaluates exists assertions against selector resolution", () => {
+    const document = normalize(
+      parse("# Escalation\n\nSee the [rollback guide](./rollback-guide.md).\n")
+        .parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "rollback-link.exists",
+          select: {
+            target: "link",
+            section: "Escalation",
+            text: "rollback guide",
+            url: "./rollback-guide.md",
+          },
+          assert: { exists: true },
+        },
+        {
+          id: "missing-link.exists",
+          select: {
+            target: "link",
+            section: "Escalation",
+            text: "release notes",
+            url: "./release-notes.md",
+          },
+          assert: { exists: true },
+        },
+      ],
+    });
+
+    expect(result.valid).toBe(false);
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.validation.emptySelection",
+        ruleId: "missing-link.exists",
+        message: "Rule selector did not match any document targets.",
+        severity: "error",
+      },
+    ]);
+    expect(result.ruleResults).toEqual([
+      {
+        ruleId: "missing-link.exists",
+        passed: false,
+        diagnostics: result.diagnostics,
+      },
+      {
+        ruleId: "rollback-link.exists",
+        passed: true,
+        diagnostics: [],
+      },
+    ]);
+  });
+
   it("sorts rule results and diagnostics deterministically by rule id", () => {
     const document = normalize(
       parse("# Bravo\n\nReady.\n\n# Alpha\n\nReady.\n").parsed,

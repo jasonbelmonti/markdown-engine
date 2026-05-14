@@ -115,6 +115,7 @@ const supportedSelectorTargets = [
   "textSpan",
 ] as const;
 const supportedAssertionFamilies = [
+  "exists",
   "frontmatterRequired",
   "ids",
   "references",
