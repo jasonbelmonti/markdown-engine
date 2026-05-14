@@ -120,6 +120,7 @@ const missingSelectorTargetProfile = {
 } as const;
 const unsupportedSelector = { target: "section" } satisfies DeclarativeSelector;
 const publicAssertion = { ids: { unique: true } } satisfies DeclarativeAssertion;
+const existsAssertion = { exists: true } satisfies DeclarativeAssertion;
 const exactOneTextAssertion = {
   textOccurrenceCount: {
     text: "shall",
@@ -360,6 +361,31 @@ describe("declarative validation public contract scaffold", () => {
     });
   });
 
+  it("accepts the public exists assertion spelling", () => {
+    const existsProfile = {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "link-exists-contract",
+          select: {
+            target: "link",
+            text: "rollback guide",
+            url: "./rollback-guide.md",
+          },
+          assert: {
+            exists: true,
+          },
+        },
+      ],
+    } satisfies ValidationProfile;
+
+    expect(parseValidationProfile(existsProfile)).toEqual({
+      profile: existsProfile,
+      diagnostics: [],
+    });
+  });
+
   it("accepts the public exact-one text occurrence spelling", () => {
     const exactOneProfile = {
       syntaxVersion: "markdown-engine.validation@v1",
@@ -488,6 +514,7 @@ void (undefined as unknown as CompiledDeclarativeValidationPlan);
 void (undefined as unknown as DeclarativeValidationCompileResult);
 void unsupportedSelector;
 void publicAssertion;
+void existsAssertion;
 void exactOneTextAssertion;
 void textLengthAssertion;
 void removedTextAssertion;

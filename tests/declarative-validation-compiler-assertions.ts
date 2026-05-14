@@ -4,6 +4,31 @@ import type { ValidationProfile } from "@jasonbelmonti/markdown-engine";
 import { compileValidationProfile } from "../src/declarative-validation/compiler/index.js";
 
 describe("declarative validation compiler assertion proof", () => {
+  it("rejects typed exists assertions with values other than true before execution", () => {
+    const result = compileValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      rules: [
+        {
+          id: "exists.false",
+          select: { target: "document" },
+          assert: {
+            exists: false,
+          } as unknown as ValidationProfile["rules"][number]["assert"],
+        },
+      ],
+    });
+
+    expect(result.plan).toBeUndefined();
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.config.invalidShape",
+        ruleId: "exists.false",
+        message: "exists must be true.",
+        severity: "error",
+      },
+    ]);
+  });
+
   it("rejects typed text assertions with no predicate before execution", () => {
     const result = compileValidationProfile({
       syntaxVersion: "markdown-engine.validation@v1",

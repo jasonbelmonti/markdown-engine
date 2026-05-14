@@ -35,6 +35,7 @@ export type AssertionBuilder = (
 ) => CompiledDeclarativeAssertion | undefined;
 
 export const ASSERTION_BUILDERS: readonly AssertionBuilder[] = [
+  buildExistsAssertion,
   buildSectionsRequiredAssertion,
   buildTableColumnsRequiredAssertion,
   buildIdsAssertion,
@@ -44,6 +45,35 @@ export const ASSERTION_BUILDERS: readonly AssertionBuilder[] = [
   buildTextLengthAssertion,
   buildFrontmatterRequiredAssertion,
 ];
+
+function buildExistsAssertion(
+  assertion: DeclarativeAssertion,
+  selector: DeclarativeSelector,
+  ruleId: string,
+  diagnostics: MarkdownDiagnostic[],
+): CompiledDeclarativeAssertion | undefined {
+  if (assertion.exists === undefined) {
+    return undefined;
+  }
+
+  if (assertion.exists !== true) {
+    diagnostics.push(
+      compileDiagnostic(
+        "profile.config.invalidShape",
+        "exists must be true.",
+        ruleId,
+      ),
+    );
+
+    return undefined;
+  }
+
+  if (pushCompatibilityDiagnostic("exists", selector, ruleId, diagnostics)) {
+    return { kind: "exists" };
+  }
+
+  return undefined;
+}
 
 function buildSectionsRequiredAssertion(
   assertion: DeclarativeAssertion,

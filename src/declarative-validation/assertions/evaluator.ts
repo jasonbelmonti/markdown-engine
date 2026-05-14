@@ -6,6 +6,7 @@ import type {
 import type { DeclarativeSelection } from "../selectors/index.js";
 import type { AssertionEvaluationContext } from "./context.js";
 import type { AssertionDiagnostic } from "./diagnostics.js";
+import { evaluateExists } from "./exists.js";
 import { evaluateFrontmatterRequired } from "./frontmatter-required.js";
 import { evaluateIds } from "./ids.js";
 import { sortAssertionDiagnostics } from "./ordering.js";
@@ -42,6 +43,9 @@ function evaluateAssertion(
   context: AssertionEvaluationContext,
 ): AssertionDiagnostic[] {
   switch (assertion.kind) {
+    case "exists":
+      return evaluateExists(context);
+
     case "sectionsRequired":
       return evaluateSectionsRequired(assertion, context);
 

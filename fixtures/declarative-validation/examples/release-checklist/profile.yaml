@@ -93,5 +93,4 @@ rules:
       text: "release notes"
       url: "./release-notes.md"
     assert:
-      text:
-        contains: "release notes"
+      exists: true
