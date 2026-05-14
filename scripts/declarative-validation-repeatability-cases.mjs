@@ -49,6 +49,23 @@ const failingProfile = {
   ],
 };
 
+const textLengthProfile = {
+  syntaxVersion: "markdown-engine.validation@v1",
+  documentVersion: "1.0.0",
+  rules: [
+    {
+      id: "objective.length",
+      select: { target: "section", title: "Objective" },
+      assert: {
+        textLength: {
+          min: 1,
+          max: 80,
+        },
+      },
+    },
+  ],
+};
+
 export function buildDeclarativeValidationRepeatabilityCases(repoRoot, engine) {
   const { normalize, parse, serialize, validateWithProfile } = engine;
   const markdown = readFileSync(join(repoRoot, fixturePath), "utf8");
@@ -81,6 +98,11 @@ export function buildDeclarativeValidationRepeatabilityCases(repoRoot, engine) {
     document,
     failingProfile,
   );
+  const textLengthResult = validateWithEvidence(
+    validateWithProfile,
+    document,
+    textLengthProfile,
+  );
 
   return [
     { name: "declarative-validation:passing-result", result: passingResult },
@@ -100,6 +122,14 @@ export function buildDeclarativeValidationRepeatabilityCases(repoRoot, engine) {
     {
       name: "declarative-validation:failing-evidence",
       result: requiredEvidence(failingResult),
+    },
+    {
+      name: "declarative-validation:text-length-result",
+      result: textLengthResult,
+    },
+    {
+      name: "declarative-validation:text-length-evidence",
+      result: requiredEvidence(textLengthResult),
     },
   ].flatMap(({ name, result }) =>
     serializedFormatCases(serialize, name, result),

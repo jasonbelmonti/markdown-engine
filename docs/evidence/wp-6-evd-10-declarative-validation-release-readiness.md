@@ -65,6 +65,7 @@ service behavior, or API-owned persistence.
 | EVD-6 | [Declarative validation repeatability](wp-5-evd-6-declarative-validation-repeatability.md) | Ten-run deterministic result and evidence hash proof is recorded. |
 | EVD-7 | [Declarative validation contract review](wp-5-evd-7-declarative-validation-contract-review.md) | Contract docs, CLI JSON union, exit codes, migration notes, and non-goals are recorded. |
 | EVD-8 | [Declarative validation boundary audit](wp-5-evd-8-declarative-validation-boundary-audit.md) | Boundary exclusions and automated audit behavior are recorded. |
+| BEL-1043 | [textLength contract verification](bel-1043-textlength-contract-verification.md) plus current updates in EVD-6, EVD-7, and EVD-8 | Contract docs, boundary audit, and repeatability proof were rerun on 2026-05-14 from baseline `d02522d`. |
 | MS-2 | [BEL-986 MS-2 approval](bel-986-ms-2-approval.md) | Implementation and public contract approval are recorded before WP-6 release evidence. |
 | EVD-9 | [ODS profile exercise](wp-6-evd-9-ods-profile-exercise.md) | Operational-design-spec-shaped fixture passes through generic declarative validation syntax without core ODS semantics. |
 | EVD-10 | [Release readiness and containment](wp-6-evd-10-release-readiness.md) and [rollback containment](wp-6-evd-10-rollback-containment.md) | BEL-989 release verification, current public artifact state, and rollback controls are recorded. |
@@ -121,6 +122,19 @@ Additional BEL-990 verification:
   at `01cf36ec3da3991b3dc1a0b9cfe7a7cc43211bef`.
 - `npm view @jasonbelmonti/markdown-engine version dist-tags --json`: pass;
   npm reports version `1.0.0` and dist-tag `latest: 1.0.0`.
+
+Additional BEL-1043 textLength verification on 2026-05-14:
+
+- `npm run docs:declarative-validation-contract`: pass; the current public
+  contract includes `textLength: { min, max }`, JavaScript string `.length`
+  semantics, and `profile.validation.assertionFailed` for bound failures.
+- `npm run audit:declarative-validation-boundary`: pass; internal compiled
+  plans remain unexported and the declarative validation boundary reported 0
+  direct dependency matches and 0 runtime boundary source matches.
+- `npm run test:validation:repeatability`: pass, 1 file and 2 tests plus
+  `node scripts/prove-declarative-validation-repeatability.mjs --runs 10`.
+  The current repeatability proof passed 10 runs and 16 cases per run after the
+  updated assertion surface reached the representative fixtures.
 
 ## Boundary Revalidation Decision Input
 

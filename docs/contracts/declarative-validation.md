@@ -1,7 +1,7 @@
 # Declarative Validation Contract
 
 Status: package 2.0.0, v1 profile syntax, document contract 1.0.0
-Last updated: 2026-05-13
+Last updated: 2026-05-14
 
 This document defines the public declarative validation contract for
 `@jasonbelmonti/markdown-engine`. The stable surface is the package-root API,

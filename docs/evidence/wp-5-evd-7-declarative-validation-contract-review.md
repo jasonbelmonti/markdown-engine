@@ -40,7 +40,8 @@ exclusions.
 - The selector contract for document, section, heading, table, table row, table
   cell, text span, link, and list targets.
 - The assertion contract for required sections, table columns, IDs,
-  references, literal text, occurrence count, and required frontmatter.
+  references, literal text, occurrence count, text length, and required
+  frontmatter.
 - The diagnostic inventory for config, compile, and validation diagnostics.
 - The public `DeclarativeValidationResult` shape and deterministic evidence
   fields.
@@ -73,6 +74,11 @@ node scripts/check-declarative-validation-contract-docs.mjs
 Declarative validation contract documentation gate PASS
 Checked files: docs/contracts/declarative-validation.md, README.md, docs/evidence/wp-5-evd-7-declarative-validation-contract-review.md, docs/evidence/wp-5-evd-8-declarative-validation-boundary-audit.md, package.json
 ```
+
+BEL-1043 revalidated this gate on 2026-05-14 after the public `textLength`
+assertion reached the contract, CLI, examples, and repeatability surface. The
+same command passed from
+`.worktrees/bel-1043-textlength-contract-verification` on baseline `d02522d`.
 
 ## Residual Risks
 
