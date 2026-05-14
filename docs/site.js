@@ -17,6 +17,16 @@ const examples = {
     profile: `syntaxVersion: markdown-engine.validation@v1
 documentVersion: 1.0.0
 rules:
+  - id: frontmatter.required
+    select:
+      target: document
+    assert:
+      frontmatterRequired:
+        fields:
+          - title
+          - owner
+          - status
+
   - id: sections.required
     select:
       target: document
@@ -30,6 +40,21 @@ rules:
           - Risk Register
           - Handoff Links
 
+  - id: risk.table.columns
+    select:
+      target: table
+      section: Risk Register
+      header:
+        - ID
+        - Mitigation
+        - Status
+    assert:
+      tableColumnsRequired:
+        columns:
+          - ID
+          - Mitigation
+          - Status
+
   - id: risk.ids.unique
     select:
       target: tableCell
@@ -38,7 +63,17 @@ rules:
     assert:
       ids:
         prefix: OPS-RISK
-        unique: true`,
+        unique: true
+
+  - id: handoff.link
+    select:
+      target: link
+      section: Handoff Links
+      text: handoff packet
+      url: ./handoff-packet.md
+    assert:
+      text:
+        contains: handoff packet`,
     document: `---
 title: Operational Spec Example
 owner: platform-team
@@ -50,12 +85,29 @@ status: ready
 Mission control uses this structural profile to confirm a small operating spec
 has the required sections, handoff links, and risk tracking details.
 
+# Context / Constraints
+
+The example stays generic. It validates Markdown headings, tables, IDs, list
+content, literal text, and links without attaching domain meaning to the core
+engine.
+
+# Execution Plan
+
+- MUST Validate profile fixtures locally.
+- MUST Record evidence before requesting review.
+- Keep the checks deterministic and local-only.
+
 # Risk Register
 
 | ID | Mitigation | Status |
 | --- | --- | --- |
 | OPS-RISK-1 | Keep examples structural. | tracked |
-| OPS-RISK-2 | Keep commands local. | closed |`,
+| OPS-RISK-2 | Keep commands local. | closed |
+
+# Handoff Links
+
+The [handoff packet](./handoff-packet.md) records follow-up review notes for the
+next operator.`,
   },
   releaseChecklist: {
     tabId: "tab-release-checklist",
@@ -140,6 +192,35 @@ Publish review uses the [release notes](./release-notes.md) after all gates pass
     profile: `syntaxVersion: markdown-engine.validation@v1
 documentVersion: 1.0.0
 rules:
+  - id: requirements.table.columns
+    select:
+      target: table
+      section: Requirements
+      header:
+        - ID
+        - Requirement statement
+        - Source
+    assert:
+      tableColumnsRequired:
+        columns:
+          - ID
+          - Requirement statement
+          - Source
+
+  - id: evidence.table.columns
+    select:
+      target: table
+      section: Evidence Matrix
+      header:
+        - ID
+        - Requirement
+    assert:
+      tableColumnsRequired:
+        columns:
+          - ID
+          - Requirement
+          - Evidence
+
   - id: requirement.ids.unique
     select:
       target: tableCell
@@ -150,6 +231,30 @@ rules:
         prefix: REQ
         unique: true
 
+  - id: evidence.ids.unique
+    select:
+      target: tableCell
+      section: Evidence Matrix
+      column: ID
+    assert:
+      ids:
+        prefix: EVD
+        unique: true
+
+  - id: requirement.text
+    select:
+      target: tableCell
+      section: Requirements
+      column: Requirement statement
+      rowWhere:
+        column: ID
+        equals: REQ-2
+    assert:
+      text:
+        contains: shall
+        excludes:
+          - TBD
+
   - id: traceability.requirements
     select:
       target: document
@@ -159,6 +264,18 @@ rules:
           section: Requirements
           column: ID
           prefix: REQ
+        mustAppearIn:
+          - Traceability
+
+  - id: traceability.evidence
+    select:
+      target: document
+    assert:
+      references:
+        idsFrom:
+          section: Evidence Matrix
+          column: ID
+          prefix: EVD
         mustAppearIn:
           - Traceability`,
     document: `---
@@ -174,6 +291,14 @@ status: ready
 | REQ-1 | The package shall parse one Markdown file. | CLI |
 | REQ-2 | The package shall validate a configured profile. | API |
 | REQ-3 | The package shall emit deterministic diagnostics. | Evidence |
+
+# Evidence Matrix
+
+| ID | Requirement | Evidence |
+| --- | --- | --- |
+| EVD-1 | REQ-1 | CLI parse fixture |
+| EVD-2 | REQ-2 | Profile validation fixture |
+| EVD-3 | REQ-3 | Diagnostic assertion fixture |
 
 # Traceability
 
