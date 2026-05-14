@@ -369,13 +369,14 @@ h3 {
 }
 
 .segmented-control {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
   gap: 8px;
   margin-bottom: 18px;
 }
 
 .segment {
+  width: 100%;
   min-height: 42px;
   padding: 0 16px;
   color: #e9f3e9;

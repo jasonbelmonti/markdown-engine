@@ -306,6 +306,199 @@ REQ-1 is covered by EVD-1.
 REQ-2 is covered by EVD-2.
 REQ-3 is covered by EVD-3.`,
   },
+  skillMd: {
+    tabId: "tab-skill-md",
+    kicker: "SKILL.md pattern",
+    title: "Package agent capability instructions as a checked contract.",
+    story:
+      "A platform team wants skill files to tell agents when to use a capability, what sequence to follow, what inputs are required, and how to validate the output. Markdown Engine can treat SKILL.md as a profile-backed document instead of free-form agent guidance.",
+    profilePath: "profile-patterns/skill-md/profile.yaml",
+    documentPath: "SKILL.md",
+    outcomes: [
+      "Frontmatter includes name and description.",
+      "Required skill sections appear in strict order.",
+      "Workflow and validation instructions are present as literal checks.",
+    ],
+    profile: `syntaxVersion: markdown-engine.validation@v1
+documentVersion: 1.0.0
+rules:
+  - id: frontmatter.required
+    select:
+      target: document
+    assert:
+      frontmatterRequired:
+        fields:
+          - name
+          - description
+
+  - id: sections.required
+    select:
+      target: document
+    assert:
+      sectionsRequired:
+        order: strict
+        headings:
+          - When to use
+          - Inputs
+          - Workflow
+          - Validation
+          - Safety
+
+  - id: workflow.inspect
+    select:
+      target: list
+      section: Workflow
+      ordered: true
+    assert:
+      text:
+        contains: Inspect target files
+
+  - id: validation.required
+    select:
+      target: section
+      title: Validation
+    assert:
+      text:
+        contains: Run the smallest check that proves the skill output`,
+    document: `---
+name: release-note-writer
+description: Draft release notes from merged pull requests and changelog entries.
+---
+
+# When to use
+
+Use this skill when a repository needs concise release notes grounded in local
+changes, merged pull requests, and existing changelog conventions.
+
+# Inputs
+
+- Target version or release branch.
+- Changelog path.
+- Pull request range.
+
+# Workflow
+
+1. Inspect target files and merged pull requests.
+2. Group changes by user-facing impact.
+3. Draft notes using the repository's existing release-note style.
+4. Identify missing evidence or unresolved release questions.
+
+# Validation
+
+Run the smallest check that proves the skill output is grounded in the provided
+source material before handing it back.
+
+# Safety
+
+Do not invent shipped behavior, security impact, or migration requirements that
+are not supported by source files.`,
+  },
+  playbookMd: {
+    tabId: "tab-playbook-md",
+    kicker: "PLAYBOOK.md pattern",
+    title: "Turn operational playbooks into repeatable execution gates.",
+    story:
+      "A team can define a custom Markdown type for repeated operational work: entry criteria, ordered procedure rows, decision tracking, and escalation links. The engine validates the structure before the playbook is used in a release or incident workflow.",
+    profilePath: "profile-patterns/playbook-md/profile.yaml",
+    documentPath: "PLAYBOOK.md",
+    outcomes: [
+      "Playbook frontmatter identifies owner and status.",
+      "Procedure steps use stable PB-STEP identifiers.",
+      "Escalation links point operators to the rollback guide.",
+    ],
+    profile: `syntaxVersion: markdown-engine.validation@v1
+documentVersion: 1.0.0
+rules:
+  - id: frontmatter.required
+    select:
+      target: document
+    assert:
+      frontmatterRequired:
+        fields:
+          - title
+          - owner
+          - status
+
+  - id: sections.required
+    select:
+      target: document
+    assert:
+      sectionsRequired:
+        order: strict
+        headings:
+          - Purpose
+          - Entry Criteria
+          - Procedure
+          - Decision Log
+          - Escalation
+
+  - id: procedure.table.columns
+    select:
+      target: table
+      section: Procedure
+      header:
+        - Step
+        - Owner
+        - Status
+    assert:
+      tableColumnsRequired:
+        columns:
+          - Step
+          - Owner
+          - Status
+
+  - id: procedure.ids.unique
+    select:
+      target: tableCell
+      section: Procedure
+      column: Step
+    assert:
+      ids:
+        prefix: PB-STEP
+        unique: true
+
+  - id: escalation.rollback
+    select:
+      target: link
+      section: Escalation
+      text: rollback guide
+      url: ./rollback-guide.md
+    assert:
+      text:
+        contains: rollback guide`,
+    document: `---
+title: Payment Release Playbook
+owner: platform-ops
+status: active
+---
+
+# Purpose
+
+Coordinate a payment-service release with explicit gates, named operators, and
+rollback visibility.
+
+# Entry Criteria
+
+- Release candidate is built.
+- Smoke tests are passing.
+- On-call owner is assigned.
+
+# Procedure
+
+| Step | Owner | Status |
+| --- | --- | --- |
+| PB-STEP-1 | Release captain | ready |
+| PB-STEP-2 | QA operator | ready |
+| PB-STEP-3 | On-call engineer | standby |
+
+# Decision Log
+
+Record approval, hold, rollback, and follow-up decisions in timestamp order.
+
+# Escalation
+
+Use the [rollback guide](./rollback-guide.md) if deployment health checks fail.`,
+  },
 };
 
 const selectors = {
@@ -402,3 +595,5 @@ document.querySelectorAll("[data-copy-target]").forEach((button) => {
     copyTextFrom(button.dataset.copyTarget, button);
   });
 });
+
+setExample("operationalSpec");

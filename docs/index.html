@@ -171,11 +171,12 @@
         <div class="section-inner">
           <div class="section-heading">
             <p class="eyebrow">Grounded workflows</p>
-            <h2 id="workflow-title">Examples from the shipped fixture suite.</h2>
+            <h2 id="workflow-title">Fixture workflows and profile patterns.</h2>
             <p>
-              These are not toy claims. Each narrative maps to a real
-              `fixtures/declarative-validation/examples/**` profile and passing
-              Markdown document in the package.
+              The first three narratives map to shipped fixture profiles and
+              passing Markdown documents. The `SKILL.md` and `PLAYBOOK.md`
+              patterns show how consumers can define their own document types
+              with the same deterministic contract model.
             </p>
           </div>
 
@@ -212,6 +213,28 @@
               data-example-button="requirementsTraceability"
             >
               Traceability
+            </button>
+            <button
+              id="tab-skill-md"
+              class="segment"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              aria-controls="workflow-panel"
+              data-example-button="skillMd"
+            >
+              SKILL.md
+            </button>
+            <button
+              id="tab-playbook-md"
+              class="segment"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              aria-controls="workflow-panel"
+              data-example-button="playbookMd"
+            >
+              PLAYBOOK.md
             </button>
           </div>
 
