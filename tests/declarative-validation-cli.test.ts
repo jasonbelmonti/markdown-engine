@@ -60,6 +60,15 @@ rules:
   - id: invalid
     select: [
 `;
+const unsupportedSyntaxProfile = `syntaxVersion: markdown-engine.validation@v2
+rules:
+  - id: skipped.rule
+    select:
+      target: document
+    assert:
+      text:
+        contains: REQ-1
+`;
 const incompatibleProfile = `syntaxVersion: markdown-engine.validation@v1
 rules:
   - id: sections.incompatible
@@ -140,6 +149,34 @@ describe("declarative validation CLI", () => {
     });
     expect(result.evidence.inputHash).toMatch(/^[0-9a-f]{64}$/);
     expect(result.evidence.profileHash).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it("accepts assignment-form file and profile targets with explicit JSON format", async () => {
+    const cwd = await makeTempDir();
+    await writeFile(join(cwd, "mission.md"), validMarkdown);
+    await writeFile(join(cwd, "profile.yaml"), validProfile);
+
+    const { exitCode, stderr, stdout } = await runCliWithOutput({
+      args: [
+        "validate",
+        "--file=mission.md",
+        "--profile=profile.yaml",
+        "--format",
+        "json",
+      ],
+      cwd,
+    });
+
+    expect(exitCode).toBe(0);
+    expect(stderr.text()).toBe("");
+    expect(parseStdout(stdout.text())).toMatchObject({
+      diagnostics: [],
+      profile: {
+        documentVersion: "1.0.0",
+        ruleCount: 1,
+      },
+      valid: true,
+    });
   });
 
   it("carries executable profile warnings into validation JSON and evidence", async () => {
@@ -344,6 +381,40 @@ describe("declarative validation CLI", () => {
     expect(result).not.toHaveProperty("evidence");
   });
 
+  it("emits profile-stage JSON for unsupported syntax without reading Markdown", async () => {
+    const cwd = await makeTempDir();
+    await writeFile(join(cwd, "profile.yaml"), unsupportedSyntaxProfile);
+
+    const { exitCode, stderr, stdout } = await runCliWithOutput({
+      args: [
+        "validate",
+        "--file",
+        "missing.md",
+        "--profile",
+        "profile.yaml",
+      ],
+      cwd,
+    });
+
+    expect(exitCode).toBe(1);
+    expect(stderr.text()).toBe("");
+
+    const result = parseStdout(stdout.text());
+    expect(result).toMatchObject({
+      diagnostics: [
+        expect.objectContaining({
+          code: "profile.config.unsupportedSyntaxVersion",
+          severity: "error",
+        }),
+      ],
+      ruleResults: [],
+      stage: "profile",
+      valid: false,
+    });
+    expect(result).not.toHaveProperty("profile");
+    expect(result).not.toHaveProperty("evidence");
+  });
+
   it.each([
     {
       name: "incompatible selector/assertion",
@@ -427,8 +498,48 @@ describe("declarative validation CLI", () => {
 
   it.each([
     {
+      args: ["validate", "--help"],
+      usage: "Usage: markdown-engine validate",
+    },
+    {
+      args: ["validate", "-h"],
+      usage: "Usage: markdown-engine validate",
+    },
+  ])("writes validation help to stdout: $args", async ({ args, usage }) => {
+    const { exitCode, stderr, stdout } = await runCliWithOutput({
+      args,
+      cwd: "/",
+    });
+
+    expect(exitCode).toBe(0);
+    expect(stdout.text()).toContain(usage);
+    expect(stderr.text()).toBe("");
+  });
+
+  it.each([
+    {
+      args: ["validate"],
+      message: "Expected exactly one --file target.",
+    },
+    {
       args: ["validate", "--file", "mission.md"],
       message: "Expected exactly one --profile target.",
+    },
+    {
+      args: ["validate", "--file"],
+      message: "Missing value for --file.",
+    },
+    {
+      args: ["validate", "--file=", "--profile", "profile.yaml"],
+      message: "File path cannot be empty.",
+    },
+    {
+      args: ["validate", "--file", "mission.md", "--profile"],
+      message: "Missing value for --profile.",
+    },
+    {
+      args: ["validate", "--file", "mission.md", "--profile="],
+      message: "Profile path cannot be empty.",
     },
     {
       args: [
@@ -441,6 +552,29 @@ describe("declarative validation CLI", () => {
         "profile.yaml",
       ],
       message: "Expected one Markdown file target, received multiple.",
+    },
+    {
+      args: [
+        "validate",
+        "--file",
+        "mission.md",
+        "--profile",
+        "a.yaml",
+        "--profile",
+        "b.yaml",
+      ],
+      message: "Expected one profile file target, received multiple.",
+    },
+    {
+      args: [
+        "validate",
+        "--file",
+        "mission.md",
+        "--profile",
+        "profile.yaml",
+        "--format",
+      ],
+      message: "Missing value for --format.",
     },
     {
       args: [
@@ -461,22 +595,49 @@ describe("declarative validation CLI", () => {
         "mission.md",
         "--profile",
         "profile.yaml",
+        "--format=xml",
+      ],
+      message: "Unsupported validation output format: xml.",
+    },
+    {
+      args: [
+        "validate",
+        "--file",
+        "mission.md",
+        "--profile",
+        "profile.yaml",
+        "--format=json",
+        "--format",
+        "json",
+      ],
+      message: "Expected at most one --format selector.",
+    },
+    {
+      args: [
+        "validate",
+        "--file",
+        "mission.md",
+        "--profile",
+        "profile.yaml",
         "--document-version",
         "1.0.0",
       ],
       message: "Unknown argument: --document-version",
     },
-  ])("returns usage errors with exit code 2: $message", async ({ args, message }) => {
-    const { exitCode, stderr, stdout } = await runCliWithOutput({
-      args,
-      cwd: "/",
-    });
+  ])(
+    "returns usage errors with exit code 2: $message",
+    async ({ args, message }) => {
+      const { exitCode, stderr, stdout } = await runCliWithOutput({
+        args,
+        cwd: "/",
+      });
 
-    expect(exitCode).toBe(2);
-    expect(stdout.text()).toBe("");
-    expect(stderr.text()).toContain(message);
-    expect(stderr.text()).toContain("Usage: markdown-engine validate");
-  });
+      expect(exitCode).toBe(2);
+      expect(stdout.text()).toBe("");
+      expect(stderr.text()).toContain(message);
+      expect(stderr.text()).toContain("Usage: markdown-engine validate");
+    },
+  );
 
   it.each([
     {
@@ -516,19 +677,31 @@ describe("declarative validation CLI", () => {
       args: ["validate", "--file", "docs", "--profile", "profile.yaml"],
       message: "Directories are not supported",
     },
-  ])("returns read errors with exit code 2: $name", async ({ args, message, setup }) => {
-    const cwd = await makeTempDir();
-    await setup(cwd);
+    {
+      name: "directory profile target",
+      setup: async (cwd: string) => {
+        await writeFile(join(cwd, "mission.md"), validMarkdown);
+        await mkdir(join(cwd, "profiles"));
+      },
+      args: ["validate", "--file", "mission.md", "--profile", "profiles"],
+      message: "Directories are not supported",
+    },
+  ])(
+    "returns read errors with exit code 2: $name",
+    async ({ args, message, setup }) => {
+      const cwd = await makeTempDir();
+      await setup(cwd);
 
-    const { exitCode, stderr, stdout } = await runCliWithOutput({
-      args,
-      cwd,
-    });
+      const { exitCode, stderr, stdout } = await runCliWithOutput({
+        args,
+        cwd,
+      });
 
-    expect(exitCode).toBe(2);
-    expect(stdout.text()).toBe("");
-    expect(stderr.text()).toContain(message);
-  });
+      expect(exitCode).toBe(2);
+      expect(stdout.text()).toBe("");
+      expect(stderr.text()).toContain(message);
+    },
+  );
 });
 
 async function makeTempDir(): Promise<string> {
