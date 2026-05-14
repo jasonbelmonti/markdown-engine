@@ -114,6 +114,191 @@ rules:
     });
   });
 
+  it("rejects invalid parsed YAML textLength assertions", () => {
+    const invalidTextLengthProfiles = [
+      {
+        name: "missing bounds",
+        textLength: "{}",
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            message: "textLength must include min, max, or both.",
+          },
+        ],
+      },
+      {
+        name: "negative min",
+        textLength: "min: -1",
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            message: "textLength.min must be a non-negative integer when provided.",
+          },
+        ],
+      },
+      {
+        name: "fractional max",
+        textLength: "max: 2.5",
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            message: "textLength.max must be a non-negative integer when provided.",
+          },
+        ],
+      },
+      {
+        name: "reversed range",
+        textLength: "min: 10\n        max: 3",
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            message: "textLength.min must be less than or equal to textLength.max.",
+          },
+        ],
+      },
+      {
+        name: "unsupported nested key",
+        textLength: "min: 1\n        unit: words",
+        diagnostics: [
+          {
+            code: "profile.config.unsupportedKey",
+            message: 'Unsupported validation profile key "unit".',
+          },
+        ],
+      },
+    ];
+
+    for (const { diagnostics, name, textLength } of invalidTextLengthProfiles) {
+      const result = parseValidationProfile(`
+syntaxVersion: markdown-engine.validation@v1
+documentVersion: 1.0.0
+rules:
+  - id: text-length-${name.replaceAll(" ", "-")}
+    select:
+      target: textSpan
+    assert:
+      textLength:
+        ${textLength}
+`);
+
+      expect(result.profile).toBeUndefined();
+      for (const diagnostic of diagnostics) {
+        expect(result.diagnostics).toContainEqual(
+          expect.objectContaining({
+            ...diagnostic,
+            severity: "error",
+          }),
+        );
+      }
+    }
+  });
+
+  it("rejects non-finite parsed YAML textLength bounds before schema traversal", () => {
+    const result = parseValidationProfile(`
+syntaxVersion: markdown-engine.validation@v1
+documentVersion: 1.0.0
+rules:
+  - id: text-length-non-finite
+    select:
+      target: textSpan
+    assert:
+      textLength:
+        min: .nan
+`);
+
+    expect(result.profile).toBeUndefined();
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.config.invalidYaml",
+        message:
+          "Validation profile YAML contains non-finite numbers, which are not JSON-safe.",
+        severity: "error",
+      }),
+    ]);
+  });
+
+  it("rejects invalid direct profile textLength assertions", () => {
+    const invalidTextLengthProfiles = [
+      {
+        name: "negative-min",
+        textLength: { min: -1 },
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            message: "textLength.min must be a non-negative integer when provided.",
+          },
+        ],
+      },
+      {
+        name: "fractional-max",
+        textLength: { max: 2.5 },
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            message: "textLength.max must be a non-negative integer when provided.",
+          },
+        ],
+      },
+      {
+        name: "reversed-range",
+        textLength: { min: 10, max: 3 },
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            message: "textLength.min must be less than or equal to textLength.max.",
+          },
+        ],
+      },
+      {
+        name: "unsupported-nested-key",
+        textLength: { min: 1, unit: "words" },
+        diagnostics: [
+          {
+            code: "profile.config.unsupportedKey",
+            message: 'Unsupported validation profile key "unit".',
+          },
+        ],
+      },
+      {
+        name: "non-finite-min",
+        textLength: { min: Number.POSITIVE_INFINITY },
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            message:
+              "Profile.rules[0].assert.textLength.min must contain only JSON-safe data properties.",
+          },
+        ],
+      },
+    ];
+
+    for (const { diagnostics, name, textLength } of invalidTextLengthProfiles) {
+      const result = parseValidationProfile({
+        syntaxVersion: "markdown-engine.validation@v1",
+        documentVersion: "1.0.0",
+        rules: [
+          {
+            id: `text-length-${name}`,
+            select: { target: "textSpan" },
+            assert: {
+              textLength,
+            },
+          },
+        ],
+      } as ProfileInput);
+
+      expect(result.profile).toBeUndefined();
+      for (const diagnostic of diagnostics) {
+        expect(result.diagnostics).toContainEqual(
+          expect.objectContaining({
+            ...diagnostic,
+            severity: "error",
+          }),
+        );
+      }
+    }
+  });
+
   it("returns invalidYaml diagnostics for invalid YAML strings", () => {
     const result = parseValidationProfile(`
 syntaxVersion: markdown-engine.validation@v1

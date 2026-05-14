@@ -106,12 +106,14 @@ export function pushTextLengthShapeDiagnostics(
   diagnostics: MarkdownDiagnostic[],
 ): boolean {
   let valid = true;
+  const min = assertion?.min;
+  const max = assertion?.max;
 
   if (
-    assertion?.min !== undefined &&
+    min !== undefined &&
     !pushTextLengthNumberDiagnostic(
       "textLength.min",
-      assertion.min,
+      min,
       ruleId,
       diagnostics,
     )
@@ -120,14 +122,26 @@ export function pushTextLengthShapeDiagnostics(
   }
 
   if (
-    assertion?.max !== undefined &&
+    max !== undefined &&
     !pushTextLengthNumberDiagnostic(
       "textLength.max",
-      assertion.max,
+      max,
       ruleId,
       diagnostics,
     )
   ) {
+    valid = false;
+  }
+
+  if (valid && min !== undefined && max !== undefined && min > max) {
+    diagnostics.push(
+      compileDiagnostic(
+        "profile.config.invalidShape",
+        "textLength.min must be less than or equal to textLength.max.",
+        ruleId,
+      ),
+    );
+
     valid = false;
   }
 
@@ -193,12 +207,31 @@ function pushTextLengthNumberDiagnostic(
   ruleId: string,
   diagnostics: MarkdownDiagnostic[],
 ): boolean {
-  return pushNumberDiagnostic(
-    value,
-    ruleId,
-    diagnostics,
-    `${fieldName} must be a number when provided.`,
-  );
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    diagnostics.push(
+      compileDiagnostic(
+        "profile.config.invalidShape",
+        `${fieldName} must be a number when provided.`,
+        ruleId,
+      ),
+    );
+
+    return false;
+  }
+
+  if (!Number.isInteger(value) || value < 0) {
+    diagnostics.push(
+      compileDiagnostic(
+        "profile.config.invalidShape",
+        `${fieldName} must be a non-negative integer when provided.`,
+        ruleId,
+      ),
+    );
+
+    return false;
+  }
+
+  return true;
 }
 
 function pushNumberDiagnostic(

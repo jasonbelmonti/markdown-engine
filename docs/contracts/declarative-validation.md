@@ -259,8 +259,9 @@ documented token grammar `[A-Za-z][A-Za-z0-9]*-[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*`.
 `text` must include `contains` or a non-empty `excludes` array.
 `textOccurrenceCount.count` is a finite number and counts non-overlapping
 literal occurrences per selected target.
-`textLength` must include `min`, `max`, or both. Bounds are finite numbers and
-evaluate against JavaScript string `.length` for each selected target's
+`textLength` must include `min`, `max`, or both. Bounds are non-negative
+integers, `min` must be less than or equal to `max` when both are present, and
+evaluation uses JavaScript string `.length` for each selected target's
 normalized text.
 
 Empty selector results produce `profile.validation.emptySelection` for table,
