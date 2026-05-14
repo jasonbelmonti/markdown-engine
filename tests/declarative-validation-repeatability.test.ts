@@ -15,6 +15,10 @@ const expectedRepeatabilityCaseNames = [
   "declarative-validation:failing-result:pretty",
   "declarative-validation:failing-evidence:compact",
   "declarative-validation:failing-evidence:pretty",
+  "declarative-validation:text-length-result:compact",
+  "declarative-validation:text-length-result:pretty",
+  "declarative-validation:text-length-evidence:compact",
+  "declarative-validation:text-length-evidence:pretty",
 ] as const;
 
 describe("BEL-983 declarative validation evidence repeatability", () => {

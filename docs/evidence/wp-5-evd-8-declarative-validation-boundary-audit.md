@@ -83,6 +83,13 @@ Unsafe executable key rejection checks: present
 Profile-specific core semantic matches: 0
 ```
 
+BEL-1043 revalidated this gate on 2026-05-14 after the `textLength` assertion
+surface reached public contract and CLI/example coverage. The same command
+passed from `.worktrees/bel-1043-textlength-contract-verification` on baseline
+`d02522d`, with 0 direct dependency matches, 0 runtime boundary source matches,
+regex-like key rejection present, unsafe executable key rejection present, and 0
+profile-specific core semantic matches.
+
 ## Residual Risks
 
 - The audit is intentionally targeted at declarative validation source and

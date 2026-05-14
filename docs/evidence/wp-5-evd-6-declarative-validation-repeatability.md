@@ -4,6 +4,7 @@ Date: 2026-05-12
 Issue: BEL-983
 Work package: BEL-981 / WP-5C
 Validation: Declarative validation evidence hashes and repeatability
+Current revalidation: BEL-1043 on 2026-05-14
 
 ## Scope
 
@@ -48,27 +49,31 @@ Both hashes use stable JSON object key ordering before hashing.
 tests/declarative-validation-repeatability.test.ts (2 tests) passed
 Declarative validation repeatability PASS
 Runs: 10
-Cases per run: 12
-declarative-validation:passing-result:compact: 1d01064d791c854238d8b9b047a53800ada941f5cc38ff3a85676ab94d5ce889 (645 bytes)
-declarative-validation:passing-result:pretty: 6044c58601692155f13e04c7e3398dafded22786e4e11c5b646d91f29ba998e4 (890 bytes)
-declarative-validation:passing-evidence:compact: d0632c890e2636ca6ac3a7aa30b0707f5e5ba0e389f3fcf474784f191ed17a3d (366 bytes)
-declarative-validation:passing-evidence:pretty: 7aab0395bd1207887f5b781b6b803ece8af32e4c0b7cae72eb16b6f155d9089f (462 bytes)
-declarative-validation:explicit-default-result:compact: 1d01064d791c854238d8b9b047a53800ada941f5cc38ff3a85676ab94d5ce889 (645 bytes)
-declarative-validation:explicit-default-result:pretty: 6044c58601692155f13e04c7e3398dafded22786e4e11c5b646d91f29ba998e4 (890 bytes)
-declarative-validation:alternate-path-result:compact: 1d01064d791c854238d8b9b047a53800ada941f5cc38ff3a85676ab94d5ce889 (645 bytes)
-declarative-validation:alternate-path-result:pretty: 6044c58601692155f13e04c7e3398dafded22786e4e11c5b646d91f29ba998e4 (890 bytes)
-declarative-validation:failing-result:compact: bc21af4e282a9f8d604f574a584f19b4e02633c40bd450190786d5368208875e (1622 bytes)
-declarative-validation:failing-result:pretty: 0ae1b9d3005d1129de63d7dc1a9fdf70eb5f3a490687e9081472ff9f150dad11 (2697 bytes)
-declarative-validation:failing-evidence:compact: d83bf9d88ba9043ab6f509af58846ff50e1876034115f251a63edae81f3984a3 (854 bytes)
-declarative-validation:failing-evidence:pretty: 0d2d7cb0fc9cd2502b53679b64870cc3b66515ca0560b881fd696faad424a328 (1332 bytes)
+Cases per run: 16
+declarative-validation:passing-result:compact: 770a34f06416e6dfd1697db368b41b6140f669ed5c1bc105c57fcfb1c0d07d09 (645 bytes)
+declarative-validation:passing-result:pretty: acac659b8c47eed8e39fe0afa03286a0fd8d5915468512c54d976430b15e8d73 (890 bytes)
+declarative-validation:passing-evidence:compact: c81d3975a308ff6c79a0f0839b04908185daad584fabe96763b7501e19049ac3 (366 bytes)
+declarative-validation:passing-evidence:pretty: 0fb40c2e70631470e4487b3e8615a390925382a13b6167f808df18391d400af3 (462 bytes)
+declarative-validation:explicit-default-result:compact: 770a34f06416e6dfd1697db368b41b6140f669ed5c1bc105c57fcfb1c0d07d09 (645 bytes)
+declarative-validation:explicit-default-result:pretty: acac659b8c47eed8e39fe0afa03286a0fd8d5915468512c54d976430b15e8d73 (890 bytes)
+declarative-validation:alternate-path-result:compact: 770a34f06416e6dfd1697db368b41b6140f669ed5c1bc105c57fcfb1c0d07d09 (645 bytes)
+declarative-validation:alternate-path-result:pretty: acac659b8c47eed8e39fe0afa03286a0fd8d5915468512c54d976430b15e8d73 (890 bytes)
+declarative-validation:failing-result:compact: e597b3548316e58b8ced9816b522ccbc6fa19912ddabaa8257768c872e312521 (1622 bytes)
+declarative-validation:failing-result:pretty: 1ba4d1a94d05ed7e45b9fa6f4be9e8408edd4778c669d26e4e5b88cc70e5a21d (2697 bytes)
+declarative-validation:failing-evidence:compact: cd92b9a7ea18804c597e69c28eaa2cd961aa3ae047af075583a63f25c0034019 (854 bytes)
+declarative-validation:failing-evidence:pretty: ce6a2beed35d60076da4c15127818a2b459455ded0ba14609ab78878fc2758e9 (1332 bytes)
+declarative-validation:text-length-result:compact: ce128ba464aacd762d467b05afeec7756d2c280fa5536242420b5cd5dd725e6d (527 bytes)
+declarative-validation:text-length-result:pretty: d846aff5526499a95cf3bee1ad57a009fca49d02ce7b75aa370b0921783beb93 (694 bytes)
+declarative-validation:text-length-evidence:compact: ba40a91ed5a38de1fa9cb323c00a10b46e0b0a6c013e9bedc932693809fbb027 (307 bytes)
+declarative-validation:text-length-evidence:pretty: ac08efce2a9f5ad99ad0dc621c6bbf25ddee07aed10dc0fdb18a56334278d2d3 (369 bytes)
 ```
 
 ## Observed Evidence Hashes
 
 ```text
-passing inputHash: 9c5d3f9132a0e4f43ee8a3e1c2218548da9ebe2532a16b3069e5014aab09a8cc
+passing inputHash: 8f3376c2986860c3acb6ac94fa40226aacae8b0cbd50da5b804701f2510d6a56
 passing profileHash: 3a288b6612d5c042e51d4260d0a9532e1229f87be5d507e2f5caf3a3db66da92
-failing inputHash: 9c5d3f9132a0e4f43ee8a3e1c2218548da9ebe2532a16b3069e5014aab09a8cc
+failing inputHash: 8f3376c2986860c3acb6ac94fa40226aacae8b0cbd50da5b804701f2510d6a56
 failing profileHash: d4ce7117cf4b119e44a778a56c25a02043712e64056a975562b1a781a89abc33
 ```
 
@@ -80,6 +85,8 @@ failing profileHash: d4ce7117cf4b119e44a778a56c25a02043712e64056a975562b1a781a89
 - Equivalent document parsed with a different top-level path.
 - Failing declarative validation result with source-targeted diagnostics.
 - Failing standalone evidence packet.
+- Passing `textLength` declarative validation result and standalone evidence
+  packet.
 - Compact and pretty serializer modes for every case.
 
 ## Guarantees
@@ -104,6 +111,7 @@ failing profileHash: d4ce7117cf4b119e44a778a56c25a02043712e64056a975562b1a781a89
 
 ## Conclusion
 
-BEL-983 passes. Declarative validation result and evidence serialization are
-byte-for-byte repeatable across ten runs, and the observed evidence hashes match
-the documented canonical input behavior.
+BEL-983 passes, and BEL-1043 revalidation remains passing after the public
+`textLength` assertion surface landed. Declarative validation result and
+evidence serialization are byte-for-byte repeatable across ten runs, and the
+observed evidence hashes match the documented canonical input behavior.
