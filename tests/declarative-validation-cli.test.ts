@@ -55,6 +55,21 @@ rules:
       text:
         contains: ready for launch
 `;
+const textLengthFailingMarkdown = `# Summary
+
+Short.
+`;
+const textLengthProfile = `syntaxVersion: markdown-engine.validation@v1
+rules:
+  - id: summary.length
+    select:
+      target: section
+      title: Summary
+    assert:
+      textLength:
+        min: 30
+        max: 40
+`;
 const invalidYamlProfile = `syntaxVersion: markdown-engine.validation@v1
 rules:
   - id: invalid
@@ -260,6 +275,56 @@ describe("declarative validation CLI", () => {
       valid: false,
     });
     expect(result.evidence).toBeDefined();
+  });
+
+  it("emits deterministic validation JSON for failed textLength rules", async () => {
+    const cwd = await makeTempDir();
+    await writeFile(join(cwd, "mission.md"), textLengthFailingMarkdown);
+    await writeFile(join(cwd, "profile.yaml"), textLengthProfile);
+
+    const { exitCode, stderr, stdout } = await runCliWithOutput({
+      args: [
+        "validate",
+        "--file=mission.md",
+        "--profile=profile.yaml",
+        "--format=json",
+      ],
+      cwd,
+    });
+
+    expect(exitCode).toBe(1);
+    expect(stderr.text()).toBe("");
+
+    const result = parseStdout(stdout.text());
+    const expectedDiagnostic = {
+      code: "profile.validation.assertionFailed",
+      message:
+        "Selected section text length must be between 30 and 40; found 14.",
+      ruleId: "summary.length",
+      severity: "error",
+    };
+
+    expect(result).toMatchObject({
+      diagnostics: [expectedDiagnostic],
+      profile: {
+        documentVersion: "1.0.0",
+        ruleCount: 1,
+        syntaxVersion: "markdown-engine.validation@v1",
+      },
+      ruleResults: [
+        {
+          diagnostics: [expectedDiagnostic],
+          passed: false,
+          ruleId: "summary.length",
+        },
+      ],
+      valid: false,
+    });
+    expect(result).not.toHaveProperty("stage");
+    expect(result.evidence).toMatchObject({
+      diagnostics: result.diagnostics,
+      ruleResults: result.ruleResults,
+    });
   });
 
   it("emits validation JSON and exits 1 for Markdown normalization diagnostics", async () => {

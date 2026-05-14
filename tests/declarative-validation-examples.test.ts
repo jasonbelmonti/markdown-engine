@@ -32,6 +32,7 @@ const examples: readonly ExampleCase[] = [
       "frontmatter.required",
       "handoff.link",
       "handoff.paragraph",
+      "objective.length",
       "objective.text",
       "risk.heading.text",
       "risk.ids.unique",
@@ -43,7 +44,11 @@ const examples: readonly ExampleCase[] = [
       "profile.validation.assertionFailed",
       "profile.validation.frontmatterFieldMissing",
     ],
-    expectedFailureRuleIds: ["execution.must.count", "frontmatter.required"],
+    expectedFailureRuleIds: [
+      "execution.must.count",
+      "frontmatter.required",
+      "objective.length",
+    ],
   },
   {
     domain: "release checklist",
@@ -122,6 +127,7 @@ const supportedAssertionFamilies = [
   "sectionsRequired",
   "tableColumnsRequired",
   "text",
+  "textLength",
   "textOccurrenceCount",
 ] as const;
 const packagedExamplesRoot = "fixtures/declarative-validation/examples";
