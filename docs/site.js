@@ -120,13 +120,45 @@ next operator.`,
     documentPath:
       "fixtures/declarative-validation/examples/release-checklist/pass.md",
     outcomes: [
-      "Release metadata carries title, release, and owner.",
-      "Gate Table contains ID, Gate, and Status columns.",
-      "Release notes link is present in the Links section.",
+      "Release metadata and required sections are present.",
+      "Gate Table contains required columns and unique REL-GATE IDs.",
+      "Contract docs are ready and release notes are linked.",
     ],
     profile: `syntaxVersion: markdown-engine.validation@v1
 documentVersion: 1.0.0
 rules:
+  - id: frontmatter.required
+    select:
+      target: document
+    assert:
+      frontmatterRequired:
+        fields:
+          - title
+          - release
+          - owner
+
+  - id: sections.required
+    select:
+      target: document
+    assert:
+      sectionsRequired:
+        order: strict
+        headings:
+          - Release Checklist
+          - Gate Table
+          - Links
+
+  - id: checklist.list
+    select:
+      target: list
+      section: Release Checklist
+      ordered: false
+    assert:
+      text:
+        contains: Verify package
+        excludes:
+          - manual bypass
+
   - id: gate.table.columns
     select:
       target: table
@@ -141,6 +173,44 @@ rules:
           - ID
           - Gate
           - Status
+
+  - id: gate.ids.unique
+    select:
+      target: tableCell
+      section: Gate Table
+      column: ID
+    assert:
+      ids:
+        prefix: REL-GATE
+        unique: true
+
+  - id: ready.gate.row
+    select:
+      target: tableRow
+      section: Gate Table
+      tableHeader:
+        - ID
+        - Gate
+        - Status
+      where:
+        column: Gate
+        equals: Contract docs
+    assert:
+      text:
+        contains: ready
+
+  - id: status.ready.count
+    select:
+      target: tableCell
+      section: Gate Table
+      column: Status
+      rowWhere:
+        column: ID
+        equals: REL-GATE-1
+    assert:
+      textOccurrenceCount:
+        text: ready
+        count: 1
 
   - id: release.link
     select:
