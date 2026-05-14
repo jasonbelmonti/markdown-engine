@@ -14,6 +14,7 @@ const ASSERTION_KEYS = [
   "references",
   "text",
   "textOccurrenceCount",
+  "textLength",
   "frontmatterRequired",
 ];
 

@@ -92,19 +92,46 @@ export function pushTextOccurrenceCountDiagnostic(
   ruleId: string,
   diagnostics: MarkdownDiagnostic[],
 ): boolean {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return true;
+  return pushNumberDiagnostic(
+    value,
+    ruleId,
+    diagnostics,
+    "textOccurrenceCount.count must be a number.",
+  );
+}
+
+export function pushTextLengthShapeDiagnostics(
+  assertion: DeclarativeAssertion["textLength"],
+  ruleId: string,
+  diagnostics: MarkdownDiagnostic[],
+): boolean {
+  let valid = true;
+
+  if (
+    assertion?.min !== undefined &&
+    !pushTextLengthNumberDiagnostic(
+      "textLength.min",
+      assertion.min,
+      ruleId,
+      diagnostics,
+    )
+  ) {
+    valid = false;
   }
 
-  diagnostics.push(
-    compileDiagnostic(
-      "profile.config.invalidShape",
-      "textOccurrenceCount.count must be a number.",
+  if (
+    assertion?.max !== undefined &&
+    !pushTextLengthNumberDiagnostic(
+      "textLength.max",
+      assertion.max,
       ruleId,
-    ),
-  );
+      diagnostics,
+    )
+  ) {
+    valid = false;
+  }
 
-  return false;
+  return valid;
 }
 
 export function pushOptionalNonEmptyStringDiagnostic(
@@ -160,6 +187,37 @@ export function pushNonEmptyStringDiagnostic(
   return false;
 }
 
+function pushTextLengthNumberDiagnostic(
+  fieldName: string,
+  value: unknown,
+  ruleId: string,
+  diagnostics: MarkdownDiagnostic[],
+): boolean {
+  return pushNumberDiagnostic(
+    value,
+    ruleId,
+    diagnostics,
+    `${fieldName} must be a number when provided.`,
+  );
+}
+
+function pushNumberDiagnostic(
+  value: unknown,
+  ruleId: string,
+  diagnostics: MarkdownDiagnostic[],
+  message: string,
+): boolean {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return true;
+  }
+
+  diagnostics.push(
+    compileDiagnostic("profile.config.invalidShape", message, ruleId),
+  );
+
+  return false;
+}
+
 export function closedStringArray(
   fieldName: string,
   value: unknown,
@@ -205,9 +263,22 @@ export function optionalStringArray<TKey extends string>(
     : ({ [key]: values } as unknown as Record<TKey, readonly string[]>);
 }
 
+export function optionalNumber<TKey extends string>(
+  key: TKey,
+  value: number | undefined,
+): Record<TKey, number> | Record<string, never> {
+  return value === undefined ? {} : ({ [key]: value } as Record<TKey, number>);
+}
+
 export function hasTextPredicate(assertion: DeclarativeAssertion["text"]): boolean {
   return (
     assertion?.contains !== undefined ||
     (assertion?.excludes !== undefined && assertion.excludes.length > 0)
   );
+}
+
+export function hasTextLengthBound(
+  assertion: DeclarativeAssertion["textLength"],
+): boolean {
+  return assertion?.min !== undefined || assertion?.max !== undefined;
 }

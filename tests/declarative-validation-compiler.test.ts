@@ -69,6 +69,11 @@ describe("declarative validation compiler proof", () => {
           assertions: [{ kind: "textOccurrenceCount", text: "MUST", count: 1 }],
         },
         {
+          ruleId: "text.length",
+          selector: { target: "textSpan", nodeType: "paragraph" },
+          assertions: [{ kind: "textLength", min: 5, max: 120 }],
+        },
+        {
           ruleId: "frontmatter.required",
           selector: { target: "document" },
           assertions: [
@@ -243,6 +248,11 @@ const supportedProfile = {
       id: "occurrences",
       select: { target: "textSpan", nodeType: "paragraph" },
       assert: { textOccurrenceCount: { text: "MUST", count: 1 } },
+    },
+    {
+      id: "text.length",
+      select: { target: "textSpan", nodeType: "paragraph" },
+      assert: { textLength: { min: 5, max: 120 } },
     },
     {
       id: "frontmatter.required",

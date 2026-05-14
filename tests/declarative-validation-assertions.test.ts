@@ -368,6 +368,120 @@ describe("declarative validation assertion proof", () => {
     expect(result.diagnostics).toEqual(result.ruleResults[0]?.diagnostics);
   });
 
+  it("validates text length bounds per selected target", () => {
+    const document = normalize(
+      parse("# Short\n\nbody\n\n# LongerText!\n\nbody\n").parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "length.max.fail",
+          select: { target: "heading", text: "LongerText!" },
+          assert: { textLength: { max: 10 } },
+        },
+        {
+          id: "length.max.pass",
+          select: { target: "heading", text: "Short" },
+          assert: { textLength: { max: 5 } },
+        },
+        {
+          id: "length.min.fail",
+          select: { target: "heading", text: "Short" },
+          assert: { textLength: { min: 6 } },
+        },
+        {
+          id: "length.min.pass",
+          select: { target: "heading", text: "Short" },
+          assert: { textLength: { min: 5 } },
+        },
+        {
+          id: "length.range.fail",
+          select: { target: "heading", text: "Short" },
+          assert: { textLength: { min: 6, max: 10 } },
+        },
+        {
+          id: "length.range.pass",
+          select: { target: "heading", text: "Short" },
+          assert: { textLength: { min: 2, max: 5 } },
+        },
+      ],
+    });
+
+    expect(result.valid).toBe(false);
+    expect(result.ruleResults).toEqual([
+      {
+        ruleId: "length.max.fail",
+        passed: false,
+        diagnostics: [
+          expect.objectContaining({
+            code: "profile.validation.assertionFailed",
+            ruleId: "length.max.fail",
+            message:
+              "Selected heading text length must be at most 10; found 11.",
+            sourceRange: expect.objectContaining({
+              start: expect.objectContaining({ line: 5 }),
+            }),
+          }),
+        ],
+      },
+      {
+        ruleId: "length.max.pass",
+        passed: true,
+        diagnostics: [],
+      },
+      {
+        ruleId: "length.min.fail",
+        passed: false,
+        diagnostics: [
+          expect.objectContaining({
+            code: "profile.validation.assertionFailed",
+            ruleId: "length.min.fail",
+            message:
+              "Selected heading text length must be at least 6; found 5.",
+            sourceRange: expect.objectContaining({
+              start: expect.objectContaining({ line: 1 }),
+            }),
+          }),
+        ],
+      },
+      {
+        ruleId: "length.min.pass",
+        passed: true,
+        diagnostics: [],
+      },
+      {
+        ruleId: "length.range.fail",
+        passed: false,
+        diagnostics: [
+          expect.objectContaining({
+            code: "profile.validation.assertionFailed",
+            ruleId: "length.range.fail",
+            message:
+              "Selected heading text length must be between 6 and 10; found 5.",
+            sourceRange: expect.objectContaining({
+              start: expect.objectContaining({ line: 1 }),
+            }),
+          }),
+        ],
+      },
+      {
+        ruleId: "length.range.pass",
+        passed: true,
+        diagnostics: [],
+      },
+    ]);
+    expect(result.diagnostics).toEqual([
+      ...(result.ruleResults[0]?.diagnostics ?? []),
+      ...(result.ruleResults[2]?.diagnostics ?? []),
+      ...(result.ruleResults[4]?.diagnostics ?? []),
+    ]);
+  });
+
   it("validates strict section order for reordered and duplicate-heading cases", () => {
     const document = normalize(
       parse("# Alpha\n\nReady.\n\n# Beta\n\nDone.\n").parsed,

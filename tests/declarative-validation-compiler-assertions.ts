@@ -27,6 +27,29 @@ describe("declarative validation compiler assertion proof", () => {
     ]);
   });
 
+  it("rejects typed textLength assertions with no bound before execution", () => {
+    const result = compileValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      rules: [
+        {
+          id: "text-length.empty",
+          select: { target: "section", title: "Objective" },
+          assert: { textLength: {} },
+        },
+      ],
+    });
+
+    expect(result.plan).toBeUndefined();
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.config.invalidShape",
+        ruleId: "text-length.empty",
+        message: "textLength must include min, max, or both.",
+        severity: "error",
+      },
+    ]);
+  });
+
   it("rejects ids assertions without explicit unique true before execution", () => {
     const invalidIdAssertions = [
       { ids: {}, select: { target: "document" } },
@@ -72,6 +95,13 @@ describe("declarative validation compiler assertion proof", () => {
         assert: { ids: { unique: true, prefix: "" } },
         message: "prefix must be a non-empty string when provided.",
         select: { target: "document" },
+      },
+      {
+        assert: {
+          textLength: { min: "short" },
+        } as unknown as ValidationProfile["rules"][number]["assert"],
+        message: "textLength.min must be a number when provided.",
+        select: { target: "section", title: "Objective" },
       },
     ] satisfies {
       assert: ValidationProfile["rules"][number]["assert"];

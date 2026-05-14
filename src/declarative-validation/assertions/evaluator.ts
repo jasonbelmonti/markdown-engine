@@ -13,6 +13,7 @@ import { evaluateReferences } from "./references.js";
 import { evaluateSectionsRequired } from "./sections-required.js";
 import { evaluateTableColumnsRequired } from "./table-columns-required.js";
 import { evaluateText } from "./text.js";
+import { evaluateTextLength } from "./text-length.js";
 import { evaluateTextOccurrenceCount } from "./text-occurrence-count.js";
 
 export function evaluateCompiledDeclarativeRule(
@@ -49,6 +50,9 @@ function evaluateAssertion(
 
     case "textOccurrenceCount":
       return evaluateTextOccurrenceCount(assertion, context);
+
+    case "textLength":
+      return evaluateTextLength(assertion, context);
 
     case "frontmatterRequired":
       return evaluateFrontmatterRequired(assertion, context);

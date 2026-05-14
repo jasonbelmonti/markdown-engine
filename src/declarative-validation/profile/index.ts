@@ -92,6 +92,10 @@ export interface DeclarativeAssertion {
     text: string;
     count: number;
   };
+  textLength?: {
+    min?: number;
+    max?: number;
+  };
   frontmatterRequired?: {
     fields: readonly string[];
   };

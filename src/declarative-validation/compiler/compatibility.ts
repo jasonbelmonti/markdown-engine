@@ -21,6 +21,7 @@ export function selectorAssertionCompatibilityError(
     case "ids":
     case "text":
     case "textOccurrenceCount":
+    case "textLength":
       return undefined;
 
     case "frontmatterRequired":
