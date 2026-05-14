@@ -62,6 +62,58 @@ rules:
     });
   });
 
+  it("parses textLength assertions with min, max, or both", () => {
+    const result = parseValidationProfile(`
+syntaxVersion: markdown-engine.validation@v1
+documentVersion: 1.0.0
+rules:
+  - id: text-length-min
+    select:
+      target: textSpan
+    assert:
+      textLength:
+        min: 5
+  - id: text-length-max
+    select:
+      target: textSpan
+    assert:
+      textLength:
+        max: 20
+  - id: text-length-range
+    select:
+      target: textSpan
+    assert:
+      textLength:
+        min: 5
+        max: 20
+`);
+
+    expect(result).toEqual({
+      profile: {
+        syntaxVersion: "markdown-engine.validation@v1",
+        documentVersion: "1.0.0",
+        rules: [
+          {
+            id: "text-length-min",
+            select: { target: "textSpan" },
+            assert: { textLength: { min: 5 } },
+          },
+          {
+            id: "text-length-max",
+            select: { target: "textSpan" },
+            assert: { textLength: { max: 20 } },
+          },
+          {
+            id: "text-length-range",
+            select: { target: "textSpan" },
+            assert: { textLength: { min: 5, max: 20 } },
+          },
+        ],
+      },
+      diagnostics: [],
+    });
+  });
+
   it("returns invalidYaml diagnostics for invalid YAML strings", () => {
     const result = parseValidationProfile(`
 syntaxVersion: markdown-engine.validation@v1

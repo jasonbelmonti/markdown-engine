@@ -215,6 +215,10 @@ interface DeclarativeAssertion {
     text: string;
     count: number;
   };
+  textLength?: {
+    min?: number;
+    max?: number;
+  };
   frontmatterRequired?: {
     fields: readonly string[];
   };
@@ -238,6 +242,7 @@ Selector/assertion compatibility is part of the public contract:
 | `references` | `document` |
 | `text` | all supported selector targets |
 | `textOccurrenceCount` | all supported selector targets |
+| `textLength` | all supported selector targets |
 | `frontmatterRequired` | `document` |
 
 Incompatible supported selector/assertion pairs emit
@@ -254,10 +259,14 @@ documented token grammar `[A-Za-z][A-Za-z0-9]*-[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*`.
 `text` must include `contains` or a non-empty `excludes` array.
 `textOccurrenceCount.count` is a finite number and counts non-overlapping
 literal occurrences per selected target.
+`textLength` must include `min`, `max`, or both. Bounds are finite numbers and
+evaluate against JavaScript string `.length` for each selected target's
+normalized text.
 
 Empty selector results produce `profile.validation.emptySelection` for table,
-ID, reference, text, and occurrence assertions. Document-scoped required-section
-and required-frontmatter assertions evaluate against the document.
+ID, reference, text, occurrence, and text-length assertions. Document-scoped
+required-section and required-frontmatter assertions evaluate against the
+document.
 
 ## Diagnostics
 
@@ -280,7 +289,7 @@ rather than fabricated when unavailable.
 | `profile.compile.unsupportedAssertion` | `error` | Parsed YAML or JSON-safe `assert` input contains an unsupported first-level assertion member that does not have unsupported-key precedence. |
 | `profile.compile.incompatibleSelectorAssertion` | `error` | A supported selector target is paired with an incompatible supported assertion. |
 | `profile.validation.emptySelection` | Rule severity | A rule cannot evaluate because its selector matches no applicable target. |
-| `profile.validation.assertionFailed` | Rule severity | A supported assertion evaluates and fails without a more specific diagnostic code, including missing table columns and exact occurrence-count mismatches. |
+| `profile.validation.assertionFailed` | Rule severity | A supported assertion evaluates and fails without a more specific diagnostic code, including missing table columns, exact occurrence-count mismatches, and text-length bound failures. |
 | `profile.validation.duplicateId` | Rule severity | An `ids.unique` assertion finds repeated IDs. |
 | `profile.validation.frontmatterFieldMissing` | Rule severity | A required frontmatter field is absent. |
 | `profile.validation.referenceMissing` | Rule severity | A source ID is absent from a required target section. |

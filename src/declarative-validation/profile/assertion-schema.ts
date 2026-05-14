@@ -10,6 +10,7 @@ import {
   invalidShape,
   isFiniteNumber,
   optionalBooleanField,
+  optionalNumberField,
   optionalStringArrayField,
   optionalStringField,
   requiredNonEmptyStringField,
@@ -24,6 +25,7 @@ const SUPPORTED_ASSERTION_KEYS = [
   "references",
   "text",
   "textOccurrenceCount",
+  "textLength",
   "frontmatterRequired",
 ] as const;
 
@@ -46,6 +48,7 @@ export function assertionFromValue(
     ...referencesFromValue(value.references, diagnostics),
     ...textAssertionFromValue(value.text, diagnostics),
     ...textOccurrenceCountFromValue(value.textOccurrenceCount, diagnostics),
+    ...textLengthFromValue(value.textLength, diagnostics),
     ...frontmatterRequiredFromValue(value.frontmatterRequired, diagnostics),
   };
 
@@ -306,6 +309,38 @@ function textOccurrenceCountFromValue(
       };
 }
 
+function textLengthFromValue(
+  value: unknown,
+  diagnostics: MarkdownDiagnostic[],
+): Pick<DeclarativeAssertion, "textLength"> {
+  if (value === undefined) {
+    return {};
+  }
+
+  if (!isPlainRecord(value)) {
+    diagnostics.push(invalidShape("textLength must be an object."));
+
+    return {};
+  }
+
+  unsupportedKeys(value, ["min", "max"], diagnostics);
+
+  const textLength = {
+    ...optionalNumber(value, "min", diagnostics),
+    ...optionalNumber(value, "max", diagnostics),
+  };
+
+  if (!hasTextLengthBound(textLength)) {
+    diagnostics.push(
+      invalidShape("textLength must include min, max, or both."),
+    );
+
+    return {};
+  }
+
+  return { textLength };
+}
+
 function frontmatterRequiredFromValue(
   value: unknown,
   diagnostics: MarkdownDiagnostic[],
@@ -393,6 +428,19 @@ function optionalBoolean(
   );
 }
 
+function optionalNumber(
+  record: Record<string, unknown>,
+  key: string,
+  diagnostics: MarkdownDiagnostic[],
+): Partial<Record<string, number>> {
+  return optionalNumberField(
+    record,
+    key,
+    diagnostics,
+    (field) => `textLength.${field} must be a number when provided.`,
+  );
+}
+
 function requiredAssertionString(
   value: unknown,
   field: string,
@@ -408,4 +456,10 @@ function requiredAssertionString(
 
 function hasTextPredicate(text: DeclarativeAssertion["text"]): boolean {
   return text?.contains !== undefined || text?.excludes !== undefined;
+}
+
+function hasTextLengthBound(
+  textLength: DeclarativeAssertion["textLength"],
+): boolean {
+  return textLength?.min !== undefined || textLength?.max !== undefined;
 }

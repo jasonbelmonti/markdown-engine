@@ -60,6 +60,11 @@ export type CompiledDeclarativeAssertion =
       count: number;
     }
   | {
+      kind: "textLength";
+      min?: number;
+      max?: number;
+    }
+  | {
       kind: "frontmatterRequired";
       fields: readonly string[];
     };

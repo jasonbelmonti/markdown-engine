@@ -12,6 +12,8 @@ import type { CompiledDeclarativeAssertion } from "./plan.js";
 import {
   closedStringArray,
   hasTextPredicate,
+  hasTextLengthBound,
+  optionalNumber,
   optionalString,
   optionalStringArray,
   pushNonEmptyStringDiagnostic,
@@ -19,6 +21,7 @@ import {
   pushOptionalBooleanDiagnostic,
   pushOptionalNonEmptyStringDiagnostic,
   pushSectionsRequiredOrderDiagnostic,
+  pushTextLengthShapeDiagnostics,
   pushTextOccurrenceCountDiagnostic,
   pushTextShapeDiagnostics,
   pushUnsupportedKeyDiagnostics,
@@ -38,6 +41,7 @@ export const ASSERTION_BUILDERS: readonly AssertionBuilder[] = [
   buildReferencesAssertion,
   buildTextAssertion,
   buildTextOccurrenceCountAssertion,
+  buildTextLengthAssertion,
   buildFrontmatterRequiredAssertion,
 ];
 
@@ -354,6 +358,47 @@ function buildTextOccurrenceCountAssertion(
       kind: "textOccurrenceCount",
       text: assertion.textOccurrenceCount.text,
       count: assertion.textOccurrenceCount.count,
+    };
+  }
+
+  return undefined;
+}
+
+function buildTextLengthAssertion(
+  assertion: DeclarativeAssertion,
+  selector: DeclarativeSelector,
+  ruleId: string,
+  diagnostics: MarkdownDiagnostic[],
+): CompiledDeclarativeAssertion | undefined {
+  if (assertion.textLength === undefined) {
+    return undefined;
+  }
+
+  if (
+    !pushObjectDiagnostic("textLength", assertion.textLength, ruleId, diagnostics) ||
+    !pushUnsupportedKeyDiagnostics(assertion.textLength, ["min", "max"], diagnostics) ||
+    !pushTextLengthShapeDiagnostics(assertion.textLength, ruleId, diagnostics)
+  ) {
+    return undefined;
+  }
+
+  if (!hasTextLengthBound(assertion.textLength)) {
+    diagnostics.push(
+      compileDiagnostic(
+        "profile.config.invalidShape",
+        "textLength must include min, max, or both.",
+        ruleId,
+      ),
+    );
+
+    return undefined;
+  }
+
+  if (pushCompatibilityDiagnostic("textLength", selector, ruleId, diagnostics)) {
+    return {
+      kind: "textLength",
+      ...optionalNumber("min", assertion.textLength.min),
+      ...optionalNumber("max", assertion.textLength.max),
     };
   }
 

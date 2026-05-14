@@ -126,6 +126,12 @@ const exactOneTextAssertion = {
     count: 1,
   },
 } satisfies DeclarativeAssertion;
+const textLengthAssertion = {
+  textLength: {
+    min: 1,
+    max: 140,
+  },
+} satisfies DeclarativeAssertion;
 const removedTextAssertion = {
   text: {
     // @ts-expect-error containsExactlyOne was removed from public text assertion syntax.
@@ -382,6 +388,33 @@ describe("declarative validation public contract scaffold", () => {
     });
   });
 
+  it("accepts the public text length assertion spelling", () => {
+    const textLengthProfile = {
+      syntaxVersion: "markdown-engine.validation@v1",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "text-length-contract",
+          select: {
+            target: "textSpan",
+            nodeType: "paragraph",
+          },
+          assert: {
+            textLength: {
+              min: 1,
+              max: 140,
+            },
+          },
+        },
+      ],
+    } satisfies ValidationProfile;
+
+    expect(parseValidationProfile(textLengthProfile)).toEqual({
+      profile: textLengthProfile,
+      diagnostics: [],
+    });
+  });
+
   it("rejects the removed exact-one text spelling from parsed profiles", () => {
     expect(
       parseValidationProfile({
@@ -456,6 +489,7 @@ void (undefined as unknown as DeclarativeValidationCompileResult);
 void unsupportedSelector;
 void publicAssertion;
 void exactOneTextAssertion;
+void textLengthAssertion;
 void removedTextAssertion;
 void removedIdsColumnAssertion;
 void removedTextColumnAssertion;
