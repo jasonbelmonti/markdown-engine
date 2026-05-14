@@ -274,6 +274,16 @@
                 <pre><code id="profile-code" data-example-profile>syntaxVersion: markdown-engine.validation@v1
 documentVersion: 1.0.0
 rules:
+  - id: frontmatter.required
+    select:
+      target: document
+    assert:
+      frontmatterRequired:
+        fields:
+          - title
+          - owner
+          - status
+
   - id: sections.required
     select:
       target: document
@@ -285,7 +295,42 @@ rules:
           - Context / Constraints
           - Execution Plan
           - Risk Register
-          - Handoff Links</code></pre>
+          - Handoff Links
+
+  - id: risk.table.columns
+    select:
+      target: table
+      section: Risk Register
+      header:
+        - ID
+        - Mitigation
+        - Status
+    assert:
+      tableColumnsRequired:
+        columns:
+          - ID
+          - Mitigation
+          - Status
+
+  - id: risk.ids.unique
+    select:
+      target: tableCell
+      section: Risk Register
+      column: ID
+    assert:
+      ids:
+        prefix: OPS-RISK
+        unique: true
+
+  - id: handoff.link
+    select:
+      target: link
+      section: Handoff Links
+      text: handoff packet
+      url: ./handoff-packet.md
+    assert:
+      text:
+        contains: handoff packet</code></pre>
               </div>
               <div class="code-frame">
                 <div class="code-frame-header">
@@ -303,7 +348,31 @@ status: ready
 # Objective
 
 Mission control uses this structural profile to confirm a small operating spec
-has the required sections, handoff links, and risk tracking details.</code></pre>
+has the required sections, handoff links, and risk tracking details.
+
+# Context / Constraints
+
+The example stays generic. It validates Markdown headings, tables, IDs, list
+content, literal text, and links without attaching domain meaning to the core
+engine.
+
+# Execution Plan
+
+- MUST Validate profile fixtures locally.
+- MUST Record evidence before requesting review.
+- Keep the checks deterministic and local-only.
+
+# Risk Register
+
+| ID | Mitigation | Status |
+| --- | --- | --- |
+| OPS-RISK-1 | Keep examples structural. | tracked |
+| OPS-RISK-2 | Keep commands local. | closed |
+
+# Handoff Links
+
+The [handoff packet](./handoff-packet.md) records follow-up review notes for the
+next operator.</code></pre>
               </div>
             </div>
           </article>
