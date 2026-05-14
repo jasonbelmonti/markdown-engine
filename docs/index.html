@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Markdown Engine | Deterministic Markdown contracts</title>
+    <meta
+      name="description"
+      content="A deterministic Markdown parsing and validation engine for release workflows, operational docs, and agent runtime contracts."
+    />
+    <meta property="og:title" content="Markdown Engine" />
+    <meta
+      property="og:description"
+      content="Turn Markdown from informal prose into stable, local, machine-checkable contracts."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="./assets/markdown-engine-workflow.png" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="site-header" aria-label="Primary navigation">
+      <a class="brand" href="#top" aria-label="Markdown Engine home">
+        <span class="brand-mark">ME</span>
+        <span>Markdown Engine</span>
+      </a>
+      <nav class="nav-links" aria-label="Site sections">
+        <a href="#value">Value</a>
+        <a href="#workflows">Workflows</a>
+        <a href="#quickstart">Quickstart</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-media" aria-hidden="true">
+          <img
+            src="./assets/markdown-engine-workflow.png"
+            alt=""
+            width="1600"
+            height="1000"
+          />
+        </div>
+        <div class="hero-shade" aria-hidden="true"></div>
+        <div class="section-inner hero-content">
+          <p class="proof-line">
+            Package 2.0 | Rich IR document contract 1.0.0 | Local validation
+          </p>
+          <h1 id="hero-title">Markdown Engine</h1>
+          <p class="hero-copy">
+            A deterministic parsing and validation boundary for teams that need
+            Markdown to behave like an operational contract, not an unchecked
+            blob of prose.
+          </p>
+          <div class="hero-actions" aria-label="Primary actions">
+            <a class="button primary" href="#quickstart">Start in five minutes</a>
+            <a class="button secondary" href="#workflows">Inspect workflows</a>
+          </div>
+          <dl class="mission-stats" aria-label="Package guarantees">
+            <div>
+              <dt>Input</dt>
+              <dd>GFM Markdown plus YAML frontmatter</dd>
+            </div>
+            <div>
+              <dt>Output</dt>
+              <dd>Stable JSON, rich IR, precise diagnostics</dd>
+            </div>
+            <div>
+              <dt>Boundary</dt>
+              <dd>No network, no arbitrary plugins, no hidden semantics</dd>
+            </div>
+          </dl>
+        </div>
+      </section>
+
+      <section id="value" class="section band-light" aria-labelledby="value-title">
+        <div class="section-inner">
+          <div class="section-heading">
+            <p class="eyebrow">Consumer value</p>
+            <h2 id="value-title">Use Markdown where failure needs evidence.</h2>
+            <p>
+              Markdown Engine gives downstream tools a stable document model,
+              deterministic validation, and diagnostics that can be reviewed,
+              stored, diffed, and gated in CI.
+            </p>
+          </div>
+          <div class="value-grid">
+            <article class="value-card">
+              <h3>Parse once, consume safely</h3>
+              <p>
+                Normalize GFM, frontmatter, source ranges, links, lists, tables,
+                sections, and text spans into an engine-owned IR instead of
+                binding consumers to raw parser ASTs.
+              </p>
+            </article>
+            <article class="value-card">
+              <h3>Make document rules explicit</h3>
+              <p>
+                Express required headings, frontmatter fields, table columns,
+                IDs, literal text, links, and trace references with closed,
+                YAML-friendly profile data.
+              </p>
+            </article>
+            <article class="value-card">
+              <h3>Fail locally before review</h3>
+              <p>
+                Run the CLI or API before a release, handoff, or agent task and
+                get structured diagnostics instead of late reviewer discovery.
+              </p>
+            </article>
+            <article class="value-card">
+              <h3>Protect the deterministic boundary</h3>
+              <p>
+                Profile inputs are data. Regex-like keys, executable-like keys,
+                accessors, proxies, cycles, and unsafe shapes are rejected as
+                inert config errors.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" aria-labelledby="fit-title">
+        <div class="section-inner">
+          <div class="split-copy">
+            <div>
+              <p class="eyebrow">Where it fits</p>
+              <h2 id="fit-title">A foundation for profiled Markdown systems.</h2>
+            </div>
+            <p>
+              The package is intentionally narrow: parse, normalize, validate,
+              serialize. That makes it useful as the deterministic substrate for
+              docs platforms, release operations, requirements evidence, and
+              future agent runtime lenses.
+            </p>
+          </div>
+          <div class="fit-grid">
+            <article>
+              <span class="fit-index">01</span>
+              <h3>Docs and platform teams</h3>
+              <p>
+                Keep required document sections, frontmatter, links, tables, and
+                structural IDs consistent across repositories.
+              </p>
+            </article>
+            <article>
+              <span class="fit-index">02</span>
+              <h3>Release operators</h3>
+              <p>
+                Turn release checklists into repeatable local gates before npm
+                packing, publishing, or human approval.
+              </p>
+            </article>
+            <article>
+              <span class="fit-index">03</span>
+              <h3>Agent runtime builders</h3>
+              <p>
+                Feed coding agents normalized document contracts and deterministic
+                evidence instead of asking them to infer process from raw
+                Markdown.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section
+        id="workflows"
+        class="section band-strong"
+        aria-labelledby="workflow-title"
+      >
+        <div class="section-inner">
+          <div class="section-heading">
+            <p class="eyebrow">Grounded workflows</p>
+            <h2 id="workflow-title">Examples from the shipped fixture suite.</h2>
+            <p>
+              These are not toy claims. Each narrative maps to a real
+              `fixtures/declarative-validation/examples/**` profile and passing
+              Markdown document in the package.
+            </p>
+          </div>
+
+          <div class="segmented-control" role="tablist" aria-label="Workflow examples">
+            <button
+              id="tab-operational-spec"
+              class="segment is-active"
+              type="button"
+              role="tab"
+              aria-selected="true"
+              aria-controls="workflow-panel"
+              data-example-button="operationalSpec"
+            >
+              Operational spec
+            </button>
+            <button
+              id="tab-release-checklist"
+              class="segment"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              aria-controls="workflow-panel"
+              data-example-button="releaseChecklist"
+            >
+              Release checklist
+            </button>
+            <button
+              id="tab-requirements-traceability"
+              class="segment"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              aria-controls="workflow-panel"
+              data-example-button="requirementsTraceability"
+            >
+              Traceability
+            </button>
+          </div>
+
+          <article
+            id="workflow-panel"
+            class="workflow-panel"
+            role="tabpanel"
+            aria-labelledby="tab-operational-spec"
+          >
+            <div class="workflow-narrative">
+              <p class="eyebrow" data-example-kicker>Operational spec</p>
+              <h3 data-example-title>Confirm every handoff carries the same structure.</h3>
+              <p data-example-story>
+                A platform team wants each operating spec to include objective,
+                constraints, execution plan, risk register, and handoff links.
+                Markdown Engine validates those sections, checks table shape,
+                enforces `OPS-RISK` IDs, and proves the expected handoff link is
+                present.
+              </p>
+              <ul class="outcome-list" aria-label="Validation outcome" data-example-outcomes>
+                <li>Frontmatter includes `title`, `owner`, and `status`.</li>
+                <li>Required sections appear in strict order.</li>
+                <li>Risk IDs are unique and use the `OPS-RISK` prefix.</li>
+              </ul>
+            </div>
+            <div class="code-stack" aria-label="Workflow example code">
+              <div class="code-frame">
+                <div class="code-frame-header">
+                  <span data-example-profile-path>profile.yaml</span>
+                  <button class="copy-button" type="button" data-copy-target="profile-code">
+                    Copy
+                  </button>
+                </div>
+                <pre><code id="profile-code" data-example-profile>syntaxVersion: markdown-engine.validation@v1
+documentVersion: 1.0.0
+rules:
+  - id: sections.required
+    select:
+      target: document
+    assert:
+      sectionsRequired:
+        order: strict
+        headings:
+          - Objective
+          - Context / Constraints
+          - Execution Plan
+          - Risk Register
+          - Handoff Links</code></pre>
+              </div>
+              <div class="code-frame">
+                <div class="code-frame-header">
+                  <span data-example-document-path>pass.md</span>
+                  <button class="copy-button" type="button" data-copy-target="document-code">
+                    Copy
+                  </button>
+                </div>
+                <pre><code id="document-code" data-example-document>---
+title: Operational Spec Example
+owner: platform-team
+status: ready
+---
+
+# Objective
+
+Mission control uses this structural profile to confirm a small operating spec
+has the required sections, handoff links, and risk tracking details.</code></pre>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="quickstart" class="section band-light" aria-labelledby="quickstart-title">
+        <div class="section-inner">
+          <div class="section-heading">
+            <p class="eyebrow">Quickstart</p>
+            <h2 id="quickstart-title">Install, validate, then integrate.</h2>
+            <p>
+              Start with the CLI to inspect behavior against bundled fixtures,
+              then move the same deterministic path into your application code.
+            </p>
+          </div>
+          <div class="quickstart-grid">
+            <article class="quickstart-step">
+              <div class="step-number">1</div>
+              <h3>Install the package</h3>
+              <p>Add the engine to the project that owns your Markdown workflow.</p>
+              <div class="code-frame">
+                <div class="code-frame-header">
+                  <span>shell</span>
+                  <button class="copy-button" type="button" data-copy-target="install-code">
+                    Copy
+                  </button>
+                </div>
+                <pre><code id="install-code">npm install @jasonbelmonti/markdown-engine</code></pre>
+              </div>
+            </article>
+            <article class="quickstart-step">
+              <div class="step-number">2</div>
+              <h3>Run a bundled profile</h3>
+              <p>Validate a real release checklist fixture and inspect JSON output.</p>
+              <div class="code-frame">
+                <div class="code-frame-header">
+                  <span>shell</span>
+                  <button class="copy-button" type="button" data-copy-target="cli-code">
+                    Copy
+                  </button>
+                </div>
+                <pre><code id="cli-code">markdown-engine validate \
+  --file node_modules/@jasonbelmonti/markdown-engine/fixtures/declarative-validation/examples/release-checklist/pass.md \
+  --profile node_modules/@jasonbelmonti/markdown-engine/fixtures/declarative-validation/examples/release-checklist/profile.yaml</code></pre>
+              </div>
+            </article>
+            <article class="quickstart-step">
+              <div class="step-number">3</div>
+              <h3>Use the API in your workflow</h3>
+              <p>Parse, normalize to rich IR, compile the profile, and validate locally.</p>
+              <div class="code-frame">
+                <div class="code-frame-header">
+                  <span>TypeScript</span>
+                  <button class="copy-button" type="button" data-copy-target="api-code">
+                    Copy
+                  </button>
+                </div>
+                <pre><code id="api-code">import {
+  normalize,
+  parse,
+  parseValidationProfile,
+  validateWithProfile,
+} from "@jasonbelmonti/markdown-engine";
+
+const parsed = parse(markdown, { path: "release.md" });
+const normalized = normalize(parsed.parsed);
+const profileResult = parseValidationProfile(profileYaml);
+
+if (!profileResult.profile) {
+  throw new Error(profileResult.diagnostics[0]?.message ?? "Invalid profile");
+}
+
+const result = validateWithProfile(
+  normalized.document,
+  profileResult.profile,
+  { includeEvidence: true },
+);
+
+console.log(result.valid, result.diagnostics);</code></pre>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" aria-labelledby="contracts-title">
+        <div class="section-inner contract-section">
+          <div>
+            <p class="eyebrow">Stable contracts</p>
+            <h2 id="contracts-title">Built for downstream consumers.</h2>
+            <p>
+              Package 2.0 keeps the serialized rich IR at
+              `documentVersion: "1.0.0"` and makes that shape the default output
+              for `normalize(parsed)`. Legacy consumers can still request the
+              retained `0.0.0` document shape explicitly.
+            </p>
+          </div>
+          <div class="contract-links" aria-label="Reference documents">
+            <a href="https://github.com/jasonbelmonti/markdown-engine/blob/main/docs/contracts/api.md">
+              Public API contract
+            </a>
+            <a href="https://github.com/jasonbelmonti/markdown-engine/blob/main/docs/contracts/declarative-validation.md">
+              Declarative validation contract
+            </a>
+            <a href="https://github.com/jasonbelmonti/markdown-engine/blob/main/docs/contracts/frontmatter.md">
+              Frontmatter contract
+            </a>
+            <a href="https://github.com/jasonbelmonti/markdown-engine/blob/main/CHANGELOG.md">
+              Changelog
+            </a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="section-inner footer-inner">
+        <p>Markdown Engine turns Markdown workflows into deterministic contracts.</p>
+        <a href="https://www.npmjs.com/package/@jasonbelmonti/markdown-engine">
+          npm package
+        </a>
+      </div>
+    </footer>
+
+    <script src="./site.js"></script>
+  </body>
+</html>

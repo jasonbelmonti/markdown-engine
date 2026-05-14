@@ -2,7 +2,10 @@
 
 ## Unreleased
 
-No unreleased changes.
+### Added
+
+- Added a GitHub Pages consumer site under `docs/` with value proposition,
+  workflow examples, and quickstart material for package 2.0 users.
 
 ## 2.0.0 - 2026-05-13
 

@@ -7,6 +7,7 @@ Current package release:
 
 - package name: `@jasonbelmonti/markdown-engine`
 - version: `2.0.0`
+- website: <https://jasonbelmonti.github.io/markdown-engine/>
 - release focus: package-level 2.0 hardening with the existing
   `documentVersion: "1.0.0"` rich IR contract as the default API and CLI
   document shape
@@ -174,6 +175,7 @@ is ready. The CLI already defaults to the rich IR document contract and keeps
 
 Contract references:
 
+- [Consumer website](https://jasonbelmonti.github.io/markdown-engine/)
 - [Public API contract](docs/contracts/api.md)
 - [Declarative validation contract](docs/contracts/declarative-validation.md)
 - [Frontmatter contract](docs/contracts/frontmatter.md)
