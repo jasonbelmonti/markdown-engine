@@ -32,6 +32,15 @@ rules:
       text:
         contains: "Mission control"
 
+  - id: objective.length
+    select:
+      target: section
+      title: Objective
+    assert:
+      textLength:
+        min: 80
+        max: 180
+
   - id: risk.heading.text
     select:
       target: heading

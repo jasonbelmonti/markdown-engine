@@ -5,8 +5,7 @@ status: ready
 
 # Objective
 
-Mission control uses this structural profile to confirm a small operating spec
-has the required sections, handoff links, and risk tracking details.
+Mission control.
 
 # Context / Constraints
 
