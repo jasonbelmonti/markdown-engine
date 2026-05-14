@@ -116,7 +116,11 @@ owner: release-team
 | ID | Gate | Status |
 | --- | --- | --- |
 | REL-GATE-1 | Contract docs | ready |
-| REL-GATE-2 | Boundary audit | ready |`,
+| REL-GATE-2 | Boundary audit | ready |
+
+# Links
+
+Publish review uses the [release notes](./release-notes.md) after all gates pass.`,
   },
   requirementsTraceability: {
     tabId: "tab-requirements-traceability",
