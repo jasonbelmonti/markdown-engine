@@ -27,6 +27,7 @@
         <span>Markdown Engine</span>
       </a>
       <nav class="nav-links" aria-label="Site sections">
+        <a href="#story">Story</a>
         <a href="#value">Value</a>
         <a href="#workflows">Workflows</a>
         <a href="#quickstart">Quickstart</a>
@@ -72,6 +73,64 @@
               <dd>No network, no arbitrary plugins, no hidden semantics</dd>
             </div>
           </dl>
+        </div>
+      </section>
+
+      <section id="story" class="section narrative-band" aria-labelledby="story-title">
+        <div class="section-inner narrative-layout">
+          <div class="narrative-copy">
+            <p class="eyebrow">Plain-language story</p>
+            <h2 id="story-title">
+              It checks the important parts of Markdown before people depend on it.
+            </h2>
+            <p>
+              Teams often keep serious work in Markdown: release checklists,
+              operating specs, handoff notes, requirements, and agent
+              instructions. Those files are easy for humans to read, but most
+              tools still treat them like loose text.
+            </p>
+            <p>
+              That means a document can look finished while a required section is
+              missing, a table column was renamed, a release gate has no owner, or
+              an evidence link no longer proves anything. The mistake is usually
+              found later, during review, release, or handoff.
+            </p>
+            <p>
+              Markdown Engine lets a team write simple rules for the document:
+              these sections must exist, these fields at the top must be present,
+              these IDs must be unique, and these links must point to the right
+              evidence. Then it checks the file locally and returns clear
+              pass/fail results that a person, CI job, or agent can trust.
+            </p>
+          </div>
+
+          <div class="narrative-flow" aria-label="Problem and resolution">
+            <article>
+              <span>Before</span>
+              <h3>The Markdown looks fine.</h3>
+              <p>
+                A checklist reads well, but a release gate, owner field, or
+                evidence link can silently drift out of shape.
+              </p>
+            </article>
+            <article>
+              <span>Rule</span>
+              <h3>The expected shape is written down.</h3>
+              <p>
+                A small rules file says which headings, fields, tables, IDs,
+                text, and links the document must contain.
+              </p>
+            </article>
+            <article>
+              <span>After</span>
+              <h3>The document proves it is ready.</h3>
+              <p>
+                The engine gives the same answer every time and points to what is
+                wrong before the file is reviewed, merged, published, or handed
+                to an agent.
+              </p>
+            </article>
+          </div>
         </div>
       </section>
 
