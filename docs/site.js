@@ -72,8 +72,7 @@ rules:
       text: handoff packet
       url: ./handoff-packet.md
     assert:
-      text:
-        contains: handoff packet`,
+      exists: true`,
     document: `---
 title: Operational Spec Example
 owner: platform-team
@@ -219,8 +218,7 @@ rules:
       text: release notes
       url: ./release-notes.md
     assert:
-      text:
-        contains: release notes`,
+      exists: true`,
     document: `---
 title: Release Checklist Example
 release: 1.0.0
@@ -474,7 +472,7 @@ are not supported by source files.`,
     outcomes: [
       "Playbook frontmatter identifies owner and status.",
       "Procedure steps use stable PB-STEP identifiers.",
-      "Escalation links point operators to the rollback guide.",
+      "Rollback guidance link exists in the Escalation section.",
     ],
     profile: `syntaxVersion: markdown-engine.validation@v1
 documentVersion: 1.0.0
@@ -534,8 +532,7 @@ rules:
       text: rollback guide
       url: ./rollback-guide.md
     assert:
-      text:
-        contains: rollback guide`,
+      exists: true`,
     document: `---
 title: Payment Release Playbook
 owner: platform-ops
