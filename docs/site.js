@@ -72,8 +72,7 @@ rules:
       text: handoff packet
       url: ./handoff-packet.md
     assert:
-      text:
-        contains: handoff packet`,
+      exists: true`,
     document: `---
 title: Operational Spec Example
 owner: platform-team
@@ -219,8 +218,7 @@ rules:
       text: release notes
       url: ./release-notes.md
     assert:
-      text:
-        contains: release notes`,
+      exists: true`,
     document: `---
 title: Release Checklist Example
 release: 1.0.0
