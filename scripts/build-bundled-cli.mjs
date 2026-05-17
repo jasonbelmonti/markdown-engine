@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { chmod, mkdir, stat } from "node:fs/promises";
+import { chmod, mkdir, rm, stat } from "node:fs/promises";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -8,9 +8,11 @@ import { build } from "esbuild";
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(scriptDir, "..");
 const entryPoint = join(repoRoot, "src", "cli", "index.ts");
-const outfile = join(repoRoot, "dist", "cli", "markdown-engine.mjs");
+const outputDir = join(repoRoot, "dist-bundled");
+const outfile = join(outputDir, "markdown-engine-cli.mjs");
 
-await mkdir(dirname(outfile), { recursive: true });
+await rm(outputDir, { force: true, recursive: true });
+await mkdir(outputDir, { recursive: true });
 
 await build({
   banner: {
@@ -23,7 +25,6 @@ await build({
   entryPoints: [entryPoint],
   format: "esm",
   legalComments: "none",
-  logLevel: "silent",
   outfile,
   platform: "node",
   sourcemap: false,
