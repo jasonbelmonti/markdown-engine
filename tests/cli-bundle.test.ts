@@ -9,6 +9,7 @@ const execFileAsync = promisify(execFile);
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 const artifactDir = join(repoRoot, "dist-bundled");
 const artifactPath = join(artifactDir, "markdown-engine-cli.mjs");
+const packageManifestPath = join(repoRoot, "package.json");
 const staleArtifactPath = join(artifactDir, "stale-artifact.txt");
 const buildTimeoutMs = 30_000;
 const commandTimeoutMs = 10_000;
@@ -55,6 +56,14 @@ describe("bundled CLI artifact", () => {
 
   it("cleans stale bundled output before rebuilding", async () => {
     await expect(fileExists(staleArtifactPath)).resolves.toBe(false);
+  });
+
+  it("includes the bundled artifact directory in the published package files", async () => {
+    const manifest = JSON.parse(await readFile(packageManifestPath, "utf8")) as {
+      files?: string[];
+    };
+
+    expect(manifest.files).toContain("dist-bundled");
   });
 
   it("prints CLI usage and exits 0 for --help", async () => {
