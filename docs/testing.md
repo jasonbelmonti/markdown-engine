@@ -1,4 +1,4 @@
-# Testing And Snapshot Operations
+# Testing, Snapshot, And Distribution Operations
 
 This repository uses checked-in Vitest file snapshots as contract baselines for
 public markdown-engine behavior. The `snapshots/` directory is not disposable
@@ -61,6 +61,80 @@ Run the full release gate before package tag or publication review:
 ```sh
 npm run release:verify
 ```
+
+## Bundled CLI And Skill Distribution
+
+The bundled CLI artifact is a Node.js ESM distribution artifact for local
+operator workflows and Agent Skill handoff. It is not the npm package release
+itself and is not a native binary.
+
+Build the current bundled artifact from the repository root:
+
+```sh
+npm run build:cli:bundled
+```
+
+The build writes `dist-bundled/markdown-engine-cli.mjs`, removes stale files in
+`dist-bundled/` before rebuilding, and marks the artifact executable on
+platforms that support executable mode bits. The artifact targets Node.js 20
+and follows the package engine range in `package.json`: `^20.19.0 || >=22.12.0`.
+It still runs on the Node.js runtime and may be invoked with `node` or through
+its executable shebang. It is separate from the package `bin` entry and from
+future native-binary packaging decisions.
+
+The compatibility build command remains available for callers that still expect
+the older artifact path:
+
+```sh
+npm run build:cli-bundle
+```
+
+That command writes `dist/cli/markdown-engine.mjs`. New distribution checks
+should prefer `npm run build:cli:bundled` and
+`dist-bundled/markdown-engine-cli.mjs`.
+
+Run these smoke commands after building the bundled artifact:
+
+```sh
+node dist-bundled/markdown-engine-cli.mjs --help
+node dist-bundled/markdown-engine-cli.mjs validate --file fixtures/declarative-validation/examples/operational-spec/pass.md --profile fixtures/declarative-validation/examples/operational-spec/profile.yaml
+node dist-bundled/markdown-engine-cli.mjs validate --file fixtures/declarative-validation/examples/operational-spec/fail.md --profile fixtures/declarative-validation/examples/operational-spec/profile.yaml
+```
+
+Pass/fail expectations:
+
+- `npm run build:cli:bundled` prints the bundled artifact path and leaves a
+  non-empty `dist-bundled/markdown-engine-cli.mjs` file.
+- `--help` exits `0`, writes usage text to stdout, and writes no stderr.
+- The passing validation fixture exits `0`, writes JSON with `valid: true`, and
+  emits no diagnostics.
+- The intentionally failing validation fixture exits `1`, writes JSON with
+  `valid: false`, and emits diagnostic entries.
+
+The focused automated checks for this surface are:
+
+```sh
+npm run build && npm exec -- vitest run tests/cli-bundle.test.ts tests/profile-backed-markdown-skill.test.ts "--exclude=.worktrees/**"
+```
+
+The `profile-backed-markdown` Agent Skill consumes the bundled artifact through
+`skills/profile-backed-markdown/scripts/validate-profile-backed-markdown.mjs`.
+The wrapper resolves the CLI in this order: `MARKDOWN_ENGINE_CLI`, a copied
+`skills/profile-backed-markdown/scripts/markdown-engine-cli.mjs`, then the
+package-level `dist-bundled/markdown-engine-cli.mjs`.
+
+For a standalone skill folder, build and copy the artifact into the skill:
+
+```sh
+npm run build:cli:bundled
+cp dist-bundled/markdown-engine-cli.mjs skills/profile-backed-markdown/scripts/
+```
+
+Release containment remains explicit. Building, copying, testing, or packaging
+the bundled artifact does not authorize a git tag, npm publish, npm dist-tag
+mutation, GitHub Release, public release-completion claim, or native binary
+ship decision. Native binaries are outside this slice and require separate
+build, validation, and release approval.
 
 ## Update Commands
 
