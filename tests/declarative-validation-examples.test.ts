@@ -136,6 +136,7 @@ const installedExamplesRoot =
 const intentionalPackageFiles = [
   "dist",
   "dist-bundled",
+  "skills",
   "docs/contracts",
   packagedExamplesRoot,
   "CHANGELOG.md",
