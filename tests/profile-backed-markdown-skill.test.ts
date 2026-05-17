@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -74,6 +74,16 @@ const failingMarkdown = passingMarkdown.replace(
   "- MUST Record evidence before requesting review.",
   "- Record evidence before requesting review.",
 );
+const permissiveProfile = `syntaxVersion: markdown-engine.validation@v1
+rules:
+  - id: frontmatter.required
+    select:
+      target: document
+    assert:
+      frontmatterRequired:
+        fields:
+          - title
+`;
 
 describe("profile-backed-markdown skill wrapper", () => {
   beforeAll(async () => {
@@ -127,6 +137,31 @@ describe("profile-backed-markdown skill wrapper", () => {
     expect(result.exitCode).toBe(0);
     expect(result.stderr).toBe("");
     expect(JSON.parse(result.stdout)).toMatchObject({ valid: true });
+  });
+
+  it("appends profile extensions for dotted profile ids", async () => {
+    const cwd = await makeTempDir();
+    await mkdir(join(cwd, "profiles"));
+    await writeFile(join(cwd, "profiles", "team.v1.yaml"), permissiveProfile);
+    await writeFile(
+      join(cwd, "spec.md"),
+      passingMarkdown.replace(
+        "validationProfile: operational-spec",
+        "validationProfile: team.v1",
+      ),
+    );
+
+    const result = await runWrapper(
+      ["--file", "spec.md", "--profile-root", "profiles"],
+      cwd,
+    );
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stderr).toBe("");
+    expect(JSON.parse(result.stdout)).toMatchObject({
+      profile: { ruleCount: 1 },
+      valid: true,
+    });
   });
 
   it("preserves validator JSON on failure and exits non-zero", async () => {

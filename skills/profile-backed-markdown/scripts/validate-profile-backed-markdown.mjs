@@ -4,7 +4,6 @@ import { constants } from "node:fs";
 import { access, readFile, stat } from "node:fs/promises";
 import {
   dirname,
-  extname,
   isAbsolute,
   join,
   relative,
@@ -17,6 +16,7 @@ const scriptPath = fileURLToPath(import.meta.url);
 const scriptDir = dirname(scriptPath);
 const skillRoot = resolve(scriptDir, "..");
 const defaultProfileRoot = join(skillRoot, "assets", "profiles");
+const profileFileExtensions = [".yaml", ".yml", ".json"];
 const defaultBundledCliPath = resolve(
   skillRoot,
   "..",
@@ -405,10 +405,12 @@ async function resolveProfilePath(validationProfile, profileRoot) {
     };
   }
 
-  const candidates =
-    extname(normalizedRef) === ""
-      ? [`${normalizedRef}.yaml`, `${normalizedRef}.yml`, `${normalizedRef}.json`]
-      : [normalizedRef];
+  const candidates = hasProfileFileExtension(normalizedRef)
+    ? [normalizedRef]
+    : [
+        ...profileFileExtensions.map((extension) => `${normalizedRef}${extension}`),
+        normalizedRef,
+      ];
 
   for (const candidate of candidates) {
     const candidatePath = resolve(profileRoot, candidate);
@@ -429,6 +431,12 @@ async function resolveProfilePath(validationProfile, profileRoot) {
     kind: "error",
     message: `Unable to resolve validationProfile "${validationProfile}" under ${profileRoot}.`,
   };
+}
+
+function hasProfileFileExtension(profileRef) {
+  return profileFileExtensions.some((extension) =>
+    profileRef.toLowerCase().endsWith(extension),
+  );
 }
 
 function isWithinDirectory(root, target) {
