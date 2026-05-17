@@ -31,6 +31,7 @@
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
+    "dist-bundled",
     "docs/contracts",
     "fixtures/declarative-validation/examples",
     "CHANGELOG.md",
@@ -42,10 +43,11 @@
   "scripts": {
     "clean": "node scripts/clean-dist.mjs",
     "build": "npm run clean && tsc -p tsconfig.json",
+    "build:cli:bundled": "node scripts/build-bundled-cli.mjs",
     "build:cli-bundle": "node scripts/build-cli-bundle.mjs",
     "prepack": "npm run release:verify",
     "prepublishOnly": "npm run release:verify",
-    "release:verify": "npm run typecheck && npm test && node scripts/check-boundaries.mjs && npm run docs:rich-ir-contract && npm run docs:declarative-validation-contract && npm run audit:declarative-validation-boundary && npm run build && node scripts/prove-repeatability.mjs --runs 10 && npm run release:check-clean",
+    "release:verify": "npm run typecheck && npm test && node scripts/check-boundaries.mjs && npm run docs:rich-ir-contract && npm run docs:declarative-validation-contract && npm run audit:declarative-validation-boundary && npm run build && npm run build:cli:bundled && node scripts/prove-repeatability.mjs --runs 10 && npm run release:check-clean",
     "release:check-clean": "git diff --check HEAD -- && git diff --exit-code HEAD --",
     "snapshots:update:parser": "npm run build && vitest run tests/parser-fixtures.test.ts -u \"--exclude=.worktrees/**\"",
     "snapshots:update:rules": "npm run build && vitest run tests/rules.test.ts -u \"--exclude=.worktrees/**\"",

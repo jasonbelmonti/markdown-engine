@@ -135,6 +135,7 @@ const installedExamplesRoot =
   "node_modules/@jasonbelmonti/markdown-engine/fixtures/declarative-validation/examples";
 const intentionalPackageFiles = [
   "dist",
+  "dist-bundled",
   "docs/contracts",
   packagedExamplesRoot,
   "CHANGELOG.md",

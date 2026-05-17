@@ -6,11 +6,12 @@ import { buildCliArtifact, writeBuildSummary } from "./build-cli-artifact.mjs";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(scriptDir, "..");
-const outfile = join(repoRoot, "dist", "cli", "markdown-engine.mjs");
+const outputDir = join(repoRoot, "dist-bundled");
+const outfile = join(outputDir, "markdown-engine-cli.mjs");
 
 writeBuildSummary(
   await buildCliArtifact({
-    cleanOutputFile: true,
+    cleanOutputDirectory: true,
     outfile,
     repoRoot,
   }),

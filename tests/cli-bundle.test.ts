@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { stat } from "node:fs/promises";
+import { access, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
@@ -7,7 +7,12 @@ import { beforeAll, describe, expect, it } from "vitest";
 
 const execFileAsync = promisify(execFile);
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
-const artifactPath = join(repoRoot, "dist", "cli", "markdown-engine.mjs");
+const artifactDir = join(repoRoot, "dist-bundled");
+const artifactPath = join(artifactDir, "markdown-engine-cli.mjs");
+const legacyArtifactPath = join(repoRoot, "dist", "cli", "markdown-engine.mjs");
+const packageManifestPath = join(repoRoot, "package.json");
+const staleArtifactPath = join(artifactDir, "stale-artifact.txt");
+const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
 const buildTimeoutMs = 30_000;
 const commandTimeoutMs = 10_000;
 const maxBuffer = 10 * 1024 * 1024;
@@ -26,7 +31,10 @@ interface ExecFileFailure extends Error {
 
 describe("bundled CLI artifact", () => {
   beforeAll(async () => {
-    await execFileAsync(process.execPath, ["scripts/build-cli-bundle.mjs"], {
+    await mkdir(artifactDir, { recursive: true });
+    await writeFile(staleArtifactPath, "stale output must be removed\n", "utf8");
+
+    await execFileAsync(process.execPath, ["scripts/build-bundled-cli.mjs"], {
       cwd: repoRoot,
       maxBuffer,
       timeout: buildTimeoutMs,
@@ -35,11 +43,64 @@ describe("bundled CLI artifact", () => {
 
   it("builds an executable single-file ESM artifact", async () => {
     const artifactStats = await stat(artifactPath);
+    const artifactText = await readFile(artifactPath, "utf8");
 
     expect(artifactPath.endsWith(".mjs")).toBe(true);
+    expect(artifactPath.endsWith(join("dist-bundled", "markdown-engine-cli.mjs"))).toBe(true);
+    expect(artifactText.startsWith("#!/usr/bin/env node\n")).toBe(true);
     expect(artifactStats.isFile()).toBe(true);
     expect(artifactStats.size).toBeGreaterThan(0);
-    expect(artifactStats.mode & 0o111).not.toBe(0);
+
+    if (process.platform !== "win32") {
+      expect(artifactStats.mode & 0o111).not.toBe(0);
+    }
+  });
+
+  it("cleans stale bundled output before rebuilding", async () => {
+    await expect(fileExists(staleArtifactPath)).resolves.toBe(false);
+  });
+
+  it("includes the bundled artifact directory in the published package files", async () => {
+    const manifest = JSON.parse(await readFile(packageManifestPath, "utf8")) as {
+      files?: string[];
+      scripts?: Record<string, string>;
+    };
+
+    expect(manifest.files).toContain("dist-bundled");
+    expect(manifest.scripts?.["build:cli-bundle"]).toBe(
+      "node scripts/build-cli-bundle.mjs",
+    );
+    expect(manifest.scripts?.prepack).toBe("npm run release:verify");
+    expect(manifest.scripts?.prepublishOnly).toBe("npm run release:verify");
+    expect(manifest.scripts?.["release:verify"]).toContain(
+      "npm run build && npm run build:cli:bundled &&",
+    );
+  });
+
+  it("keeps the compatibility build command writing the legacy artifact path", async () => {
+    await rm(legacyArtifactPath, { force: true });
+
+    await execFileAsync(npmCommand, ["run", "build:cli-bundle"], {
+      cwd: repoRoot,
+      maxBuffer,
+      timeout: buildTimeoutMs,
+    });
+
+    const artifactStats = await stat(legacyArtifactPath);
+    const artifactText = await readFile(legacyArtifactPath, "utf8");
+
+    expect(artifactText.startsWith("#!/usr/bin/env node\n")).toBe(true);
+    expect(artifactStats.isFile()).toBe(true);
+    expect(artifactStats.size).toBeGreaterThan(0);
+
+    if (process.platform !== "win32") {
+      expect(artifactStats.mode & 0o111).not.toBe(0);
+    }
+
+    const result = await runCliArtifact(legacyArtifactPath, ["--help"]);
+    expect(result.exitCode).toBe(0);
+    expect(result.stderr).toBe("");
+    expect(result.stdout).toContain("Usage: markdown-engine");
   });
 
   it("prints CLI usage and exits 0 for --help", async () => {
@@ -98,8 +159,12 @@ describe("bundled CLI artifact", () => {
 });
 
 async function runBundledCli(args: string[]): Promise<CommandResult> {
+  return runCliArtifact(artifactPath, args);
+}
+
+async function runCliArtifact(path: string, args: string[]): Promise<CommandResult> {
   try {
-    const result = await execFileAsync(process.execPath, [artifactPath, ...args], {
+    const result = await execFileAsync(process.execPath, [path, ...args], {
       cwd: repoRoot,
       maxBuffer,
       timeout: commandTimeoutMs,
@@ -131,4 +196,13 @@ function toText(value: string | Buffer | undefined): string {
   }
 
   return typeof value === "string" ? value : value.toString("utf8");
+}
+
+async function fileExists(path: string): Promise<boolean> {
+  try {
+    await access(path);
+    return true;
+  } catch {
+    return false;
+  }
 }
