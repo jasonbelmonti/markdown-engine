@@ -44,7 +44,7 @@
     "clean": "node scripts/clean-dist.mjs",
     "build": "npm run clean && tsc -p tsconfig.json",
     "build:cli:bundled": "node scripts/build-bundled-cli.mjs",
-    "build:cli-bundle": "npm run build:cli:bundled",
+    "build:cli-bundle": "node scripts/build-cli-bundle.mjs",
     "prepack": "npm run release:verify",
     "prepublishOnly": "npm run release:verify",
     "release:verify": "npm run typecheck && npm test && node scripts/check-boundaries.mjs && npm run docs:rich-ir-contract && npm run docs:declarative-validation-contract && npm run audit:declarative-validation-boundary && npm run build && npm run build:cli:bundled && node scripts/prove-repeatability.mjs --runs 10 && npm run release:check-clean",
