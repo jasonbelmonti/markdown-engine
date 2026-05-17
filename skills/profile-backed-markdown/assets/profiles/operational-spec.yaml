@@ -1,0 +1,98 @@
+syntaxVersion: markdown-engine.validation@v1
+documentVersion: 1.0.0
+rules:
+  - id: frontmatter.required
+    select:
+      target: document
+    assert:
+      frontmatterRequired:
+        fields:
+          - title
+          - owner
+          - status
+
+  - id: sections.required
+    select:
+      target: document
+    assert:
+      sectionsRequired:
+        order: strict
+        headings:
+          - Objective
+          - Context / Constraints
+          - Execution Plan
+          - Risk Register
+          - Handoff Links
+
+  - id: objective.text
+    select:
+      target: section
+      title: Objective
+    assert:
+      text:
+        contains: "Mission control"
+
+  - id: objective.length
+    select:
+      target: section
+      title: Objective
+    assert:
+      textLength:
+        min: 80
+        max: 180
+
+  - id: risk.table.columns
+    select:
+      target: table
+      section: Risk Register
+      header:
+        - ID
+        - Mitigation
+        - Status
+    assert:
+      tableColumnsRequired:
+        columns:
+          - ID
+          - Mitigation
+          - Status
+
+  - id: risk.ids.unique
+    select:
+      target: tableCell
+      section: Risk Register
+      tableHeader:
+        - ID
+        - Mitigation
+        - Status
+      column: ID
+    assert:
+      ids:
+        prefix: OPS-RISK
+        unique: true
+
+  - id: execution.must.count
+    select:
+      target: section
+      title: Execution Plan
+    assert:
+      textOccurrenceCount:
+        text: MUST
+        count: 2
+
+  - id: execution.list
+    select:
+      target: list
+      section: Execution Plan
+      ordered: false
+    assert:
+      text:
+        contains: "Validate profile"
+
+  - id: handoff.link
+    select:
+      target: link
+      section: Handoff Links
+      text: "handoff packet"
+      url: "./handoff-packet.md"
+    assert:
+      exists: true
