@@ -61,9 +61,15 @@ describe("bundled CLI artifact", () => {
   it("includes the bundled artifact directory in the published package files", async () => {
     const manifest = JSON.parse(await readFile(packageManifestPath, "utf8")) as {
       files?: string[];
+      scripts?: Record<string, string>;
     };
 
     expect(manifest.files).toContain("dist-bundled");
+    expect(manifest.scripts?.prepack).toBe("npm run release:verify");
+    expect(manifest.scripts?.prepublishOnly).toBe("npm run release:verify");
+    expect(manifest.scripts?.["release:verify"]).toContain(
+      "npm run build && npm run build:cli:bundled &&",
+    );
   });
 
   it("prints CLI usage and exits 0 for --help", async () => {
