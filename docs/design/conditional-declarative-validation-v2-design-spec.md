@@ -296,6 +296,19 @@ Section status: Complete
 | TECH-14 | Contract documentation and examples | Documentation | Publish v2 grammar, result shape, diagnostics, evidence, migration, and motivating examples. | FUNC-1 / FUNC-6 |
 | TECH-15 | Decomposed package gates | Test/review harness | Enforce staged implementation packages, targeted validation commands, compatibility gates, and final release verification. | FUNC-7 |
 
+Technical feasibility evidence:
+
+| Feasibility claim | Existing implementation evidence | Residual implementation gap | Verification gate |
+| --- | --- | --- | --- |
+| Syntax-versioned schema dispatch can be added without silent v1 changes. | V1 syntax, selector, assertion, closed-key, and direct-profile validation already live in `src/declarative-validation/profile/index.ts`, `src/declarative-validation/profile/schema.ts`, `src/declarative-validation/profile/selector-schema.ts`, `src/declarative-validation/profile/assertion-schema.ts`, and `src/declarative-validation/profile/direct-profile-diagnostics.ts`, with coverage in `tests/declarative-validation-profile.test.ts` and `tests/declarative-validation-contract.test.ts`. | Add a discriminated v2 schema branch while keeping the v1 parser and diagnostics unchanged. | `VAL-1` / `VAL-2` / `VAL-10` |
+| Flat, grouped, and applicability plans can reuse the existing selector/assertion compiler boundary. | Existing compiled rule plans and assertion dispatch are isolated in `src/declarative-validation/compiler/plan.ts`, `src/declarative-validation/compiler/index.ts`, `src/declarative-validation/compiler/assertions.ts`, `src/declarative-validation/compiler/assertion-builders.ts`, and `src/declarative-validation/compiler/compatibility.ts`. | Extend the internal plan union for flat v2 rules, `anyOf`, `allOf`, and `when` without exporting compiled plans from the package root. | `VAL-3` / `VAL-6` / `VAL-7` |
+| ID count bounds can be implemented without changing ID token extraction. | Current ID token, target, duplicate, prefix, and case-sensitivity behavior is isolated in `src/declarative-validation/assertions/ids.ts`, `src/declarative-validation/assertions/id-targets.ts`, and `src/declarative-validation/assertions/id-tokens.ts`, with broad assertion coverage in `tests/declarative-validation-assertions.test.ts`. | Apply `minCount` and `maxCount` after existing prefix filtering and occurrence de-duplication. | `VAL-4` |
+| Column-scoped coverage can be implemented without changing rich IR extraction. | Table row and cell selectors already exist in `src/declarative-validation/selectors/table-targets.ts`; reference-source and table-ID behavior already exists in `src/declarative-validation/assertions/references.ts` and `src/declarative-validation/assertions/id-targets.ts`. | Add a dedicated `tableColumnCoverage` evaluator that reads only the configured target table column and never falls back to whole-section text. | `VAL-5` / `VAL-13` |
+| V2 result and evidence serialization can remain deterministic. | Public result types live in `src/declarative-validation/results/index.ts`; evidence hashing and stable JSON serialization are centralized in `src/declarative-validation/evidence/index.ts`; repeatability coverage exists in `tests/declarative-validation-repeatability.test.ts` and `tests/support/declarative-validation-repeatability.ts`. | Clone nested v2 rule results, skipped evaluations, and branch diagnostics while preserving v1 result and evidence shapes. | `VAL-8` / `VAL-9` / `VAL-11` |
+| V2 conditionals can remain inert profile data. | JSON-safe profile closure and boundary checks already exist in `src/declarative-validation/profile/materialization.ts`, `src/declarative-validation/profile/data-closure.ts`, and `scripts/check-declarative-validation-boundary.mjs`. | Add unsupported and executable-key coverage at each new v2 nested object boundary. | `VAL-2` / `VAL-12` |
+
+Feasibility conclusion: The design maps each high-risk v2 mechanism to an existing module boundary and an explicit package gate. This supports a technical feasibility score of `3` at the design-spec level, while `CON-6` still prohibits implementing the 38-path surface as one broad patch.
+
 Section status: Complete
 
 ## 14. Data, Schemas, and Compatibility
@@ -707,7 +720,16 @@ Section status: Complete
 | Boundary audit result | Audit | Detect executable predicates, profile-specific semantics, or cross-boundary imports. | Security/boundary reviewer |
 | Downstream design-spec fixture result | Audit | Prove motivating cases work without warnings-as-workaround. | Downstream profile owner |
 
-Rollout plan: Execute implementation in six packages. Package 1 defines v2 contract/schema/result scaffolding and v1 compatibility gates. Package 2 implements `ids.minCount` and `ids.maxCount` for `BEL-1075`. Package 3 implements `tableColumnCoverage` for `BEL-1076`. Package 4 implements `anyOf` and `allOf` grouped evaluation. Package 5 implements rule-level `when` and skipped semantics. Package 6 adds downstream design-spec-like fixtures, repeatability, docs, and final release hardening. Each package requires targeted tests before the next package starts, and final merge requires `npm run release:verify`.
+Rollout plan: Execute implementation in six packages. Each package requires targeted tests before the next package starts, and final merge requires `npm run release:verify`.
+
+| Package | Scope | Primary implementation surface | Exit gate | Stop condition |
+| --- | --- | --- | --- | --- |
+| PKG-1 | V2 contract, syntax dispatch, schema, result/evidence scaffolding, and v1 compatibility harness. | `docs/contracts/declarative-validation.md`; `src/api/declarative-validation.ts`; `src/declarative-validation/profile/*`; `src/declarative-validation/results/index.ts`; `src/declarative-validation/evidence/index.ts`; CLI JSON types. | `VAL-1` / `VAL-2` / `VAL-8` / `VAL-10` / `VAL-11` | Stop if any v1 parse, result, CLI, diagnostic, or evidence fixture changes without an explicit compatibility decision. |
+| PKG-2 | `ids.minCount` and `ids.maxCount` for `BEL-1075`. | `src/declarative-validation/compiler/assertions.ts`; `src/declarative-validation/compiler/assertion-builders.ts`; `src/declarative-validation/compiler/assertion-shapes.ts`; `src/declarative-validation/assertions/ids.ts`; `src/declarative-validation/assertions/id-targets.ts`. | `VAL-4` plus existing ID uniqueness and prefix tests. | Stop if count behavior requires changing existing ID token grammar or duplicate-ID semantics. |
+| PKG-3 | `tableColumnCoverage` for `BEL-1076`. | `src/declarative-validation/profile/assertion-schema.ts`; `src/declarative-validation/compiler/assertions.ts`; `src/declarative-validation/assertions/references.ts`; `src/declarative-validation/assertions/id-targets.ts`; `src/declarative-validation/selectors/table-targets.ts`. | `VAL-5` / targeted `VAL-13` column-coverage fixture. | Stop if target-column coverage cannot be proven without whole-section fallback or a rich IR contract change. |
+| PKG-4 | `anyOf` and `allOf` grouped evaluation. | `src/declarative-validation/compiler/plan.ts`; `src/declarative-validation/compiler/index.ts`; `src/declarative-validation/assertions/evaluator.ts`; `src/declarative-validation/assertions/diagnostics.ts`; v2 result serialization. | `VAL-3` / `VAL-6` / `VAL-9` | Stop if branch diagnostics cannot stay nested while preserving aggregate validity semantics. |
+| PKG-5 | Rule-level `when`, matched/not-matched applicability, and skipped result semantics. | `src/declarative-validation/compiler/plan.ts`; `src/declarative-validation/compiler/index.ts`; `src/declarative-validation/assertions/evaluator.ts`; `src/declarative-validation/results/index.ts`; `src/declarative-validation/evidence/index.ts`. | `VAL-7` / `VAL-8` / `VAL-9` | Stop if skipped rules require serializing unevaluated planned rule bodies or emitting top-level diagnostics. |
+| PKG-6 | Downstream design-spec fixtures, CLI parity, repeatability, documentation, boundary audit, and release hardening. | `tests/declarative-validation-downstream.test.ts`; `tests/declarative-validation-cli.test.ts`; `tests/declarative-validation-repeatability.test.ts`; `fixtures/declarative-validation/conditionals/`; contract docs; boundary scripts. | `VAL-1` through `VAL-14`; `npm run release:verify` | Stop if any heightened-control gate lacks evidence or downstream fixtures show false acceptance. |
 
 Rollback or containment plan: Before public release, revert or pause the failing implementation package and keep v1 validation as the only documented public syntax. After public release, preserve v1 behavior, treat v2 regressions as contract defects, ship a patch that restores documented v2 behavior, and document any consumer migration if a v2 correction changes observable output. Trigger rollback or containment on any v1 compatibility regression, v2 evidence nondeterminism, branch diagnostic promotion ambiguity, executable-profile boundary violation, or downstream fixture false acceptance.
 
@@ -856,7 +878,7 @@ Section status: Complete
 | Baseline validation result | Passed after revision with `markdown-engine validate --file docs/design/conditional-declarative-validation-v2-design-spec.md --profile /Users/jasonbelmonti/.codex/skills/design-spec/references/design-spec-validation-profile.yaml --format json` |
 | Verdict | Approve with heightened controls |
 | Open findings | none |
-| Resolved findings verified in this decision | `ST-1`; `SM-1`; `TR-1`; `CR-1`; `CR-2`; `CR-3`; `CR-4`; `DV-1` |
+| Resolved findings verified in this decision | `ST-1`; `SM-1`; `TR-1`; `CR-1`; `CR-2`; `CR-3`; `CR-4`; `DV-1`; `FS-1` |
 | Reviewed waivers | none |
 | Required heightened controls | `HC-1` / `HC-2` / `HC-3` / `HC-4` / `HC-5` |
 | Approval conditions | none |
@@ -884,6 +906,7 @@ Section status: Complete
 | CR-3 | Blocker | Resolved | 14 / 17 | Consensus review found aggregate `valid` ambiguous for warning/info top-level diagnostics. | Define v2 aggregate validity as false only for top-level error diagnostics, matching v1, and add result-shape verification coverage. | Codex |
 | CR-4 | Blocker | Resolved | 1 / proposed files | Consensus review found the proposed implementation surface list incomplete relative to API, result, evidence, and CLI scope in the final spec. | Expand `conditional-declarative-validation-proposed-files.txt` to include public contract, API/result/evidence, CLI, profile, compiler, evaluator, tests, docs, and fixtures; update estimation references to the 38-path proposed surface. | Codex |
 | DV-1 | Blocker | Resolved | Layer 1 Exit / Layer 2 Exit | Baseline deterministic validation failed because required `Layer 1 Exit` and `Layer 2 Exit` sections were missing. | Add the required exit headings before the existing layer status lines and rerun baseline validation. | Codex |
+| FS-1 | Minor | Resolved | 13 / 16 / semantic score | Technical feasibility was scored `2` because implementation evidence was source-grounded but still broad. | Add a source-grounded feasibility evidence matrix, expand package-level rollout gates, and update technical feasibility to `3` without claiming implementation slices were executed. | Codex |
 
 ### Semantic Scores
 
@@ -892,7 +915,7 @@ Section status: Complete
 | Problem validity | 3 | Problem is grounded in the v1 contract and downstream design-spec workaround. |
 | Requirement quality | 3 | Requirements are atomic, use one `shall`, and cover grammar, compatibility, diagnostics, evidence, and controls. |
 | Functional adequacy | 3 | Layer 2 covers v1, v2 flat rules, groups, applicability, ID counts, column coverage, CLI, and misuse. |
-| Technical feasibility | 2 | Existing selector and ID extraction machinery supports the direction, but implementation remains broad and must be decomposed. |
+| Technical feasibility | 3 | Source-grounded mechanism allocation maps v2 schema, compiler, evaluator, result, evidence, CLI, and boundary work to existing modules and package gates; no implementation slice has been executed. |
 | Non-functional adequacy | 3 | Determinism, inert config, compatibility, and boundary controls are explicit. |
 | Operational safety | 3 | Rollout, rollback, containment, heightened controls, and stop conditions are specified. |
 | Verification adequacy | 3 | Verification covers v1 compatibility, v2 grammar, result semantics, evidence, boundary audit, downstream fixtures, and release gates. |
