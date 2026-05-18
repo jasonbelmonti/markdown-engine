@@ -2,6 +2,7 @@ import type { EngineDocumentVersion } from "../../api/document.js";
 import type { MarkdownDiagnostic } from "../../api/diagnostics.js";
 import type { ValidationResult } from "../../api/validate.js";
 import type { DeclarativeValidationEvidence } from "../evidence/index.js";
+import type { ValidationProfileSyntaxVersion } from "../profile/syntax-version.js";
 
 export type DeclarativeValidationCliJsonResult =
   | DeclarativeValidationResult
@@ -23,7 +24,7 @@ export interface DeclarativeValidationOptions {
 
 export interface DeclarativeValidationResult extends ValidationResult {
   profile: {
-    syntaxVersion: "markdown-engine.validation@v1";
+    syntaxVersion: ValidationProfileSyntaxVersion;
     documentVersion: EngineDocumentVersion;
     ruleCount: number;
   };

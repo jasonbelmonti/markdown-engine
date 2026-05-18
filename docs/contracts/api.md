@@ -227,7 +227,9 @@ validateWithProfile(
 
 `parseValidationProfile` accepts YAML text or JSON-safe profile objects. The
 top-level profile keys are `syntaxVersion`, `documentVersion`, and `rules`.
-`syntaxVersion` must be `"markdown-engine.validation@v1"`.
+`syntaxVersion` must be `"markdown-engine.validation@v1"` or
+`"markdown-engine.validation@v2"`; v2 admission is limited to the existing flat
+rule shape.
 `documentVersion` is optional; when provided it must be `"0.0.0"` or
 `"1.0.0"`. The parser preserves omission and does not inject a default into
 the parsed profile.

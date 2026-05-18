@@ -59,6 +59,11 @@ const profile = {
   documentVersion: "1.0.0",
   rules: [],
 } satisfies ValidationProfile;
+const v2Profile = {
+  syntaxVersion: "markdown-engine.validation@v2",
+  documentVersion: "1.0.0",
+  rules: [],
+} satisfies ValidationProfile;
 const supportedRuleProfile = {
   syntaxVersion: "markdown-engine.validation@v1",
   documentVersion: "1.0.0",
@@ -191,6 +196,92 @@ describe("declarative validation public contract scaffold", () => {
       ],
       valid: false,
     });
+  });
+
+  it("admits v2 direct profiles through validation materialization", () => {
+    expect(validateWithProfile(document, v2Profile)).toEqual({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [],
+      profile: {
+        syntaxVersion: "markdown-engine.validation@v2",
+        documentVersion: "1.0.0",
+        ruleCount: 0,
+      },
+    });
+  });
+
+  it("preserves v2 direct profile metadata when unsupported rule keys fail materialization", () => {
+    expect(
+      validateWithProfile(document, {
+        syntaxVersion: "markdown-engine.validation@v2",
+        documentVersion: "1.0.0",
+        rules: [
+          {
+            id: "future-when",
+            when: {
+              select: { target: "document" },
+              assert: { exists: true },
+            },
+            select: { target: "document" },
+            assert: { exists: true },
+          },
+        ],
+      } as unknown as ValidationProfile),
+    ).toEqual({
+      valid: false,
+      diagnostics: [
+        {
+          code: "profile.config.unsupportedKey",
+          message: 'Unsupported validation profile key "when".',
+          severity: "error",
+        },
+      ],
+      ruleResults: [],
+      profile: {
+        syntaxVersion: "markdown-engine.validation@v2",
+        documentVersion: "1.0.0",
+        ruleCount: 0,
+      },
+    });
+  });
+
+  it("preserves v2 direct profile metadata when JSON-safe closure fails", () => {
+    let rulesAccessorRead = false;
+    const profileWithAccessorRules = {
+      syntaxVersion: "markdown-engine.validation@v2",
+      documentVersion: "1.0.0",
+    };
+    Object.defineProperty(profileWithAccessorRules, "rules", {
+      enumerable: true,
+      get() {
+        rulesAccessorRead = true;
+        throw new Error("profile rules accessor must not execute");
+      },
+    });
+
+    expect(
+      validateWithProfile(
+        document,
+        profileWithAccessorRules as unknown as ValidationProfile,
+      ),
+    ).toEqual({
+      valid: false,
+      diagnostics: [
+        {
+          code: "profile.config.invalidShape",
+          message: "Profile.rules must contain only JSON-safe data properties.",
+          severity: "error",
+        },
+      ],
+      ruleResults: [],
+      profile: {
+        syntaxVersion: "markdown-engine.validation@v2",
+        documentVersion: "1.0.0",
+        ruleCount: 0,
+      },
+    });
+    expect(rulesAccessorRead).toBe(false);
   });
 
   it("rejects profile documentVersion mismatches before rule evaluation", () => {

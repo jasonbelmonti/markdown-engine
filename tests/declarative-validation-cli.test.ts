@@ -75,7 +75,7 @@ rules:
   - id: invalid
     select: [
 `;
-const unsupportedSyntaxProfile = `syntaxVersion: markdown-engine.validation@v2
+const unsupportedSyntaxProfile = `syntaxVersion: markdown-engine.validation@v3
 rules:
   - id: skipped.rule
     select:

@@ -1,19 +1,22 @@
 # Declarative Validation Contract
 
-Status: package 2.0.0, v1 profile syntax, document contract 1.0.0
+Status: package 2.0.0, v1 profile syntax with v2 profile admission, document contract 1.0.0
 Last updated: 2026-05-14
 
 This document defines the public declarative validation contract for
 `@jasonbelmonti/markdown-engine`. The stable surface is the package-root API,
-the v1 profile syntax, the CLI validation command, diagnostic codes, serialized
-result shapes, and evidence fields. Internal parser output, compiled rule-plan
-records, selector target records, and evaluator implementation modules are not
-public contracts.
+the v1 profile syntax, the narrow v2 flat-profile admission path, the CLI
+validation command, diagnostic codes, serialized result shapes, and evidence
+fields. Internal parser output, compiled rule-plan records, selector target
+records, and evaluator implementation modules are not public contracts.
 
-Package 2.0 does not introduce `documentVersion: "2.0.0"` or
-`markdown-engine.validation@v2`. Declarative validation continues to use the v1
-profile syntax against the existing `documentVersion: "1.0.0"` rich IR
-document contract.
+Package 2.0 does not introduce `documentVersion: "2.0.0"` or v2 evaluator,
+CLI JSON, evidence, grouped-rule, `when`, ID count-bound, or
+`tableColumnCoverage` behavior. Declarative validation continues to use the v1
+runtime behavior against the existing `documentVersion: "1.0.0"` rich IR
+document contract, while the profile admission path recognizes
+`markdown-engine.validation@v2` for the same flat rule shape with `id`,
+optional `severity`, `select`, and `assert`.
 
 ## 1.0 Contract
 
@@ -53,8 +56,19 @@ syntaxVersion: markdown-engine.validation@v1
 `syntaxVersion` is required. Missing or unsupported values emit
 `profile.config.unsupportedSyntaxVersion`.
 
-The v1 vocabulary is closed. Unknown profile keys, rule keys, selector keys,
-known assertion keys, and nested assertion keys emit
+The v2 syntax is admitted with the same flat-rule profile shape:
+
+```yaml
+syntaxVersion: markdown-engine.validation@v2
+```
+
+This release only recognizes v2 as a distinct syntax version at profile
+admission. V2-only constructs such as grouped rules, `when`, ID count bounds,
+and `tableColumnCoverage` remain unsupported and emit deterministic profile
+diagnostics.
+
+The admitted v1/v2 flat vocabulary is closed. Unknown profile keys, rule keys,
+selector keys, known assertion keys, and nested assertion keys emit
 `profile.config.unsupportedKey` unless the contract assigns a more specific
 compile diagnostic for an unsupported selector target or unsupported assertion
 member.
@@ -113,8 +127,12 @@ results, and does not evaluate rules.
 The top-level profile shape is:
 
 ```ts
+type ValidationProfileSyntaxVersion =
+  | "markdown-engine.validation@v1"
+  | "markdown-engine.validation@v2";
+
 interface ValidationProfile {
-  syntaxVersion: "markdown-engine.validation@v1";
+  syntaxVersion: ValidationProfileSyntaxVersion;
   documentVersion?: EngineDocumentVersion;
   rules: readonly DeclarativeValidationRule[];
 }
@@ -288,7 +306,7 @@ rather than fabricated when unavailable.
 | --- | --- | --- |
 | `profile.config.invalidYaml` | `error` | YAML text cannot be parsed or materialized as JSON-safe profile data. |
 | `profile.config.yamlWarning` | `warning` | YAML materialization produces a non-fatal parser warning. |
-| `profile.config.unsupportedSyntaxVersion` | `error` | `syntaxVersion` is missing or is not `markdown-engine.validation@v1`. |
+| `profile.config.unsupportedSyntaxVersion` | `error` | `syntaxVersion` is missing or is not `markdown-engine.validation@v1` or `markdown-engine.validation@v2`. |
 | `profile.config.invalidShape` | `error` | Required fields are missing, fields have wrong types, arrays or strings are empty, rule IDs duplicate, scalar values are invalid, table predicates are ineffective, or assertion payloads contain no effective predicate. |
 | `profile.config.documentVersionMismatch` | `error` | Resolved profile `documentVersion` differs from the supplied `EngineDocument.version`. |
 | `profile.config.unsupportedKey` | `error` | A closed profile, rule, selector, known assertion object, nested object, regex-like key, executable-like key, or direct typed profile object contains unsupported syntax. |
@@ -316,13 +334,17 @@ interface DeclarativeValidationResult extends ValidationResult {
   diagnostics: readonly MarkdownDiagnostic[];
   ruleResults: readonly ValidationRuleResult[];
   profile: {
-    syntaxVersion: "markdown-engine.validation@v1";
+    syntaxVersion: ValidationProfileSyntaxVersion;
     documentVersion: EngineDocumentVersion;
     ruleCount: number;
   };
   evidence?: DeclarativeValidationEvidence;
 }
 ```
+
+For admitted v2 flat profiles, result metadata records
+`syntaxVersion: "markdown-engine.validation@v2"` without changing the v1 result
+shape.
 
 `valid` is `false` when any error-severity diagnostic exists. Warning and info
 validation diagnostics can make a rule result fail without making the aggregate
