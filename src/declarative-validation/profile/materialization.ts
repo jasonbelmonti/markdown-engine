@@ -1,19 +1,24 @@
 import type { EngineDocumentVersion } from "../../api/document.js";
 import type { MarkdownDiagnostic } from "../../api/diagnostics.js";
 import { isPlainRecord } from "../../internal/plain-record.js";
-import {
-  PROFILE_SYNTAX_VERSION,
-  unsupportedSyntaxVersion,
-} from "../diagnostics/profile-config-diagnostics.js";
+import { unsupportedSyntaxVersion } from "../diagnostics/profile-config-diagnostics.js";
 import {
   closeProfileDataTree,
   DATA_CLOSURE_FAILED,
 } from "./data-closure.js";
-import { pushDirectProfileUnsupportedKeyDiagnostics } from "./direct-profile-diagnostics.js";
+import {
+  directProfileDataPropertyValue,
+  pushDirectProfileUnsupportedKeyDiagnostics,
+} from "./direct-profile-diagnostics.js";
 import type {
   DeclarativeValidationRule,
   ValidationProfile,
 } from "./index.js";
+import {
+  PROFILE_SYNTAX_VERSION,
+  isValidationProfileSyntaxVersion,
+  type ValidationProfileSyntaxVersion,
+} from "./syntax-version.js";
 
 export interface MaterializedValidationProfile {
   profile: ValidationProfile;
@@ -25,9 +30,13 @@ export function materializeValidationProfile(
   fallbackDocumentVersion: EngineDocumentVersion,
 ): MaterializedValidationProfile {
   const diagnostics: MarkdownDiagnostic[] = [];
+  const fallbackSyntaxVersion = syntaxVersionFromValue(
+    directProfileDataPropertyValue(profile, "syntaxVersion"),
+  );
+
   if (pushDirectProfileUnsupportedKeyDiagnostics(profile, diagnostics)) {
     return {
-      profile: fallbackProfile(fallbackDocumentVersion),
+      profile: fallbackProfile(fallbackDocumentVersion, fallbackSyntaxVersion),
       diagnostics,
     };
   }
@@ -43,15 +52,12 @@ export function materializeValidationProfile(
     }
 
     return {
-      profile: fallbackProfile(fallbackDocumentVersion),
+      profile: fallbackProfile(fallbackDocumentVersion, fallbackSyntaxVersion),
       diagnostics,
     };
   }
 
-  const syntaxVersion =
-    closedProfile.syntaxVersion === PROFILE_SYNTAX_VERSION
-      ? PROFILE_SYNTAX_VERSION
-      : undefined;
+  const syntaxVersion = syntaxVersionFromValue(closedProfile.syntaxVersion);
   if (syntaxVersion === undefined) {
     diagnostics.push(unsupportedSyntaxVersion());
   }
@@ -65,7 +71,7 @@ export function materializeValidationProfile(
 
   return {
     profile: {
-      syntaxVersion: PROFILE_SYNTAX_VERSION,
+      syntaxVersion: syntaxVersion ?? PROFILE_SYNTAX_VERSION,
       ...(documentVersion !== undefined ? { documentVersion } : {}),
       rules: rules ?? [],
     },
@@ -75,12 +81,19 @@ export function materializeValidationProfile(
 
 function fallbackProfile(
   documentVersion: EngineDocumentVersion,
+  syntaxVersion: ValidationProfileSyntaxVersion = PROFILE_SYNTAX_VERSION,
 ): ValidationProfile {
   return {
-    syntaxVersion: PROFILE_SYNTAX_VERSION,
+    syntaxVersion,
     documentVersion,
     rules: [],
   };
+}
+
+function syntaxVersionFromValue(
+  value: unknown,
+): ValidationProfileSyntaxVersion | undefined {
+  return isValidationProfileSyntaxVersion(value) ? value : undefined;
 }
 
 function documentVersionFromValue(

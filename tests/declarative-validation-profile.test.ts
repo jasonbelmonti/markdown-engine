@@ -335,6 +335,66 @@ rules:
     });
   });
 
+  it("accepts v2 flat-rule YAML profiles through the admission path", () => {
+    const result = parseValidationProfile(`
+syntaxVersion: markdown-engine.validation@v2
+documentVersion: 1.0.0
+rules:
+  - id: v2-flat-rule
+    severity: info
+    select:
+      target: document
+    assert:
+      text:
+        contains: Mission
+`);
+
+    expect(result).toEqual({
+      profile: {
+        syntaxVersion: "markdown-engine.validation@v2",
+        documentVersion: "1.0.0",
+        rules: [
+          {
+            id: "v2-flat-rule",
+            severity: "info",
+            select: { target: "document" },
+            assert: { text: { contains: "Mission" } },
+          },
+        ],
+      },
+      diagnostics: [],
+    });
+  });
+
+  it("accepts v2 flat-rule direct profile objects through the admission path", () => {
+    const result = parseValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v2",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "v2-direct-flat-rule",
+          select: { target: "document" },
+          assert: { exists: true },
+        },
+      ],
+    });
+
+    expect(result).toEqual({
+      profile: {
+        syntaxVersion: "markdown-engine.validation@v2",
+        documentVersion: "1.0.0",
+        rules: [
+          {
+            id: "v2-direct-flat-rule",
+            select: { target: "document" },
+            assert: { exists: true },
+          },
+        ],
+      },
+      diagnostics: [],
+    });
+  });
+
   it("returns invalidYaml diagnostics for invalid YAML strings", () => {
     const result = parseValidationProfile(`
 syntaxVersion: markdown-engine.validation@v1
@@ -999,14 +1059,14 @@ rules:
         {
           code: "profile.config.unsupportedSyntaxVersion",
           message:
-            'Profile syntaxVersion must be "markdown-engine.validation@v1".',
+            'Profile syntaxVersion must be "markdown-engine.validation@v1" or "markdown-engine.validation@v2".',
         },
       ],
     },
     {
       name: "unsupported syntaxVersion",
       input: {
-        syntaxVersion: "markdown-engine.validation@v2",
+        syntaxVersion: "markdown-engine.validation@v3",
         rules: [
           {
             id: "unsupported-syntax-version",
@@ -1019,7 +1079,7 @@ rules:
         {
           code: "profile.config.unsupportedSyntaxVersion",
           message:
-            'Profile syntaxVersion must be "markdown-engine.validation@v1".',
+            'Profile syntaxVersion must be "markdown-engine.validation@v1" or "markdown-engine.validation@v2".',
         },
       ],
     },
@@ -1529,5 +1589,56 @@ rules:
         },
       ],
     });
+  });
+
+  it("rejects unsupported v2 future constructs with deterministic diagnostics", () => {
+    const result = parseValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v2",
+      rules: [
+        {
+          id: "v2-when-not-admitted",
+          when: {
+            select: { target: "document" },
+            assert: { text: { contains: "Mission" } },
+          },
+          select: { target: "document" },
+          assert: { text: { contains: "Mission" } },
+        },
+        {
+          id: "v2-table-column-coverage-not-admitted",
+          select: { target: "table" },
+          assert: {
+            tableColumnCoverage: {
+              source: { section: "Requirements", column: "ID" },
+              target: { section: "Traceability", column: "Requirement" },
+            },
+          },
+        },
+        {
+          id: "v2-id-count-not-admitted",
+          select: { target: "document" },
+          assert: { ids: { unique: true, minCount: 1 } },
+        },
+      ],
+    } as ProfileInput);
+
+    expect(result.profile).toBeUndefined();
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.config.unsupportedKey",
+        message: 'Unsupported validation profile key "when".',
+        severity: "error",
+      },
+      {
+        code: "profile.compile.unsupportedAssertion",
+        message: 'Unsupported assertion "tableColumnCoverage".',
+        severity: "error",
+      },
+      {
+        code: "profile.config.unsupportedKey",
+        message: 'Unsupported validation profile key "minCount".',
+        severity: "error",
+      },
+    ]);
   });
 });

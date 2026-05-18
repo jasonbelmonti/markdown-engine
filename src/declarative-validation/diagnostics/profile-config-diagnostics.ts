@@ -1,6 +1,5 @@
 import type { MarkdownDiagnostic } from "../../api/diagnostics.js";
-
-export const PROFILE_SYNTAX_VERSION = "markdown-engine.validation@v1";
+import { SUPPORTED_PROFILE_SYNTAX_VERSIONS } from "../profile/syntax-version.js";
 
 export const REGEX_LIKE_PROFILE_KEYS = [
   "matches",
@@ -47,7 +46,7 @@ export function unsupportedProfileKey(key: string): MarkdownDiagnostic {
 export function unsupportedSyntaxVersion(): MarkdownDiagnostic {
   return profileDiagnostic(
     "profile.config.unsupportedSyntaxVersion",
-    `Profile syntaxVersion must be "${PROFILE_SYNTAX_VERSION}".`,
+    `Profile syntaxVersion must be ${quotedList(SUPPORTED_PROFILE_SYNTAX_VERSIONS)}`,
   );
 }
 
@@ -65,4 +64,12 @@ export function unsupportedProfileKeys(
 
 export function hasConfigUnsupportedKeyPrecedence(key: string): boolean {
   return CONFIG_UNSUPPORTED_KEY_PRECEDENCE.has(key);
+}
+
+function quotedList(values: readonly string[]): string {
+  const quotedValues = values.map((value) => `"${value}"`);
+  const finalValue = quotedValues.at(-1) ?? "";
+  const prefix = quotedValues.slice(0, -1).join(", ");
+
+  return prefix.length === 0 ? `${finalValue}.` : `${prefix} or ${finalValue}.`;
 }

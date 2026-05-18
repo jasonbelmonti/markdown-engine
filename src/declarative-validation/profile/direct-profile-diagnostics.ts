@@ -43,6 +43,13 @@ export function pushDirectProfileUnsupportedKeyDiagnostics(
   return hasUnsupportedKeys;
 }
 
+export function directProfileDataPropertyValue(
+  value: unknown,
+  key: (typeof PROFILE_KEYS)[number],
+): unknown {
+  return dataPropertyValue(value, key);
+}
+
 function pushUnsupportedKeys(
   keys: readonly string[],
   allowedKeys: readonly string[],

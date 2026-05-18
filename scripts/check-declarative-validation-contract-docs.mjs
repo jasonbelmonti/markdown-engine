@@ -27,9 +27,11 @@ checkFile("docs/contracts/declarative-validation.md", {
     "## Contract Review Gates",
   ],
   phrases: [
-    "Status: package 2.0.0, v1 profile syntax, document contract 1.0.0",
+    "Status: package 2.0.0, v1 profile syntax with v2 profile admission, document contract 1.0.0",
     "Package 2.0 does not introduce",
     "markdown-engine.validation@v1",
+    "markdown-engine.validation@v2",
+    "same flat rule shape with `id`",
     'documentVersion: "1.0.0"',
     "Direct object inputs to `parseValidationProfile` are closed as JSON-safe data",
     "profile.config.documentVersionMismatch",

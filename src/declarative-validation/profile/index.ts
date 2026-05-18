@@ -3,6 +3,7 @@ import type {
   EngineNode,
 } from "../../api/document.js";
 import type { MarkdownDiagnostic } from "../../api/diagnostics.js";
+import type { ValidationProfileSyntaxVersion } from "./syntax-version.js";
 
 export { parseValidationProfileInput } from "./parse.js";
 
@@ -18,7 +19,7 @@ export type JsonSafeValue =
   | { readonly [key: string]: JsonSafeValue };
 
 export interface ValidationProfile {
-  syntaxVersion: "markdown-engine.validation@v1";
+  syntaxVersion: ValidationProfileSyntaxVersion;
   documentVersion?: EngineDocumentVersion;
   rules: readonly DeclarativeValidationRule[];
 }

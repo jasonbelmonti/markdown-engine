@@ -1,10 +1,7 @@
 import type { EngineDocumentVersion } from "../../api/document.js";
 import type { MarkdownDiagnostic } from "../../api/diagnostics.js";
 import { isPlainRecord } from "../../internal/plain-record.js";
-import {
-  PROFILE_SYNTAX_VERSION,
-  unsupportedSyntaxVersion,
-} from "../diagnostics/profile-config-diagnostics.js";
+import { unsupportedSyntaxVersion } from "../diagnostics/profile-config-diagnostics.js";
 import type {
   DeclarativeValidationRule,
   DeclarativeValidationSeverity,
@@ -13,6 +10,7 @@ import type {
 } from "./index.js";
 import { assertionFromValue } from "./assertion-schema.js";
 import { selectorFromValue } from "./selector-schema.js";
+import { isValidationProfileSyntaxVersion } from "./syntax-version.js";
 import {
   invalidShape,
   nonEmptyString,
@@ -41,20 +39,23 @@ export function validationProfileFromValue(
   const diagnostics: MarkdownDiagnostic[] = [];
   unsupportedKeys(value, ["syntaxVersion", "documentVersion", "rules"], diagnostics);
 
-  if (value.syntaxVersion !== PROFILE_SYNTAX_VERSION) {
+  const syntaxVersion = isValidationProfileSyntaxVersion(value.syntaxVersion)
+    ? value.syntaxVersion
+    : undefined;
+  if (syntaxVersion === undefined) {
     diagnostics.push(unsupportedSyntaxVersion());
   }
 
   const documentVersion = documentVersionFromValue(value.documentVersion, diagnostics);
   const rules = rulesFromValue(value.rules, diagnostics);
 
-  if (diagnostics.length > 0 || rules === undefined) {
+  if (diagnostics.length > 0 || syntaxVersion === undefined || rules === undefined) {
     return { diagnostics };
   }
 
   return {
     profile: {
-      syntaxVersion: PROFILE_SYNTAX_VERSION,
+      syntaxVersion,
       ...(documentVersion !== undefined ? { documentVersion } : {}),
       rules,
     },
