@@ -11,14 +11,27 @@ import {
 } from "../profile/data-closure.js";
 import { pushDirectProfileUnsupportedKeyDiagnostics } from "../profile/direct-profile-diagnostics.js";
 import { selectorFromValue } from "../profile/selector-schema.js";
+import {
+  PROFILE_SYNTAX_VERSION_V2,
+  type ValidationProfileSyntaxVersion,
+} from "../profile/syntax-version.js";
 import { compiledAssertionsFromValue } from "./assertions.js";
 import { compileDiagnostic } from "./diagnostics.js";
-import type { DeclarativeValidationCompileResult } from "./plan.js";
+import type {
+  CompiledDeclarativeValidationPlan,
+  CompiledDeclarativeValidationRuleFields,
+  DeclarativeValidationCompileResult,
+} from "./plan.js";
 
 export type {
-  CompiledDeclarativeAssertion,
   CompiledDeclarativeValidationPlan,
+  CompiledDeclarativeValidationPlanV1,
+  CompiledDeclarativeValidationPlanV2,
   CompiledDeclarativeValidationRule,
+  CompiledDeclarativeValidationRuleFields,
+  CompiledDeclarativeValidationRuleV1,
+  CompiledDeclarativeValidationFlatRuleV2,
+  CompiledDeclarativeAssertion,
   DeclarativeValidationCompileResult,
 } from "./plan.js";
 
@@ -62,7 +75,7 @@ export function compileValidationProfile(
     return { diagnostics };
   }
 
-  const rules = [];
+  const rules: CompiledDeclarativeValidationRuleFields[] = [];
   const seenRuleIds = new Set<string>();
 
   for (let index = 0; index < profileRules.length; index += 1) {
@@ -167,10 +180,26 @@ export function compileValidationProfile(
   return diagnostics.length > 0
     ? { diagnostics }
     : {
-        plan: {
-          rules,
-        },
+        plan: compiledPlanFromRuleFields(profile.syntaxVersion, rules),
         diagnostics,
+      };
+}
+
+function compiledPlanFromRuleFields(
+  syntaxVersion: ValidationProfileSyntaxVersion,
+  rules: readonly CompiledDeclarativeValidationRuleFields[],
+): CompiledDeclarativeValidationPlan {
+  return syntaxVersion === PROFILE_SYNTAX_VERSION_V2
+    ? {
+        syntaxVersion,
+        rules: rules.map((rule) => ({
+          kind: "flat",
+          syntaxVersion,
+          ...rule,
+        })),
+      }
+    : {
+        rules,
       };
 }
 
