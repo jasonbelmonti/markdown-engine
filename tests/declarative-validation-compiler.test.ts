@@ -4,6 +4,7 @@ import "./declarative-validation-compiler-direct-profile.js";
 import { describe, expect, it } from "vitest";
 
 import type { ValidationProfile } from "@jasonbelmonti/markdown-engine";
+import type { evaluateCompiledDeclarativeRule } from "../src/declarative-validation/assertions/index.js";
 import { compileValidationProfile } from "../src/declarative-validation/compiler/index.js";
 
 describe("declarative validation compiler proof", () => {
@@ -95,6 +96,99 @@ describe("declarative validation compiler proof", () => {
     });
     expect(result.plan).not.toHaveProperty("profile");
     expect(containsFunction(result.plan)).toBe(false);
+  });
+
+  it("compiles v2 flat rules into private evaluator-compatible plan variants", () => {
+    const result = compileValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v2",
+      rules: [
+        {
+          id: "v2-flat-rule",
+          severity: "info",
+          select: { target: "document" },
+          assert: { text: { contains: "Mission" } },
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([]);
+    expect(result.plan).toEqual({
+      syntaxVersion: "markdown-engine.validation@v2",
+      rules: [
+        {
+          kind: "flat",
+          syntaxVersion: "markdown-engine.validation@v2",
+          ruleId: "v2-flat-rule",
+          severity: "info",
+          selector: { target: "document" },
+          assertions: [{ kind: "text", contains: "Mission" }],
+        },
+      ],
+    });
+    const compiledRule = result.plan?.rules[0];
+    expect(compiledRule).toBeDefined();
+    if (compiledRule === undefined) {
+      throw new Error("Expected v2 flat rule to compile.");
+    }
+
+    const evaluatorRule: Parameters<typeof evaluateCompiledDeclarativeRule>[0] =
+      compiledRule;
+    expect(evaluatorRule).toBe(compiledRule);
+    expect(containsFunction(result.plan)).toBe(false);
+  });
+
+  it("rejects deferred v2 grouped and applicability constructs before plan creation", () => {
+    const result = compileValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v2",
+      rules: [
+        {
+          id: "v2-anyof-not-admitted",
+          anyOf: [
+            {
+              select: { target: "document" },
+              assert: { text: { contains: "Mission" } },
+            },
+          ],
+        },
+        {
+          id: "v2-allof-not-admitted",
+          allOf: [
+            {
+              select: { target: "document" },
+              assert: { text: { contains: "Mission" } },
+            },
+          ],
+        },
+        {
+          id: "v2-when-not-admitted",
+          when: {
+            select: { target: "document" },
+            assert: { text: { contains: "Mission" } },
+          },
+          select: { target: "document" },
+          assert: { text: { contains: "Mission" } },
+        },
+      ],
+    } as unknown as ValidationProfile);
+
+    expect(result.plan).toBeUndefined();
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.config.unsupportedKey",
+        message: 'Unsupported validation profile key "anyOf".',
+        severity: "error",
+      },
+      {
+        code: "profile.config.unsupportedKey",
+        message: 'Unsupported validation profile key "allOf".',
+        severity: "error",
+      },
+      {
+        code: "profile.config.unsupportedKey",
+        message: 'Unsupported validation profile key "when".',
+        severity: "error",
+      },
+    ]);
   });
 
   it("rejects incompatible selector and assertion pairs before execution", () => {
