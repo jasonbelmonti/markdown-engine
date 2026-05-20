@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | Title | Markdown Engine Declarative Validation Syntax |
-| Status | Draft |
+| Status | Historical implementation record |
 | Rigor level | `R2` |
 | Rigor justification | The work creates a durable author-facing configuration syntax, compiler contract, validation result shape, diagnostic behavior, and CLI/API behavior for downstream consumers. It does not qualify for `R1` because config and public contract decisions are material outputs. It does not trigger `R3` because it introduces no authentication, authorization, secret handling, live customer data, irreversible storage, safety control, financial control, or network service. |
 | Author(s) | Codex |
@@ -15,6 +15,14 @@
 | Last updated | 2026-05-07 |
 | Related docs | `RUNTIME_ARCHITECTURE.md`; `docs/contracts/api.md`; `docs/design/markdown-engine-operational-design-spec.md`; `docs/design/markdown-engine-1.0-rich-ir-operational-design-spec.md` |
 | Related tickets | none |
+
+## Current Authority
+
+This document is retained as the historical design record for the v1
+declarative validation syntax implementation. Current public declarative
+validation behavior is defined by `docs/contracts/declarative-validation.md`;
+this spec remains useful for rationale and scope history but does not
+supersede the contract.
 
 ## 0. Executive Summary
 

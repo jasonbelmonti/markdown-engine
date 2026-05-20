@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | Title | Markdown Engine Declarative Validation Syntax Implementation |
-| Status | Draft |
+| Status | Historical implementation record |
 | Execution level | `E2` |
 | Execution level justification | The work introduces durable author-facing validation syntax, public API and CLI behavior, validation result shape, diagnostic codes, evidence hashes, contract documentation, and release controls. It does not qualify for `E1` because another implementer or agent must be able to execute public contract and package changes from this artifact. It does not trigger `E3` because execution remains local and stateless, with no authentication, authorization, secret handling, live customer data, irreversible storage, safety control, financial control, network service, or constrained rollback. |
 | Author(s) | Codex |
@@ -16,6 +16,14 @@
 | Last updated | 2026-05-07 |
 | Related source docs | `docs/design/markdown-engine-declarative-validation-syntax-operational-design-spec.md`; `docs/contracts/api.md`; `docs/execution/markdown-engine-1.0-rich-ir-execution-spec.md`; `docs/design/markdown-engine-1.0-rich-ir-operational-design-spec.md`; `RUNTIME_ARCHITECTURE.md` |
 | Related tickets | none |
+
+## Current Authority
+
+This document is retained as the historical execution record for the v1
+declarative validation syntax implementation. Current public declarative
+validation behavior is defined by `docs/contracts/declarative-validation.md`;
+milestone, release-gate, and implementation-blocker language below is
+historical context unless a current contract explicitly references it.
 
 ## 0. Execution Summary
 

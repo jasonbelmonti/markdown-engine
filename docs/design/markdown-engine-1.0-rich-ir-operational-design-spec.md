@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | Title | Markdown Engine 1.0 Rich IR |
-| Status | Draft |
+| Status | Historical implementation record |
 | Rigor level | `R2` |
 | Rigor justification | The work changes durable public IR, API, serialization, and downstream-consumer contracts. It does not qualify for `R1` because schema and API compatibility are material outputs. It does not trigger `R3` because it does not change authentication, authorization, secrets, live customer data, irreversible storage, payments, safety controls, or a high-volume production path. |
 | Author(s) | Codex |
@@ -15,6 +15,13 @@
 | Last updated | 2026-05-01 |
 | Related docs | `RUNTIME_ARCHITECTURE.md`; `docs/design/markdown-engine-operational-design-spec.md`; SpecTrace R0 design and BEL-905 scanner worktree observations |
 | Related tickets | none |
+
+## Current Authority
+
+This document is retained as the historical design record for the rich IR
+implementation. Current public rich IR and API behavior is defined by
+`docs/contracts/api.md`; this spec remains useful for rationale and scope
+history but does not supersede the contract.
 
 ## 0. Executive Summary
 

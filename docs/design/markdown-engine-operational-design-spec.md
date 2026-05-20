@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | Title | Markdown Engine Deterministic Parsing and Validation |
-| Status | Draft |
+| Status | Historical implementation record |
 | Rigor level | `R2` |
 | Rigor justification | The work is intended for durable package use and introduces public API, IR, diagnostic, and config contracts. It does not qualify for `R1` because API and config contracts are material design outputs. It does not trigger `R3` because it does not change authentication, authorization, secret handling, live customer data, irreversible data, or a high-volume production path. |
 | Author(s) | Codex |
@@ -15,6 +15,14 @@
 | Last updated | 2026-04-27 |
 | Related docs | `RUNTIME_ARCHITECTURE.md`; current project decisions captured in the user thread |
 | Related tickets | none |
+
+## Current Authority
+
+This document is retained as the historical design record for the initial
+`markdown-engine` implementation. It is not the active package contract.
+Current public behavior is defined by the contract docs under
+`docs/contracts/`, with API behavior in `docs/contracts/api.md` and
+declarative validation behavior in `docs/contracts/declarative-validation.md`.
 
 ## 0. Executive Summary
 

@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | Title | Conditional Declarative Validation V2 |
-| Status | Draft |
+| Status | Future design artifact |
 | Rigor level | `R3` |
 | Rigor justification | The design changes a shared validation engine's public profile grammar, API and CLI result contracts, diagnostics, evidence payloads, and compatibility behavior. Failure can falsely accept or falsely reject downstream controlled design-spec documents. Rollback is possible because known consumers are directly controlled, but the public contract and cross-module implementation surface create high blast radius and require heightened controls. |
 | Author(s) | Codex |
@@ -15,6 +15,15 @@
 | Last updated | 2026-05-17 |
 | Related docs | `docs/contracts/declarative-validation.md`; `docs/design/markdown-engine-declarative-validation-syntax-operational-design-spec.md`; `docs/execution/markdown-engine-declarative-validation-syntax-execution-spec.md`; `docs/execution/conditional-declarative-validation-v2-execution-spec.md` |
 | Related tickets | `BEL-1075`; `BEL-1076`; proposed follow-up tickets for grouped rules, rule-level `when`, v2 result contract, and downstream design-spec profile exercise |
+
+## Current Authority
+
+This document is retained as a future design artifact for conditional
+declarative validation v2 behavior. Current runtime behavior does not implement
+grouped rules, rule-level `when`, ID count bounds, `tableColumnCoverage`,
+nested v2 results/evidence, or v2 CLI/evaluator behavior. The current public
+contract only admits `markdown-engine.validation@v2` for the flat rule profile
+shape documented in `docs/contracts/declarative-validation.md`.
 
 ## 0. Executive Summary
 
