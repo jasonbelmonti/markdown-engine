@@ -6,6 +6,14 @@ Parent audit: BEL-956
 Baseline: `origin/main` at `a5ba719af234b0c6122304d4f7476c2f3177d479`
 Worktree: `.worktrees/BEL-959-release-audit-group-2`
 
+## Current Status
+
+This is a dated BEL-956 release-audit record. The `0.1.0` package and
+release-withhold statements below describe the 2026-05-07 audit baseline. At the
+BEL-1158 cleanup baseline (`origin/main` at `804c6351edf0`, 2026-05-20), package
+metadata is `@jasonbelmonti/markdown-engine@2.0.0`; do not read those statements
+as current package truth.
+
 ## Scope
 
 This audit verifies Markdown parsing, YAML frontmatter handling, source-position

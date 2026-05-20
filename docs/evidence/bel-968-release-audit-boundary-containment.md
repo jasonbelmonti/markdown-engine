@@ -5,6 +5,14 @@ Issue: BEL-968
 Baseline: `origin/main` at `e52cdd0`
 Worktree: `.worktrees/BEL-968-boundary-containment`
 
+## Current Status
+
+This is a dated BEL-956 release-audit record. The `0.1.0` package and
+release-withhold blocker references below describe the 2026-05-07 audit
+baseline. At the BEL-1158 cleanup baseline (`origin/main` at `804c6351edf0`,
+2026-05-20), package metadata is `@jasonbelmonti/markdown-engine@2.0.0`; use
+current contract docs and newer release evidence for live package status.
+
 ## Objective
 
 Verify that the full 1.0 release candidate remains inside the deterministic

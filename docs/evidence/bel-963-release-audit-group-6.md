@@ -6,6 +6,14 @@ Parent audit: BEL-956
 Baseline: `origin/main` at `4edfb1d849a7f4db7fa50333714eafb1e097ff57`
 Worktree: `.worktrees/BEL-963-release-audit-group-6`
 
+## Current Status
+
+This is a dated BEL-956 release-audit record. The `0.1.0` package and
+release-withhold statements below describe the 2026-05-07 audit baseline. At the
+BEL-1158 cleanup baseline (`origin/main` at `804c6351edf0`, 2026-05-20), package
+metadata is `@jasonbelmonti/markdown-engine@2.0.0`; do not read those statements
+as current release state.
+
 ## Scope
 
 This audit verifies deterministic validation config loading, the closed rule

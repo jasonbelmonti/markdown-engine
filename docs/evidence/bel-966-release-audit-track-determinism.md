@@ -8,6 +8,14 @@ Worktree: `.worktrees/BEL-966-release-audit-determinism`
 Branch: `codex/bel-966-release-audit-determinism`
 Package: `@jasonbelmonti/markdown-engine@0.1.0`
 
+## Current Status
+
+This is a dated BEL-956 release-audit record. The `Package:` line, `1.0.0-draft`
+lane, and release-withhold statements below describe the 2026-05-07 audit
+baseline. At the BEL-1158 cleanup baseline (`origin/main` at `804c6351edf0`,
+2026-05-20), package metadata is `@jasonbelmonti/markdown-engine@2.0.0` and the
+public document contract at that baseline uses `documentVersion: "1.0.0"`.
+
 ## Scope
 
 This audit verifies deterministic behavior across rich IR target IDs, derived
