@@ -5,6 +5,14 @@ Issue: BEL-960
 Parent: BEL-956
 Base: `origin/main` at `d88c409258f8d123fa8ddffdd44bf63bfe044355`
 
+## Current Status
+
+This is a dated BEL-956 release-audit record. The `0.1.0` package state,
+`1.0.0-draft` CLI selector, and withheld 1.0 publication language below
+describe the 2026-05-07 audit baseline. As of the current repository state,
+package metadata is `@jasonbelmonti/markdown-engine@2.0.0` and the current CLI
+document contract uses `documentVersion: "1.0.0"`.
+
 ## Scope
 
 This audit covers the documented local single-file CLI surface: CLI argument

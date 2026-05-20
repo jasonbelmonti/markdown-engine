@@ -7,6 +7,14 @@ Validation: VAL-7, VAL-8
 Branch: `codex/bel-928-public-package-metadata`
 Base: `origin/main` at `9da314fe1b591ef63c282d0ef47c6efe648651d9`
 
+## Current Status
+
+This is historical release-readiness evidence for the initial `0.1.0` package
+metadata lane. The release-withhold and MS-3 approval language below records the
+2026-05-01 BEL-888/BEL-928 state. As of the current repository state, package
+metadata is `@jasonbelmonti/markdown-engine@2.0.0`; do not read this record as a
+live release authorization or live package-version statement.
+
 ## Scope
 
 This evidence records the release-readiness state for the initial

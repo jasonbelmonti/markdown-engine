@@ -6,6 +6,15 @@ Work package: WP-6
 Validation: VAL-10
 Baseline: `origin/main` at `43f05c6`
 
+## Current Status
+
+This is historical release-readiness and containment evidence for the 1.0 public
+artifact state observed during BEL-989. The release state, MS-3 decision notes,
+and `latest: 1.0.0` references below are current relative to the 2026-05-13
+verification, not live package-status statements. As of the current repository
+state, package metadata is `@jasonbelmonti/markdown-engine@2.0.0`; use current
+contract docs and newer 2.0 release evidence for live package status.
+
 ## Scope
 
 This evidence records BEL-943 release-readiness validation, release containment,

@@ -6,6 +6,14 @@ Parent audit: BEL-956
 Baseline: `origin/main` at `0b5f566`
 Worktree: `.worktrees/BEL-961-release-audit-group-3`
 
+## Current Status
+
+This is a dated BEL-956 release-audit record. The `0.1.0` package,
+`1.0.0-draft` document lane, and release-withhold statements below describe the
+2026-05-07 audit baseline. As of the current repository state, package metadata
+is `@jasonbelmonti/markdown-engine@2.0.0` and the current public document
+contract uses `documentVersion: "1.0.0"`.
+
 ## Scope
 
 This audit verifies the 1.0 draft rich IR target/source substrate before any 1.0

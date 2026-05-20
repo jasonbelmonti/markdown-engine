@@ -8,6 +8,14 @@ Worktree: `.worktrees/BEL-969-test-value-snapshot-governance`
 Branch: `codex/bel-969-test-value-snapshot-governance`
 Package: `@jasonbelmonti/markdown-engine@0.1.0`
 
+## Current Status
+
+This is a dated BEL-956 release-audit record. The `Package:` line,
+`1.0.0-draft` lane, and release-withhold statements below describe the
+2026-05-07 audit baseline. As of the current repository state, package metadata
+is `@jasonbelmonti/markdown-engine@2.0.0` and the current public document
+contract uses `documentVersion: "1.0.0"`.
+
 ## Scope
 
 This audit verifies that automated tests and checked-in snapshots protect

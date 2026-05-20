@@ -5,6 +5,15 @@ Issue: BEL-888
 Work package: WP-6
 Review: REV-4
 
+## Current Status
+
+This is historical downstream handoff evidence for the initial package release
+lane. The open handoff items about missing MS-3 approval, prepared `0.1.0`
+metadata, and withheld publication record the 2026-05-01 BEL-888 state. As of
+the current repository state, package metadata is
+`@jasonbelmonti/markdown-engine@2.0.0`; use current contract docs and newer
+release evidence for live package status.
+
 ## Scope
 
 This evidence records downstream profile/runtime consultation status and

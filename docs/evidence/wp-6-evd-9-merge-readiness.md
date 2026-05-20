@@ -6,6 +6,14 @@ Work package: WP-6
 Validation: VAL-7, VAL-8
 Branch: `codex/bel-928-public-package-metadata`
 
+## Current Status
+
+This is historical merge-readiness evidence for BEL-928 and the initial
+package-metadata handoff. The MS-3 pending/blocking language below describes
+the 2026-05-01 release lane state. As of the current repository state, package
+metadata is `@jasonbelmonti/markdown-engine@2.0.0`; use current contract docs
+and newer release evidence for live package status.
+
 ## Scope
 
 This evidence records branch status, review state, milestone state, and merge

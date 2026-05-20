@@ -7,6 +7,14 @@ Baseline: `origin/main` at `5290d24988721f828711fff91c6eb4fed772f9ff`
 Worktree: `.worktrees/BEL-964-release-audit-group-5`
 Package: `@jasonbelmonti/markdown-engine@0.1.0`
 
+## Current Status
+
+This is a dated BEL-956 release-audit record. The `Package:` line and
+release-withhold statements below describe the 2026-05-07 audit baseline. As of
+the current repository state, package metadata is
+`@jasonbelmonti/markdown-engine@2.0.0`; preserved package metadata remains a
+historical audit fact.
+
 ## Scope
 
 This audit verifies caller-owned annotation target validation before any 1.0

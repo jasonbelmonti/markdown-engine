@@ -6,6 +6,14 @@ Parent audit: BEL-956
 Baseline: `origin/main` at `dc513a0c0d228e6c6b47e91329a06bf43318dec7`
 Worktree: `.worktrees/BEL-958-release-audit-group-8`
 
+## Current Status
+
+This is a dated BEL-956 release-audit record. Statements below about the
+`0.1.0` package, publish dry-run blocker, and release-withhold state describe
+the 2026-05-07 audit baseline. As of the current repository state, package
+metadata is `@jasonbelmonti/markdown-engine@2.0.0`; preserved command output and
+tarball previews remain historical audit facts.
+
 ## Scope
 
 This audit verifies deterministic serialization, release script behavior,

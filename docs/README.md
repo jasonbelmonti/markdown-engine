@@ -66,6 +66,13 @@ tests, contract reviews, boundary checks, release readiness, and milestone
 approval. They should support current contracts, but they do not override the
 contract documents.
 
+Read evidence records as dated proof records, not normative behavior contracts.
+When an evidence file says "current", interpret that statement relative to the
+file's recorded date, baseline, and issue unless a newer "Current status" note
+explicitly updates it. Historical package versions, release-withhold decisions,
+and milestone gates remain useful audit facts, but current package behavior is
+controlled by the current contract documents and observed repository state.
+
 Primary evidence families:
 
 - `wp-1-*` through `wp-6-*` - work-package validation and release-readiness

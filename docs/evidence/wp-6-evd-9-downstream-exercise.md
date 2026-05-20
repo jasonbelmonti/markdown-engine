@@ -6,6 +6,14 @@ Work package: WP-6
 Validation: VAL-9
 Baseline: `origin/main` at `88989a3`
 
+## Current Status
+
+This is historical downstream-exercise evidence from the 1.0 rich IR release
+lane. The `1.0.0-draft` selector named below is preserved as an audit fact from
+the 2026-05-06 run. As of the current repository state, package metadata is
+`@jasonbelmonti/markdown-engine@2.0.0` and the current public document contract
+uses `documentVersion: "1.0.0"`.
+
 ## Scope
 
 This evidence records the 1.0 rich IR downstream exercise required before

@@ -5,6 +5,15 @@ Issue: BEL-888 / BEL-989
 Work package: WP-6 / Declarative Validation WP-6B
 Validation: VAL-7, VAL-8, VAL-10
 
+## Current Status
+
+This rollback record preserves the 1.0 public-artifact state observed during
+BEL-989. The `Current Release State` section below is current relative to that
+2026-05-13 verification, not a live package-status statement. As of the current
+repository state, package metadata is `@jasonbelmonti/markdown-engine@2.0.0`;
+use current contract docs and newer 2.0 release evidence for live package
+status.
+
 ## Scope
 
 This evidence records rollback paths, containment decisions, and recovery

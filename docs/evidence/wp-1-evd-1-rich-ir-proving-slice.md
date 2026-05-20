@@ -6,6 +6,14 @@ Evidence date: 2026-05-03
 Branch: `codex/bel-936-wp-1c-annotation-serialization-evd`
 Baseline: `origin/main` at `3937e59`
 
+## Current Status
+
+This is historical MS-1 evidence for the 1.0 rich IR release lane. As of the
+current repository state, package metadata is `@jasonbelmonti/markdown-engine@2.0.0`
+and the public document contract uses `documentVersion: "1.0.0"`. The MS-3
+blocked language below describes the 2026-05-03 handoff state for this proof
+record, not current package truth.
+
 ## Objective
 
 Complete the MS-1 proving slice by demonstrating that the representative

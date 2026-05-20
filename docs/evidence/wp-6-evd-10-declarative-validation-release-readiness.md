@@ -8,6 +8,15 @@ Validation: VAL-8 / VAL-9 / VAL-10
 Branch: `codex/bel-990-declarative-validation-wp-6c-boundary-revalidation-handoff`
 Baseline: `origin/main` at `ddcc0c1`
 
+## Current Status
+
+This is historical declarative-validation release-readiness handoff evidence
+from the 1.0 public-artifact state. The `Current public artifact state` and
+MS-3/release-artifact decision language below describe BEL-990/BEL-989 evidence
+as of 2026-05-13. As of the current repository state, package metadata is
+`@jasonbelmonti/markdown-engine@2.0.0`; use current contract docs and newer
+2.0 release evidence for live package status.
+
 ## Scope
 
 This evidence records the final BEL-990 boundary revalidation and handoff
