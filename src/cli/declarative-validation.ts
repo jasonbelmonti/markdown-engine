@@ -163,10 +163,10 @@ function documentDiagnosticsResult(
   });
 }
 
-function mergeDocumentDiagnostics(
-  validationResult: DeclarativeValidationResult,
+function mergeDocumentDiagnostics<T extends DeclarativeValidationResult>(
+  validationResult: T,
   documentDiagnostics: readonly MarkdownDiagnostic[],
-): DeclarativeValidationResult {
+): T {
   if (documentDiagnostics.length === 0) {
     return validationResult;
   }
@@ -185,10 +185,10 @@ function mergeDocumentDiagnostics(
           evidence: {
             ...validationResult.evidence,
             diagnostics: cloneDiagnostics(diagnostics),
-          },
+          } as T["evidence"],
         }
       : {}),
-  };
+  } as T;
 }
 
 function outputResult(

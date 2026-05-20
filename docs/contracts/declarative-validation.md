@@ -1,7 +1,8 @@
 # Declarative Validation Contract
 
 Status: package 2.0.0, v1 profile syntax with v2 profile admission, document contract 1.0.0
-Last updated: 2026-05-14
+Last updated: 2026-05-20
+Current v2 surface: flat-rule result and evidence shell only.
 
 This document defines the public declarative validation contract for
 `@jasonbelmonti/markdown-engine`. The stable surface is the package-root API,
@@ -10,13 +11,14 @@ validation command, diagnostic codes, serialized result shapes, and evidence
 fields. Internal parser output, compiled rule-plan records, selector target
 records, and evaluator implementation modules are not public contracts.
 
-Package 2.0 does not introduce `documentVersion: "2.0.0"` or v2 evaluator,
-CLI JSON, evidence, grouped-rule, `when`, ID count-bound, or
-`tableColumnCoverage` behavior. Declarative validation continues to use the v1
-runtime behavior against the existing `documentVersion: "1.0.0"` rich IR
-document contract, while the profile admission path recognizes
-`markdown-engine.validation@v2` for the same flat rule shape with `id`,
-optional `severity`, `select`, and `assert`.
+Package 2.0 does not introduce `documentVersion: "2.0.0"`, CLI JSON
+discrimination, grouped-rule, `when`, ID count-bound, or `tableColumnCoverage`
+behavior. Declarative validation continues to use the v1 runtime behavior
+against the existing `documentVersion: "1.0.0"` rich IR document contract,
+while the profile admission path recognizes `markdown-engine.validation@v2` for
+the same flat rule shape with `id`, optional `severity`, `select`, and `assert`.
+The admitted v2 flat path exposes only the minimal result and evidence shell
+needed to distinguish flat assertion evaluation output from v1 output.
 
 ## 1.0 Contract
 
@@ -332,7 +334,10 @@ rather than fabricated when unavailable.
 interface DeclarativeValidationResult extends ValidationResult {
   valid: boolean;
   diagnostics: readonly MarkdownDiagnostic[];
-  ruleResults: readonly ValidationRuleResult[];
+  ruleResults: readonly (
+    | ValidationRuleResult
+    | DeclarativeValidationRuleResultV2
+  )[];
   profile: {
     syntaxVersion: ValidationProfileSyntaxVersion;
     documentVersion: EngineDocumentVersion;
@@ -343,8 +348,23 @@ interface DeclarativeValidationResult extends ValidationResult {
 ```
 
 For admitted v2 flat profiles, result metadata records
-`syntaxVersion: "markdown-engine.validation@v2"` without changing the v1 result
-shape.
+`syntaxVersion: "markdown-engine.validation@v2"`, `evaluatedRuleCount`, and
+`skippedRuleCount`. Flat v2 rule results include the v1-compatible `ruleId`,
+`passed`, and `diagnostics` fields plus `status` and assertion evaluation
+metadata:
+
+```ts
+interface DeclarativeValidationRuleResultV2 extends ValidationRuleResult {
+  status: "passed" | "failed";
+  evaluation: {
+    kind: "assertions";
+    diagnostics: readonly MarkdownDiagnostic[];
+  };
+}
+```
+
+The current v2 flat path does not produce skipped rule results; `skippedRuleCount`
+is `0` until rule-level applicability is admitted by a later contract update.
 
 `valid` is `false` when any error-severity diagnostic exists. Warning and info
 validation diagnostics can make a rule result fail without making the aggregate
@@ -360,15 +380,23 @@ Evidence is emitted only when `DeclarativeValidationOptions.includeEvidence` is
 `true`:
 
 ```ts
-interface DeclarativeValidationEvidence {
+interface DeclarativeValidationEvidence<
+  RuleResult extends ValidationRuleResult = ValidationRuleResult,
+> {
   inputHash: string;
   profileHash: string;
   engineVersion: string;
   runtimeVersion: string;
-  ruleResults: readonly ValidationRuleResult[];
+  ruleResults: readonly RuleResult[];
   diagnostics: readonly MarkdownDiagnostic[];
 }
 ```
+
+For v1 profiles, `ruleResults` contains the unchanged v1 rule-result shape. For
+admitted v2 flat profiles, `ruleResults` clones the public flat v2 rule-result
+shape, including `status` and `evaluation.kind: "assertions"`. Evidence does
+not serialize compiled rule plans, selector target records, branch evidence,
+skipped-rule evidence, ID count evidence, or table-column coverage evidence.
 
 `inputHash` is a lowercase hexadecimal SHA-256 digest of the stable JSON
 serialization of the supplied normalized `EngineDocument` after omitting only

@@ -37,16 +37,12 @@ export function createDeclarativeValidationResult({
         createV2Result(document, profile, ruleResults, diagnostics),
         document,
         profile,
-        ruleResults,
-        diagnostics,
         options,
       )
     : withEvidence(
         createV1Result(document, profile, ruleResults, diagnostics),
         document,
         profile,
-        ruleResults,
-        diagnostics,
         options,
       );
 }
@@ -95,14 +91,9 @@ function withEvidence<T extends DeclarativeValidationResult>(
   result: T,
   document: EngineDocument,
   profile: ValidationProfile,
-  ruleResults: readonly ValidationRuleResult[],
-  diagnostics: readonly MarkdownDiagnostic[],
   options: DeclarativeValidationOptions,
 ): T {
-  if (
-    options.includeEvidence !== true ||
-    result.profile.syntaxVersion === PROFILE_SYNTAX_VERSION_V2_VALUE
-  ) {
+  if (options.includeEvidence !== true) {
     return result;
   }
 
@@ -111,8 +102,8 @@ function withEvidence<T extends DeclarativeValidationResult>(
     evidence: createDeclarativeValidationEvidence(
       document,
       profile,
-      ruleResults,
-      diagnostics,
+      result.ruleResults,
+      result.diagnostics,
     ),
   };
 }
