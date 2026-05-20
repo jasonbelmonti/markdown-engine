@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | Title | Conditional Declarative Validation V2 Implementation |
-| Status | Draft |
+| Status | Future execution artifact |
 | Execution level | `E2` |
 | Execution level justification | The work changes durable public profile grammar, API result types, CLI JSON, diagnostics, evidence payloads, contract docs, fixtures, and release validation for a published local package. It does not qualify for `E1` because execution crosses multiple package boundaries and must be executable by another engineer or agent. It does not trigger `E3` because the package remains local, stateless, reversible before release, and does not change authentication, authorization, cryptography, secret handling, payments, live customer data, regulated workflows, safety controls, irreversible storage, or network operations. The source design nevertheless mandates heightened controls, so this E2 plan applies those controls explicitly. |
 | Author(s) | Codex |
@@ -16,6 +16,15 @@
 | Last updated | 2026-05-18 |
 | Related source docs | `docs/design/conditional-declarative-validation-v2-design-spec.md`; `docs/contracts/declarative-validation.md`; `docs/design/markdown-engine-declarative-validation-syntax-operational-design-spec.md`; `docs/execution/markdown-engine-declarative-validation-syntax-execution-spec.md` |
 | Related tickets | `BEL-1075`; `BEL-1076`; follow-up implementation tickets required for grouped rules, rule-level `when`, v2 result contract, downstream design-spec profile exercise, and release-readiness closure before those packages start |
+
+## Current Authority
+
+This document is retained as a future execution artifact for conditional
+declarative validation v2 behavior. It is not evidence that the full
+conditional v2 runtime has shipped or is currently executable. Current package
+behavior is limited to flat v2 profile admission as documented in
+`docs/contracts/declarative-validation.md`; grouped and conditional behavior
+remains future implementation scope.
 
 ## 0. Execution Summary
 

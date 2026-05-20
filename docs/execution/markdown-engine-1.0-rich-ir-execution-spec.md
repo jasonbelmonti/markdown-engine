@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | Title | Markdown Engine 1.0 Rich IR Implementation |
-| Status | Draft |
+| Status | Historical implementation record |
 | Execution level | `E2` |
 | Execution level justification | The work changes durable public TypeScript API, IR schema, serialization, compatibility, query, annotation, and downstream-consumer contracts. It does not qualify for `E1` because another implementer or agent must be able to execute package and contract changes from this plan. It does not trigger `E3` because execution does not change authentication, authorization, secrets, live customer data, irreversible storage, payments, safety controls, or a high-volume production path. |
 | Author(s) | Codex |
@@ -16,6 +16,13 @@
 | Last updated | 2026-05-01 |
 | Related source docs | `docs/design/markdown-engine-1.0-rich-ir-operational-design-spec.md`; `docs/contracts/api.md`; `docs/design/markdown-engine-operational-design-spec.md`; `RUNTIME_ARCHITECTURE.md` |
 | Related tickets | none |
+
+## Current Authority
+
+This document is retained as the historical execution record for the rich IR
+implementation. Current public rich IR and API behavior is defined by
+`docs/contracts/api.md`; milestone and release-gate language below is
+historical implementation context, not the current package state.
 
 ## 0. Execution Summary
 

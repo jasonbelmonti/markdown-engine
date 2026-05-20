@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | Title | Markdown Engine Initial Package Implementation |
-| Status | Draft |
+| Status | Historical implementation record |
 | Execution level | `E2` |
 | Execution level justification | The work implements a durable TypeScript package with public API, IR, config, diagnostic, and compatibility contracts. It does not qualify for `E1` because package and contract surfaces require another engineer or agent to execute from a complete plan. It does not trigger `E3` because execution does not change authentication, authorization, secrets, live customer data, one-way migrations, payments, safety controls, or a high-volume production path. |
 | Author(s) | Codex |
@@ -16,6 +16,13 @@
 | Last updated | 2026-05-01 |
 | Related source docs | `RUNTIME_ARCHITECTURE.md`; `docs/design/markdown-engine-operational-design-spec.md`; PR #1 consensus review record in thread |
 | Related tickets | `BEL-883` through `BEL-888` |
+
+## Current Authority
+
+This document is retained as the historical execution record for the initial
+`markdown-engine` implementation. It is not an active release gate or current
+execution blocker. Current public behavior and compatibility are governed by
+the contract docs under `docs/contracts/`.
 
 ## 0. Execution Summary
 
