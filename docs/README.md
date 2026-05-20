@@ -58,11 +58,6 @@ package behavior unless a later contract says so.
 
 - [Conditional declarative validation v2 design](design/conditional-declarative-validation-v2-design-spec.md)
 - [Conditional declarative validation v2 execution](execution/conditional-declarative-validation-v2-execution-spec.md)
-- [Conditional declarative validation grammar brief](design/conditional-declarative-validation-grammar-design-brief.md)
-- [Conditional declarative validation agent brief](design/conditional-declarative-validation-design-spec-agent-brief.md)
-- [Conditional declarative validation proposed files](design/conditional-declarative-validation-proposed-files.txt)
-- [Declarative validation documentation tracks](declarative-validation-documentation-tracks.md)
-- [Declarative validation agent interpretation notes](declarative-validation-agent-interpretation-notes.md)
 
 ## Evidence record
 
