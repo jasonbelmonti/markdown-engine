@@ -8,11 +8,12 @@ Worktree: `.worktrees/BEL-962-release-audit-group-4`
 
 ## Current Status
 
-This is a dated BEL-956 release-audit record. The `0.1.0` package,
-`1.0.0-draft` document lane, and release-withhold statements below describe the
-2026-05-07 audit baseline. As of the current repository state, package metadata
-is `@jasonbelmonti/markdown-engine@2.0.0` and the current public document
-contract uses `documentVersion: "1.0.0"`.
+This is a dated BEL-956 release-audit record. The `0.1.0` package, `1.0.0-draft`
+document lane, and release-withhold statements below describe the 2026-05-07
+audit baseline. At the BEL-1158 cleanup baseline (`origin/main` at
+`804c6351edf0`, 2026-05-20), package metadata is
+`@jasonbelmonti/markdown-engine@2.0.0` and the public document contract at that
+baseline uses `documentVersion: "1.0.0"`.
 
 ## Scope
 

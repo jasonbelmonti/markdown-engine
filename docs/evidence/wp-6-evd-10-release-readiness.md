@@ -11,9 +11,10 @@ Baseline: `origin/main` at `43f05c6`
 This is historical release-readiness and containment evidence for the 1.0 public
 artifact state observed during BEL-989. The release state, MS-3 decision notes,
 and `latest: 1.0.0` references below are current relative to the 2026-05-13
-verification, not live package-status statements. As of the current repository
-state, package metadata is `@jasonbelmonti/markdown-engine@2.0.0`; use current
-contract docs and newer 2.0 release evidence for live package status.
+verification, not live package-status statements. At the BEL-1158 cleanup
+baseline (`origin/main` at `804c6351edf0`, 2026-05-20), package metadata is
+`@jasonbelmonti/markdown-engine@2.0.0`; use contract docs and evidence newer
+than this BEL-1158 note for later package status.
 
 ## Scope
 

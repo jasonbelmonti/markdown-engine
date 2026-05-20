@@ -11,9 +11,10 @@ Base: `origin/main` at `9da314fe1b591ef63c282d0ef47c6efe648651d9`
 
 This is historical release-readiness evidence for the initial `0.1.0` package
 metadata lane. The release-withhold and MS-3 approval language below records the
-2026-05-01 BEL-888/BEL-928 state. As of the current repository state, package
-metadata is `@jasonbelmonti/markdown-engine@2.0.0`; do not read this record as a
-live release authorization or live package-version statement.
+2026-05-01 BEL-888/BEL-928 state. At the BEL-1158 cleanup baseline
+(`origin/main` at `804c6351edf0`, 2026-05-20), package metadata is
+`@jasonbelmonti/markdown-engine@2.0.0`; do not read this record as a live
+release authorization or live package-version statement.
 
 ## Scope
 

@@ -201,9 +201,9 @@ reader examples under `fixtures/declarative-validation/examples/**`.
 
 ## Evidence Consistency
 
-The current repository state supersedes stale Linear project and BEL-1028
-narrative text that still names PR #114 as the latest sync point. Confirmed
-repository reality for this audit:
+The repository state at this BEL-1035 audit baseline superseded stale Linear
+project and BEL-1028 narrative text that still named PR #114 as the latest sync
+point. Confirmed repository reality for this audit:
 
 - `origin/main` is `9f19b08321745aec1a093883aeef62087e7ca4ca`.
 - PR #115 is included in the audited baseline.

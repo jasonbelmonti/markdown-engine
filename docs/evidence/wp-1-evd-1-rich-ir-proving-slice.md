@@ -8,11 +8,12 @@ Baseline: `origin/main` at `3937e59`
 
 ## Current Status
 
-This is historical MS-1 evidence for the 1.0 rich IR release lane. As of the
-current repository state, package metadata is `@jasonbelmonti/markdown-engine@2.0.0`
-and the public document contract uses `documentVersion: "1.0.0"`. The MS-3
-blocked language below describes the 2026-05-03 handoff state for this proof
-record, not current package truth.
+This is historical MS-1 evidence for the 1.0 rich IR release lane. At the
+BEL-1158 cleanup baseline (`origin/main` at `804c6351edf0`, 2026-05-20), package
+metadata is `@jasonbelmonti/markdown-engine@2.0.0` and the public document
+contract uses `documentVersion: "1.0.0"`. The MS-3 blocked language below
+describes the 2026-05-03 handoff state for this proof record, not a live
+package-status statement.
 
 ## Objective
 

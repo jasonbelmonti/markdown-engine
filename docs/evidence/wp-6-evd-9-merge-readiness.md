@@ -9,10 +9,11 @@ Branch: `codex/bel-928-public-package-metadata`
 ## Current Status
 
 This is historical merge-readiness evidence for BEL-928 and the initial
-package-metadata handoff. The MS-3 pending/blocking language below describes
-the 2026-05-01 release lane state. As of the current repository state, package
-metadata is `@jasonbelmonti/markdown-engine@2.0.0`; use current contract docs
-and newer release evidence for live package status.
+package-metadata handoff. The MS-3 pending/blocking language below describes the
+2026-05-01 release lane state. At the BEL-1158 cleanup baseline (`origin/main`
+at `804c6351edf0`, 2026-05-20), package metadata is
+`@jasonbelmonti/markdown-engine@2.0.0`; use current contract docs and newer
+release evidence for live package status.
 
 ## Scope
 

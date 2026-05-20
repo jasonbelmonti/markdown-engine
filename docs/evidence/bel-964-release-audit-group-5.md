@@ -10,10 +10,10 @@ Package: `@jasonbelmonti/markdown-engine@0.1.0`
 ## Current Status
 
 This is a dated BEL-956 release-audit record. The `Package:` line and
-release-withhold statements below describe the 2026-05-07 audit baseline. As of
-the current repository state, package metadata is
-`@jasonbelmonti/markdown-engine@2.0.0`; preserved package metadata remains a
-historical audit fact.
+release-withhold statements below describe the 2026-05-07 audit baseline. At the
+BEL-1158 cleanup baseline (`origin/main` at `804c6351edf0`, 2026-05-20), package
+metadata is `@jasonbelmonti/markdown-engine@2.0.0`; preserved package metadata
+remains a historical audit fact.
 
 ## Scope
 
