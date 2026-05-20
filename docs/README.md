@@ -27,6 +27,7 @@ why profile compilation, runtime lenses, MCP transport, agent adapters,
 semantic evaluation, network services, and persistence remain outside
 `markdown-engine`.
 
+- [Runtime architecture](../RUNTIME_ARCHITECTURE.md)
 - [Markdown Engine operational design](design/markdown-engine-operational-design-spec.md)
 - [Markdown Engine execution specification](execution/markdown-engine-execution-spec.md)
 - [Rich IR operational design](design/markdown-engine-1.0-rich-ir-operational-design-spec.md)
