@@ -1,0 +1,70 @@
+import type { EngineDocumentVersion } from "../../api/document.js";
+import type { MarkdownDiagnostic } from "../../api/diagnostics.js";
+import type {
+  ValidationResult,
+  ValidationRuleResult,
+} from "../../api/validate.js";
+import type { DeclarativeValidationEvidence } from "../evidence/index.js";
+import type {
+  PROFILE_SYNTAX_VERSION,
+  PROFILE_SYNTAX_VERSION_V2,
+} from "../profile/syntax-version.js";
+
+export type DeclarativeValidationCliJsonResult =
+  | DeclarativeValidationResult
+  | DeclarativeValidationConfigErrorResult;
+
+export interface DeclarativeValidationConfigErrorResult {
+  valid: false;
+  stage: "profile";
+  diagnostics: readonly MarkdownDiagnostic[];
+  ruleResults: readonly [];
+  profile?: undefined;
+  evidence?: undefined;
+}
+
+export interface DeclarativeValidationOptions {
+  path?: string;
+  includeEvidence?: boolean;
+}
+
+export type DeclarativeValidationResult =
+  | DeclarativeValidationResultV1
+  | DeclarativeValidationResultV2;
+
+export interface DeclarativeValidationResultV1 extends ValidationResult {
+  profile: {
+    syntaxVersion: typeof PROFILE_SYNTAX_VERSION;
+    documentVersion: EngineDocumentVersion;
+    ruleCount: number;
+  };
+  evidence?: DeclarativeValidationEvidence;
+}
+
+export type DeclarativeValidationRuleStatus = "passed" | "failed";
+
+export interface DeclarativeValidationRuleResultV2
+  extends ValidationRuleResult {
+  status: DeclarativeValidationRuleStatus;
+  evaluation: DeclarativeValidationRuleEvaluationResult;
+}
+
+export type DeclarativeValidationRuleEvaluationResult =
+  DeclarativeValidationAssertionsEvaluationResult;
+
+export interface DeclarativeValidationAssertionsEvaluationResult {
+  kind: "assertions";
+  diagnostics: MarkdownDiagnostic[];
+}
+
+export interface DeclarativeValidationResultV2 extends ValidationResult {
+  ruleResults: DeclarativeValidationRuleResultV2[];
+  profile: {
+    syntaxVersion: typeof PROFILE_SYNTAX_VERSION_V2;
+    documentVersion: EngineDocumentVersion;
+    ruleCount: number;
+    evaluatedRuleCount: number;
+    skippedRuleCount: number;
+  };
+  evidence?: DeclarativeValidationEvidence;
+}

@@ -3,6 +3,8 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import {
+  normalize,
+  parse,
   parseValidationProfile,
   validateWithProfile,
   type DeclarativeAssertion,
@@ -207,8 +209,124 @@ describe("declarative validation public contract scaffold", () => {
         syntaxVersion: "markdown-engine.validation@v2",
         documentVersion: "1.0.0",
         ruleCount: 0,
+        evaluatedRuleCount: 0,
+        skippedRuleCount: 0,
       },
     });
+  });
+
+  it("returns the v2 flat-rule API result shell without changing assertion semantics", () => {
+    const document = normalize(parse("# Mission\n\nReady for launch.\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+
+    expect(
+      validateWithProfile(document, {
+        syntaxVersion: "markdown-engine.validation@v2",
+        documentVersion: "1.0.0",
+        rules: [
+          {
+            id: "mission.contains",
+            severity: "info",
+            select: { target: "document" },
+            assert: { text: { contains: "Mission" } },
+          },
+        ],
+      }),
+    ).toEqual({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [
+        {
+          ruleId: "mission.contains",
+          status: "passed",
+          passed: true,
+          diagnostics: [],
+          evaluation: {
+            kind: "assertions",
+            diagnostics: [],
+          },
+        },
+      ],
+      profile: {
+        syntaxVersion: "markdown-engine.validation@v2",
+        documentVersion: "1.0.0",
+        ruleCount: 1,
+        evaluatedRuleCount: 1,
+        skippedRuleCount: 0,
+      },
+    });
+  });
+
+  it("returns source-grounded v2 flat-rule diagnostics with failed status", () => {
+    const document = normalize(parse("# Mission\n\nReady for launch.\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v2",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "mission.missing-text",
+          select: { target: "section", title: "Mission" },
+          assert: { text: { contains: "Complete" } },
+        },
+      ],
+    });
+
+    expect(result.valid).toBe(false);
+    expect(result.profile).toEqual({
+      syntaxVersion: "markdown-engine.validation@v2",
+      documentVersion: "1.0.0",
+      ruleCount: 1,
+      evaluatedRuleCount: 1,
+      skippedRuleCount: 0,
+    });
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.textMissing",
+        ruleId: "mission.missing-text",
+        severity: "error",
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({ line: 1, column: 1 }),
+        }),
+      }),
+    ]);
+    expect(result.ruleResults).toEqual([
+      {
+        ruleId: "mission.missing-text",
+        status: "failed",
+        passed: false,
+        diagnostics: result.diagnostics,
+        evaluation: {
+          kind: "assertions",
+          diagnostics: result.diagnostics,
+        },
+      },
+    ]);
+  });
+
+  it("keeps the v1 API rule result shape unchanged", () => {
+    const result = validateWithProfile(document, supportedRuleProfile);
+
+    expect(result).toMatchObject({
+      profile: {
+        syntaxVersion: "markdown-engine.validation@v1",
+        documentVersion: "1.0.0",
+        ruleCount: 1,
+      },
+      ruleResults: [
+        {
+          ruleId: "sections.required",
+          passed: false,
+        },
+      ],
+      valid: false,
+    });
+    expect(result.profile).not.toHaveProperty("evaluatedRuleCount");
+    expect(result.profile).not.toHaveProperty("skippedRuleCount");
+    expect(result.ruleResults[0]).not.toHaveProperty("status");
+    expect(result.ruleResults[0]).not.toHaveProperty("evaluation");
   });
 
   it("preserves v2 direct profile metadata when unsupported rule keys fail materialization", () => {
@@ -242,6 +360,8 @@ describe("declarative validation public contract scaffold", () => {
         syntaxVersion: "markdown-engine.validation@v2",
         documentVersion: "1.0.0",
         ruleCount: 0,
+        evaluatedRuleCount: 0,
+        skippedRuleCount: 0,
       },
     });
   });
@@ -279,6 +399,8 @@ describe("declarative validation public contract scaffold", () => {
         syntaxVersion: "markdown-engine.validation@v2",
         documentVersion: "1.0.0",
         ruleCount: 0,
+        evaluatedRuleCount: 0,
+        skippedRuleCount: 0,
       },
     });
     expect(rulesAccessorRead).toBe(false);

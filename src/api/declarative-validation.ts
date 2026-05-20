@@ -1,13 +1,10 @@
 import type { EngineDocument } from "./document.js";
 import type { MarkdownDiagnostic } from "./diagnostics.js";
-import type { ValidationRuleResult } from "./validate.js";
-import { cloneDiagnostics, hasErrorDiagnostic } from "../diagnostics/index.js";
 import {
   evaluateCompiledDeclarativeRule,
   sortValidationRuleResults,
 } from "../declarative-validation/assertions/index.js";
 import { compileValidationProfile } from "../declarative-validation/compiler/index.js";
-import { createDeclarativeValidationEvidence } from "../declarative-validation/evidence/index.js";
 import { parseValidationProfileInput } from "../declarative-validation/profile/index.js";
 import { materializeValidationProfile } from "../declarative-validation/profile/materialization.js";
 import type {
@@ -16,6 +13,7 @@ import type {
   JsonSafeValue,
   ValidationProfile,
 } from "../declarative-validation/profile/index.js";
+import { createDeclarativeValidationResult } from "../declarative-validation/results/index.js";
 import type {
   DeclarativeValidationOptions,
   DeclarativeValidationResult,
@@ -38,9 +36,15 @@ export type {
 } from "../declarative-validation/profile/index.js";
 export type { DeclarativeValidationEvidence } from "../declarative-validation/evidence/index.js";
 export type {
+  DeclarativeValidationAssertionsEvaluationResult,
   DeclarativeValidationCliJsonResult,
   DeclarativeValidationConfigErrorResult,
   DeclarativeValidationOptions,
+  DeclarativeValidationResultV1,
+  DeclarativeValidationResultV2,
+  DeclarativeValidationRuleEvaluationResult,
+  DeclarativeValidationRuleResultV2,
+  DeclarativeValidationRuleStatus,
   DeclarativeValidationResult,
 } from "../declarative-validation/results/index.js";
 
@@ -73,13 +77,13 @@ export function validateWithProfile(
     document.version,
   );
   if (materializedProfile.diagnostics.length > 0) {
-    return validationResult(
+    return createDeclarativeValidationResult({
       document,
-      materializedProfile.profile,
-      [],
-      materializedProfile.diagnostics,
+      profile: materializedProfile.profile,
+      ruleResults: [],
+      diagnostics: materializedProfile.diagnostics,
       options,
-    );
+    });
   }
 
   const profileDocumentVersion =
@@ -90,13 +94,13 @@ export function validateWithProfile(
       : [documentVersionMismatchDiagnostic(profileDocumentVersion, document.version)];
 
   if (versionDiagnostics.length > 0) {
-    return validationResult(
+    return createDeclarativeValidationResult({
       document,
-      materializedProfile.profile,
-      [],
-      versionDiagnostics,
+      profile: materializedProfile.profile,
+      ruleResults: [],
+      diagnostics: versionDiagnostics,
       options,
-    );
+    });
   }
 
   const compileResult = compileValidationProfile(materializedProfile.profile);
@@ -112,44 +116,13 @@ export function validateWithProfile(
     ...compileResult.diagnostics,
     ...ruleResults.flatMap((result) => result.diagnostics),
   ];
-  return validationResult(
+  return createDeclarativeValidationResult({
     document,
-    materializedProfile.profile,
+    profile: materializedProfile.profile,
     ruleResults,
     diagnostics,
     options,
-  );
-}
-
-function validationResult(
-  document: EngineDocument,
-  profile: ValidationProfile,
-  ruleResults: readonly ValidationRuleResult[],
-  diagnostics: readonly MarkdownDiagnostic[],
-  options: DeclarativeValidationOptions,
-): DeclarativeValidationResult {
-  const result: DeclarativeValidationResult = {
-    valid: !hasErrorDiagnostic(diagnostics),
-    diagnostics: cloneDiagnostics(diagnostics),
-    ruleResults: cloneRuleResults(ruleResults),
-    profile: {
-      syntaxVersion: profile.syntaxVersion,
-      documentVersion: profile.documentVersion ?? document.version,
-      ruleCount: profile.rules.length,
-    },
-  };
-
-  return options.includeEvidence === true
-    ? {
-        ...result,
-        evidence: createDeclarativeValidationEvidence(
-          document,
-          profile,
-          ruleResults,
-          diagnostics,
-        ),
-      }
-    : result;
+  });
 }
 
 function documentVersionMismatchDiagnostic(
@@ -161,14 +134,4 @@ function documentVersionMismatchDiagnostic(
     message: `Profile documentVersion "${profileDocumentVersion}" does not match document version "${documentVersion}".`,
     severity: "error" as const,
   };
-}
-
-function cloneRuleResults(
-  ruleResults: readonly ValidationRuleResult[],
-): ValidationRuleResult[] {
-  return ruleResults.map((result) => ({
-    ruleId: result.ruleId,
-    passed: result.passed,
-    diagnostics: cloneDiagnostics(result.diagnostics),
-  }));
 }

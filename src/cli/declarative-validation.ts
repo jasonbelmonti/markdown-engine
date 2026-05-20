@@ -2,12 +2,12 @@ import { validateWithProfile } from "../api/declarative-validation.js";
 import type { MarkdownDiagnostic } from "../api/diagnostics.js";
 import type { EngineDocument, EngineDocumentVersion } from "../api/document.js";
 import { compileValidationProfile } from "../declarative-validation/compiler/index.js";
-import { createDeclarativeValidationEvidence } from "../declarative-validation/evidence/index.js";
 import { parseValidationProfileInput } from "../declarative-validation/profile/index.js";
 import type {
   DeclarativeOutputFormat,
   ValidationProfile,
 } from "../declarative-validation/profile/index.js";
+import { createDeclarativeValidationResult } from "../declarative-validation/results/index.js";
 import type {
   DeclarativeValidationCliJsonResult,
   DeclarativeValidationConfigErrorResult,
@@ -154,24 +154,13 @@ function documentDiagnosticsResult(
   profile: ValidationProfile,
   diagnostics: readonly MarkdownDiagnostic[],
 ): DeclarativeValidationResult {
-  const clonedDiagnostics = cloneDiagnostics(diagnostics);
-
-  return {
-    valid: !hasErrorDiagnostic(clonedDiagnostics),
-    diagnostics: clonedDiagnostics,
+  return createDeclarativeValidationResult({
+    document,
+    profile,
     ruleResults: [],
-    profile: {
-      syntaxVersion: profile.syntaxVersion,
-      documentVersion: profile.documentVersion ?? document.version,
-      ruleCount: profile.rules.length,
-    },
-    evidence: createDeclarativeValidationEvidence(
-      document,
-      profile,
-      [],
-      clonedDiagnostics,
-    ),
-  };
+    diagnostics,
+    options: { includeEvidence: true },
+  });
 }
 
 function mergeDocumentDiagnostics(
