@@ -49,6 +49,34 @@ const failingProfile = {
   ],
 };
 
+const v2FlatPassingProfile = {
+  syntaxVersion: "markdown-engine.validation@v2",
+  documentVersion: "1.0.0",
+  rules: [
+    {
+      id: "v2.objective.text",
+      select: { target: "section", title: "Objective" },
+      assert: {
+        text: { contains: "declarative validation architecture viable" },
+      },
+    },
+  ],
+};
+
+const v2FlatFailingProfile = {
+  syntaxVersion: "markdown-engine.validation@v2",
+  documentVersion: "1.0.0",
+  rules: [
+    {
+      id: "v2.verification.missing",
+      select: { target: "section", title: "Verification" },
+      assert: {
+        text: { contains: "unresolved selector gap" },
+      },
+    },
+  ],
+};
+
 const textLengthProfile = {
   syntaxVersion: "markdown-engine.validation@v1",
   documentVersion: "1.0.0",
@@ -98,6 +126,16 @@ export function buildDeclarativeValidationRepeatabilityCases(repoRoot, engine) {
     document,
     failingProfile,
   );
+  const v2FlatPassingResult = validateWithEvidence(
+    validateWithProfile,
+    document,
+    v2FlatPassingProfile,
+  );
+  const v2FlatFailingResult = validateWithEvidence(
+    validateWithProfile,
+    document,
+    v2FlatFailingProfile,
+  );
   const textLengthResult = validateWithEvidence(
     validateWithProfile,
     document,
@@ -122,6 +160,22 @@ export function buildDeclarativeValidationRepeatabilityCases(repoRoot, engine) {
     {
       name: "declarative-validation:failing-evidence",
       result: requiredEvidence(failingResult),
+    },
+    {
+      name: "declarative-validation:v2-flat-passing-result",
+      result: v2FlatPassingResult,
+    },
+    {
+      name: "declarative-validation:v2-flat-passing-evidence",
+      result: requiredEvidence(v2FlatPassingResult),
+    },
+    {
+      name: "declarative-validation:v2-flat-failing-result",
+      result: v2FlatFailingResult,
+    },
+    {
+      name: "declarative-validation:v2-flat-failing-evidence",
+      result: requiredEvidence(v2FlatFailingResult),
     },
     {
       name: "declarative-validation:text-length-result",

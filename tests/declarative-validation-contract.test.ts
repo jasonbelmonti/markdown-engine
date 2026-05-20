@@ -306,8 +306,99 @@ describe("declarative validation public contract scaffold", () => {
     ]);
   });
 
+  it("records deterministic v2 flat-rule evidence for passing assertions", () => {
+    const document = normalize(parse("# Mission\n\nReady for launch.\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    const profile = {
+      syntaxVersion: "markdown-engine.validation@v2",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "mission.contains",
+          severity: "info",
+          select: { target: "document" },
+          assert: { text: { contains: "Mission" } },
+        },
+      ],
+    } satisfies ValidationProfile;
+    const firstResult = validateWithProfile(document, profile, {
+      includeEvidence: true,
+    });
+    const secondResult = validateWithProfile(document, profile, {
+      includeEvidence: true,
+    });
+
+    expect(secondResult).toEqual(firstResult);
+    expect(firstResult.evidence).toMatchObject({
+      engineVersion: "2.0.0",
+      runtimeVersion: process.version,
+      ruleResults: firstResult.ruleResults,
+      diagnostics: firstResult.diagnostics,
+    });
+    expect(firstResult.evidence?.inputHash).toMatch(/^[a-f0-9]{64}$/);
+    expect(firstResult.evidence?.profileHash).toMatch(/^[a-f0-9]{64}$/);
+    expect(firstResult.evidence?.ruleResults).toEqual([
+      {
+        ruleId: "mission.contains",
+        status: "passed",
+        passed: true,
+        diagnostics: [],
+        evaluation: {
+          kind: "assertions",
+          diagnostics: [],
+        },
+      },
+    ]);
+  });
+
+  it("records deterministic v2 flat-rule evidence for failing assertions", () => {
+    const document = normalize(parse("# Mission\n\nReady for launch.\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    const result = validateWithProfile(
+      document,
+      {
+        syntaxVersion: "markdown-engine.validation@v2",
+        documentVersion: "1.0.0",
+        rules: [
+          {
+            id: "mission.missing-text",
+            select: { target: "section", title: "Mission" },
+            assert: { text: { contains: "Complete" } },
+          },
+        ],
+      },
+      { includeEvidence: true },
+    );
+
+    expect(result.evidence).toMatchObject({
+      engineVersion: "2.0.0",
+      runtimeVersion: process.version,
+      ruleResults: result.ruleResults,
+      diagnostics: result.diagnostics,
+    });
+    expect(result.evidence?.inputHash).toMatch(/^[a-f0-9]{64}$/);
+    expect(result.evidence?.profileHash).toMatch(/^[a-f0-9]{64}$/);
+    expect(result.evidence?.ruleResults).toEqual([
+      {
+        ruleId: "mission.missing-text",
+        status: "failed",
+        passed: false,
+        diagnostics: result.diagnostics,
+        evaluation: {
+          kind: "assertions",
+          diagnostics: result.diagnostics,
+        },
+      },
+    ]);
+  });
+
   it("keeps the v1 API rule result shape unchanged", () => {
     const result = validateWithProfile(document, supportedRuleProfile);
+    const resultWithEvidence = validateWithProfile(document, supportedRuleProfile, {
+      includeEvidence: true,
+    });
 
     expect(result).toMatchObject({
       profile: {
@@ -327,6 +418,15 @@ describe("declarative validation public contract scaffold", () => {
     expect(result.profile).not.toHaveProperty("skippedRuleCount");
     expect(result.ruleResults[0]).not.toHaveProperty("status");
     expect(result.ruleResults[0]).not.toHaveProperty("evaluation");
+    expect(resultWithEvidence.evidence?.ruleResults).toEqual(
+      resultWithEvidence.ruleResults,
+    );
+    expect(resultWithEvidence.evidence?.ruleResults[0]).not.toHaveProperty(
+      "status",
+    );
+    expect(resultWithEvidence.evidence?.ruleResults[0]).not.toHaveProperty(
+      "evaluation",
+    );
   });
 
   it("preserves v2 direct profile metadata when unsupported rule keys fail materialization", () => {

@@ -15,6 +15,14 @@ const expectedRepeatabilityCaseNames = [
   "declarative-validation:failing-result:pretty",
   "declarative-validation:failing-evidence:compact",
   "declarative-validation:failing-evidence:pretty",
+  "declarative-validation:v2-flat-passing-result:compact",
+  "declarative-validation:v2-flat-passing-result:pretty",
+  "declarative-validation:v2-flat-passing-evidence:compact",
+  "declarative-validation:v2-flat-passing-evidence:pretty",
+  "declarative-validation:v2-flat-failing-result:compact",
+  "declarative-validation:v2-flat-failing-result:pretty",
+  "declarative-validation:v2-flat-failing-evidence:compact",
+  "declarative-validation:v2-flat-failing-evidence:pretty",
   "declarative-validation:text-length-result:compact",
   "declarative-validation:text-length-result:pretty",
   "declarative-validation:text-length-evidence:compact",
@@ -85,6 +93,22 @@ describe("BEL-983 declarative validation evidence repeatability", () => {
       casesByName,
       "declarative-validation:failing-evidence:pretty",
     );
+    const v2FlatPassingResult = parseJsonCase(
+      casesByName,
+      "declarative-validation:v2-flat-passing-result:pretty",
+    );
+    const v2FlatPassingEvidence = parseJsonCase(
+      casesByName,
+      "declarative-validation:v2-flat-passing-evidence:pretty",
+    );
+    const v2FlatFailingResult = parseJsonCase(
+      casesByName,
+      "declarative-validation:v2-flat-failing-result:pretty",
+    );
+    const v2FlatFailingEvidence = parseJsonCase(
+      casesByName,
+      "declarative-validation:v2-flat-failing-evidence:pretty",
+    );
 
     expect(evidenceHash(passingEvidence, "inputHash")).toMatch(
       /^[0-9a-f]{64}$/,
@@ -107,6 +131,18 @@ describe("BEL-983 declarative validation evidence repeatability", () => {
     ).toBe(evidenceHash(passingEvidence, "inputHash"));
     expect(evidenceHash(failingEvidence, "profileHash")).not.toBe(
       evidenceHash(passingEvidence, "profileHash"),
+    );
+    expect(recordProperty(v2FlatPassingResult, "evidence")).toEqual(
+      v2FlatPassingEvidence,
+    );
+    expect(recordProperty(v2FlatFailingResult, "evidence")).toEqual(
+      v2FlatFailingEvidence,
+    );
+    expect(recordProperty(v2FlatPassingEvidence, "ruleResults")).toEqual(
+      recordProperty(v2FlatPassingResult, "ruleResults"),
+    );
+    expect(recordProperty(v2FlatFailingEvidence, "ruleResults")).toEqual(
+      recordProperty(v2FlatFailingResult, "ruleResults"),
     );
   });
 });

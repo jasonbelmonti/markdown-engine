@@ -7,21 +7,33 @@ import { cloneDiagnostics } from "../../diagnostics/index.js";
 import { stringifyStableJson } from "../../internal/stable-json.js";
 import type { ValidationProfile } from "../profile/index.js";
 
-export interface DeclarativeValidationEvidence {
+export interface DeclarativeValidationEvidence<
+  RuleResult extends ValidationRuleResult = ValidationRuleResult,
+> {
   inputHash: string;
   profileHash: string;
   engineVersion: string;
   runtimeVersion: string;
-  ruleResults: readonly ValidationRuleResult[];
+  ruleResults: readonly RuleResult[];
   diagnostics: readonly MarkdownDiagnostic[];
 }
 
-export function createDeclarativeValidationEvidence(
+interface AssertionsEvidenceRuleResult extends ValidationRuleResult {
+  status: "passed" | "failed";
+  evaluation: {
+    kind: "assertions";
+    diagnostics: MarkdownDiagnostic[];
+  };
+}
+
+export function createDeclarativeValidationEvidence<
+  RuleResult extends ValidationRuleResult,
+>(
   document: EngineDocument,
   profile: ValidationProfile,
-  ruleResults: readonly ValidationRuleResult[],
+  ruleResults: readonly RuleResult[],
   diagnostics: readonly MarkdownDiagnostic[],
-): DeclarativeValidationEvidence {
+): DeclarativeValidationEvidence<RuleResult> {
   return {
     inputHash: sha256(stringifyStableJson(documentWithoutPath(document))),
     profileHash: sha256(stringifyStableJson(resolvedProfile(profile, document))),
@@ -52,14 +64,41 @@ function documentWithoutPath(document: EngineDocument): Omit<EngineDocument, "pa
   return withoutPath;
 }
 
-function cloneRuleResults(
-  ruleResults: readonly ValidationRuleResult[],
-): ValidationRuleResult[] {
-  return ruleResults.map((result) => ({
+function cloneRuleResults<RuleResult extends ValidationRuleResult>(
+  ruleResults: readonly RuleResult[],
+): RuleResult[] {
+  return ruleResults.map((result) => cloneRuleResult(result));
+}
+
+function cloneRuleResult<RuleResult extends ValidationRuleResult>(
+  result: RuleResult,
+): RuleResult {
+  const baseResult: ValidationRuleResult = {
     ruleId: result.ruleId,
     passed: result.passed,
     diagnostics: cloneDiagnostics(result.diagnostics),
-  }));
+  };
+
+  if (!hasAssertionsEvaluation(result)) {
+    return baseResult as RuleResult;
+  }
+
+  return {
+    ...baseResult,
+    status: result.status,
+    evaluation: {
+      kind: "assertions",
+      diagnostics: cloneDiagnostics(result.evaluation.diagnostics),
+    },
+  } as unknown as RuleResult;
+}
+
+function hasAssertionsEvaluation(
+  result: ValidationRuleResult,
+): result is AssertionsEvidenceRuleResult {
+  const candidate = result as Partial<AssertionsEvidenceRuleResult>;
+
+  return candidate.evaluation?.kind === "assertions";
 }
 
 function sha256(value: string): string {

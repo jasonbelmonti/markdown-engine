@@ -38,7 +38,7 @@ export interface DeclarativeValidationResultV1 extends ValidationResult {
     documentVersion: EngineDocumentVersion;
     ruleCount: number;
   };
-  evidence?: DeclarativeValidationEvidence;
+  evidence?: DeclarativeValidationEvidence<ValidationRuleResult>;
 }
 
 export type DeclarativeValidationRuleStatus = "passed" | "failed";
@@ -66,5 +66,5 @@ export interface DeclarativeValidationResultV2 extends ValidationResult {
     evaluatedRuleCount: number;
     skippedRuleCount: number;
   };
-  evidence?: DeclarativeValidationEvidence;
+  evidence?: DeclarativeValidationEvidence<DeclarativeValidationRuleResultV2>;
 }
