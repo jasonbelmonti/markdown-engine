@@ -36,6 +36,24 @@ rules:
         headings:
           - Mission Brief
 `;
+const v2PassingProfile = `syntaxVersion: markdown-engine.validation@v2
+rules:
+  - id: v2.text.present
+    select:
+      target: document
+    assert:
+      text:
+        contains: REQ-1
+`;
+const v2FailingProfile = `syntaxVersion: markdown-engine.validation@v2
+rules:
+  - id: v2.text.missing
+    select:
+      target: document
+    assert:
+      text:
+        contains: ready for launch
+`;
 const warningProfile = `syntaxVersion: !custom markdown-engine.validation@v1
 rules:
   - id: sections.present
@@ -158,10 +176,17 @@ describe("declarative validation CLI", () => {
       ],
       valid: true,
     });
+    expect(result).not.toHaveProperty("stage");
+    expect(result.profile).not.toHaveProperty("evaluatedRuleCount");
+    expect(result.profile).not.toHaveProperty("skippedRuleCount");
+    expect(result.ruleResults[0]).not.toHaveProperty("status");
+    expect(result.ruleResults[0]).not.toHaveProperty("evaluation");
     expect(result.evidence).toMatchObject({
       diagnostics: [],
       ruleResults: result.ruleResults,
     });
+    expect(result.evidence.ruleResults[0]).not.toHaveProperty("status");
+    expect(result.evidence.ruleResults[0]).not.toHaveProperty("evaluation");
     expect(result.evidence.inputHash).toMatch(/^[0-9a-f]{64}$/);
     expect(result.evidence.profileHash).toMatch(/^[0-9a-f]{64}$/);
   });
@@ -191,6 +216,114 @@ describe("declarative validation CLI", () => {
         ruleCount: 1,
       },
       valid: true,
+    });
+  });
+
+  it("emits discriminated v2 flat validation JSON with evidence", async () => {
+    const cwd = await makeTempDir();
+    await writeFile(join(cwd, "mission.md"), validMarkdown);
+    await writeFile(join(cwd, "profile.yaml"), v2PassingProfile);
+
+    const { exitCode, stderr, stdout } = await runCliWithOutput({
+      args: [
+        "validate",
+        "--file",
+        "mission.md",
+        "--profile",
+        "profile.yaml",
+      ],
+      cwd,
+    });
+
+    expect(exitCode).toBe(0);
+    expect(stderr.text()).toBe("");
+
+    const result = parseStdout(stdout.text());
+    expect(result).toMatchObject({
+      diagnostics: [],
+      profile: {
+        documentVersion: "1.0.0",
+        evaluatedRuleCount: 1,
+        ruleCount: 1,
+        skippedRuleCount: 0,
+        syntaxVersion: "markdown-engine.validation@v2",
+      },
+      ruleResults: [
+        {
+          diagnostics: [],
+          evaluation: {
+            diagnostics: [],
+            kind: "assertions",
+          },
+          passed: true,
+          ruleId: "v2.text.present",
+          status: "passed",
+        },
+      ],
+      valid: true,
+    });
+    expect(result).not.toHaveProperty("stage");
+    expect(result.evidence).toMatchObject({
+      diagnostics: [],
+      ruleResults: result.ruleResults,
+    });
+    expect(result.evidence.inputHash).toMatch(/^[0-9a-f]{64}$/);
+    expect(result.evidence.profileHash).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it("emits failed v2 flat validation JSON without changing the v2 discriminator", async () => {
+    const cwd = await makeTempDir();
+    await writeFile(join(cwd, "mission.md"), failingMarkdown);
+    await writeFile(join(cwd, "profile.yaml"), v2FailingProfile);
+
+    const { exitCode, stderr, stdout } = await runCliWithOutput({
+      args: [
+        "validate",
+        "--file",
+        "mission.md",
+        "--profile",
+        "profile.yaml",
+      ],
+      cwd,
+    });
+
+    expect(exitCode).toBe(1);
+    expect(stderr.text()).toBe("");
+
+    const result = parseStdout(stdout.text());
+    const expectedDiagnostic = expect.objectContaining({
+      code: "profile.validation.textMissing",
+      ruleId: "v2.text.missing",
+      severity: "error",
+    });
+
+    expect(result).toMatchObject({
+      diagnostics: [expectedDiagnostic],
+      profile: {
+        documentVersion: "1.0.0",
+        evaluatedRuleCount: 1,
+        ruleCount: 1,
+        skippedRuleCount: 0,
+        syntaxVersion: "markdown-engine.validation@v2",
+      },
+      ruleResults: [
+        {
+          diagnostics: [expectedDiagnostic],
+          evaluation: {
+            diagnostics: [expectedDiagnostic],
+            kind: "assertions",
+          },
+          passed: false,
+          ruleId: "v2.text.missing",
+          status: "failed",
+        },
+      ],
+      valid: false,
+    });
+    expect(result).not.toHaveProperty("stage");
+    expect(result.evidence).toMatchObject({
+      diagnostics: result.diagnostics,
+      ruleResults: result.ruleResults,
     });
   });
 
