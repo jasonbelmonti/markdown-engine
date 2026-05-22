@@ -1,0 +1,268 @@
+cases:
+  - name: min-count-pass
+    contract: pass minCount after prefix filtering
+    markdown: |
+      # Requirements
+
+      | ID | Statement |
+      | --- | --- |
+      | OBJ-1 | Build safely |
+      | SYS-1 | Ignore non-objective IDs |
+      | OBJ-2 | Launch safely |
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: ids.min-count.pass
+          select:
+            target: tableCell
+            column: ID
+          assert:
+            ids:
+              prefix: OBJ
+              minCount: 2
+    expected:
+      valid: true
+      compiledAssertions:
+        - ruleId: ids.min-count.pass
+          prefix: OBJ
+          minCount: 2
+
+  - name: min-count-fail
+    contract: fail minCount after repeated comparison values collapse
+    markdown: |
+      # Requirements
+
+      | ID | Statement |
+      | --- | --- |
+      | OBJ-1 | Build safely |
+      | SYS-1 | Ignore non-objective IDs |
+      | OBJ-1 | Repeated objective occurrence |
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: ids.min-count.fail
+          select:
+            target: tableCell
+            column: ID
+          assert:
+            ids:
+              prefix: OBJ
+              minCount: 2
+    expected:
+      valid: false
+      diagnostics:
+        - code: profile.validation.idCountTooLow
+          ruleId: ids.min-count.fail
+          message: 'Expected at least 2 unique IDs matching prefix "OBJ" but found 1.'
+          sourceLine: 5
+      compiledAssertions:
+        - ruleId: ids.min-count.fail
+          prefix: OBJ
+          minCount: 2
+
+  - name: max-count-pass
+    contract: pass maxCount after prefix filtering
+    markdown: |
+      # Requirements
+
+      | ID | Statement |
+      | --- | --- |
+      | OBJ-1 | Build safely |
+      | SYS-1 | Ignore non-objective IDs |
+      | OBJ-2 | Launch safely |
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: ids.max-count.pass
+          select:
+            target: tableCell
+            column: ID
+          assert:
+            ids:
+              prefix: OBJ
+              maxCount: 2
+    expected:
+      valid: true
+      compiledAssertions:
+        - ruleId: ids.max-count.pass
+          prefix: OBJ
+          maxCount: 2
+
+  - name: max-count-fail
+    contract: fail maxCount at the first excess unique ID
+    markdown: |
+      # Requirements
+
+      | ID | Statement |
+      | --- | --- |
+      | OBJ-1 | Build safely |
+      | SYS-1 | Ignore non-objective IDs |
+      | OBJ-2 | Launch safely |
+      | OBJ-3 | Recover safely |
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: ids.max-count.fail
+          select:
+            target: tableCell
+            column: ID
+          assert:
+            ids:
+              prefix: OBJ
+              maxCount: 2
+    expected:
+      valid: false
+      diagnostics:
+        - code: profile.validation.idCountTooHigh
+          ruleId: ids.max-count.fail
+          message: 'Expected at most 2 unique IDs matching prefix "OBJ" but found 3.'
+          sourceLine: 8
+      compiledAssertions:
+        - ruleId: ids.max-count.fail
+          prefix: OBJ
+          maxCount: 2
+
+  - name: combined-bounds-pass
+    contract: pass combined minCount and maxCount when exact count matches
+    markdown: |
+      # Requirements
+
+      | ID | Statement |
+      | --- | --- |
+      | REQ-1 | First requirement |
+      | REQ-2 | Second requirement |
+      | NOTE-1 | Ignore unrelated note |
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: ids.combined-bounds.pass
+          select:
+            target: tableCell
+            column: ID
+          assert:
+            ids:
+              prefix: REQ
+              minCount: 2
+              maxCount: 2
+    expected:
+      valid: true
+      compiledAssertions:
+        - ruleId: ids.combined-bounds.pass
+          prefix: REQ
+          minCount: 2
+          maxCount: 2
+
+  - name: duplicate-id-compatibility
+    contract: preserve existing duplicate-ID compatibility diagnostics
+    markdown: |
+      # Requirements
+
+      | ID | Statement |
+      | --- | --- |
+      | REQ-1 | Build safely |
+      | SYS-1 | Ignore non-requirement IDs |
+      | REQ-1 | Launch safely |
+    profile:
+      syntaxVersion: markdown-engine.validation@v1
+      documentVersion: "1.0.0"
+      rules:
+        - id: ids.duplicate.compatibility
+          select:
+            target: tableCell
+            column: ID
+          assert:
+            ids:
+              unique: true
+              prefix: REQ
+    expected:
+      valid: false
+      diagnostics:
+        - code: profile.validation.duplicateId
+          ruleId: ids.duplicate.compatibility
+          message: 'ID "REQ-1" duplicates earlier ID "REQ-1".'
+          sourceLine: 7
+      compiledAssertions:
+        - ruleId: ids.duplicate.compatibility
+          unique: true
+          prefix: REQ
+
+  - name: prefix-filtering-pass
+    contract: ignore nonmatching ID families before applying count bounds
+    markdown: |
+      # Requirements
+
+      | ID | Statement |
+      | --- | --- |
+      | OBJ-1 | Objective one |
+      | SYS-1 | System row |
+      | OBJ-2 | Objective two |
+      | NG-1 | Non-goal row |
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: ids.prefix-filtering.pass
+          select:
+            target: tableCell
+            column: ID
+          assert:
+            ids:
+              prefix: OBJ
+              minCount: 2
+              maxCount: 2
+    expected:
+      valid: true
+      compiledAssertions:
+        - ruleId: ids.prefix-filtering.pass
+          prefix: OBJ
+          minCount: 2
+          maxCount: 2
+
+  - name: case-sensitivity-pass
+    contract: distinguish default case-sensitive matching from case-insensitive prefix matching
+    markdown: |
+      # Requirements
+
+      REQ-1 is ready.
+
+      req-2 uses lower case.
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: ids.case-sensitive.pass
+          select:
+            target: section
+            title: Requirements
+          assert:
+            ids:
+              prefix: REQ
+              minCount: 1
+              maxCount: 1
+        - id: ids.case-insensitive.pass
+          select:
+            target: section
+            title: Requirements
+          assert:
+            ids:
+              prefix: req
+              caseSensitive: false
+              minCount: 2
+              maxCount: 2
+    expected:
+      valid: true
+      compiledAssertions:
+        - ruleId: ids.case-sensitive.pass
+          prefix: REQ
+          minCount: 1
+          maxCount: 1
+        - ruleId: ids.case-insensitive.pass
+          prefix: req
+          caseSensitive: false
+          minCount: 2
+          maxCount: 2
