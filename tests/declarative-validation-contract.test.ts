@@ -9,15 +9,19 @@ import {
   validateWithProfile,
   type DeclarativeAssertion,
   type DeclarativeIdSource,
+  type DeclarativeValidationResultV2,
+  type DeclarativeValidationRuleResultV2,
   type DeclarativeSelector,
   type DeclarativeTableCellPredicate,
   type EngineDocument,
+  type MarkdownDiagnostic,
   type ValidationProfile,
 } from "@jasonbelmonti/markdown-engine";
 // @ts-expect-error Compiled rule plans must not be package-root exports.
 import type { CompiledDeclarativeValidationPlan } from "@jasonbelmonti/markdown-engine";
 // @ts-expect-error Compile results must remain internal to declarative validation.
 import type { DeclarativeValidationCompileResult } from "@jasonbelmonti/markdown-engine";
+import { createDeclarativeValidationResult } from "../src/declarative-validation/results/index.js";
 
 const requiredScriptNames = [
   "test:validation:proving",
@@ -65,6 +69,62 @@ const v2Profile = {
   syntaxVersion: "markdown-engine.validation@v2",
   documentVersion: "1.0.0",
   rules: [],
+} satisfies ValidationProfile;
+const representativeV2ResultProfile = {
+  syntaxVersion: "markdown-engine.validation@v2",
+  documentVersion: "1.0.0",
+  rules: [
+    {
+      id: "mission.anyof.passed",
+      anyOf: [
+        {
+          label: "table",
+          select: { target: "table", section: "Mission" },
+          assert: { tableColumnsRequired: { columns: ["Owner"] } },
+        },
+        {
+          label: "explicit-none",
+          select: { target: "section", title: "Mission" },
+          assert: { text: { contains: "None" } },
+        },
+      ],
+    },
+    {
+      id: "mission.anyof.failed",
+      anyOf: [
+        {
+          label: "table",
+          select: { target: "table", section: "Mission" },
+          assert: { tableColumnsRequired: { columns: ["Owner"] } },
+        },
+        {
+          label: "explicit-none",
+          select: { target: "section", title: "Mission" },
+          assert: { text: { contains: "None" } },
+        },
+      ],
+    },
+    {
+      id: "mission.allof.failed",
+      allOf: [
+        {
+          label: "heading",
+          select: { target: "document" },
+          assert: { sectionsRequired: { headings: ["Mission"] } },
+        },
+        {
+          label: "table",
+          select: { target: "table", section: "Mission" },
+          assert: { tableColumnsRequired: { columns: ["Owner"] } },
+        },
+      ],
+    },
+    {
+      id: "mission.when.deferred",
+      select: { target: "section", title: "Mission" },
+      assert: { exists: true },
+    },
+  ],
 } satisfies ValidationProfile;
 const supportedRuleProfile = {
   syntaxVersion: "markdown-engine.validation@v1",
@@ -434,6 +494,49 @@ describe("declarative validation public contract scaffold", () => {
         },
       },
     ]);
+  });
+
+  it("preserves representative v2 branch result structures through API and evidence cloning", () => {
+    const sourceRuleResults = representativeV2RuleResults();
+    const expectedRuleResults = representativeV2RuleResults();
+    const sourceDiagnostics = [
+      ...sourceRuleResults[1]!.diagnostics,
+      ...sourceRuleResults[2]!.diagnostics,
+    ];
+    const result = expectV2Result(
+      createDeclarativeValidationResult({
+        document,
+        profile: representativeV2ResultProfile,
+        ruleResults: sourceRuleResults,
+        diagnostics: sourceDiagnostics,
+        options: { includeEvidence: true },
+      }),
+    );
+
+    const sourceAnyOfEvaluation = sourceRuleResults[0]!.evaluation;
+    if (sourceAnyOfEvaluation.kind !== "anyOf") {
+      throw new Error("Expected representative anyOf result.");
+    }
+    sourceAnyOfEvaluation.branches[0]!.diagnostics[0]!.message =
+      "mutated nested branch diagnostic";
+    sourceRuleResults[3]!.when!.diagnostics[0]!.message =
+      "mutated applicability diagnostic";
+
+    expect(result.valid).toBe(false);
+    expect(result.profile).toEqual({
+      syntaxVersion: "markdown-engine.validation@v2",
+      documentVersion: "1.0.0",
+      ruleCount: 4,
+      evaluatedRuleCount: 3,
+      skippedRuleCount: 1,
+    });
+    expect(result.diagnostics.map((diagnostic) => diagnostic.code)).toEqual([
+      "profile.validation.noAlternativeMatched",
+      "profile.validation.groupRequirementFailed",
+    ]);
+    expect(result.ruleResults).toEqual(expectedRuleResults);
+    expect(result.evidence?.ruleResults).toEqual(result.ruleResults);
+    expect(result.evidence?.diagnostics).toEqual(result.diagnostics);
   });
 
   it("keeps the v1 API rule result shape unchanged", () => {
@@ -864,6 +967,159 @@ describe("declarative validation public contract scaffold", () => {
     }
   });
 });
+
+function expectV2Result(
+  result: ReturnType<typeof createDeclarativeValidationResult>,
+): DeclarativeValidationResultV2 {
+  if (result.profile.syntaxVersion !== "markdown-engine.validation@v2") {
+    throw new Error("Expected a v2 declarative validation result.");
+  }
+
+  return result as DeclarativeValidationResultV2;
+}
+
+function representativeV2RuleResults(): DeclarativeValidationRuleResultV2[] {
+  const noAlternativeDiagnostic = diagnostic(
+    "profile.validation.noAlternativeMatched",
+    "mission.anyof.failed",
+    "No anyOf branch matched the grouped rule.",
+  );
+  const groupRequirementDiagnostic = diagnostic(
+    "profile.validation.groupRequirementFailed",
+    "mission.allof.failed",
+    "One or more allOf branches failed the grouped rule.",
+  );
+
+  return [
+    {
+      ruleId: "mission.anyof.passed",
+      status: "passed",
+      passed: true,
+      diagnostics: [],
+      evaluation: {
+        kind: "anyOf",
+        selectedBranch: { branchIndex: 1, label: "explicit-none" },
+        branches: [
+          {
+            branchIndex: 0,
+            label: "table",
+            status: "failed",
+            diagnostics: [
+              diagnostic(
+                "profile.validation.emptySelection",
+                "mission.anyof.passed",
+                "Rule selector did not match any document targets.",
+              ),
+            ],
+          },
+          {
+            branchIndex: 1,
+            label: "explicit-none",
+            status: "passed",
+            diagnostics: [],
+          },
+        ],
+      },
+    },
+    {
+      ruleId: "mission.anyof.failed",
+      status: "failed",
+      passed: false,
+      diagnostics: [noAlternativeDiagnostic],
+      evaluation: {
+        kind: "anyOf",
+        branches: [
+          {
+            branchIndex: 0,
+            label: "table",
+            status: "failed",
+            diagnostics: [
+              diagnostic(
+                "profile.validation.emptySelection",
+                "mission.anyof.failed",
+                "Rule selector did not match any document targets.",
+              ),
+            ],
+          },
+          {
+            branchIndex: 1,
+            label: "explicit-none",
+            status: "failed",
+            diagnostics: [
+              diagnostic(
+                "profile.validation.textMissing",
+                "mission.anyof.failed",
+                'Selected section text must contain "None".',
+              ),
+            ],
+          },
+        ],
+      },
+    },
+    {
+      ruleId: "mission.allof.failed",
+      status: "failed",
+      passed: false,
+      diagnostics: [groupRequirementDiagnostic],
+      evaluation: {
+        kind: "allOf",
+        branches: [
+          {
+            branchIndex: 0,
+            label: "heading",
+            status: "passed",
+            diagnostics: [],
+          },
+          {
+            branchIndex: 1,
+            label: "table",
+            status: "failed",
+            diagnostics: [
+              diagnostic(
+                "profile.validation.assertionFailed",
+                "mission.allof.failed",
+                'Selected table must include column "Owner".',
+              ),
+            ],
+          },
+        ],
+      },
+    },
+    {
+      ruleId: "mission.when.deferred",
+      status: "skipped",
+      passed: true,
+      diagnostics: [],
+      when: {
+        status: "notMatched",
+        diagnostics: [
+          diagnostic(
+            "profile.validation.emptySelection",
+            "mission.when.deferred",
+            "Rule selector did not match any document targets.",
+          ),
+        ],
+      },
+      evaluation: {
+        kind: "skipped",
+        reason: "whenNotMatched",
+      },
+    },
+  ];
+}
+
+function diagnostic(
+  code: string,
+  ruleId: string,
+  message: string,
+): MarkdownDiagnostic {
+  return {
+    code,
+    ruleId,
+    message,
+    severity: "error",
+  };
+}
 
 void (undefined as unknown as CompiledDeclarativeValidationPlan);
 void (undefined as unknown as DeclarativeValidationCompileResult);

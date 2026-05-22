@@ -1,6 +1,8 @@
 import type { MarkdownDiagnostic, SourceRange } from "../../api/diagnostics.js";
 import type {
   CompiledDeclarativeAssertion,
+  CompiledDeclarativeValidationAllOfRuleV2,
+  CompiledDeclarativeValidationAnyOfRuleV2,
   CompiledDeclarativeValidationExecutableRule,
 } from "../compiler/plan.js";
 import type { DeclarativeSelectionTarget } from "../selectors/index.js";
@@ -20,6 +22,28 @@ export interface AssertionDiagnosticOptions {
   targetKey?: string;
   diagnosticOrder?: number;
   sourceRange?: SourceRange;
+}
+
+export function noAlternativeMatchedDiagnostic(
+  rule: CompiledDeclarativeValidationAnyOfRuleV2,
+): MarkdownDiagnostic {
+  return {
+    code: "profile.validation.noAlternativeMatched",
+    ruleId: rule.ruleId,
+    message: "No anyOf branch matched the grouped rule.",
+    severity: rule.severity,
+  };
+}
+
+export function groupRequirementFailedDiagnostic(
+  rule: CompiledDeclarativeValidationAllOfRuleV2,
+): MarkdownDiagnostic {
+  return {
+    code: "profile.validation.groupRequirementFailed",
+    ruleId: rule.ruleId,
+    message: "One or more allOf branches failed the grouped rule.",
+    severity: rule.severity,
+  };
 }
 
 export function emptySelectionDiagnostic(

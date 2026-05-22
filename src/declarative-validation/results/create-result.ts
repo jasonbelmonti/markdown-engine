@@ -8,13 +8,16 @@ import {
   PROFILE_SYNTAX_VERSION as PROFILE_SYNTAX_VERSION_VALUE,
   PROFILE_SYNTAX_VERSION_V2 as PROFILE_SYNTAX_VERSION_V2_VALUE,
 } from "../profile/syntax-version.js";
+import {
+  cloneBaseValidationRuleResult,
+  cloneV2ValidationRuleResult,
+} from "./clone-rule-result.js";
 import type {
   DeclarativeValidationOptions,
   DeclarativeValidationResult,
   DeclarativeValidationResultV1,
   DeclarativeValidationResultV2,
   DeclarativeValidationRuleResultV2,
-  DeclarativeValidationRuleStatus,
 } from "./types.js";
 
 interface CreateDeclarativeValidationResultInput {
@@ -81,8 +84,8 @@ function createV2Result(
       syntaxVersion: PROFILE_SYNTAX_VERSION_V2_VALUE,
       documentVersion: profile.documentVersion ?? document.version,
       ruleCount: profile.rules.length,
-      evaluatedRuleCount: v2RuleResults.length,
-      skippedRuleCount: 0,
+      evaluatedRuleCount: countEvaluatedV2RuleResults(v2RuleResults),
+      skippedRuleCount: countSkippedV2RuleResults(v2RuleResults),
     },
   };
 }
@@ -111,39 +114,23 @@ function withEvidence<T extends DeclarativeValidationResult>(
 function cloneRuleResults(
   ruleResults: readonly ValidationRuleResult[],
 ): ValidationRuleResult[] {
-  return ruleResults.map((result) => ({
-    ruleId: result.ruleId,
-    passed: result.passed,
-    diagnostics: cloneDiagnostics(result.diagnostics),
-  }));
+  return ruleResults.map(cloneBaseValidationRuleResult);
 }
 
 function cloneV2RuleResults(
   ruleResults: readonly ValidationRuleResult[],
 ): DeclarativeValidationRuleResultV2[] {
-  return ruleResults.map((result) => {
-    const status = statusFromRuleResult(result);
-    const diagnostics = cloneDiagnostics(result.diagnostics);
-
-    return {
-      ruleId: result.ruleId,
-      status,
-      passed: passedFromStatus(status),
-      diagnostics,
-      evaluation: {
-        kind: "assertions",
-        diagnostics: cloneDiagnostics(diagnostics),
-      },
-    };
-  });
+  return ruleResults.map(cloneV2ValidationRuleResult);
 }
 
-function statusFromRuleResult(
-  result: ValidationRuleResult,
-): DeclarativeValidationRuleStatus {
-  return result.diagnostics.length === 0 ? "passed" : "failed";
+function countEvaluatedV2RuleResults(
+  ruleResults: readonly DeclarativeValidationRuleResultV2[],
+): number {
+  return ruleResults.length - countSkippedV2RuleResults(ruleResults);
 }
 
-function passedFromStatus(status: DeclarativeValidationRuleStatus): boolean {
-  return status !== "failed";
+function countSkippedV2RuleResults(
+  ruleResults: readonly DeclarativeValidationRuleResultV2[],
+): number {
+  return ruleResults.filter((result) => result.status === "skipped").length;
 }
