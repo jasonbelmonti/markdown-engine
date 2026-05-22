@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { normalize, parse } from "@jasonbelmonti/markdown-engine";
 import { resolveDeclarativeSelector } from "../src/declarative-validation/selectors/index.js";
+import { tableColumnTargets } from "../src/declarative-validation/selectors/table-targets.js";
 
 const fixturePath = "fixtures/declarative-validation/proving/representative.md";
 const richIrFixturePath = "fixtures/rich-ir/queries.md";
@@ -234,6 +235,61 @@ describe("declarative validation selector proof", () => {
         text: "docs",
       }),
     ]);
+  });
+
+  it("resolves table column targets with diagnostic-ready missing states", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Traceability",
+          "",
+          "Narrative mentions REQ-2.",
+          "",
+          "| Requirement | Behavior | Notes |",
+          "| --- | --- | --- |",
+          "| REQ-1 | BEH-1 | - |",
+          "| - | BEH-2 | REQ-2 appears in the wrong column |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+
+    expect(
+      tableColumnTargets(document, {
+        section: "Traceability",
+        column: "Requirement",
+      }),
+    ).toEqual({
+      status: "resolved",
+      source: {
+        section: "Traceability",
+        column: "Requirement",
+      },
+      targets: [
+        expect.objectContaining({
+          kind: "tableCell",
+          text: "REQ-1",
+        }),
+        expect.objectContaining({
+          kind: "tableCell",
+          text: "-",
+        }),
+      ],
+    });
+    expect(
+      tableColumnTargets(document, {
+        section: "Missing Traceability",
+        column: "Requirement",
+      }).status,
+    ).toBe("missingSection");
+    expect(
+      tableColumnTargets(document, {
+        section: "Traceability",
+        column: "Missing Requirement",
+      }).status,
+    ).toBe("missingColumn");
   });
 
   it("matches inline heading targets when scoped to their section", () => {
