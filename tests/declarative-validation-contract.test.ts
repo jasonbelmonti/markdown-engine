@@ -127,6 +127,9 @@ const missingSelectorTargetProfile = {
 } as const;
 const unsupportedSelector = { target: "section" } satisfies DeclarativeSelector;
 const publicAssertion = { ids: { unique: true } } satisfies DeclarativeAssertion;
+const idCountAssertion = {
+  ids: { minCount: 1, maxCount: 3 },
+} satisfies DeclarativeAssertion;
 const existsAssertion = { exists: true } satisfies DeclarativeAssertion;
 const exactOneTextAssertion = {
   textOccurrenceCount: {
@@ -827,6 +830,7 @@ void (undefined as unknown as CompiledDeclarativeValidationPlan);
 void (undefined as unknown as DeclarativeValidationCompileResult);
 void unsupportedSelector;
 void publicAssertion;
+void idCountAssertion;
 void existsAssertion;
 void exactOneTextAssertion;
 void textLengthAssertion;

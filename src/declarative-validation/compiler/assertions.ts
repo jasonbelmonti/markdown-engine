@@ -3,6 +3,7 @@ import type {
   DeclarativeAssertion,
   DeclarativeSelector,
 } from "../profile/index.js";
+import type { ValidationProfileSyntaxVersion } from "../profile/syntax-version.js";
 import { ASSERTION_BUILDERS } from "./assertion-builders.js";
 import { pushUnsupportedKeyDiagnostics } from "./assertion-shapes.js";
 import type { CompiledDeclarativeAssertion } from "./plan.js";
@@ -23,6 +24,7 @@ export function compiledAssertionsFromValue(
   assertion: DeclarativeAssertion,
   selector: DeclarativeSelector,
   ruleId: string,
+  syntaxVersion: ValidationProfileSyntaxVersion,
   diagnostics: MarkdownDiagnostic[],
 ): CompiledDeclarativeAssertion[] {
   const compiled: CompiledDeclarativeAssertion[] = [];
@@ -34,6 +36,7 @@ export function compiledAssertionsFromValue(
       assertion,
       selector,
       ruleId,
+      syntaxVersion,
       diagnostics,
     );
 

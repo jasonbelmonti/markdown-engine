@@ -4,6 +4,10 @@ import type {
   DeclarativeSelector,
 } from "../profile/index.js";
 import {
+  PROFILE_SYNTAX_VERSION_V2,
+  type ValidationProfileSyntaxVersion,
+} from "../profile/syntax-version.js";
+import {
   type DeclarativeAssertionName,
   selectorAssertionCompatibilityError,
 } from "./compatibility.js";
@@ -16,6 +20,7 @@ import {
   optionalNumber,
   optionalString,
   optionalStringArray,
+  pushIdsCountShapeDiagnostics,
   pushNonEmptyStringDiagnostic,
   pushObjectDiagnostic,
   pushOptionalBooleanDiagnostic,
@@ -31,6 +36,7 @@ export type AssertionBuilder = (
   assertion: DeclarativeAssertion,
   selector: DeclarativeSelector,
   ruleId: string,
+  syntaxVersion: ValidationProfileSyntaxVersion,
   diagnostics: MarkdownDiagnostic[],
 ) => CompiledDeclarativeAssertion | undefined;
 
@@ -50,6 +56,7 @@ function buildExistsAssertion(
   assertion: DeclarativeAssertion,
   selector: DeclarativeSelector,
   ruleId: string,
+  _syntaxVersion: ValidationProfileSyntaxVersion,
   diagnostics: MarkdownDiagnostic[],
 ): CompiledDeclarativeAssertion | undefined {
   if (assertion.exists === undefined) {
@@ -79,6 +86,7 @@ function buildSectionsRequiredAssertion(
   assertion: DeclarativeAssertion,
   selector: DeclarativeSelector,
   ruleId: string,
+  _syntaxVersion: ValidationProfileSyntaxVersion,
   diagnostics: MarkdownDiagnostic[],
 ): CompiledDeclarativeAssertion | undefined {
   if (assertion.sectionsRequired === undefined) {
@@ -130,6 +138,7 @@ function buildTableColumnsRequiredAssertion(
   assertion: DeclarativeAssertion,
   selector: DeclarativeSelector,
   ruleId: string,
+  _syntaxVersion: ValidationProfileSyntaxVersion,
   diagnostics: MarkdownDiagnostic[],
 ): CompiledDeclarativeAssertion | undefined {
   if (assertion.tableColumnsRequired === undefined) {
@@ -175,6 +184,7 @@ function buildIdsAssertion(
   assertion: DeclarativeAssertion,
   selector: DeclarativeSelector,
   ruleId: string,
+  syntaxVersion: ValidationProfileSyntaxVersion,
   diagnostics: MarkdownDiagnostic[],
 ): CompiledDeclarativeAssertion | undefined {
   if (assertion.ids === undefined) {
@@ -187,11 +197,25 @@ function buildIdsAssertion(
 
   const hasSupportedKeys = pushUnsupportedKeyDiagnostics(
     assertion.ids,
-    ["prefix", "unique", "caseSensitive"],
+    syntaxVersion === PROFILE_SYNTAX_VERSION_V2
+      ? ["prefix", "unique", "caseSensitive", "minCount", "maxCount"]
+      : ["prefix", "unique", "caseSensitive"],
     diagnostics,
   );
 
-  if (assertion.ids.unique !== true) {
+  if (assertion.ids.unique !== undefined && assertion.ids.unique !== true) {
+    diagnostics.push(
+      compileDiagnostic(
+        "profile.config.invalidShape",
+        "ids.unique must be true.",
+        ruleId,
+      ),
+    );
+
+    return undefined;
+  }
+
+  if (!hasEffectiveIdsPredicate(assertion.ids, syntaxVersion)) {
     diagnostics.push(
       compileDiagnostic(
         "profile.config.invalidShape",
@@ -217,23 +241,41 @@ function buildIdsAssertion(
       ruleId,
       diagnostics,
     ) &&
+    pushIdsCountShapeDiagnostics(assertion.ids, ruleId, diagnostics) &&
     pushCompatibilityDiagnostic("ids", selector, ruleId, diagnostics)
   ) {
     return {
       kind: "ids",
-      unique: true,
       caseSensitive: assertion.ids.caseSensitive ?? true,
+      ...(assertion.ids.unique === true ? { unique: true as const } : {}),
       ...optionalString("prefix", assertion.ids.prefix),
+      ...optionalNumber("minCount", assertion.ids.minCount),
+      ...optionalNumber("maxCount", assertion.ids.maxCount),
     };
   }
 
   return undefined;
 }
 
+function hasEffectiveIdsPredicate(
+  assertion: DeclarativeAssertion["ids"],
+  syntaxVersion: ValidationProfileSyntaxVersion,
+): boolean {
+  return (
+    assertion?.unique === true ||
+    (syntaxVersion === PROFILE_SYNTAX_VERSION_V2 && hasIdsCountBound(assertion))
+  );
+}
+
+function hasIdsCountBound(assertion: DeclarativeAssertion["ids"]): boolean {
+  return assertion?.minCount !== undefined || assertion?.maxCount !== undefined;
+}
+
 function buildReferencesAssertion(
   assertion: DeclarativeAssertion,
   selector: DeclarativeSelector,
   ruleId: string,
+  _syntaxVersion: ValidationProfileSyntaxVersion,
   diagnostics: MarkdownDiagnostic[],
 ): CompiledDeclarativeAssertion | undefined {
   if (assertion.references === undefined) {
@@ -303,6 +345,7 @@ function buildTextAssertion(
   assertion: DeclarativeAssertion,
   selector: DeclarativeSelector,
   ruleId: string,
+  _syntaxVersion: ValidationProfileSyntaxVersion,
   diagnostics: MarkdownDiagnostic[],
 ): CompiledDeclarativeAssertion | undefined {
   if (assertion.text === undefined) {
@@ -348,6 +391,7 @@ function buildTextOccurrenceCountAssertion(
   assertion: DeclarativeAssertion,
   selector: DeclarativeSelector,
   ruleId: string,
+  _syntaxVersion: ValidationProfileSyntaxVersion,
   diagnostics: MarkdownDiagnostic[],
 ): CompiledDeclarativeAssertion | undefined {
   if (assertion.textOccurrenceCount === undefined) {
@@ -398,6 +442,7 @@ function buildTextLengthAssertion(
   assertion: DeclarativeAssertion,
   selector: DeclarativeSelector,
   ruleId: string,
+  _syntaxVersion: ValidationProfileSyntaxVersion,
   diagnostics: MarkdownDiagnostic[],
 ): CompiledDeclarativeAssertion | undefined {
   if (assertion.textLength === undefined) {
@@ -439,6 +484,7 @@ function buildFrontmatterRequiredAssertion(
   assertion: DeclarativeAssertion,
   selector: DeclarativeSelector,
   ruleId: string,
+  _syntaxVersion: ValidationProfileSyntaxVersion,
   diagnostics: MarkdownDiagnostic[],
 ): CompiledDeclarativeAssertion | undefined {
   if (assertion.frontmatterRequired === undefined) {

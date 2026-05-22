@@ -1060,6 +1060,57 @@ describe("declarative validation assertion proof", () => {
     ]);
   });
 
+  it("fails v2 ids count bounds with an unsupported-evaluator diagnostic", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| OBJ-1 | Build safely |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v2",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "ids.min-count",
+          select: { target: "tableCell", column: "ID" },
+          assert: { ids: { unique: true, prefix: "OBJ", minCount: 2 } },
+        },
+      ],
+    });
+
+    expect(result.valid).toBe(false);
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.validation.assertionUnsupported",
+        ruleId: "ids.min-count",
+        message:
+          'Unsupported assertion feature "count bounds" for "ids" is compiled but not implemented by the assertion evaluator yet.',
+        severity: "error",
+      },
+    ]);
+    expect(result.ruleResults).toEqual([
+      {
+        ruleId: "ids.min-count",
+        status: "failed",
+        passed: false,
+        diagnostics: result.diagnostics,
+        evaluation: {
+          kind: "assertions",
+          diagnostics: result.diagnostics,
+        },
+      },
+    ]);
+  });
+
   it("honors case-sensitive and case-insensitive ID policies", () => {
     const document = normalize(
       parse("# Requirements\n\nREQ-1 is ready.\n\nreq-1 repeats.\n").parsed,

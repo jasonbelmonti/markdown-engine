@@ -3,6 +3,7 @@ import type { AssertionEvaluationContext } from "./context.js";
 import type { AssertionDiagnostic } from "./diagnostics.js";
 import {
   emptySelectionDiagnostic,
+  unsupportedEvaluatorFeatureDiagnostic,
   validationDiagnostic,
 } from "./diagnostics.js";
 import { extractTargetIdTokens } from "./id-targets.js";
@@ -17,6 +18,17 @@ export function evaluateIds(
   assertion: IdsAssertion,
   context: AssertionEvaluationContext,
 ): AssertionDiagnostic[] {
+  if (hasIdsCountBounds(assertion)) {
+    return [
+      unsupportedEvaluatorFeatureDiagnostic(
+        assertion.kind,
+        "count bounds",
+        context.rule,
+        context.assertionIndex,
+      ),
+    ];
+  }
+
   if (context.selection.targets.length === 0) {
     return [emptySelectionDiagnostic(context.rule, context.assertionIndex)];
   }
@@ -66,6 +78,10 @@ export function evaluateIds(
   }
 
   return diagnostics;
+}
+
+function hasIdsCountBounds(assertion: IdsAssertion): boolean {
+  return assertion.minCount !== undefined || assertion.maxCount !== undefined;
 }
 
 function duplicateIdSortKey(comparisonValue: string, targetOrder: number): string {

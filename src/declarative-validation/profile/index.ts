@@ -81,6 +81,8 @@ export interface DeclarativeAssertion {
     prefix?: string;
     unique?: boolean;
     caseSensitive?: boolean;
+    minCount?: number;
+    maxCount?: number;
   };
   references?: {
     idsFrom: DeclarativeIdSource;

@@ -108,6 +108,18 @@ describe("declarative validation compiler proof", () => {
           select: { target: "document" },
           assert: { text: { contains: "Mission" } },
         },
+        {
+          id: "v2-id-count-plan",
+          select: { target: "tableCell", column: "ID" },
+          assert: {
+            ids: {
+              prefix: "OBJ",
+              caseSensitive: false,
+              minCount: 1,
+              maxCount: 3,
+            },
+          },
+        },
       ],
     });
 
@@ -122,6 +134,22 @@ describe("declarative validation compiler proof", () => {
           severity: "info",
           selector: { target: "document" },
           assertions: [{ kind: "text", contains: "Mission" }],
+        },
+        {
+          kind: "flat",
+          syntaxVersion: "markdown-engine.validation@v2",
+          ruleId: "v2-id-count-plan",
+          severity: "error",
+          selector: { target: "tableCell", column: "ID" },
+          assertions: [
+            {
+              kind: "ids",
+              caseSensitive: false,
+              prefix: "OBJ",
+              minCount: 1,
+              maxCount: 3,
+            },
+          ],
         },
       ],
     });

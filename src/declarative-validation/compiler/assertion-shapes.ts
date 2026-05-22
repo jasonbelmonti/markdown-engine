@@ -148,6 +148,59 @@ export function pushTextLengthShapeDiagnostics(
   return valid;
 }
 
+export function pushIdsCountShapeDiagnostics(
+  assertion: DeclarativeAssertion["ids"],
+  ruleId: string,
+  diagnostics: MarkdownDiagnostic[],
+): boolean {
+  let valid = true;
+  const minCount = assertion?.minCount;
+  const maxCount = assertion?.maxCount;
+
+  if (
+    minCount !== undefined &&
+    !pushNonNegativeIntegerDiagnostic(
+      "ids.minCount",
+      minCount,
+      ruleId,
+      diagnostics,
+    )
+  ) {
+    valid = false;
+  }
+
+  if (
+    maxCount !== undefined &&
+    !pushNonNegativeIntegerDiagnostic(
+      "ids.maxCount",
+      maxCount,
+      ruleId,
+      diagnostics,
+    )
+  ) {
+    valid = false;
+  }
+
+  if (
+    valid &&
+    minCount !== undefined &&
+    maxCount !== undefined &&
+    minCount > maxCount
+  ) {
+    diagnostics.push(
+      compileDiagnostic(
+        "profile.config.invalidShape",
+        "ids.minCount must be less than or equal to ids.maxCount.",
+        ruleId,
+      ),
+    );
+
+    valid = false;
+  }
+
+  return valid;
+}
+
 export function pushOptionalNonEmptyStringDiagnostic(
   fieldName: string,
   value: unknown,
@@ -202,6 +255,15 @@ export function pushNonEmptyStringDiagnostic(
 }
 
 function pushTextLengthNumberDiagnostic(
+  fieldName: string,
+  value: unknown,
+  ruleId: string,
+  diagnostics: MarkdownDiagnostic[],
+): boolean {
+  return pushNonNegativeIntegerDiagnostic(fieldName, value, ruleId, diagnostics);
+}
+
+function pushNonNegativeIntegerDiagnostic(
   fieldName: string,
   value: unknown,
   ruleId: string,
