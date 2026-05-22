@@ -51,6 +51,39 @@ function stripSourceEvidence(value: unknown): void {
 }
 
 describe("declarative validation assertion proof", () => {
+  it("emits an unsupported diagnostic for tableColumnCoverage before evaluator semantics land", () => {
+    const document = normalize(
+      parse("| ID | Requirement |\n| --- | --- |\n| REQ-1 | REQ-1 |\n").parsed,
+      { documentVersion: "1.0.0" },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v2",
+      rules: [
+        {
+          id: "traceability.coverage",
+          select: { target: "document" },
+          assert: {
+            tableColumnCoverage: {
+              source: { section: "Requirements", column: "ID" },
+              target: { section: "Traceability", column: "Requirement" },
+              require: "everySourceId",
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.assertionUnsupported",
+        ruleId: "traceability.coverage",
+        message:
+          'Assertion "tableColumnCoverage" is compiled but not implemented by the assertion evaluator yet.',
+        severity: "error",
+      }),
+    ]);
+  });
+
   it("evaluates the minimal text assertion path and emits source-targeted diagnostics", () => {
     const document = normalize(parse(fixture, { path: fixturePath }).parsed, {
       documentVersion: "1.0.0",

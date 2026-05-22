@@ -1,7 +1,12 @@
 import type { MarkdownDiagnostic } from "../../api/diagnostics.js";
 import { isPlainRecord } from "../../internal/plain-record.js";
 import { unsupportedProfileKey } from "../diagnostics/profile-config-diagnostics.js";
-import type { DeclarativeAssertion } from "../profile/index.js";
+import type {
+  DeclarativeAssertion,
+  DeclarativeTableColumnCoverage,
+  DeclarativeTableColumnCoverageSource,
+  DeclarativeTableColumnCoverageTarget,
+} from "../profile/index.js";
 import { stringArray } from "../profile/schema-values.js";
 import { compileDiagnostic } from "./diagnostics.js";
 
@@ -199,6 +204,175 @@ export function pushIdsCountShapeDiagnostics(
   }
 
   return valid;
+}
+
+export function closedTableColumnCoverage(
+  value: unknown,
+  ruleId: string,
+  diagnostics: MarkdownDiagnostic[],
+): DeclarativeTableColumnCoverage | undefined {
+  const diagnosticCountBefore = diagnostics.length;
+
+  if (!pushObjectDiagnostic("tableColumnCoverage", value, ruleId, diagnostics)) {
+    return undefined;
+  }
+
+  const record = value as Record<string, unknown>;
+  const hasSupportedKeys = pushUnsupportedKeyDiagnostics(
+    record,
+    ["source", "target", "require"],
+    diagnostics,
+  );
+  const source = closedTableColumnCoverageSource(
+    record.source,
+    ruleId,
+    diagnostics,
+  );
+  const target = closedTableColumnCoverageTarget(
+    record.target,
+    ruleId,
+    diagnostics,
+  );
+  const require =
+    record.require === "everySourceId" ? "everySourceId" : undefined;
+
+  if (require === undefined) {
+    diagnostics.push(
+      compileDiagnostic(
+        "profile.config.invalidShape",
+        'tableColumnCoverage.require must be "everySourceId".',
+        ruleId,
+      ),
+    );
+  }
+
+  return hasSupportedKeys &&
+    diagnostics.length === diagnosticCountBefore &&
+    source !== undefined &&
+    target !== undefined &&
+    require !== undefined
+    ? {
+        source,
+        target,
+        require,
+      }
+    : undefined;
+}
+
+function closedTableColumnCoverageSource(
+  value: unknown,
+  ruleId: string,
+  diagnostics: MarkdownDiagnostic[],
+): DeclarativeTableColumnCoverageSource | undefined {
+  if (
+    !pushObjectDiagnostic(
+      "tableColumnCoverage.source",
+      value,
+      ruleId,
+      diagnostics,
+    )
+  ) {
+    return undefined;
+  }
+
+  const source = value as Record<string, unknown>;
+  const hasSupportedKeys = pushUnsupportedKeyDiagnostics(
+    source,
+    ["section", "column", "prefix", "caseSensitive"],
+    diagnostics,
+  );
+  const hasValidFields =
+    pushNonEmptyStringDiagnostic(
+      "tableColumnCoverage.source.section",
+      source.section,
+      ruleId,
+      diagnostics,
+    ) &&
+    pushNonEmptyStringDiagnostic(
+      "tableColumnCoverage.source.column",
+      source.column,
+      ruleId,
+      diagnostics,
+    ) &&
+    pushOptionalNonEmptyStringDiagnostic(
+      "tableColumnCoverage.source.prefix",
+      source.prefix,
+      ruleId,
+      diagnostics,
+    ) &&
+    pushOptionalBooleanDiagnostic(
+      "tableColumnCoverage.source.caseSensitive",
+      source.caseSensitive,
+      ruleId,
+      diagnostics,
+    );
+
+  return hasSupportedKeys && hasValidFields
+    ? {
+        section: source.section as string,
+        column: source.column as string,
+        ...optionalString("prefix", source.prefix as string | undefined),
+        ...(source.caseSensitive === undefined
+          ? {}
+          : { caseSensitive: source.caseSensitive as boolean }),
+      }
+    : undefined;
+}
+
+function closedTableColumnCoverageTarget(
+  value: unknown,
+  ruleId: string,
+  diagnostics: MarkdownDiagnostic[],
+): DeclarativeTableColumnCoverageTarget | undefined {
+  if (
+    !pushObjectDiagnostic(
+      "tableColumnCoverage.target",
+      value,
+      ruleId,
+      diagnostics,
+    )
+  ) {
+    return undefined;
+  }
+
+  const target = value as Record<string, unknown>;
+  const hasSupportedKeys = pushUnsupportedKeyDiagnostics(
+    target,
+    ["section", "tableHeader", "column"],
+    diagnostics,
+  );
+  const hasValidRequiredFields =
+    pushNonEmptyStringDiagnostic(
+      "tableColumnCoverage.target.section",
+      target.section,
+      ruleId,
+      diagnostics,
+    ) &&
+    pushNonEmptyStringDiagnostic(
+      "tableColumnCoverage.target.column",
+      target.column,
+      ruleId,
+      diagnostics,
+    );
+  const tableHeader =
+    target.tableHeader === undefined
+      ? undefined
+      : closedStringArray(
+          "tableColumnCoverage.target.tableHeader",
+          target.tableHeader,
+          ruleId,
+          diagnostics,
+        );
+  const hasValidTableHeader =
+    target.tableHeader === undefined || tableHeader !== undefined;
+
+  return hasSupportedKeys && hasValidRequiredFields && hasValidTableHeader
+    ? {
+        section: target.section as string,
+        ...(tableHeader === undefined ? {} : { tableHeader }),
+        column: target.column as string,
+      }
+    : undefined;
 }
 
 export function pushOptionalNonEmptyStringDiagnostic(

@@ -2,8 +2,9 @@
 
 Status: package 2.0.0, v1 profile syntax with v2 profile admission, document contract 1.0.0
 Last updated: 2026-05-22
-Current v2 surface: flat-rule result/evidence shell plus ID count-bound schema
-and runtime evaluator contract.
+Current v2 surface: flat-rule result/evidence shell, ID count-bound schema and
+runtime evaluator contract, plus `tableColumnCoverage` schema and compiled-plan
+contract.
 
 This document defines the public declarative validation contract for
 `@jasonbelmonti/markdown-engine`. The stable surface is the package-root API,
@@ -13,14 +14,16 @@ fields. Internal parser output, compiled rule-plan records, selector target
 records, and evaluator implementation modules are not public contracts.
 
 Package 2.0 does not introduce `documentVersion: "2.0.0"`, CLI JSON
-discrimination, grouped-rule, `when`, or `tableColumnCoverage` behavior.
+discrimination, grouped-rule, `when`, or `tableColumnCoverage` runtime coverage
+behavior.
 Declarative validation continues to use the existing `documentVersion: "1.0.0"`
 rich IR document contract, while the profile admission path recognizes
 `markdown-engine.validation@v2` for the same flat rule shape with `id`, optional
 `severity`, `select`, and `assert`. The admitted v2 flat path exposes the
 minimal result and evidence shell needed to distinguish flat assertion
 evaluation output from v1 output, plus the ID count-bound schema, compiled-plan,
-and runtime evaluator contract.
+and runtime evaluator contract, and the `tableColumnCoverage` schema and
+internal compiled-plan contract.
 
 ## 1.0 Contract
 
@@ -66,11 +69,11 @@ The v2 syntax is admitted with the same flat-rule profile shape:
 syntaxVersion: markdown-engine.validation@v2
 ```
 
-This release recognizes v2 as a distinct syntax version at profile admission
-and admits ID count bounds at the schema, compiled-plan, and runtime evaluator
-layers. Other v2-only constructs such as grouped rules, `when`, and
-`tableColumnCoverage` remain unsupported and emit deterministic profile
-diagnostics.
+This release recognizes v2 as a distinct syntax version at profile admission,
+admits ID count bounds at the schema, compiled-plan, and runtime evaluator
+layers, and admits `tableColumnCoverage` at the schema and internal
+compiled-plan layers. Other v2-only constructs such as grouped rules and `when`
+remain unsupported and emit deterministic profile diagnostics.
 
 The admitted v1/v2 flat vocabulary is closed. Unknown profile keys, rule keys,
 selector keys, known assertion keys, and nested assertion keys emit
@@ -233,6 +236,20 @@ interface DeclarativeAssertion {
     idsFrom: { section?: string; column?: string; prefix?: string };
     mustAppearIn: readonly string[];
   };
+  tableColumnCoverage?: {
+    source: {
+      section: string;
+      column: string;
+      prefix?: string;
+      caseSensitive?: boolean;
+    };
+    target: {
+      section: string;
+      tableHeader?: readonly string[];
+      column: string;
+    };
+    require: "everySourceId";
+  };
   text?: {
     contains?: string;
     excludes?: readonly string[];
@@ -267,6 +284,7 @@ Selector/assertion compatibility is part of the public contract:
 | `tableColumnsRequired` | `table` |
 | `ids` | all supported selector targets |
 | `references` | `document` |
+| `tableColumnCoverage` | `document` |
 | `text` | all supported selector targets |
 | `textOccurrenceCount` | all supported selector targets |
 | `textLength` | all supported selector targets |
@@ -294,6 +312,18 @@ be less than or equal to `maxCount`. Runtime count evaluation uses unique
 comparison values after prefix filtering and duplicate occurrence de-duplication.
 Failed lower and upper bounds emit `profile.validation.idCountTooLow` and
 `profile.validation.idCountTooHigh`.
+
+For v2 profiles, `tableColumnCoverage` is admitted as a flat-rule schema and
+internal compiled-plan assertion. It is compatible only with a `document`
+selector because the assertion owns its source and target table-column inputs.
+`source.section`, `source.column`, `target.section`, and `target.column` are
+required non-empty strings. `source.prefix` is optional and must be non-empty
+when provided. `source.caseSensitive` is optional and defaults to `true` in the
+compiled plan. `target.tableHeader` is an optional non-empty string array.
+`require` must be exactly `"everySourceId"`. Runtime source-to-target coverage
+evaluation is deferred; until the evaluator leaf implements it, validation emits
+`profile.validation.assertionUnsupported` for this compiled assertion instead of
+performing column coverage comparison.
 
 `text` must include `contains` or a non-empty `excludes` array.
 `textOccurrenceCount.count` is a finite number and counts non-overlapping

@@ -120,6 +120,25 @@ describe("declarative validation compiler proof", () => {
             },
           },
         },
+        {
+          id: "v2-table-column-coverage-plan",
+          select: { target: "document" },
+          assert: {
+            tableColumnCoverage: {
+              source: {
+                section: "5. Requirements",
+                column: "ID",
+                prefix: "REQ",
+              },
+              target: {
+                section: "11. Requirements-to-Behavior Traceability",
+                tableHeader: ["Requirement", "Behavior"],
+                column: "Requirement",
+              },
+              require: "everySourceId",
+            },
+          },
+        },
       ],
     });
 
@@ -148,6 +167,30 @@ describe("declarative validation compiler proof", () => {
               prefix: "OBJ",
               minCount: 1,
               maxCount: 3,
+            },
+          ],
+        },
+        {
+          kind: "flat",
+          syntaxVersion: "markdown-engine.validation@v2",
+          ruleId: "v2-table-column-coverage-plan",
+          severity: "error",
+          selector: { target: "document" },
+          assertions: [
+            {
+              kind: "tableColumnCoverage",
+              source: {
+                section: "5. Requirements",
+                column: "ID",
+                caseSensitive: true,
+                prefix: "REQ",
+              },
+              target: {
+                section: "11. Requirements-to-Behavior Traceability",
+                tableHeader: ["Requirement", "Behavior"],
+                column: "Requirement",
+              },
+              require: "everySourceId",
             },
           ],
         },

@@ -12,6 +12,7 @@ export function selectorAssertionCompatibilityError(
 
     case "sectionsRequired":
     case "references":
+    case "tableColumnCoverage":
       return selector.target === "document"
         ? undefined
         : selectorCompatibilityMessage(assertionName, "document");

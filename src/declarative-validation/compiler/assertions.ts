@@ -3,12 +3,15 @@ import type {
   DeclarativeAssertion,
   DeclarativeSelector,
 } from "../profile/index.js";
-import type { ValidationProfileSyntaxVersion } from "../profile/syntax-version.js";
+import {
+  PROFILE_SYNTAX_VERSION_V2,
+  type ValidationProfileSyntaxVersion,
+} from "../profile/syntax-version.js";
 import { ASSERTION_BUILDERS } from "./assertion-builders.js";
 import { pushUnsupportedKeyDiagnostics } from "./assertion-shapes.js";
 import type { CompiledDeclarativeAssertion } from "./plan.js";
 
-const ASSERTION_KEYS = [
+const ASSERTION_KEYS_V1 = [
   "exists",
   "sectionsRequired",
   "tableColumnsRequired",
@@ -18,7 +21,12 @@ const ASSERTION_KEYS = [
   "textOccurrenceCount",
   "textLength",
   "frontmatterRequired",
-];
+] as const;
+
+const ASSERTION_KEYS_V2 = [
+  ...ASSERTION_KEYS_V1,
+  "tableColumnCoverage",
+] as const;
 
 export function compiledAssertionsFromValue(
   assertion: DeclarativeAssertion,
@@ -29,7 +37,11 @@ export function compiledAssertionsFromValue(
 ): CompiledDeclarativeAssertion[] {
   const compiled: CompiledDeclarativeAssertion[] = [];
 
-  pushUnsupportedKeyDiagnostics(assertion, ASSERTION_KEYS, diagnostics);
+  pushUnsupportedKeyDiagnostics(
+    assertion,
+    assertionKeysForSyntaxVersion(syntaxVersion),
+    diagnostics,
+  );
 
   for (const buildAssertion of ASSERTION_BUILDERS) {
     const compiledAssertion = buildAssertion(
@@ -46,4 +58,12 @@ export function compiledAssertionsFromValue(
   }
 
   return compiled;
+}
+
+function assertionKeysForSyntaxVersion(
+  syntaxVersion: ValidationProfileSyntaxVersion,
+): readonly string[] {
+  return syntaxVersion === PROFILE_SYNTAX_VERSION_V2
+    ? ASSERTION_KEYS_V2
+    : ASSERTION_KEYS_V1;
 }

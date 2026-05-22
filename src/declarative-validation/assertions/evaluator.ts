@@ -5,7 +5,10 @@ import type {
 } from "../compiler/plan.js";
 import type { DeclarativeSelection } from "../selectors/index.js";
 import type { AssertionEvaluationContext } from "./context.js";
-import type { AssertionDiagnostic } from "./diagnostics.js";
+import {
+  unsupportedEvaluatorDiagnostic,
+  type AssertionDiagnostic,
+} from "./diagnostics.js";
 import { evaluateExists } from "./exists.js";
 import { evaluateFrontmatterRequired } from "./frontmatter-required.js";
 import { evaluateIds } from "./ids.js";
@@ -69,5 +72,14 @@ function evaluateAssertion(
 
     case "references":
       return evaluateReferences(assertion, context);
+
+    case "tableColumnCoverage":
+      return [
+        unsupportedEvaluatorDiagnostic(
+          assertion,
+          context.rule,
+          context.assertionIndex,
+        ),
+      ];
   }
 }
