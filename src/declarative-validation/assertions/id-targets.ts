@@ -33,6 +33,7 @@ export interface TargetIdToken {
 
 export interface TableColumnIdSource {
   section?: string;
+  tableHeader?: readonly string[];
   column: string;
 }
 

@@ -51,9 +51,23 @@ function stripSourceEvidence(value: unknown): void {
 }
 
 describe("declarative validation assertion proof", () => {
-  it("emits an unsupported diagnostic for tableColumnCoverage before evaluator semantics land", () => {
+  it("evaluates tableColumnCoverage against configured target column IDs", () => {
     const document = normalize(
-      parse("| ID | Requirement |\n| --- | --- |\n| REQ-1 | REQ-1 |\n").parsed,
+      parse(
+        [
+          "# Requirements",
+          "",
+          "| ID | Requirement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "",
+          "# Traceability",
+          "",
+          "| Requirement | Evidence |",
+          "| --- | --- |",
+          "| REQ-1 | Unit test |",
+        ].join("\n"),
+      ).parsed,
       { documentVersion: "1.0.0" },
     ).document;
     const result = validateWithProfile(document, {
@@ -73,15 +87,17 @@ describe("declarative validation assertion proof", () => {
       ],
     });
 
-    expect(result.diagnostics).toEqual([
-      expect.objectContaining({
-        code: "profile.validation.assertionUnsupported",
-        ruleId: "traceability.coverage",
-        message:
-          'Assertion "tableColumnCoverage" is compiled but not implemented by the assertion evaluator yet.',
-        severity: "error",
-      }),
-    ]);
+    expect(result).toMatchObject({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [
+        {
+          ruleId: "traceability.coverage",
+          passed: true,
+          diagnostics: [],
+        },
+      ],
+    });
   });
 
   it("evaluates the minimal text assertion path and emits source-targeted diagnostics", () => {

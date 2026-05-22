@@ -3,8 +3,8 @@
 Status: package 2.0.0, v1 profile syntax with v2 profile admission, document contract 1.0.0
 Last updated: 2026-05-22
 Current v2 surface: flat-rule result/evidence shell, ID count-bound schema and
-runtime evaluator contract, plus `tableColumnCoverage` schema and compiled-plan
-contract.
+runtime evaluator contract, plus `tableColumnCoverage` schema, compiled-plan,
+and runtime evaluator contract.
 
 This document defines the public declarative validation contract for
 `@jasonbelmonti/markdown-engine`. The stable surface is the package-root API,
@@ -14,16 +14,15 @@ fields. Internal parser output, compiled rule-plan records, selector target
 records, and evaluator implementation modules are not public contracts.
 
 Package 2.0 does not introduce `documentVersion: "2.0.0"`, CLI JSON
-discrimination, grouped-rule, `when`, or `tableColumnCoverage` runtime coverage
-behavior.
+discrimination, grouped-rule, or `when` behavior.
 Declarative validation continues to use the existing `documentVersion: "1.0.0"`
 rich IR document contract, while the profile admission path recognizes
 `markdown-engine.validation@v2` for the same flat rule shape with `id`, optional
 `severity`, `select`, and `assert`. The admitted v2 flat path exposes the
 minimal result and evidence shell needed to distinguish flat assertion
 evaluation output from v1 output, plus the ID count-bound schema, compiled-plan,
-and runtime evaluator contract, and the `tableColumnCoverage` schema and
-internal compiled-plan contract.
+and runtime evaluator contract, and the `tableColumnCoverage` schema,
+compiled-plan, and runtime evaluator contract.
 
 ## 1.0 Contract
 
@@ -71,9 +70,9 @@ syntaxVersion: markdown-engine.validation@v2
 
 This release recognizes v2 as a distinct syntax version at profile admission,
 admits ID count bounds at the schema, compiled-plan, and runtime evaluator
-layers, and admits `tableColumnCoverage` at the schema and internal
-compiled-plan layers. Other v2-only constructs such as grouped rules and `when`
-remain unsupported and emit deterministic profile diagnostics.
+layers, and admits `tableColumnCoverage` at the schema, internal compiled-plan,
+and runtime evaluator layers. Other v2-only constructs such as grouped rules and
+`when` remain unsupported and emit deterministic profile diagnostics.
 
 The admitted v1/v2 flat vocabulary is closed. Unknown profile keys, rule keys,
 selector keys, known assertion keys, and nested assertion keys emit
@@ -320,10 +319,13 @@ selector because the assertion owns its source and target table-column inputs.
 required non-empty strings. `source.prefix` is optional and must be non-empty
 when provided. `source.caseSensitive` is optional and defaults to `true` in the
 compiled plan. `target.tableHeader` is an optional non-empty string array.
-`require` must be exactly `"everySourceId"`. Runtime source-to-target coverage
-evaluation is deferred; until the evaluator leaf implements it, validation emits
-`profile.validation.assertionUnsupported` for this compiled assertion instead of
-performing column coverage comparison.
+`require` must be exactly `"everySourceId"`. Runtime evaluation extracts unique
+source IDs from `source.section` and `source.column`, applies `source.prefix`
+and `source.caseSensitive`, and requires every source ID comparison value to
+appear in the configured target table column. IDs appearing elsewhere in the
+target section do not satisfy coverage. Missing target sections, missing target
+columns, and missing target-column IDs emit deterministic validation diagnostics
+source-grounded to the source ID when source evidence is available.
 
 `text` must include `contains` or a non-empty `excludes` array.
 `textOccurrenceCount.count` is a finite number and counts non-overlapping
@@ -367,6 +369,9 @@ rather than fabricated when unavailable.
 | `profile.validation.referenceMissing` | Rule severity | A source ID is absent from a required target section. |
 | `profile.validation.sectionMissing` | Rule severity | A required section heading is absent. |
 | `profile.validation.sectionOrder` | Rule severity | A strict required-section order cannot be satisfied. |
+| `profile.validation.tableColumnCoverageIdMissing` | Rule severity | A source ID is absent from the configured target table column. |
+| `profile.validation.tableColumnCoverageTargetColumnMissing` | Rule severity | The configured target table column cannot be resolved. |
+| `profile.validation.tableColumnCoverageTargetSectionMissing` | Rule severity | The configured target section cannot be resolved. |
 | `profile.validation.textExcluded` | Rule severity | A selected target contains forbidden literal text. |
 | `profile.validation.textMissing` | Rule severity | A selected target lacks required literal text from a `text.contains` assertion. |
 | `profile.validation.assertionUnsupported` | `error` | A compiled assertion or compiled assertion feature has no evaluator implementation; this is an internal safety diagnostic. |
