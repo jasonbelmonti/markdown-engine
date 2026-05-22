@@ -7,6 +7,13 @@ import {
 } from "../diagnostics/profile-config-diagnostics.js";
 import type { DeclarativeAssertion, DeclarativeIdSource } from "./index.js";
 import {
+  hasEffectiveIdsPredicate,
+  hasValidIdsCountRange,
+  idsAssertionKeysForSyntaxVersion,
+  idsAssertionSupportsCountBounds,
+  type IdsCountBoundKey,
+} from "./ids-assertion-contract.js";
+import {
   invalidShape,
   isFiniteNumber,
   optionalBooleanField,
@@ -16,10 +23,7 @@ import {
   stringArray,
   unsupportedKeys,
 } from "./schema-values.js";
-import {
-  PROFILE_SYNTAX_VERSION_V2,
-  type ValidationProfileSyntaxVersion,
-} from "./syntax-version.js";
+import type { ValidationProfileSyntaxVersion } from "./syntax-version.js";
 
 const SUPPORTED_ASSERTION_KEYS = [
   "exists",
@@ -215,26 +219,24 @@ function idsFromValue(
     return {};
   }
 
-  const isV2 = syntaxVersion === PROFILE_SYNTAX_VERSION_V2;
+  const supportsCountBounds = idsAssertionSupportsCountBounds(syntaxVersion);
 
-  unsupportedKeys(
-    value,
-    isV2
-      ? ["prefix", "unique", "caseSensitive", "minCount", "maxCount"]
-      : ["prefix", "unique", "caseSensitive"],
-    diagnostics,
-  );
+  unsupportedKeys(value, idsAssertionKeysForSyntaxVersion(syntaxVersion), diagnostics);
 
-  const diagnosticCountBeforeCountBounds = diagnostics.length;
+  const diagnosticCountBeforeIdsShape = diagnostics.length;
   const ids = {
     ...optionalAssertionString(value, "prefix", diagnostics),
     ...(value.unique === true ? { unique: true as const } : {}),
     ...optionalBoolean(value, "caseSensitive", diagnostics),
-    ...(isV2 ? optionalIdCountBound(value, "minCount", diagnostics) : {}),
-    ...(isV2 ? optionalIdCountBound(value, "maxCount", diagnostics) : {}),
+    ...(supportsCountBounds
+      ? optionalIdCountBound(value, "minCount", diagnostics)
+      : {}),
+    ...(supportsCountBounds
+      ? optionalIdCountBound(value, "maxCount", diagnostics)
+      : {}),
   };
 
-  if (diagnostics.length > diagnosticCountBeforeCountBounds) {
+  if (diagnostics.length > diagnosticCountBeforeIdsShape) {
     return {};
   }
 
@@ -244,13 +246,13 @@ function idsFromValue(
     return {};
   }
 
-  if (!hasEffectiveIdsPredicate(ids, isV2)) {
+  if (!hasEffectiveIdsPredicate(ids, syntaxVersion)) {
     diagnostics.push(invalidShape("ids.unique must be true."));
 
     return {};
   }
 
-  if (!hasValidIdCountRange(ids)) {
+  if (!hasValidIdsCountRange(ids)) {
     diagnostics.push(
       invalidShape("ids.minCount must be less than or equal to ids.maxCount."),
     );
@@ -528,9 +530,9 @@ function optionalTextLengthBound(
 
 function optionalIdCountBound(
   record: Record<string, unknown>,
-  key: "minCount" | "maxCount",
+  key: IdsCountBoundKey,
   diagnostics: MarkdownDiagnostic[],
-): Partial<Record<"minCount" | "maxCount", number>> {
+): Partial<Record<IdsCountBoundKey, number>> {
   const value = record[key];
 
   if (value === undefined) {
@@ -551,7 +553,7 @@ function optionalIdCountBound(
     return {};
   }
 
-  return { [key]: value } as Partial<Record<"minCount" | "maxCount", number>>;
+  return { [key]: value } as Partial<Record<IdsCountBoundKey, number>>;
 }
 
 function requiredAssertionString(
@@ -585,25 +587,6 @@ function hasValidTextLengthRange(
     textLength.max === undefined ||
     textLength.min <= textLength.max
   );
-}
-
-function hasValidIdCountRange(ids: DeclarativeAssertion["ids"]): boolean {
-  return (
-    ids?.minCount === undefined ||
-    ids.maxCount === undefined ||
-    ids.minCount <= ids.maxCount
-  );
-}
-
-function hasEffectiveIdsPredicate(
-  ids: DeclarativeAssertion["ids"],
-  isV2: boolean,
-): boolean {
-  return ids?.unique === true || (isV2 && hasIdCountBound(ids));
-}
-
-function hasIdCountBound(ids: DeclarativeAssertion["ids"]): boolean {
-  return ids?.minCount !== undefined || ids?.maxCount !== undefined;
 }
 
 function isTextLengthBound(value: number): boolean {

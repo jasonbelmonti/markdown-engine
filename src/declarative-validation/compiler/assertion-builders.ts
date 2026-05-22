@@ -4,9 +4,10 @@ import type {
   DeclarativeSelector,
 } from "../profile/index.js";
 import {
-  PROFILE_SYNTAX_VERSION_V2,
-  type ValidationProfileSyntaxVersion,
-} from "../profile/syntax-version.js";
+  hasEffectiveIdsPredicate,
+  idsAssertionKeysForSyntaxVersion,
+} from "../profile/ids-assertion-contract.js";
+import type { ValidationProfileSyntaxVersion } from "../profile/syntax-version.js";
 import {
   type DeclarativeAssertionName,
   selectorAssertionCompatibilityError,
@@ -197,9 +198,7 @@ function buildIdsAssertion(
 
   const hasSupportedKeys = pushUnsupportedKeyDiagnostics(
     assertion.ids,
-    syntaxVersion === PROFILE_SYNTAX_VERSION_V2
-      ? ["prefix", "unique", "caseSensitive", "minCount", "maxCount"]
-      : ["prefix", "unique", "caseSensitive"],
+    idsAssertionKeysForSyntaxVersion(syntaxVersion),
     diagnostics,
   );
 
@@ -255,20 +254,6 @@ function buildIdsAssertion(
   }
 
   return undefined;
-}
-
-function hasEffectiveIdsPredicate(
-  assertion: DeclarativeAssertion["ids"],
-  syntaxVersion: ValidationProfileSyntaxVersion,
-): boolean {
-  return (
-    assertion?.unique === true ||
-    (syntaxVersion === PROFILE_SYNTAX_VERSION_V2 && hasIdsCountBound(assertion))
-  );
-}
-
-function hasIdsCountBound(assertion: DeclarativeAssertion["ids"]): boolean {
-  return assertion?.minCount !== undefined || assertion?.maxCount !== undefined;
 }
 
 function buildReferencesAssertion(
