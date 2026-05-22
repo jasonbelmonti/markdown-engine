@@ -100,6 +100,57 @@ cases:
             section: Traceability
             column: Requirement
 
+  - name: narrative-text-fail
+    contract: fail when an ID appears in target-section narrative text but not the configured target column
+    markdown: |
+      # Requirements
+
+      | ID | Statement |
+      | --- | --- |
+      | REQ-1 | Build safely |
+      | REQ-2 | Launch safely |
+
+      # Traceability
+
+      REQ-2 appears in traceability narrative text but not the target column.
+
+      | Requirement | Evidence |
+      | --- | --- |
+      | REQ-1 | Unit test |
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: coverage.narrative-text
+          select:
+            target: document
+          assert:
+            tableColumnCoverage:
+              source:
+                section: Requirements
+                column: ID
+                prefix: REQ
+              target:
+                section: Traceability
+                column: Requirement
+              require: everySourceId
+    expected:
+      valid: false
+      diagnostics:
+        - code: profile.validation.tableColumnCoverageIdMissing
+          ruleId: coverage.narrative-text
+          message: 'ID "REQ-2" must appear in target table column "Requirement" of section "Traceability".'
+          sourceLine: 6
+      compiledAssertions:
+        - ruleId: coverage.narrative-text
+          source:
+            section: Requirements
+            column: ID
+            prefix: REQ
+          target:
+            section: Traceability
+            column: Requirement
+
   - name: missing-target-section
     contract: emit a source-grounded diagnostic when the configured target section is absent
     markdown: |
