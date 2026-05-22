@@ -1060,7 +1060,7 @@ describe("declarative validation assertion proof", () => {
     ]);
   });
 
-  it("fails v2 ids count bounds with an unsupported-evaluator diagnostic", () => {
+  it("fails v2 ids minCount after prefix filtering and repeated comparison values are collapsed", () => {
     const document = normalize(
       parse(
         [
@@ -1069,6 +1069,8 @@ describe("declarative validation assertion proof", () => {
           "| ID | Statement |",
           "| --- | --- |",
           "| OBJ-1 | Build safely |",
+          "| SYS-1 | Ignore non-objective IDs |",
+          "| OBJ-1 | Repeated objective occurrence |",
         ].join("\n"),
       ).parsed,
       {
@@ -1082,20 +1084,23 @@ describe("declarative validation assertion proof", () => {
         {
           id: "ids.min-count",
           select: { target: "tableCell", column: "ID" },
-          assert: { ids: { unique: true, prefix: "OBJ", minCount: 2 } },
+          assert: { ids: { prefix: "OBJ", minCount: 2 } },
         },
       ],
     });
 
     expect(result.valid).toBe(false);
     expect(result.diagnostics).toEqual([
-      {
-        code: "profile.validation.assertionUnsupported",
+      expect.objectContaining({
+        code: "profile.validation.idCountTooLow",
         ruleId: "ids.min-count",
         message:
-          'Unsupported assertion feature "count bounds" for "ids" is compiled but not implemented by the assertion evaluator yet.',
+          'Expected at least 2 unique IDs matching prefix "OBJ" but found 1.',
         severity: "error",
-      },
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({ line: 5 }),
+        }),
+      }),
     ]);
     expect(result.ruleResults).toEqual([
       {
@@ -1109,6 +1114,144 @@ describe("declarative validation assertion proof", () => {
         },
       },
     ]);
+  });
+
+  it("fails v2 ids maxCount at the first excess unique ID after prefix filtering", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| OBJ-1 | Build safely |",
+          "| SYS-1 | Ignore non-objective IDs |",
+          "| OBJ-2 | Launch safely |",
+          "| OBJ-3 | Recover safely |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v2",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "ids.max-count",
+          select: { target: "tableCell", column: "ID" },
+          assert: { ids: { prefix: "OBJ", maxCount: 2 } },
+        },
+      ],
+    });
+
+    expect(result.valid).toBe(false);
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.idCountTooHigh",
+        ruleId: "ids.max-count",
+        message:
+          'Expected at most 2 unique IDs matching prefix "OBJ" but found 3.',
+        severity: "error",
+        sourceRange: expect.objectContaining({
+          start: expect.objectContaining({ line: 8 }),
+        }),
+      }),
+    ]);
+    expect(result.ruleResults).toEqual([
+      {
+        ruleId: "ids.max-count",
+        status: "failed",
+        passed: false,
+        diagnostics: result.diagnostics,
+        evaluation: {
+          kind: "assertions",
+          diagnostics: result.diagnostics,
+        },
+      },
+    ]);
+  });
+
+  it("counts overlapping ID occurrences once for v2 ids bounds", () => {
+    const document = normalize(
+      parse("# Parent\n\n## Child\n\nREQ-1 is defined here.\n").parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v2",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "ids.overlapping-count",
+          select: { target: "section" },
+          assert: { ids: { prefix: "REQ", minCount: 1, maxCount: 1 } },
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [
+        {
+          ruleId: "ids.overlapping-count",
+          status: "passed",
+          passed: true,
+          diagnostics: [],
+          evaluation: {
+            kind: "assertions",
+            diagnostics: [],
+          },
+        },
+      ],
+    });
+  });
+
+  it("counts case-insensitive comparison values once for v2 ids bounds", () => {
+    const document = normalize(
+      parse("# Requirements\n\nREQ-1 is ready.\n\nreq-1 repeats.\n").parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v2",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "ids.case-insensitive-count",
+          select: { target: "section", title: "Requirements" },
+          assert: {
+            ids: {
+              prefix: "req",
+              caseSensitive: false,
+              minCount: 1,
+              maxCount: 1,
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [
+        {
+          ruleId: "ids.case-insensitive-count",
+          status: "passed",
+          passed: true,
+          diagnostics: [],
+          evaluation: {
+            kind: "assertions",
+            diagnostics: [],
+          },
+        },
+      ],
+    });
   });
 
   it("honors case-sensitive and case-insensitive ID policies", () => {
