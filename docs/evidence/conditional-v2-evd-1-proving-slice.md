@@ -1,8 +1,9 @@
 # Conditional V2 EVD-1: Proving Slice
 
-Issue: BEL-1089
-Branch: `codex/bel-1089-cli-discrimination-evd-1`
-Worktree: `.worktrees/bel-1089-cli-discrimination-evd-1`
+Issue: BEL-1090
+Proving-slice source: BEL-1089
+Branch: `codex/bel-1090-ms-1-gate`
+Worktree: `.worktrees/BEL-1090-ms-1-gate`
 Date: 2026-05-21
 
 ## Scope
@@ -15,7 +16,8 @@ table-column coverage remain out of scope for later packages.
 
 ## Command Results
 
-Commands were run from `.worktrees/bel-1089-cli-discrimination-evd-1`.
+Commands were rerun from `.worktrees/BEL-1090-ms-1-gate` for the BEL-1090
+MS-1 gate.
 
 ```text
 npm run test:validation:profile
@@ -61,7 +63,8 @@ The CLI JSON union is discriminated as follows:
 - v2 flat validation output: `profile.syntaxVersion` is
   `"markdown-engine.validation@v2"`, `profile.evaluatedRuleCount` and
   `profile.skippedRuleCount` are present, and flat rule results include
-  `status` plus `evaluation.kind: "assertions"`.
+  `status` plus `evaluation.kind: "assertions"`. The evidence shell clones the
+  v2 rule-result structure and includes deterministic input/profile hashes.
 - Profile-stage failure output: top-level `stage` is `"profile"` and the JSON
   contains no `profile` and no `evidence`.
 
@@ -133,7 +136,7 @@ rules:
 Command:
 
 ```sh
-node dist/cli/index.js validate --file .tmp-bel-1089/mission.md --profile .tmp-bel-1089/v2-profile.yaml --format json
+node dist/cli/index.js validate --file .tmp-bel-1090/mission.md --profile .tmp-bel-1090/v2-profile.yaml --format json
 ```
 
 Exit code: `0`
@@ -143,6 +146,24 @@ Excerpt:
 ```json
 {
   "diagnostics": [],
+  "evidence": {
+    "diagnostics": [],
+    "engineVersion": "2.0.0",
+    "inputHash": "0a40c85ffe254cbb71e572a63a3a8466f6ff91b3db2762803015d14bebd7f5a4",
+    "profileHash": "511e25e3d891160e459a619d0f22be603b0854fa5fcab3846f252a56bfe17540",
+    "ruleResults": [
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "v2.text.present",
+        "status": "passed"
+      }
+    ]
+  },
   "profile": {
     "documentVersion": "1.0.0",
     "evaluatedRuleCount": 1,
@@ -180,7 +201,7 @@ rules:
 Command:
 
 ```sh
-node dist/cli/index.js validate --file .tmp-bel-1089/missing.md --profile .tmp-bel-1089/invalid-profile.yaml --format json
+node dist/cli/index.js validate --file .tmp-bel-1090/missing.md --profile .tmp-bel-1090/invalid-profile.yaml --format json
 ```
 
 Exit code: `1`
@@ -211,15 +232,22 @@ surface, v1 preservation, v2 result metadata, v2 rule-result fields, evidence
 rule-result cloning, CLI behavior, and the CLI JSON union. The docs gate passed
 without additional contract skeleton changes.
 
-## MS-1 Approval Input
+## MS-1 Approval Decision
 
-MS-1 owner decision: pending project-owner review.
+MS-1 owner decision: approved for L2-A unblocking only.
 
-Approval inputs ready for review:
+Decision source: BEL-1090 execution request in the Codex thread on
+2026-05-21, after rerunning the MS-1 validation commands listed above.
+
+Approval basis:
 
 - Profile, compiler, contract, CLI, and contract-doc gates pass.
 - V1 CLI JSON remains flat and syntax-versioned as v1.
 - V2 flat CLI JSON is syntax-versioned as v2 and includes the flat v2 result
-  shell.
+  shell and flat evidence shell.
 - Profile-stage failures retain the existing `stage: "profile"` shape and do
   not read Markdown.
+- No public contract or v1 compatibility deviation was observed in this gate.
+- No `DEV-*` follow-up or approved redesign decision is required for MS-1.
+- L2-A is unblocked by this approval. L2, L3, L4, and L5 implementation beyond
+  L2-A remains subject to the later milestone gates in the execution spec.
