@@ -60,6 +60,7 @@ const fixtureSuite = parseYaml(
 const expectedFixtureNames = [
   "coverage-pass",
   "wrong-target-column-fail",
+  "narrative-text-fail",
   "missing-target-section",
   "missing-target-column",
   "source-less-missing-id",
