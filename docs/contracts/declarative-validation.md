@@ -1,8 +1,9 @@
 # Declarative Validation Contract
 
 Status: package 2.0.0, v1 profile syntax with v2 profile admission, document contract 1.0.0
-Last updated: 2026-05-20
-Current v2 surface: flat-rule result and evidence shell only.
+Last updated: 2026-05-21
+Current v2 surface: flat-rule result/evidence shell plus ID count-bound schema
+and compiled-plan contract only.
 
 This document defines the public declarative validation contract for
 `@jasonbelmonti/markdown-engine`. The stable surface is the package-root API,
@@ -12,13 +13,15 @@ fields. Internal parser output, compiled rule-plan records, selector target
 records, and evaluator implementation modules are not public contracts.
 
 Package 2.0 does not introduce `documentVersion: "2.0.0"`, CLI JSON
-discrimination, grouped-rule, `when`, ID count-bound, or `tableColumnCoverage`
-behavior. Declarative validation continues to use the v1 runtime behavior
+discrimination, grouped-rule, `when`, ID count-bound runtime evaluation, or
+`tableColumnCoverage` behavior. Declarative validation continues to use the v1
+runtime behavior
 against the existing `documentVersion: "1.0.0"` rich IR document contract,
 while the profile admission path recognizes `markdown-engine.validation@v2` for
 the same flat rule shape with `id`, optional `severity`, `select`, and `assert`.
-The admitted v2 flat path exposes only the minimal result and evidence shell
-needed to distinguish flat assertion evaluation output from v1 output.
+The admitted v2 flat path exposes the minimal result and evidence shell needed
+to distinguish flat assertion evaluation output from v1 output, plus the ID
+count-bound schema and compiled-plan contract.
 
 ## 1.0 Contract
 
@@ -64,10 +67,12 @@ The v2 syntax is admitted with the same flat-rule profile shape:
 syntaxVersion: markdown-engine.validation@v2
 ```
 
-This release only recognizes v2 as a distinct syntax version at profile
-admission. V2-only constructs such as grouped rules, `when`, ID count bounds,
-and `tableColumnCoverage` remain unsupported and emit deterministic profile
-diagnostics.
+This release recognizes v2 as a distinct syntax version at profile admission
+and admits ID count bounds at the schema and compiled-plan layer. Runtime
+evaluation of `ids.minCount` and `ids.maxCount` remains unsupported and emits
+`profile.validation.assertionUnsupported` if executed. Other v2-only constructs
+such as grouped rules, `when`, and `tableColumnCoverage` remain unsupported and
+emit deterministic profile diagnostics.
 
 The admitted v1/v2 flat vocabulary is closed. Unknown profile keys, rule keys,
 selector keys, known assertion keys, and nested assertion keys emit
@@ -223,6 +228,8 @@ interface DeclarativeAssertion {
     prefix?: string;
     unique?: boolean;
     caseSensitive?: boolean;
+    minCount?: number;
+    maxCount?: number;
   };
   references?: {
     idsFrom: { section?: string; column?: string; prefix?: string };
@@ -278,9 +285,16 @@ resolves zero targets.
 headings appear as an ordered subsequence in the normalized section tree
 flattened in source order.
 
-`ids.unique` must be `true`; `prefix` and `caseSensitive` are modifiers, not
-standalone predicates. `caseSensitive` defaults to `true`. ID tokens use the
+For v1 profiles, `ids.unique` must be `true`. For v2 profiles, `ids.unique`
+must be `true` when provided and may be omitted when `ids.minCount` or
+`ids.maxCount` provides the predicate. `prefix` and `caseSensitive` are modifiers,
+not standalone predicates. `caseSensitive` defaults to `true`. ID tokens use the
 documented token grammar `[A-Za-z][A-Za-z0-9]*-[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*`.
+For v2 profiles, `ids.minCount` and `ids.maxCount` are admitted as non-negative
+integer schema and compiled-plan fields. When both are present, `minCount` must
+be less than or equal to `maxCount`. Runtime count evaluation is deferred; a
+count-bound `ids` assertion fails with `profile.validation.assertionUnsupported`
+rather than silently passing.
 
 `text` must include `contains` or a non-empty `excludes` array.
 `textOccurrenceCount.count` is a finite number and counts non-overlapping
@@ -324,7 +338,7 @@ rather than fabricated when unavailable.
 | `profile.validation.sectionOrder` | Rule severity | A strict required-section order cannot be satisfied. |
 | `profile.validation.textExcluded` | Rule severity | A selected target contains forbidden literal text. |
 | `profile.validation.textMissing` | Rule severity | A selected target lacks required literal text from a `text.contains` assertion. |
-| `profile.validation.assertionUnsupported` | `error` | A compiled assertion has no evaluator implementation; this is an internal safety diagnostic. |
+| `profile.validation.assertionUnsupported` | `error` | A compiled assertion or compiled assertion feature has no evaluator implementation; this is an internal safety diagnostic. |
 
 ## Result Shape
 

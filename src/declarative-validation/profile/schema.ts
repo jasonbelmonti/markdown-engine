@@ -10,7 +10,10 @@ import type {
 } from "./index.js";
 import { assertionFromValue } from "./assertion-schema.js";
 import { selectorFromValue } from "./selector-schema.js";
-import { isValidationProfileSyntaxVersion } from "./syntax-version.js";
+import {
+  PROFILE_SYNTAX_VERSION_V1,
+  isValidationProfileSyntaxVersion,
+} from "./syntax-version.js";
 import {
   invalidShape,
   nonEmptyString,
@@ -47,7 +50,11 @@ export function validationProfileFromValue(
   }
 
   const documentVersion = documentVersionFromValue(value.documentVersion, diagnostics);
-  const rules = rulesFromValue(value.rules, diagnostics);
+  const rules = rulesFromValue(
+    value.rules,
+    syntaxVersion ?? PROFILE_SYNTAX_VERSION_V1,
+    diagnostics,
+  );
 
   if (diagnostics.length > 0 || syntaxVersion === undefined || rules === undefined) {
     return { diagnostics };
@@ -89,6 +96,7 @@ function documentVersionFromValue(
 
 function rulesFromValue(
   value: unknown,
+  syntaxVersion: ValidationProfile["syntaxVersion"],
   diagnostics: MarkdownDiagnostic[],
 ): readonly DeclarativeValidationRule[] | undefined {
   if (!Array.isArray(value)) {
@@ -101,7 +109,7 @@ function rulesFromValue(
   const seenRuleIds = new Set<string>();
 
   for (const [index, item] of value.entries()) {
-    const rule = ruleFromValue(item, index, diagnostics);
+    const rule = ruleFromValue(item, index, syntaxVersion, diagnostics);
 
     if (rule !== undefined) {
       if (seenRuleIds.has(rule.id)) {
@@ -123,6 +131,7 @@ function rulesFromValue(
 function ruleFromValue(
   value: unknown,
   index: number,
+  syntaxVersion: ValidationProfile["syntaxVersion"],
   diagnostics: MarkdownDiagnostic[],
 ): DeclarativeValidationRule | undefined {
   if (!isPlainRecord(value)) {
@@ -136,7 +145,7 @@ function ruleFromValue(
   const id = nonEmptyString(value.id);
   const severity = severityFromValue(value.severity, diagnostics);
   const select = selectorFromValue(value.select, diagnostics);
-  const assert = assertionFromValue(value.assert, diagnostics);
+  const assert = assertionFromValue(value.assert, syntaxVersion, diagnostics);
 
   if (id === undefined) {
     diagnostics.push(

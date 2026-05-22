@@ -114,6 +114,55 @@ rules:
     });
   });
 
+  it("parses v2 ids count bounds", () => {
+    const result = parseValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v2",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "ids.min-count",
+          select: { target: "tableCell", column: "ID" },
+          assert: { ids: { prefix: "OBJ", minCount: 1 } },
+        },
+        {
+          id: "ids.max-count",
+          select: { target: "tableCell", column: "ID" },
+          assert: { ids: { unique: true, maxCount: 3 } },
+        },
+        {
+          id: "ids.count-range",
+          select: { target: "tableCell", column: "ID" },
+          assert: { ids: { unique: true, minCount: 1, maxCount: 3 } },
+        },
+      ],
+    });
+
+    expect(result).toEqual({
+      profile: {
+        syntaxVersion: "markdown-engine.validation@v2",
+        documentVersion: "1.0.0",
+        rules: [
+          {
+            id: "ids.min-count",
+            select: { target: "tableCell", column: "ID" },
+            assert: { ids: { prefix: "OBJ", minCount: 1 } },
+          },
+          {
+            id: "ids.max-count",
+            select: { target: "tableCell", column: "ID" },
+            assert: { ids: { unique: true, maxCount: 3 } },
+          },
+          {
+            id: "ids.count-range",
+            select: { target: "tableCell", column: "ID" },
+            assert: { ids: { unique: true, minCount: 1, maxCount: 3 } },
+          },
+        ],
+      },
+      diagnostics: [],
+    });
+  });
+
   it("rejects invalid parsed YAML textLength assertions", () => {
     const invalidTextLengthProfiles = [
       {
@@ -191,6 +240,72 @@ rules:
         );
       }
     }
+  });
+
+  it("rejects invalid v2 ids count bounds with deterministic diagnostics", () => {
+    const invalidIdCountAssertions = [
+      {
+        ids: { unique: true, minCount: -1 },
+        message: "ids.minCount must be a non-negative integer when provided.",
+      },
+      {
+        ids: { unique: true, maxCount: 2.5 },
+        message: "ids.maxCount must be a non-negative integer when provided.",
+      },
+      {
+        ids: { unique: true, minCount: 4, maxCount: 2 },
+        message: "ids.minCount must be less than or equal to ids.maxCount.",
+      },
+    ];
+
+    for (const { ids, message } of invalidIdCountAssertions) {
+      const result = parseValidationProfile({
+        syntaxVersion: "markdown-engine.validation@v2",
+        rules: [
+          {
+            id: "ids.invalid-count",
+            select: { target: "tableCell", column: "ID" },
+            assert: { ids },
+          },
+        ],
+      });
+
+      expect(result.profile).toBeUndefined();
+      expect(result.diagnostics).toEqual([
+        {
+          code: "profile.config.invalidShape",
+          message,
+          severity: "error",
+        },
+        {
+          code: "profile.config.invalidShape",
+          message: "Rule assert must include at least one supported assertion.",
+          severity: "error",
+        },
+      ]);
+    }
+  });
+
+  it("keeps ids count bounds invalid for v1 profiles", () => {
+    const result = parseValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      rules: [
+        {
+          id: "v1.ids-count",
+          select: { target: "tableCell", column: "ID" },
+          assert: { ids: { unique: true, minCount: 1 } },
+        },
+      ],
+    } as ProfileInput);
+
+    expect(result.profile).toBeUndefined();
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.config.unsupportedKey",
+        message: 'Unsupported validation profile key "minCount".',
+        severity: "error",
+      },
+    ]);
   });
 
   it("rejects non-finite parsed YAML textLength bounds before schema traversal", () => {
@@ -1614,11 +1729,6 @@ rules:
             },
           },
         },
-        {
-          id: "v2-id-count-not-admitted",
-          select: { target: "document" },
-          assert: { ids: { unique: true, minCount: 1 } },
-        },
       ],
     } as ProfileInput);
 
@@ -1632,11 +1742,6 @@ rules:
       {
         code: "profile.compile.unsupportedAssertion",
         message: 'Unsupported assertion "tableColumnCoverage".',
-        severity: "error",
-      },
-      {
-        code: "profile.config.unsupportedKey",
-        message: 'Unsupported validation profile key "minCount".',
         severity: "error",
       },
     ]);

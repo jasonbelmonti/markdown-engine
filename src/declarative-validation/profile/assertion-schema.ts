@@ -7,6 +7,13 @@ import {
 } from "../diagnostics/profile-config-diagnostics.js";
 import type { DeclarativeAssertion, DeclarativeIdSource } from "./index.js";
 import {
+  hasEffectiveIdsPredicate,
+  hasValidIdsCountRange,
+  idsAssertionKeysForSyntaxVersion,
+  idsAssertionSupportsCountBounds,
+  type IdsCountBoundKey,
+} from "./ids-assertion-contract.js";
+import {
   invalidShape,
   isFiniteNumber,
   optionalBooleanField,
@@ -16,6 +23,7 @@ import {
   stringArray,
   unsupportedKeys,
 } from "./schema-values.js";
+import type { ValidationProfileSyntaxVersion } from "./syntax-version.js";
 
 const SUPPORTED_ASSERTION_KEYS = [
   "exists",
@@ -31,6 +39,7 @@ const SUPPORTED_ASSERTION_KEYS = [
 
 export function assertionFromValue(
   value: unknown,
+  syntaxVersion: ValidationProfileSyntaxVersion,
   diagnostics: MarkdownDiagnostic[],
 ): DeclarativeAssertion | undefined {
   if (!isPlainRecord(value)) {
@@ -45,7 +54,7 @@ export function assertionFromValue(
     ...existsFromValue(value.exists, diagnostics),
     ...sectionsRequiredFromValue(value.sectionsRequired, diagnostics),
     ...tableColumnsRequiredFromValue(value.tableColumnsRequired, diagnostics),
-    ...idsFromValue(value.ids, diagnostics),
+    ...idsFromValue(value.ids, syntaxVersion, diagnostics),
     ...referencesFromValue(value.references, diagnostics),
     ...textAssertionFromValue(value.text, diagnostics),
     ...textOccurrenceCountFromValue(value.textOccurrenceCount, diagnostics),
@@ -197,6 +206,7 @@ function tableColumnsRequiredFromValue(
 
 function idsFromValue(
   value: unknown,
+  syntaxVersion: ValidationProfileSyntaxVersion,
   diagnostics: MarkdownDiagnostic[],
 ): Pick<DeclarativeAssertion, "ids"> {
   if (value === undefined) {
@@ -209,20 +219,49 @@ function idsFromValue(
     return {};
   }
 
-  unsupportedKeys(value, ["prefix", "unique", "caseSensitive"], diagnostics);
+  const supportsCountBounds = idsAssertionSupportsCountBounds(syntaxVersion);
 
-  if (value.unique !== true) {
+  unsupportedKeys(value, idsAssertionKeysForSyntaxVersion(syntaxVersion), diagnostics);
+
+  const diagnosticCountBeforeIdsShape = diagnostics.length;
+  const ids = {
+    ...optionalAssertionString(value, "prefix", diagnostics),
+    ...(value.unique === true ? { unique: true as const } : {}),
+    ...optionalBoolean(value, "caseSensitive", diagnostics),
+    ...(supportsCountBounds
+      ? optionalIdCountBound(value, "minCount", diagnostics)
+      : {}),
+    ...(supportsCountBounds
+      ? optionalIdCountBound(value, "maxCount", diagnostics)
+      : {}),
+  };
+
+  if (diagnostics.length > diagnosticCountBeforeIdsShape) {
+    return {};
+  }
+
+  if (value.unique !== undefined && value.unique !== true) {
     diagnostics.push(invalidShape("ids.unique must be true."));
 
     return {};
   }
 
+  if (!hasEffectiveIdsPredicate(ids, syntaxVersion)) {
+    diagnostics.push(invalidShape("ids.unique must be true."));
+
+    return {};
+  }
+
+  if (!hasValidIdsCountRange(ids)) {
+    diagnostics.push(
+      invalidShape("ids.minCount must be less than or equal to ids.maxCount."),
+    );
+
+    return {};
+  }
+
   return {
-    ids: {
-      ...optionalAssertionString(value, "prefix", diagnostics),
-      unique: true,
-      ...optionalBoolean(value, "caseSensitive", diagnostics),
-    },
+    ids,
   };
 }
 
@@ -489,6 +528,34 @@ function optionalTextLengthBound(
   return { [key]: value } as Partial<Record<"min" | "max", number>>;
 }
 
+function optionalIdCountBound(
+  record: Record<string, unknown>,
+  key: IdsCountBoundKey,
+  diagnostics: MarkdownDiagnostic[],
+): Partial<Record<IdsCountBoundKey, number>> {
+  const value = record[key];
+
+  if (value === undefined) {
+    return {};
+  }
+
+  if (!isFiniteNumber(value)) {
+    diagnostics.push(invalidShape(`ids.${key} must be a number when provided.`));
+
+    return {};
+  }
+
+  if (!isNonNegativeInteger(value)) {
+    diagnostics.push(
+      invalidShape(`ids.${key} must be a non-negative integer when provided.`),
+    );
+
+    return {};
+  }
+
+  return { [key]: value } as Partial<Record<IdsCountBoundKey, number>>;
+}
+
 function requiredAssertionString(
   value: unknown,
   field: string,
@@ -523,5 +590,9 @@ function hasValidTextLengthRange(
 }
 
 function isTextLengthBound(value: number): boolean {
+  return isNonNegativeInteger(value);
+}
+
+function isNonNegativeInteger(value: number): boolean {
   return Number.isInteger(value) && value >= 0;
 }

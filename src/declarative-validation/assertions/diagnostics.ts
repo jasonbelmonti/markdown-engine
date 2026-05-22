@@ -66,11 +66,36 @@ export function unsupportedEvaluatorDiagnostic(
   rule: CompiledDeclarativeValidationRule,
   assertionIndex: number,
 ): AssertionDiagnostic {
+  return unsupportedEvaluatorDiagnosticFromMessage(
+    unsupportedEvaluatorMessage(assertion.kind),
+    rule,
+    assertionIndex,
+  );
+}
+
+export function unsupportedEvaluatorFeatureDiagnostic(
+  assertionKind: CompiledDeclarativeAssertion["kind"],
+  featureName: string,
+  rule: CompiledDeclarativeValidationRule,
+  assertionIndex: number,
+): AssertionDiagnostic {
+  return unsupportedEvaluatorDiagnosticFromMessage(
+    unsupportedEvaluatorFeatureMessage(assertionKind, featureName),
+    rule,
+    assertionIndex,
+  );
+}
+
+function unsupportedEvaluatorDiagnosticFromMessage(
+  message: string,
+  rule: CompiledDeclarativeValidationRule,
+  assertionIndex: number,
+): AssertionDiagnostic {
   return {
     diagnostic: {
       code: "profile.validation.assertionUnsupported",
       ruleId: rule.ruleId,
-      message: unsupportedEvaluatorMessage(assertion.kind),
+      message,
       severity: "error",
     },
     assertionIndex,
@@ -84,6 +109,13 @@ function unsupportedEvaluatorMessage(
   assertionKind: CompiledDeclarativeAssertion["kind"],
 ): string {
   return `Assertion "${assertionKind}" is compiled but not implemented by the assertion evaluator yet.`;
+}
+
+function unsupportedEvaluatorFeatureMessage(
+  assertionKind: CompiledDeclarativeAssertion["kind"],
+  featureName: string,
+): string {
+  return `Unsupported assertion feature "${featureName}" for "${assertionKind}" is compiled but not implemented by the assertion evaluator yet.`;
 }
 
 function targetSourceRange(

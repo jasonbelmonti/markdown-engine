@@ -142,6 +142,85 @@ describe("declarative validation compiler assertion proof", () => {
     }
   });
 
+  it("rejects typed v2 ids count assertions with invalid bounds before execution", () => {
+    const invalidIdCountAssertions = [
+      {
+        assert: { ids: { unique: true, minCount: -1 } },
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            ruleId: "ids.invalid-count",
+            message: "ids.minCount must be a non-negative integer when provided.",
+            severity: "error",
+          },
+        ],
+      },
+      {
+        assert: { ids: { unique: true, maxCount: 2.5 } },
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            ruleId: "ids.invalid-count",
+            message: "ids.maxCount must be a non-negative integer when provided.",
+            severity: "error",
+          },
+        ],
+      },
+      {
+        assert: { ids: { unique: true, minCount: 10, maxCount: 3 } },
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            ruleId: "ids.invalid-count",
+            message: "ids.minCount must be less than or equal to ids.maxCount.",
+            severity: "error",
+          },
+        ],
+      },
+    ] satisfies {
+      assert: ValidationProfile["rules"][number]["assert"];
+      diagnostics: unknown[];
+    }[];
+
+    for (const { assert, diagnostics } of invalidIdCountAssertions) {
+      const result = compileValidationProfile({
+        syntaxVersion: "markdown-engine.validation@v2",
+        rules: [
+          {
+            id: "ids.invalid-count",
+            select: { target: "tableCell", column: "ID" },
+            assert,
+          },
+        ],
+      });
+
+      expect(result.plan).toBeUndefined();
+      expect(result.diagnostics).toEqual(diagnostics);
+    }
+  });
+
+  it("rejects typed v1 ids count assertions as unsupported before execution", () => {
+    const result = compileValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      rules: [
+        {
+          id: "ids.v1-count",
+          select: { target: "tableCell", column: "ID" },
+          assert: { ids: { unique: true, minCount: 1 } },
+        },
+      ],
+    });
+
+    expect(result.plan).toBeUndefined();
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.config.unsupportedKey",
+        message: 'Unsupported validation profile key "minCount".',
+        severity: "error",
+      },
+    ]);
+  });
+
   it("rejects ids assertions without explicit unique true before execution", () => {
     const invalidIdAssertions = [
       { ids: {}, select: { target: "document" } },

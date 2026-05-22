@@ -67,9 +67,11 @@ export type CompiledDeclarativeAssertion =
     }
   | {
       kind: "ids";
-      unique: true;
+      unique?: true;
       caseSensitive: boolean;
       prefix?: string;
+      minCount?: number;
+      maxCount?: number;
     }
   | {
       kind: "references";

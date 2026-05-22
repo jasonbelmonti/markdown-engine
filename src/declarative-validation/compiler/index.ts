@@ -152,6 +152,7 @@ export function compileValidationProfile(
       assertionInput as ValidationProfile["rules"][number]["assert"],
       selector,
       ruleId,
+      profile.syntaxVersion,
       diagnostics,
     );
 
