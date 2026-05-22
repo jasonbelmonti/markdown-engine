@@ -49,7 +49,12 @@ export type {
 } from "../declarative-validation/profile/index.js";
 export type { DeclarativeValidationEvidence } from "../declarative-validation/evidence/index.js";
 export type {
+  DeclarativeValidationAllOfEvaluationResult,
+  DeclarativeValidationAnyOfEvaluationResult,
+  DeclarativeValidationApplicabilityResult,
   DeclarativeValidationAssertionsEvaluationResult,
+  DeclarativeValidationBranchReference,
+  DeclarativeValidationBranchResult,
   DeclarativeValidationCliJsonResult,
   DeclarativeValidationConfigErrorResult,
   DeclarativeValidationOptions,
@@ -58,6 +63,7 @@ export type {
   DeclarativeValidationRuleEvaluationResult,
   DeclarativeValidationRuleResultV2,
   DeclarativeValidationRuleStatus,
+  DeclarativeValidationSkippedEvaluationResult,
   DeclarativeValidationResult,
 } from "../declarative-validation/results/index.js";
 

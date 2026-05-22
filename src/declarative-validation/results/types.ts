@@ -41,19 +41,56 @@ export interface DeclarativeValidationResultV1 extends ValidationResult {
   evidence?: DeclarativeValidationEvidence<ValidationRuleResult>;
 }
 
-export type DeclarativeValidationRuleStatus = "passed" | "failed";
+export type DeclarativeValidationRuleStatus = "passed" | "failed" | "skipped";
 
 export interface DeclarativeValidationRuleResultV2
   extends ValidationRuleResult {
   status: DeclarativeValidationRuleStatus;
+  when?: DeclarativeValidationApplicabilityResult;
   evaluation: DeclarativeValidationRuleEvaluationResult;
 }
 
 export type DeclarativeValidationRuleEvaluationResult =
-  DeclarativeValidationAssertionsEvaluationResult;
+  | DeclarativeValidationSkippedEvaluationResult
+  | DeclarativeValidationAssertionsEvaluationResult
+  | DeclarativeValidationAnyOfEvaluationResult
+  | DeclarativeValidationAllOfEvaluationResult;
+
+export interface DeclarativeValidationApplicabilityResult {
+  status: "matched" | "notMatched";
+  diagnostics: MarkdownDiagnostic[];
+}
+
+export interface DeclarativeValidationSkippedEvaluationResult {
+  kind: "skipped";
+  reason: "whenNotMatched";
+}
 
 export interface DeclarativeValidationAssertionsEvaluationResult {
   kind: "assertions";
+  diagnostics: MarkdownDiagnostic[];
+}
+
+export interface DeclarativeValidationAnyOfEvaluationResult {
+  kind: "anyOf";
+  selectedBranch?: DeclarativeValidationBranchReference;
+  branches: DeclarativeValidationBranchResult[];
+}
+
+export interface DeclarativeValidationAllOfEvaluationResult {
+  kind: "allOf";
+  branches: DeclarativeValidationBranchResult[];
+}
+
+export interface DeclarativeValidationBranchReference {
+  branchIndex: number;
+  label?: string;
+}
+
+export interface DeclarativeValidationBranchResult {
+  branchIndex: number;
+  label?: string;
+  status: Exclude<DeclarativeValidationRuleStatus, "skipped">;
   diagnostics: MarkdownDiagnostic[];
 }
 

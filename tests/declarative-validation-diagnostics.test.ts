@@ -9,6 +9,14 @@ import {
   type EngineDocument,
   type ValidationProfile,
 } from "@jasonbelmonti/markdown-engine";
+import {
+  groupRequirementFailedDiagnostic,
+  noAlternativeMatchedDiagnostic,
+} from "../src/declarative-validation/assertions/diagnostics.js";
+import type {
+  CompiledDeclarativeValidationAllOfRuleV2,
+  CompiledDeclarativeValidationAnyOfRuleV2,
+} from "../src/declarative-validation/compiler/plan.js";
 
 const fixturePath = "fixtures/declarative-validation/assertions/diagnostics.md";
 const fixture = readFixture("diagnostics.md");
@@ -103,7 +111,38 @@ describe("declarative validation diagnostics", () => {
     expect(result.evidence?.diagnostics).toEqual(result.diagnostics);
     expect(result.evidence?.ruleResults).toEqual(result.ruleResults);
   });
+
+  it("creates deterministic grouped summary diagnostics before runtime promotion uses them", () => {
+    expect(noAlternativeMatchedDiagnostic(anyOfRule)).toEqual({
+      code: "profile.validation.noAlternativeMatched",
+      ruleId: "group.anyof",
+      message: "No anyOf branch matched the grouped rule.",
+      severity: "warning",
+    });
+    expect(groupRequirementFailedDiagnostic(allOfRule)).toEqual({
+      code: "profile.validation.groupRequirementFailed",
+      ruleId: "group.allof",
+      message: "One or more allOf branches failed the grouped rule.",
+      severity: "error",
+    });
+  });
 });
+
+const anyOfRule = {
+  kind: "anyOf",
+  syntaxVersion: "markdown-engine.validation@v2",
+  ruleId: "group.anyof",
+  severity: "warning",
+  branches: [],
+} satisfies CompiledDeclarativeValidationAnyOfRuleV2;
+
+const allOfRule = {
+  kind: "allOf",
+  syntaxVersion: "markdown-engine.validation@v2",
+  ruleId: "group.allof",
+  severity: "error",
+  branches: [],
+} satisfies CompiledDeclarativeValidationAllOfRuleV2;
 
 function normalizedFixtureDocument(): EngineDocument {
   return normalize(parse(fixture, { path: fixturePath }).parsed, {

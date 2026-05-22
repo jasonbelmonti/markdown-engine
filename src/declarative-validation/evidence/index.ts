@@ -6,6 +6,7 @@ import type { ValidationRuleResult } from "../../api/validate.js";
 import { cloneDiagnostics } from "../../diagnostics/index.js";
 import { stringifyStableJson } from "../../internal/stable-json.js";
 import type { ValidationProfile } from "../profile/index.js";
+import { cloneValidationRuleResult } from "../results/clone-rule-result.js";
 
 export interface DeclarativeValidationEvidence<
   RuleResult extends ValidationRuleResult = ValidationRuleResult,
@@ -16,14 +17,6 @@ export interface DeclarativeValidationEvidence<
   runtimeVersion: string;
   ruleResults: readonly RuleResult[];
   diagnostics: readonly MarkdownDiagnostic[];
-}
-
-interface AssertionsEvidenceRuleResult extends ValidationRuleResult {
-  status: "passed" | "failed";
-  evaluation: {
-    kind: "assertions";
-    diagnostics: MarkdownDiagnostic[];
-  };
 }
 
 export function createDeclarativeValidationEvidence<
@@ -73,32 +66,7 @@ function cloneRuleResults<RuleResult extends ValidationRuleResult>(
 function cloneRuleResult<RuleResult extends ValidationRuleResult>(
   result: RuleResult,
 ): RuleResult {
-  const baseResult: ValidationRuleResult = {
-    ruleId: result.ruleId,
-    passed: result.passed,
-    diagnostics: cloneDiagnostics(result.diagnostics),
-  };
-
-  if (!hasAssertionsEvaluation(result)) {
-    return baseResult as RuleResult;
-  }
-
-  return {
-    ...baseResult,
-    status: result.status,
-    evaluation: {
-      kind: "assertions",
-      diagnostics: cloneDiagnostics(result.evaluation.diagnostics),
-    },
-  } as unknown as RuleResult;
-}
-
-function hasAssertionsEvaluation(
-  result: ValidationRuleResult,
-): result is AssertionsEvidenceRuleResult {
-  const candidate = result as Partial<AssertionsEvidenceRuleResult>;
-
-  return candidate.evaluation?.kind === "assertions";
+  return cloneValidationRuleResult(result) as RuleResult;
 }
 
 function sha256(value: string): string {
