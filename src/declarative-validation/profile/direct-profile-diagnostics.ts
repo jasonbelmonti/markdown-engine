@@ -3,9 +3,11 @@ import { types as nodeTypes } from "node:util";
 import type { MarkdownDiagnostic } from "../../api/diagnostics.js";
 import { isPlainRecord } from "../../internal/plain-record.js";
 import { unsupportedProfileKey } from "../diagnostics/profile-config-diagnostics.js";
+import { PROFILE_SYNTAX_VERSION_V2 } from "./syntax-version.js";
 
 export const PROFILE_KEYS = ["syntaxVersion", "documentVersion", "rules"] as const;
-export const RULE_KEYS = ["id", "severity", "select", "assert"] as const;
+export const RULE_KEYS_V1 = ["id", "severity", "select", "assert"] as const;
+export const RULE_KEYS_V2 = [...RULE_KEYS_V1, "anyOf", "allOf"] as const;
 
 export function pushDirectProfileUnsupportedKeyDiagnostics(
   value: unknown,
@@ -27,6 +29,10 @@ export function pushDirectProfileUnsupportedKeyDiagnostics(
     return hasUnsupportedKeys;
   }
 
+  const syntaxVersion = dataPropertyValue(value, "syntaxVersion");
+  const allowedRuleKeys =
+    syntaxVersion === PROFILE_SYNTAX_VERSION_V2 ? RULE_KEYS_V2 : RULE_KEYS_V1;
+
   for (let index = 0; index < rules.length; index += 1) {
     const descriptor = safePropertyDescriptor(rules, String(index));
     if (descriptor === undefined || !("value" in descriptor)) {
@@ -36,7 +42,8 @@ export function pushDirectProfileUnsupportedKeyDiagnostics(
     const ruleKeys = enumerableDataKeys(descriptor.value);
     if (ruleKeys !== undefined) {
       hasUnsupportedKeys =
-        pushUnsupportedKeys(ruleKeys, RULE_KEYS, diagnostics) || hasUnsupportedKeys;
+        pushUnsupportedKeys(ruleKeys, allowedRuleKeys, diagnostics) ||
+        hasUnsupportedKeys;
     }
   }
 

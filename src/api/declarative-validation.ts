@@ -5,6 +5,10 @@ import {
   sortValidationRuleResults,
 } from "../declarative-validation/assertions/index.js";
 import { compileValidationProfile } from "../declarative-validation/compiler/index.js";
+import type {
+  CompiledDeclarativeValidationGroupRuleV2,
+  CompiledDeclarativeValidationRule,
+} from "../declarative-validation/compiler/index.js";
 import { parseValidationProfileInput } from "../declarative-validation/profile/index.js";
 import { materializeValidationProfile } from "../declarative-validation/profile/materialization.js";
 import type {
@@ -22,6 +26,12 @@ import { resolveDeclarativeSelector } from "../declarative-validation/selectors/
 
 export type {
   DeclarativeAssertion,
+  DeclarativeValidationAllOfRule,
+  DeclarativeValidationAnyOfRule,
+  DeclarativeValidationBranch,
+  DeclarativeValidationFlatRule,
+  DeclarativeValidationGroupRule,
+  DeclarativeValidationRuleFields,
   DeclarativeIdSource,
   DeclarativeOutputFormat,
   DeclarativeProfileParseOptions,
@@ -107,16 +117,35 @@ export function validateWithProfile(
   }
 
   const compileResult = compileValidationProfile(materializedProfile.profile);
+  const compiledRules = compileResult.plan?.rules ?? [];
+  const deferredGroupDiagnostics = compiledRules.flatMap((rule) =>
+    isCompiledGroupRule(rule)
+      ? [
+          {
+            code: "profile.validation.groupEvaluationDeferred",
+            ruleId: rule.ruleId,
+            message:
+              "Grouped rule runtime evaluation is not implemented in this package slice.",
+            severity: "error" as const,
+          },
+        ]
+      : [],
+  );
   const ruleResults = sortValidationRuleResults(
-    compileResult.plan?.rules.map((rule) =>
-      evaluateCompiledDeclarativeRule(
-        rule,
-        resolveDeclarativeSelector(document, rule.selector),
-      ),
-    ) ?? [],
+    compiledRules.flatMap((rule) =>
+      isCompiledGroupRule(rule)
+        ? []
+        : [
+            evaluateCompiledDeclarativeRule(
+              rule,
+              resolveDeclarativeSelector(document, rule.selector),
+            ),
+          ],
+    ),
   );
   const diagnostics = [
     ...compileResult.diagnostics,
+    ...deferredGroupDiagnostics,
     ...ruleResults.flatMap((result) => result.diagnostics),
   ];
   return createDeclarativeValidationResult({
@@ -126,6 +155,12 @@ export function validateWithProfile(
     diagnostics,
     options,
   });
+}
+
+function isCompiledGroupRule(
+  rule: CompiledDeclarativeValidationRule,
+): rule is CompiledDeclarativeValidationGroupRuleV2 {
+  return "kind" in rule && rule.kind !== "flat";
 }
 
 function documentVersionMismatchDiagnostic(

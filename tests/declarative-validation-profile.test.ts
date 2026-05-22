@@ -647,6 +647,84 @@ rules:
     });
   });
 
+  it("accepts v2 non-recursive anyOf and allOf groups through the admission path", () => {
+    const branch = {
+      label: "mission-text",
+      select: { target: "document" },
+      assert: { text: { contains: "Mission" } },
+    } as const;
+    const rules = [
+      { id: "v2-anyof-rule", anyOf: [branch] },
+      { id: "v2-allof-rule", severity: "warning", allOf: [branch] },
+    ] as const;
+
+    const result = parseValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v2",
+      documentVersion: "1.0.0",
+      rules,
+    });
+
+    expect(result.diagnostics).toEqual([]);
+    expect(result.profile?.rules).toEqual(rules);
+  });
+
+  it("rejects invalid v2 group shapes with deterministic diagnostics", () => {
+    const branch = {
+      select: { target: "document" },
+      assert: { text: { contains: "Mission" } },
+    };
+    const invalidGroupProfiles = [
+      [
+        { id: "v2-empty-anyof", anyOf: [] },
+        "profile.config.invalidShape",
+        "V2 rule at index 0 anyOf must be a non-empty array.",
+      ],
+      [
+        {
+          id: "v2-ambiguous-anyof",
+          select: branch.select,
+          assert: branch.assert,
+          anyOf: [branch],
+        },
+        "profile.config.invalidShape",
+        "V2 rule at index 0 must declare exactly one of select/assert, anyOf, or allOf.",
+      ],
+      [
+        { id: "v2-recursive-group", anyOf: [{ ...branch, allOf: [branch] }] },
+        "profile.config.unsupportedKey",
+        'Unsupported validation profile key "allOf".',
+      ],
+      [
+        {
+          id: "v2-duplicate-labels",
+          anyOf: [
+            { ...branch, label: "primary" },
+            { ...branch, label: "primary" },
+          ],
+        },
+        "profile.config.invalidShape",
+        'V2 rule at index 0 anyOf branch label "primary" must be unique.',
+      ],
+      [
+        { id: "v2-branch-callback", anyOf: [{ ...branch, callback: "isReady" }] },
+        "profile.config.unsupportedKey",
+        'Unsupported validation profile key "callback".',
+      ],
+    ] as const;
+
+    for (const [rule, code, message] of invalidGroupProfiles) {
+      const result = parseValidationProfile({
+        syntaxVersion: "markdown-engine.validation@v2",
+        rules: [rule],
+      } as ProfileInput);
+
+      expect(result.profile).toBeUndefined();
+      expect(result.diagnostics).toContainEqual(
+        expect.objectContaining({ code, message, severity: "error" }),
+      );
+    }
+  });
+
   it("returns invalidYaml diagnostics for invalid YAML strings", () => {
     const result = parseValidationProfile(`
 syntaxVersion: markdown-engine.validation@v1
@@ -1225,14 +1303,14 @@ rules:
     });
   });
 
-  it("rejects unsupported profile and nested rule keys", () => {
+  it("rejects unsupported profile and v1 nested rule keys", () => {
     const result = parseValidationProfile({
       syntaxVersion: "markdown-engine.validation@v1",
       owner: "mission-control",
       rules: [
         {
           id: "unsupported-nested-key",
-          notes: "not part of the public profile contract",
+          anyOf: [],
           select: { target: "document" },
           assert: { sectionsRequired: { headings: ["Objective"] } },
         },
@@ -1248,7 +1326,7 @@ rules:
         }),
         expect.objectContaining({
           code: "profile.config.unsupportedKey",
-          message: 'Unsupported validation profile key "notes".',
+          message: 'Unsupported validation profile key "anyOf".',
         }),
       ]),
     );

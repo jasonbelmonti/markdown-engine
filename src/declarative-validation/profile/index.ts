@@ -24,9 +24,37 @@ export interface ValidationProfile {
   rules: readonly DeclarativeValidationRule[];
 }
 
-export interface DeclarativeValidationRule {
+export type DeclarativeValidationRule =
+  | DeclarativeValidationFlatRule
+  | DeclarativeValidationGroupRule;
+
+export interface DeclarativeValidationRuleFields {
   id: string;
   severity?: DeclarativeValidationSeverity;
+}
+
+export interface DeclarativeValidationFlatRule
+  extends DeclarativeValidationRuleFields {
+  select: DeclarativeSelector;
+  assert: DeclarativeAssertion;
+}
+
+export type DeclarativeValidationGroupRule =
+  | DeclarativeValidationAnyOfRule
+  | DeclarativeValidationAllOfRule;
+
+export interface DeclarativeValidationAnyOfRule
+  extends DeclarativeValidationRuleFields {
+  anyOf: readonly DeclarativeValidationBranch[];
+}
+
+export interface DeclarativeValidationAllOfRule
+  extends DeclarativeValidationRuleFields {
+  allOf: readonly DeclarativeValidationBranch[];
+}
+
+export interface DeclarativeValidationBranch {
+  label?: string;
   select: DeclarativeSelector;
   assert: DeclarativeAssertion;
 }

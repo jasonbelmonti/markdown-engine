@@ -1,7 +1,7 @@
 import type { ValidationRuleResult } from "../../api/validate.js";
 import type {
   CompiledDeclarativeAssertion,
-  CompiledDeclarativeValidationRule,
+  CompiledDeclarativeValidationExecutableRule,
 } from "../compiler/plan.js";
 import type { DeclarativeSelection } from "../selectors/index.js";
 import type { AssertionEvaluationContext } from "./context.js";
@@ -19,7 +19,7 @@ import { evaluateTextLength } from "./text-length.js";
 import { evaluateTextOccurrenceCount } from "./text-occurrence-count.js";
 
 export function evaluateCompiledDeclarativeRule(
-  rule: CompiledDeclarativeValidationRule,
+  rule: CompiledDeclarativeValidationExecutableRule,
   selection: DeclarativeSelection,
 ): ValidationRuleResult {
   const evaluatedDiagnostics = rule.assertions.flatMap(

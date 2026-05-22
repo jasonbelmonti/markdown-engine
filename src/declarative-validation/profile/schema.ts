@@ -9,9 +9,11 @@ import type {
   ValidationProfile,
 } from "./index.js";
 import { assertionFromValue } from "./assertion-schema.js";
+import { branchesFromValue } from "./group-schema.js";
 import { selectorFromValue } from "./selector-schema.js";
 import {
   PROFILE_SYNTAX_VERSION_V1,
+  PROFILE_SYNTAX_VERSION_V2,
   isValidationProfileSyntaxVersion,
 } from "./syntax-version.js";
 import {
@@ -26,6 +28,8 @@ const SEVERITIES = new Set<DeclarativeValidationSeverity>([
   "warning",
   "info",
 ]);
+const RULE_KEYS_V1 = ["id", "severity", "select", "assert"] as const;
+const RULE_KEYS_V2 = [...RULE_KEYS_V1, "anyOf", "allOf"] as const;
 
 interface ProfileSchemaResult {
   profile?: ValidationProfile;
@@ -140,12 +144,10 @@ function ruleFromValue(
     return undefined;
   }
 
-  unsupportedKeys(value, ["id", "severity", "select", "assert"], diagnostics);
+  unsupportedKeys(value, ruleKeysForSyntaxVersion(syntaxVersion), diagnostics);
 
   const id = nonEmptyString(value.id);
   const severity = severityFromValue(value.severity, diagnostics);
-  const select = selectorFromValue(value.select, diagnostics);
-  const assert = assertionFromValue(value.assert, syntaxVersion, diagnostics);
 
   if (id === undefined) {
     diagnostics.push(
@@ -153,7 +155,100 @@ function ruleFromValue(
     );
   }
 
-  return id === undefined || select === undefined || assert === undefined
+  if (syntaxVersion === PROFILE_SYNTAX_VERSION_V2) {
+    const rule = v2RuleFromValue(
+      value,
+      index,
+      id ?? "",
+      severity,
+      syntaxVersion,
+      diagnostics,
+    );
+
+    return id === undefined ? undefined : rule;
+  }
+
+  const rule = flatRuleFromValue(
+    value,
+    id ?? "",
+    severity,
+    syntaxVersion,
+    diagnostics,
+  );
+
+  return id === undefined ? undefined : rule;
+}
+
+function ruleKeysForSyntaxVersion(
+  syntaxVersion: ValidationProfile["syntaxVersion"],
+): readonly string[] {
+  return syntaxVersion === PROFILE_SYNTAX_VERSION_V2
+    ? RULE_KEYS_V2
+    : RULE_KEYS_V1;
+}
+
+function v2RuleFromValue(
+  value: Record<string, unknown>,
+  index: number,
+  id: string,
+  severity: DeclarativeValidationSeverity | undefined,
+  syntaxVersion: ValidationProfile["syntaxVersion"],
+  diagnostics: MarkdownDiagnostic[],
+): DeclarativeValidationRule | undefined {
+  const hasFlatShapeInput = value.select !== undefined || value.assert !== undefined;
+  const hasAnyOf = value.anyOf !== undefined;
+  const hasAllOf = value.allOf !== undefined;
+  const shapeCount =
+    Number(hasFlatShapeInput) + Number(hasAnyOf) + Number(hasAllOf);
+
+  if (shapeCount !== 1) {
+    diagnostics.push(
+      invalidShape(
+        `V2 rule at index ${index} must declare exactly one of select/assert, anyOf, or allOf.`,
+      ),
+    );
+
+    return undefined;
+  }
+
+  if (hasAnyOf) {
+    const anyOf = branchesFromValue(value.anyOf, index, "anyOf", syntaxVersion, diagnostics);
+
+    return anyOf === undefined
+      ? undefined
+      : {
+          id,
+          ...(severity !== undefined ? { severity } : {}),
+          anyOf,
+        };
+  }
+
+  if (hasAllOf) {
+    const allOf = branchesFromValue(value.allOf, index, "allOf", syntaxVersion, diagnostics);
+
+    return allOf === undefined
+      ? undefined
+      : {
+          id,
+          ...(severity !== undefined ? { severity } : {}),
+          allOf,
+        };
+  }
+
+  return flatRuleFromValue(value, id, severity, syntaxVersion, diagnostics);
+}
+
+function flatRuleFromValue(
+  value: Record<string, unknown>,
+  id: string,
+  severity: DeclarativeValidationSeverity | undefined,
+  syntaxVersion: ValidationProfile["syntaxVersion"],
+  diagnostics: MarkdownDiagnostic[],
+): DeclarativeValidationRule | undefined {
+  const select = selectorFromValue(value.select, diagnostics);
+  const assert = assertionFromValue(value.assert, syntaxVersion, diagnostics);
+
+  return select === undefined || assert === undefined
     ? undefined
     : {
         id,

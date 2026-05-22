@@ -1,7 +1,7 @@
 import type { MarkdownDiagnostic, SourceRange } from "../../api/diagnostics.js";
 import type {
   CompiledDeclarativeAssertion,
-  CompiledDeclarativeValidationRule,
+  CompiledDeclarativeValidationExecutableRule,
 } from "../compiler/plan.js";
 import type { DeclarativeSelectionTarget } from "../selectors/index.js";
 
@@ -23,7 +23,7 @@ export interface AssertionDiagnosticOptions {
 }
 
 export function emptySelectionDiagnostic(
-  rule: CompiledDeclarativeValidationRule,
+  rule: CompiledDeclarativeValidationExecutableRule,
   assertionIndex: number,
 ): AssertionDiagnostic {
   return validationDiagnostic(
@@ -41,7 +41,7 @@ export function emptySelectionDiagnostic(
 export function validationDiagnostic(
   code: string,
   message: string,
-  rule: CompiledDeclarativeValidationRule,
+  rule: CompiledDeclarativeValidationExecutableRule,
   options: AssertionDiagnosticOptions,
 ): AssertionDiagnostic {
   const sourceRange = options.sourceRange ?? targetSourceRange(options.target);
@@ -63,7 +63,7 @@ export function validationDiagnostic(
 
 export function unsupportedEvaluatorDiagnostic(
   assertion: CompiledDeclarativeAssertion,
-  rule: CompiledDeclarativeValidationRule,
+  rule: CompiledDeclarativeValidationExecutableRule,
   assertionIndex: number,
 ): AssertionDiagnostic {
   return unsupportedEvaluatorDiagnosticFromMessage(
@@ -76,7 +76,7 @@ export function unsupportedEvaluatorDiagnostic(
 export function unsupportedEvaluatorFeatureDiagnostic(
   assertionKind: CompiledDeclarativeAssertion["kind"],
   featureName: string,
-  rule: CompiledDeclarativeValidationRule,
+  rule: CompiledDeclarativeValidationExecutableRule,
   assertionIndex: number,
 ): AssertionDiagnostic {
   return unsupportedEvaluatorDiagnosticFromMessage(
@@ -88,7 +88,7 @@ export function unsupportedEvaluatorFeatureDiagnostic(
 
 function unsupportedEvaluatorDiagnosticFromMessage(
   message: string,
-  rule: CompiledDeclarativeValidationRule,
+  rule: CompiledDeclarativeValidationExecutableRule,
   assertionIndex: number,
 ): AssertionDiagnostic {
   return {
