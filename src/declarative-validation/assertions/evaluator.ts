@@ -5,16 +5,14 @@ import type {
 } from "../compiler/plan.js";
 import type { DeclarativeSelection } from "../selectors/index.js";
 import type { AssertionEvaluationContext } from "./context.js";
-import {
-  unsupportedEvaluatorDiagnostic,
-  type AssertionDiagnostic,
-} from "./diagnostics.js";
+import type { AssertionDiagnostic } from "./diagnostics.js";
 import { evaluateExists } from "./exists.js";
 import { evaluateFrontmatterRequired } from "./frontmatter-required.js";
 import { evaluateIds } from "./ids.js";
 import { sortAssertionDiagnostics } from "./ordering.js";
 import { evaluateReferences } from "./references.js";
 import { evaluateSectionsRequired } from "./sections-required.js";
+import { evaluateTableColumnCoverage } from "./table-column-coverage.js";
 import { evaluateTableColumnsRequired } from "./table-columns-required.js";
 import { evaluateText } from "./text.js";
 import { evaluateTextLength } from "./text-length.js";
@@ -74,12 +72,6 @@ function evaluateAssertion(
       return evaluateReferences(assertion, context);
 
     case "tableColumnCoverage":
-      return [
-        unsupportedEvaluatorDiagnostic(
-          assertion,
-          context.rule,
-          context.assertionIndex,
-        ),
-      ];
+      return evaluateTableColumnCoverage(assertion, context);
   }
 }

@@ -1,0 +1,334 @@
+cases:
+  - name: coverage-pass
+    contract: pass when every source ID appears in the configured target table column
+    markdown: |
+      # Requirements
+
+      | ID | Statement |
+      | --- | --- |
+      | REQ-1 | Build safely |
+      | REQ-2 | Launch safely |
+
+      # Traceability
+
+      | Requirement | Evidence |
+      | --- | --- |
+      | REQ-1 | Unit test |
+      | REQ-2 | Integration test |
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: coverage.pass
+          select:
+            target: document
+          assert:
+            tableColumnCoverage:
+              source:
+                section: Requirements
+                column: ID
+                prefix: REQ
+              target:
+                section: Traceability
+                tableHeader:
+                  - Requirement
+                  - Evidence
+                column: Requirement
+              require: everySourceId
+    expected:
+      valid: true
+      compiledAssertions:
+        - ruleId: coverage.pass
+          source:
+            section: Requirements
+            column: ID
+            prefix: REQ
+          target:
+            section: Traceability
+            tableHeader:
+              - Requirement
+              - Evidence
+            column: Requirement
+
+  - name: wrong-target-column-fail
+    contract: fail when an ID appears elsewhere in the target section but not the configured target column
+    markdown: |
+      # Requirements
+
+      | ID | Statement |
+      | --- | --- |
+      | REQ-1 | Build safely |
+      | REQ-2 | Launch safely |
+
+      # Traceability
+
+      | Requirement | Evidence |
+      | --- | --- |
+      | REQ-1 | Unit test |
+      | Design note | REQ-2 appears outside the target column |
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: coverage.wrong-column
+          select:
+            target: document
+          assert:
+            tableColumnCoverage:
+              source:
+                section: Requirements
+                column: ID
+                prefix: REQ
+              target:
+                section: Traceability
+                column: Requirement
+              require: everySourceId
+    expected:
+      valid: false
+      diagnostics:
+        - code: profile.validation.tableColumnCoverageIdMissing
+          ruleId: coverage.wrong-column
+          message: 'ID "REQ-2" must appear in target table column "Requirement" of section "Traceability".'
+          sourceLine: 6
+      compiledAssertions:
+        - ruleId: coverage.wrong-column
+          source:
+            section: Requirements
+            column: ID
+            prefix: REQ
+          target:
+            section: Traceability
+            column: Requirement
+
+  - name: missing-target-section
+    contract: emit a source-grounded diagnostic when the configured target section is absent
+    markdown: |
+      # Requirements
+
+      | ID | Statement |
+      | --- | --- |
+      | REQ-1 | Build safely |
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: coverage.missing-section
+          select:
+            target: document
+          assert:
+            tableColumnCoverage:
+              source:
+                section: Requirements
+                column: ID
+                prefix: REQ
+              target:
+                section: Traceability
+                column: Requirement
+              require: everySourceId
+    expected:
+      valid: false
+      diagnostics:
+        - code: profile.validation.tableColumnCoverageTargetSectionMissing
+          ruleId: coverage.missing-section
+          message: 'ID "REQ-1" requires target section "Traceability" for tableColumnCoverage.'
+          sourceLine: 5
+      compiledAssertions:
+        - ruleId: coverage.missing-section
+          source:
+            section: Requirements
+            column: ID
+            prefix: REQ
+          target:
+            section: Traceability
+            column: Requirement
+
+  - name: missing-target-column
+    contract: emit a source-grounded diagnostic when the configured target column is absent
+    markdown: |
+      # Requirements
+
+      | ID | Statement |
+      | --- | --- |
+      | REQ-1 | Build safely |
+
+      # Traceability
+
+      | Evidence |
+      | --- |
+      | Unit test |
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: coverage.missing-column
+          select:
+            target: document
+          assert:
+            tableColumnCoverage:
+              source:
+                section: Requirements
+                column: ID
+                prefix: REQ
+              target:
+                section: Traceability
+                column: Requirement
+              require: everySourceId
+    expected:
+      valid: false
+      diagnostics:
+        - code: profile.validation.tableColumnCoverageTargetColumnMissing
+          ruleId: coverage.missing-column
+          message: 'ID "REQ-1" requires target table column "Requirement" in section "Traceability".'
+          sourceLine: 5
+      compiledAssertions:
+        - ruleId: coverage.missing-column
+          source:
+            section: Requirements
+            column: ID
+            prefix: REQ
+          target:
+            section: Traceability
+            column: Requirement
+
+  - name: source-less-missing-id
+    contract: omit source ranges instead of borrowing target ranges when source evidence is unavailable
+    stripSourceEvidence: true
+    markdown: |
+      # Requirements
+
+      | ID | Statement |
+      | --- | --- |
+      | REQ-1 | Build safely |
+
+      # Traceability
+
+      | Requirement | Evidence |
+      | --- | --- |
+      | Design note | REQ-1 appears outside the target column |
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: coverage.source-less
+          select:
+            target: document
+          assert:
+            tableColumnCoverage:
+              source:
+                section: Requirements
+                column: ID
+                prefix: REQ
+              target:
+                section: Traceability
+                column: Requirement
+              require: everySourceId
+    expected:
+      valid: false
+      diagnostics:
+        - code: profile.validation.tableColumnCoverageIdMissing
+          ruleId: coverage.source-less
+          message: 'ID "REQ-1" must appear in target table column "Requirement" of section "Traceability".'
+      compiledAssertions:
+        - ruleId: coverage.source-less
+          source:
+            section: Requirements
+            column: ID
+            prefix: REQ
+          target:
+            section: Traceability
+            column: Requirement
+
+  - name: later-duplicate-source-evidence
+    contract: use later duplicate source evidence when the first matching source ID has no source range
+    stripFirstDataCellSourceEvidence: true
+    markdown: |
+      # Requirements
+
+      | ID | Statement |
+      | --- | --- |
+      | REQ-1 | First source occurrence has no source evidence |
+      | REQ-1 | Later source occurrence has source evidence |
+
+      # Traceability
+
+      | Requirement | Evidence |
+      | --- | --- |
+      | Design note | REQ-1 appears outside the target column |
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: coverage.later-source-evidence
+          select:
+            target: document
+          assert:
+            tableColumnCoverage:
+              source:
+                section: Requirements
+                column: ID
+                prefix: REQ
+              target:
+                section: Traceability
+                column: Requirement
+              require: everySourceId
+    expected:
+      valid: false
+      diagnostics:
+        - code: profile.validation.tableColumnCoverageIdMissing
+          ruleId: coverage.later-source-evidence
+          message: 'ID "REQ-1" must appear in target table column "Requirement" of section "Traceability".'
+          sourceLine: 6
+      compiledAssertions:
+        - ruleId: coverage.later-source-evidence
+          source:
+            section: Requirements
+            column: ID
+            prefix: REQ
+          target:
+            section: Traceability
+            column: Requirement
+
+  - name: case-insensitive-pass
+    contract: use source case sensitivity when comparing source and target IDs
+    markdown: |
+      # Requirements
+
+      | ID | Statement |
+      | --- | --- |
+      | req-1 | Build safely |
+
+      # Traceability
+
+      | Requirement | Evidence |
+      | --- | --- |
+      | REQ-1 | Unit test |
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: coverage.case-insensitive
+          select:
+            target: document
+          assert:
+            tableColumnCoverage:
+              source:
+                section: Requirements
+                column: ID
+                prefix: req
+                caseSensitive: false
+              target:
+                section: Traceability
+                column: Requirement
+              require: everySourceId
+    expected:
+      valid: true
+      compiledAssertions:
+        - ruleId: coverage.case-insensitive
+          source:
+            section: Requirements
+            column: ID
+            prefix: req
+            caseSensitive: false
+          target:
+            section: Traceability
+            column: Requirement
