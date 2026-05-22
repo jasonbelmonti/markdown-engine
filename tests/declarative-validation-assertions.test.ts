@@ -1304,6 +1304,272 @@ describe("declarative validation assertion proof", () => {
     });
   });
 
+  it("passes v2 allOf only when every branch passes", () => {
+    const document = normalize(parse("# Mission\n\nReady for launch.\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v2",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "mission.allof.passes",
+          severity: "warning",
+          allOf: [
+            {
+              label: "document-exists",
+              select: { target: "document" },
+              assert: { exists: true },
+            },
+            {
+              label: "mission-ready",
+              select: { target: "section", title: "Mission" },
+              assert: { text: { contains: "Ready" } },
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(result).toEqual({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [
+        {
+          ruleId: "mission.allof.passes",
+          status: "passed",
+          passed: true,
+          diagnostics: [],
+          evaluation: {
+            kind: "allOf",
+            branches: [
+              {
+                branchIndex: 0,
+                label: "document-exists",
+                status: "passed",
+                diagnostics: [],
+              },
+              {
+                branchIndex: 1,
+                label: "mission-ready",
+                status: "passed",
+                diagnostics: [],
+              },
+            ],
+          },
+        },
+      ],
+      profile: {
+        syntaxVersion: "markdown-engine.validation@v2",
+        documentVersion: "1.0.0",
+        ruleCount: 1,
+        evaluatedRuleCount: 1,
+        skippedRuleCount: 0,
+      },
+    });
+  });
+
+  it("fails v2 allOf with one top-level summary diagnostic and nested branch diagnostics", () => {
+    const document = normalize(parse("# Mission\n\nReady for launch.\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    const summaryDiagnostic = {
+      code: "profile.validation.groupRequirementFailed",
+      ruleId: "mission.allof.fails",
+      message: "One or more allOf branches failed the grouped rule.",
+      severity: "error" as const,
+    };
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v2",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "mission.allof.fails",
+          allOf: [
+            {
+              label: "document-exists",
+              select: { target: "document" },
+              assert: { exists: true },
+            },
+            {
+              label: "mission-complete",
+              select: { target: "section", title: "Mission" },
+              assert: { text: { contains: "Complete" } },
+            },
+            {
+              label: "verification-section",
+              select: { target: "section", title: "Verification" },
+              assert: { exists: true },
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(result.valid).toBe(false);
+    expect(result.diagnostics).toEqual([summaryDiagnostic]);
+    expect(result.ruleResults).toEqual([
+      {
+        ruleId: "mission.allof.fails",
+        status: "failed",
+        passed: false,
+        diagnostics: [summaryDiagnostic],
+        evaluation: {
+          kind: "allOf",
+          branches: [
+            {
+              branchIndex: 0,
+              label: "document-exists",
+              status: "passed",
+              diagnostics: [],
+            },
+            {
+              branchIndex: 1,
+              label: "mission-complete",
+              status: "failed",
+              diagnostics: [
+                expect.objectContaining({
+                  code: "profile.validation.textMissing",
+                  ruleId: "mission.allof.fails",
+                  message: 'Selected section text must contain "Complete".',
+                  severity: "error",
+                  sourceRange: expect.objectContaining({
+                    start: expect.objectContaining({ line: 1, column: 1 }),
+                  }),
+                }),
+              ],
+            },
+            {
+              branchIndex: 2,
+              label: "verification-section",
+              status: "failed",
+              diagnostics: [
+                {
+                  code: "profile.validation.emptySelection",
+                  ruleId: "mission.allof.fails",
+                  message: "Rule selector did not match any document targets.",
+                  severity: "error",
+                },
+              ],
+            },
+          ],
+        },
+      },
+    ]);
+  });
+
+  it("keeps v2 allOf branch results stable across repeated evidence runs", () => {
+    const document = normalize(parse("# Mission\n\nReady for launch.\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    const profile = {
+      syntaxVersion: "markdown-engine.validation@v2",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "mission.allof.repeatable",
+          allOf: [
+            {
+              select: { target: "section", title: "Mission" },
+              assert: { text: { contains: "Ready" } },
+            },
+            {
+              label: "missing-table",
+              select: { target: "table", section: "Mission" },
+              assert: { tableColumnsRequired: { columns: ["ID"] } },
+            },
+          ],
+        },
+      ],
+    } satisfies ValidationProfile;
+    const firstResult = validateWithProfile(document, profile, {
+      includeEvidence: true,
+    });
+    const secondResult = validateWithProfile(document, profile, {
+      includeEvidence: true,
+    });
+
+    expect(secondResult).toEqual(firstResult);
+    expect(firstResult.diagnostics).toEqual([
+      {
+        code: "profile.validation.groupRequirementFailed",
+        ruleId: "mission.allof.repeatable",
+        message: "One or more allOf branches failed the grouped rule.",
+        severity: "error",
+      },
+    ]);
+    expect(firstResult.ruleResults[0]).toMatchObject({
+      ruleId: "mission.allof.repeatable",
+      status: "failed",
+      evaluation: {
+        kind: "allOf",
+        branches: [
+          {
+            branchIndex: 0,
+            status: "passed",
+            diagnostics: [],
+          },
+          {
+            branchIndex: 1,
+            label: "missing-table",
+            status: "failed",
+            diagnostics: [
+              {
+                code: "profile.validation.emptySelection",
+                ruleId: "mission.allof.repeatable",
+                message: "Rule selector did not match any document targets.",
+                severity: "error",
+              },
+            ],
+          },
+        ],
+      },
+    });
+    expect(firstResult.evidence?.ruleResults).toEqual(firstResult.ruleResults);
+    expect(firstResult.evidence?.diagnostics).toEqual(firstResult.diagnostics);
+  });
+
+  it("keeps v2 anyOf grouped rules deferred in the allOf runtime slice", () => {
+    const document = normalize(parse("# Mission\n\nReady for launch.\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v2",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "mission.anyof.deferred",
+          anyOf: [
+            {
+              label: "document-exists",
+              select: { target: "document" },
+              assert: { exists: true },
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(result.valid).toBe(false);
+    expect(result.ruleResults).toEqual([]);
+    expect(result.profile).toEqual({
+      syntaxVersion: "markdown-engine.validation@v2",
+      documentVersion: "1.0.0",
+      ruleCount: 1,
+      evaluatedRuleCount: 0,
+      skippedRuleCount: 0,
+    });
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.validation.groupEvaluationDeferred",
+        ruleId: "mission.anyof.deferred",
+        message:
+          "Grouped rule runtime evaluation is not implemented in this package slice.",
+        severity: "error",
+      },
+    ]);
+  });
+
   it("honors case-sensitive and case-insensitive ID policies", () => {
     const document = normalize(
       parse("# Requirements\n\nREQ-1 is ready.\n\nreq-1 repeats.\n").parsed,
