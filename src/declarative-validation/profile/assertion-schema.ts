@@ -5,7 +5,12 @@ import {
   profileDiagnostic,
   unsupportedProfileKey,
 } from "../diagnostics/profile-config-diagnostics.js";
-import type { DeclarativeAssertion, DeclarativeIdSource } from "./index.js";
+import type {
+  DeclarativeAssertion,
+  DeclarativeIdSource,
+  DeclarativeTableColumnCoverageSource,
+  DeclarativeTableColumnCoverageTarget,
+} from "./index.js";
 import {
   hasEffectiveIdsPredicate,
   hasValidIdsCountRange,
@@ -23,9 +28,12 @@ import {
   stringArray,
   unsupportedKeys,
 } from "./schema-values.js";
-import type { ValidationProfileSyntaxVersion } from "./syntax-version.js";
+import {
+  PROFILE_SYNTAX_VERSION_V2,
+  type ValidationProfileSyntaxVersion,
+} from "./syntax-version.js";
 
-const SUPPORTED_ASSERTION_KEYS = [
+const SUPPORTED_ASSERTION_KEYS_V1 = [
   "exists",
   "sectionsRequired",
   "tableColumnsRequired",
@@ -35,6 +43,11 @@ const SUPPORTED_ASSERTION_KEYS = [
   "textOccurrenceCount",
   "textLength",
   "frontmatterRequired",
+] as const;
+
+const SUPPORTED_ASSERTION_KEYS_V2 = [
+  ...SUPPORTED_ASSERTION_KEYS_V1,
+  "tableColumnCoverage",
 ] as const;
 
 export function assertionFromValue(
@@ -48,7 +61,11 @@ export function assertionFromValue(
     return undefined;
   }
 
-  const hasUnsupportedVocabulary = unsupportedAssertionKeys(value, diagnostics);
+  const hasUnsupportedVocabulary = unsupportedAssertionKeys(
+    value,
+    syntaxVersion,
+    diagnostics,
+  );
 
   const assertion = {
     ...existsFromValue(value.exists, diagnostics),
@@ -60,6 +77,9 @@ export function assertionFromValue(
     ...textOccurrenceCountFromValue(value.textOccurrenceCount, diagnostics),
     ...textLengthFromValue(value.textLength, diagnostics),
     ...frontmatterRequiredFromValue(value.frontmatterRequired, diagnostics),
+    ...(supportsTableColumnCoverage(syntaxVersion)
+      ? tableColumnCoverageFromValue(value.tableColumnCoverage, diagnostics)
+      : {}),
   };
 
   if (Object.keys(assertion).length === 0) {
@@ -79,12 +99,14 @@ export function assertionFromValue(
 
 function unsupportedAssertionKeys(
   value: Record<string, unknown>,
+  syntaxVersion: ValidationProfileSyntaxVersion,
   diagnostics: MarkdownDiagnostic[],
 ): boolean {
   let hasUnsupportedVocabulary = false;
+  const supportedAssertionKeys = assertionKeysForSyntaxVersion(syntaxVersion);
 
   for (const key of Object.keys(value)) {
-    if (SUPPORTED_ASSERTION_KEYS.includes(key as SupportedAssertionKey)) {
+    if (supportedAssertionKeys.includes(key as SupportedAssertionKey)) {
       continue;
     }
 
@@ -106,7 +128,21 @@ function unsupportedAssertionKeys(
   return hasUnsupportedVocabulary;
 }
 
-type SupportedAssertionKey = (typeof SUPPORTED_ASSERTION_KEYS)[number];
+type SupportedAssertionKey = (typeof SUPPORTED_ASSERTION_KEYS_V2)[number];
+
+function assertionKeysForSyntaxVersion(
+  syntaxVersion: ValidationProfileSyntaxVersion,
+): readonly SupportedAssertionKey[] {
+  return supportsTableColumnCoverage(syntaxVersion)
+    ? SUPPORTED_ASSERTION_KEYS_V2
+    : SUPPORTED_ASSERTION_KEYS_V1;
+}
+
+function supportsTableColumnCoverage(
+  syntaxVersion: ValidationProfileSyntaxVersion,
+): boolean {
+  return syntaxVersion === PROFILE_SYNTAX_VERSION_V2;
+}
 
 function existsFromValue(
   value: unknown,
@@ -293,6 +329,181 @@ function referencesFromValue(
   return idsFrom === undefined || mustAppearIn === undefined
     ? {}
     : { references: { idsFrom, mustAppearIn } };
+}
+
+function tableColumnCoverageFromValue(
+  value: unknown,
+  diagnostics: MarkdownDiagnostic[],
+): Pick<DeclarativeAssertion, "tableColumnCoverage"> {
+  if (value === undefined) {
+    return {};
+  }
+
+  if (!isPlainRecord(value)) {
+    diagnostics.push(invalidShape("tableColumnCoverage must be an object."));
+
+    return {};
+  }
+
+  unsupportedKeys(value, ["source", "target", "require"], diagnostics);
+
+  const source = tableColumnCoverageSourceFromValue(value.source, diagnostics);
+  const target = tableColumnCoverageTargetFromValue(value.target, diagnostics);
+  const require =
+    value.require === "everySourceId" ? "everySourceId" : undefined;
+
+  if (require === undefined) {
+    diagnostics.push(
+      invalidShape('tableColumnCoverage.require must be "everySourceId".'),
+    );
+  }
+
+  return source === undefined || target === undefined || require === undefined
+    ? {}
+    : {
+        tableColumnCoverage: {
+          source,
+          target,
+          require,
+        },
+      };
+}
+
+function tableColumnCoverageSourceFromValue(
+  value: unknown,
+  diagnostics: MarkdownDiagnostic[],
+): DeclarativeTableColumnCoverageSource | undefined {
+  const diagnosticCountBefore = diagnostics.length;
+
+  if (!isPlainRecord(value)) {
+    diagnostics.push(
+      invalidShape("tableColumnCoverage.source must be an object."),
+    );
+
+    return undefined;
+  }
+
+  unsupportedKeys(
+    value,
+    ["section", "column", "prefix", "caseSensitive"],
+    diagnostics,
+  );
+
+  const section = requiredAssertionString(
+    value.section,
+    "tableColumnCoverage.source.section",
+    diagnostics,
+  );
+  const column = requiredAssertionString(
+    value.column,
+    "tableColumnCoverage.source.column",
+    diagnostics,
+  );
+  const source = {
+    ...optionalTableColumnCoverageSourceString(value, "prefix", diagnostics),
+    ...optionalTableColumnCoverageSourceBoolean(
+      value,
+      "caseSensitive",
+      diagnostics,
+    ),
+  };
+
+  return section === undefined ||
+    column === undefined ||
+    diagnostics.length > diagnosticCountBefore
+    ? undefined
+    : {
+        section,
+        column,
+        ...source,
+      };
+}
+
+function tableColumnCoverageTargetFromValue(
+  value: unknown,
+  diagnostics: MarkdownDiagnostic[],
+): DeclarativeTableColumnCoverageTarget | undefined {
+  const diagnosticCountBefore = diagnostics.length;
+
+  if (!isPlainRecord(value)) {
+    diagnostics.push(
+      invalidShape("tableColumnCoverage.target must be an object."),
+    );
+
+    return undefined;
+  }
+
+  unsupportedKeys(value, ["section", "tableHeader", "column"], diagnostics);
+
+  const section = requiredAssertionString(
+    value.section,
+    "tableColumnCoverage.target.section",
+    diagnostics,
+  );
+  const column = requiredAssertionString(
+    value.column,
+    "tableColumnCoverage.target.column",
+    diagnostics,
+  );
+  const target = {
+    ...optionalTableColumnCoverageTargetStringArray(
+      value,
+      "tableHeader",
+      diagnostics,
+    ),
+  };
+
+  return section === undefined ||
+    column === undefined ||
+    diagnostics.length > diagnosticCountBefore
+    ? undefined
+    : {
+        section,
+        ...target,
+        column,
+      };
+}
+
+function optionalTableColumnCoverageSourceString(
+  record: Record<string, unknown>,
+  key: "prefix",
+  diagnostics: MarkdownDiagnostic[],
+): Partial<Record<"prefix", string>> {
+  return optionalStringField(
+    record,
+    key,
+    diagnostics,
+    (field) =>
+      `tableColumnCoverage.source.${field} must be a non-empty string when provided.`,
+  );
+}
+
+function optionalTableColumnCoverageSourceBoolean(
+  record: Record<string, unknown>,
+  key: "caseSensitive",
+  diagnostics: MarkdownDiagnostic[],
+): Partial<Record<"caseSensitive", boolean>> {
+  return optionalBooleanField(
+    record,
+    key,
+    diagnostics,
+    (field) =>
+      `tableColumnCoverage.source.${field} must be a boolean when provided.`,
+  );
+}
+
+function optionalTableColumnCoverageTargetStringArray(
+  record: Record<string, unknown>,
+  key: "tableHeader",
+  diagnostics: MarkdownDiagnostic[],
+): Partial<Record<"tableHeader", readonly string[]>> {
+  return optionalStringArrayField(
+    record,
+    key,
+    diagnostics,
+    (field) =>
+      `tableColumnCoverage.target.${field} must be an array of non-empty strings when provided.`,
+  );
 }
 
 function textAssertionFromValue(

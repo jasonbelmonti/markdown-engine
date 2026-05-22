@@ -88,6 +88,7 @@ export interface DeclarativeAssertion {
     idsFrom: DeclarativeIdSource;
     mustAppearIn: readonly string[];
   };
+  tableColumnCoverage?: DeclarativeTableColumnCoverage;
   text?: {
     contains?: string;
     excludes?: readonly string[];
@@ -109,6 +110,25 @@ export interface DeclarativeIdSource {
   section?: string;
   column?: string;
   prefix?: string;
+}
+
+export interface DeclarativeTableColumnCoverage {
+  source: DeclarativeTableColumnCoverageSource;
+  target: DeclarativeTableColumnCoverageTarget;
+  require: "everySourceId";
+}
+
+export interface DeclarativeTableColumnCoverageSource {
+  section: string;
+  column: string;
+  prefix?: string;
+  caseSensitive?: boolean;
+}
+
+export interface DeclarativeTableColumnCoverageTarget {
+  section: string;
+  tableHeader?: readonly string[];
+  column: string;
 }
 
 export interface DeclarativeProfileParseOptions {

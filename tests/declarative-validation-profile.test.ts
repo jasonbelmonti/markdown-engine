@@ -163,6 +163,53 @@ rules:
     });
   });
 
+  it("parses v2 tableColumnCoverage assertions", () => {
+    const result = parseValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v2",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "traceability.coverage",
+          select: { target: "document" },
+          assert: {
+            tableColumnCoverage: {
+              source: {
+                section: "5. Requirements",
+                column: "ID",
+                prefix: "REQ",
+                caseSensitive: false,
+              },
+              target: {
+                section: "11. Requirements-to-Behavior Traceability",
+                tableHeader: ["Requirement", "Behavior"],
+                column: "Requirement",
+              },
+              require: "everySourceId",
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([]);
+    expect(result.profile?.rules[0]?.assert).toEqual({
+      tableColumnCoverage: {
+        source: {
+          section: "5. Requirements",
+          column: "ID",
+          prefix: "REQ",
+          caseSensitive: false,
+        },
+        target: {
+          section: "11. Requirements-to-Behavior Traceability",
+          tableHeader: ["Requirement", "Behavior"],
+          column: "Requirement",
+        },
+        require: "everySourceId",
+      },
+    });
+  });
+
   it("rejects invalid parsed YAML textLength assertions", () => {
     const invalidTextLengthProfiles = [
       {
@@ -286,6 +333,68 @@ rules:
     }
   });
 
+  it("rejects invalid v2 tableColumnCoverage shapes with deterministic diagnostics", () => {
+    const source = { section: "5. Requirements", column: "ID", prefix: "REQ" };
+    const target = {
+      section: "11. Requirements-to-Behavior Traceability",
+      column: "Requirement",
+    };
+    const validCoverage = { source, target, require: "everySourceId" };
+    const invalidCoverageAssertions = [
+      [
+        { ...validCoverage, source: null },
+        "tableColumnCoverage.source must be an object.",
+      ],
+      [
+        { ...validCoverage, target: null },
+        "tableColumnCoverage.target must be an object.",
+      ],
+      [
+        { ...validCoverage, source: { ...source, column: "" } },
+        "tableColumnCoverage.source.column must be a non-empty string.",
+      ],
+      [
+        { ...validCoverage, source: { ...source, prefix: "" } },
+        "tableColumnCoverage.source.prefix must be a non-empty string when provided.",
+      ],
+      [
+        { ...validCoverage, target: { ...target, column: "" } },
+        "tableColumnCoverage.target.column must be a non-empty string.",
+      ],
+      [
+        { ...validCoverage, require: "anySourceId" },
+        'tableColumnCoverage.require must be "everySourceId".',
+      ],
+    ];
+
+    for (const [tableColumnCoverage, message] of invalidCoverageAssertions) {
+      const result = parseValidationProfile({
+        syntaxVersion: "markdown-engine.validation@v2",
+        rules: [
+          {
+            id: "traceability.invalid-coverage",
+            select: { target: "document" },
+            assert: { tableColumnCoverage },
+          },
+        ],
+      } as ProfileInput);
+
+      expect(result.profile).toBeUndefined();
+      expect(result.diagnostics).toEqual([
+        {
+          code: "profile.config.invalidShape",
+          message,
+          severity: "error",
+        },
+        {
+          code: "profile.config.invalidShape",
+          message: "Rule assert must include at least one supported assertion.",
+          severity: "error",
+        },
+      ]);
+    }
+  });
+
   it("keeps ids count bounds invalid for v1 profiles", () => {
     const result = parseValidationProfile({
       syntaxVersion: "markdown-engine.validation@v1",
@@ -303,6 +412,34 @@ rules:
       {
         code: "profile.config.unsupportedKey",
         message: 'Unsupported validation profile key "minCount".',
+        severity: "error",
+      },
+    ]);
+  });
+
+  it("keeps tableColumnCoverage invalid for v1 profiles", () => {
+    const result = parseValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      rules: [
+        {
+          id: "v1.table-column-coverage",
+          select: { target: "document" },
+          assert: {
+            tableColumnCoverage: {
+              source: { section: "Requirements", column: "ID" },
+              target: { section: "Traceability", column: "Requirement" },
+              require: "everySourceId",
+            },
+          },
+        },
+      ],
+    } as ProfileInput);
+
+    expect(result.profile).toBeUndefined();
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.compile.unsupportedAssertion",
+        message: 'Unsupported assertion "tableColumnCoverage".',
         severity: "error",
       },
     ]);
@@ -1719,16 +1856,6 @@ rules:
           select: { target: "document" },
           assert: { text: { contains: "Mission" } },
         },
-        {
-          id: "v2-table-column-coverage-not-admitted",
-          select: { target: "table" },
-          assert: {
-            tableColumnCoverage: {
-              source: { section: "Requirements", column: "ID" },
-              target: { section: "Traceability", column: "Requirement" },
-            },
-          },
-        },
       ],
     } as ProfileInput);
 
@@ -1737,11 +1864,6 @@ rules:
       {
         code: "profile.config.unsupportedKey",
         message: 'Unsupported validation profile key "when".',
-        severity: "error",
-      },
-      {
-        code: "profile.compile.unsupportedAssertion",
-        message: 'Unsupported assertion "tableColumnCoverage".',
         severity: "error",
       },
     ]);

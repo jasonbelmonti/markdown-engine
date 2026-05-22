@@ -7,7 +7,10 @@ import {
   hasEffectiveIdsPredicate,
   idsAssertionKeysForSyntaxVersion,
 } from "../profile/ids-assertion-contract.js";
-import type { ValidationProfileSyntaxVersion } from "../profile/syntax-version.js";
+import {
+  PROFILE_SYNTAX_VERSION_V2,
+  type ValidationProfileSyntaxVersion,
+} from "../profile/syntax-version.js";
 import {
   type DeclarativeAssertionName,
   selectorAssertionCompatibilityError,
@@ -15,6 +18,7 @@ import {
 import { compileDiagnostic } from "./diagnostics.js";
 import type { CompiledDeclarativeAssertion } from "./plan.js";
 import {
+  closedTableColumnCoverage,
   closedStringArray,
   hasTextPredicate,
   hasTextLengthBound,
@@ -47,6 +51,7 @@ export const ASSERTION_BUILDERS: readonly AssertionBuilder[] = [
   buildTableColumnsRequiredAssertion,
   buildIdsAssertion,
   buildReferencesAssertion,
+  buildTableColumnCoverageAssertion,
   buildTextAssertion,
   buildTextOccurrenceCountAssertion,
   buildTextLengthAssertion,
@@ -320,6 +325,57 @@ function buildReferencesAssertion(
         ...optionalString("prefix", assertion.references.idsFrom.prefix),
       },
       mustAppearIn,
+    };
+  }
+
+  return undefined;
+}
+
+function buildTableColumnCoverageAssertion(
+  assertion: DeclarativeAssertion,
+  selector: DeclarativeSelector,
+  ruleId: string,
+  syntaxVersion: ValidationProfileSyntaxVersion,
+  diagnostics: MarkdownDiagnostic[],
+): CompiledDeclarativeAssertion | undefined {
+  if (
+    assertion.tableColumnCoverage === undefined ||
+    syntaxVersion !== PROFILE_SYNTAX_VERSION_V2
+  ) {
+    return undefined;
+  }
+
+  const tableColumnCoverage = closedTableColumnCoverage(
+    assertion.tableColumnCoverage,
+    ruleId,
+    diagnostics,
+  );
+
+  if (
+    tableColumnCoverage !== undefined &&
+    pushCompatibilityDiagnostic(
+      "tableColumnCoverage",
+      selector,
+      ruleId,
+      diagnostics,
+    )
+  ) {
+    return {
+      kind: "tableColumnCoverage",
+      source: {
+        section: tableColumnCoverage.source.section,
+        column: tableColumnCoverage.source.column,
+        caseSensitive: tableColumnCoverage.source.caseSensitive ?? true,
+        ...optionalString("prefix", tableColumnCoverage.source.prefix),
+      },
+      target: {
+        section: tableColumnCoverage.target.section,
+        ...(tableColumnCoverage.target.tableHeader === undefined
+          ? {}
+          : { tableHeader: tableColumnCoverage.target.tableHeader }),
+        column: tableColumnCoverage.target.column,
+      },
+      require: tableColumnCoverage.require,
     };
   }
 

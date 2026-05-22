@@ -83,6 +83,21 @@ export type CompiledDeclarativeAssertion =
       mustAppearIn: readonly string[];
     }
   | {
+      kind: "tableColumnCoverage";
+      source: {
+        section: string;
+        column: string;
+        prefix?: string;
+        caseSensitive: boolean;
+      };
+      target: {
+        section: string;
+        tableHeader?: readonly string[];
+        column: string;
+      };
+      require: "everySourceId";
+    }
+  | {
       kind: "text";
       contains?: string;
       excludes?: readonly string[];
