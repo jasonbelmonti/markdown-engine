@@ -1,9 +1,9 @@
 # Declarative Validation Contract
 
 Status: package 2.0.0, v1 profile syntax with v2 profile admission, document contract 1.0.0
-Last updated: 2026-05-21
+Last updated: 2026-05-22
 Current v2 surface: flat-rule result/evidence shell plus ID count-bound schema
-and compiled-plan contract only.
+and runtime evaluator contract.
 
 This document defines the public declarative validation contract for
 `@jasonbelmonti/markdown-engine`. The stable surface is the package-root API,
@@ -13,15 +13,14 @@ fields. Internal parser output, compiled rule-plan records, selector target
 records, and evaluator implementation modules are not public contracts.
 
 Package 2.0 does not introduce `documentVersion: "2.0.0"`, CLI JSON
-discrimination, grouped-rule, `when`, ID count-bound runtime evaluation, or
-`tableColumnCoverage` behavior. Declarative validation continues to use the v1
-runtime behavior
-against the existing `documentVersion: "1.0.0"` rich IR document contract,
-while the profile admission path recognizes `markdown-engine.validation@v2` for
-the same flat rule shape with `id`, optional `severity`, `select`, and `assert`.
-The admitted v2 flat path exposes the minimal result and evidence shell needed
-to distinguish flat assertion evaluation output from v1 output, plus the ID
-count-bound schema and compiled-plan contract.
+discrimination, grouped-rule, `when`, or `tableColumnCoverage` behavior.
+Declarative validation continues to use the existing `documentVersion: "1.0.0"`
+rich IR document contract, while the profile admission path recognizes
+`markdown-engine.validation@v2` for the same flat rule shape with `id`, optional
+`severity`, `select`, and `assert`. The admitted v2 flat path exposes the
+minimal result and evidence shell needed to distinguish flat assertion
+evaluation output from v1 output, plus the ID count-bound schema, compiled-plan,
+and runtime evaluator contract.
 
 ## 1.0 Contract
 
@@ -68,11 +67,10 @@ syntaxVersion: markdown-engine.validation@v2
 ```
 
 This release recognizes v2 as a distinct syntax version at profile admission
-and admits ID count bounds at the schema and compiled-plan layer. Runtime
-evaluation of `ids.minCount` and `ids.maxCount` remains unsupported and emits
-`profile.validation.assertionUnsupported` if executed. Other v2-only constructs
-such as grouped rules, `when`, and `tableColumnCoverage` remain unsupported and
-emit deterministic profile diagnostics.
+and admits ID count bounds at the schema, compiled-plan, and runtime evaluator
+layers. Other v2-only constructs such as grouped rules, `when`, and
+`tableColumnCoverage` remain unsupported and emit deterministic profile
+diagnostics.
 
 The admitted v1/v2 flat vocabulary is closed. Unknown profile keys, rule keys,
 selector keys, known assertion keys, and nested assertion keys emit
@@ -292,9 +290,10 @@ not standalone predicates. `caseSensitive` defaults to `true`. ID tokens use the
 documented token grammar `[A-Za-z][A-Za-z0-9]*-[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*`.
 For v2 profiles, `ids.minCount` and `ids.maxCount` are admitted as non-negative
 integer schema and compiled-plan fields. When both are present, `minCount` must
-be less than or equal to `maxCount`. Runtime count evaluation is deferred; a
-count-bound `ids` assertion fails with `profile.validation.assertionUnsupported`
-rather than silently passing.
+be less than or equal to `maxCount`. Runtime count evaluation uses unique
+comparison values after prefix filtering and duplicate occurrence de-duplication.
+Failed lower and upper bounds emit `profile.validation.idCountTooLow` and
+`profile.validation.idCountTooHigh`.
 
 `text` must include `contains` or a non-empty `excludes` array.
 `textOccurrenceCount.count` is a finite number and counts non-overlapping
@@ -333,6 +332,8 @@ rather than fabricated when unavailable.
 | `profile.validation.assertionFailed` | Rule severity | A supported assertion evaluates and fails without a more specific diagnostic code, including missing table columns, exact occurrence-count mismatches, and text-length bound failures. |
 | `profile.validation.duplicateId` | Rule severity | An `ids.unique` assertion finds repeated IDs. |
 | `profile.validation.frontmatterFieldMissing` | Rule severity | A required frontmatter field is absent. |
+| `profile.validation.idCountTooHigh` | Rule severity | Unique ID count after filtering is higher than `ids.maxCount`. |
+| `profile.validation.idCountTooLow` | Rule severity | Unique ID count after filtering is lower than `ids.minCount`. |
 | `profile.validation.referenceMissing` | Rule severity | A source ID is absent from a required target section. |
 | `profile.validation.sectionMissing` | Rule severity | A required section heading is absent. |
 | `profile.validation.sectionOrder` | Rule severity | A strict required-section order cannot be satisfied. |
