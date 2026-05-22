@@ -9,6 +9,7 @@ import {
   type EngineDocument,
   type ValidationProfile,
 } from "@jasonbelmonti/markdown-engine";
+import { resolveTableColumnIdTokens } from "../src/declarative-validation/assertions/id-targets.js";
 
 const fixturePath = "fixtures/declarative-validation/proving/representative.md";
 const fixture = readFileSync(
@@ -1712,6 +1713,122 @@ describe("declarative validation assertion proof", () => {
         }),
       }),
     ]);
+  });
+
+  it("resolves target table column tokens without section text fallback", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Requirements",
+          "",
+          "| ID | Statement |",
+          "| --- | --- |",
+          "| REQ-1 | Build safely |",
+          "| REQ-2 | Launch safely |",
+          "",
+          "# Traceability",
+          "",
+          "Narrative mentions REQ-2 but does not cover it.",
+          "",
+          "| Requirement | Behavior | Notes |",
+          "| --- | --- | --- |",
+          "| REQ-1 | BEH-1 | - |",
+          "| - | BEH-2 | REQ-2 appears in the wrong column |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const resolution = resolveTableColumnIdTokens(
+      document,
+      { section: "Traceability", column: "Requirement" },
+      { prefix: "REQ" },
+    );
+
+    expect(resolution.status).toBe("resolved");
+    expect(resolution.tokens.map((token) => token.value)).toEqual(["REQ-1"]);
+    expect(resolution.tokens).toEqual([
+      expect.objectContaining({
+        definitionColumnHeader: "Requirement",
+        sectionTitle: "Traceability",
+      }),
+    ]);
+  });
+
+  it("distinguishes missing target sections from missing target columns", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Traceability",
+          "",
+          "| Behavior | Notes |",
+          "| --- | --- |",
+          "| BEH-1 | REQ-1 appears in the wrong column |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+
+    expect(
+      resolveTableColumnIdTokens(document, {
+        section: "Missing Traceability",
+        column: "Requirement",
+      }),
+    ).toEqual({
+      status: "missingSection",
+      source: {
+        section: "Missing Traceability",
+        column: "Requirement",
+      },
+      tokens: [],
+    });
+    expect(
+      resolveTableColumnIdTokens(document, {
+        section: "Traceability",
+        column: "Requirement",
+      }),
+    ).toEqual({
+      status: "missingColumn",
+      source: {
+        section: "Traceability",
+        column: "Requirement",
+      },
+      tokens: [],
+    });
+  });
+
+  it("treats an existing target column with no IDs as resolved", () => {
+    const document = normalize(
+      parse(
+        [
+          "# Traceability",
+          "",
+          "| Requirement | Behavior |",
+          "| --- | --- |",
+          "| TBD | BEH-1 |",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
+    const resolution = resolveTableColumnIdTokens(
+      document,
+      { section: "Traceability", column: "Requirement" },
+      { prefix: "REQ" },
+    );
+
+    expect(resolution).toEqual({
+      status: "resolved",
+      source: {
+        section: "Traceability",
+        column: "Requirement",
+      },
+      tokens: [],
+    });
   });
 
   it("collects section source IDs from child section tables without a column selector", () => {

@@ -12,6 +12,41 @@ import type { DeclarativeSelectionTarget } from "./index.js";
 import { sourceFromTarget, targetMatchesSection } from "./source.js";
 import { tableRowText, tableText } from "./table-text.js";
 
+export interface TableColumnTargetSource {
+  section?: string;
+  tableHeader?: readonly string[];
+  column: string;
+}
+
+export type TableColumnTargetResolution =
+  | {
+      status: "resolved";
+      source: TableColumnTargetSource;
+      targets: readonly TableCellSelectionTarget[];
+    }
+  | {
+      status: "missingSection";
+      source: TableColumnTargetSource;
+      targets: readonly [];
+    }
+  | {
+      status: "missingColumn";
+      source: TableColumnTargetSource;
+      targets: readonly [];
+    };
+
+type TableCellSelectionTarget = Extract<
+  DeclarativeSelectionTarget,
+  { kind: "tableCell" }
+>;
+
+type TableColumnTableResolution =
+  | {
+      status: "resolved";
+      tables: readonly EngineTable[];
+    }
+  | { status: "missingSection" };
+
 export function tableTargets(
   document: EngineDocument,
   selector: Extract<DeclarativeSelector, { target: "table" }>,
@@ -63,18 +98,47 @@ export function tableCellTargets(
 
           return cell === undefined
             ? []
-            : [
-                {
-                  kind: "tableCell" as const,
-                  table,
-                  cell,
-                  text: cell.text,
-                  ...sourceFromTarget(document, cell.target),
-                },
-              ];
+            : [tableCellSelectionTarget(document, table, cell)];
         });
     },
   );
+}
+
+export function tableColumnTargets(
+  document: EngineDocument,
+  source: TableColumnTargetSource,
+): TableColumnTargetResolution {
+  const tableResolution = tablesMatchingTableColumnSource(document, source);
+
+  if (tableResolution.status === "missingSection") {
+    return {
+      status: "missingSection",
+      source,
+      targets: [],
+    };
+  }
+
+  const resolvedColumns = tableResolution.tables.flatMap((table) => {
+    const columnIndex = columnIndexForHeader(table, source.column);
+
+    return columnIndex === undefined ? [] : [{ table, columnIndex }];
+  });
+
+  if (resolvedColumns.length === 0) {
+    return {
+      status: "missingColumn",
+      source,
+      targets: [],
+    };
+  }
+
+  return {
+    status: "resolved",
+    source,
+    targets: resolvedColumns.flatMap(({ table, columnIndex }) =>
+      tableCellTargetsForColumn(document, table, columnIndex),
+    ),
+  };
 }
 
 function tablesMatching(
@@ -95,6 +159,23 @@ function headerMatches(
   return expectedHeaders === undefined
     ? true
     : orderedSubsequence(headerCells(table).map((cell) => cell.text), expectedHeaders);
+}
+
+function tablesMatchingTableColumnSource(
+  document: EngineDocument,
+  source: TableColumnTargetSource,
+): TableColumnTableResolution {
+  if (
+    source.section !== undefined &&
+    documentQueries.sections(document, { title: source.section }).length === 0
+  ) {
+    return { status: "missingSection" };
+  }
+
+  return {
+    status: "resolved",
+    tables: tablesMatching(document, source.section, source.tableHeader),
+  };
 }
 
 function headerCells(table: EngineTable): readonly EngineTableCell[] {
@@ -147,6 +228,32 @@ function columnIndexForHeader(
   column: string,
 ): number | undefined {
   return headerCells(table).find((cell) => cell.text === column)?.columnIndex;
+}
+
+function tableCellTargetsForColumn(
+  document: EngineDocument,
+  table: EngineTable,
+  columnIndex: number,
+): TableCellSelectionTarget[] {
+  return dataRows(table).flatMap((row) => {
+    const cell = row.cells.find((candidate) => candidate.columnIndex === columnIndex);
+
+    return cell === undefined ? [] : [tableCellSelectionTarget(document, table, cell)];
+  });
+}
+
+function tableCellSelectionTarget(
+  document: EngineDocument,
+  table: EngineTable,
+  cell: EngineTableCell,
+): TableCellSelectionTarget {
+  return {
+    kind: "tableCell",
+    table,
+    cell,
+    text: cell.text,
+    ...sourceFromTarget(document, cell.target),
+  };
 }
 
 function sortCellsByColumn(cells: EngineTableCell[]): EngineTableCell[] {

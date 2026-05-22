@@ -9,6 +9,7 @@ import type {
 } from "../../api/document.js";
 import type { SourceRange } from "../../api/diagnostics.js";
 import type { DeclarativeSelectionTarget } from "../selectors/index.js";
+import { tableColumnTargets } from "../selectors/table-targets.js";
 import { documentTextOffsetForTarget } from "./document-text-offsets.js";
 import { extractIdTokens, type IdTokenOptions } from "./id-tokens.js";
 import { sourceRangeForNormalizedText } from "./normalized-source-ranges.js";
@@ -34,6 +35,23 @@ export interface TableColumnIdSource {
   section?: string;
   column: string;
 }
+
+export type TableColumnIdTokenResolution =
+  | {
+      status: "resolved";
+      source: TableColumnIdSource;
+      tokens: readonly TargetIdToken[];
+    }
+  | {
+      status: "missingSection";
+      source: TableColumnIdSource;
+      tokens: readonly [];
+    }
+  | {
+      status: "missingColumn";
+      source: TableColumnIdSource;
+      tokens: readonly [];
+    };
 
 interface IdTextSegment {
   text: string;
@@ -119,7 +137,36 @@ export function extractTableColumnIdTokens(
   source: TableColumnIdSource,
   options: IdTokenOptions = {},
 ): TargetIdToken[] {
-  return extractIdTokensForSegments(tableColumnSegments(document, source), options);
+  const resolution = resolveTableColumnIdTokens(document, source, options);
+
+  return [...resolution.tokens];
+}
+
+export function resolveTableColumnIdTokens(
+  document: EngineDocument,
+  source: TableColumnIdSource,
+  options: IdTokenOptions = {},
+): TableColumnIdTokenResolution {
+  const resolution = tableColumnTargets(document, source);
+
+  if (resolution.status !== "resolved") {
+    return {
+      status: resolution.status,
+      source,
+      tokens: [],
+    };
+  }
+
+  return {
+    status: "resolved",
+    source,
+    tokens: extractIdTokensForSegments(
+      resolution.targets.flatMap((target) =>
+        idTextSegmentsForSelectionTarget(document, target),
+      ),
+      options,
+    ),
+  };
 }
 
 function extractIdTokensForSegments(
@@ -372,111 +419,6 @@ function tableCellSegment(
     definitionTableHeaderCount: tableCellDefinitionTableHeaderCount(table, cell),
     definitionTableKey: table.target.id,
   });
-}
-
-function tableColumnSegments(
-  document: EngineDocument,
-  source: TableColumnIdSource,
-): IdTextSegment[] {
-  if (source.section !== undefined) {
-    return documentQueries
-      .sections(document, { title: source.section })
-      .flatMap((section) => sectionTableColumnSegments(document, section, source.column));
-  }
-
-  return documentQueries
-    .tables(document)
-    .flatMap((table) =>
-      tableDataColumnSegments(
-        table,
-        source.column,
-        sectionForTable(document, table),
-      ),
-    );
-}
-
-function sectionTableColumnSegments(
-  document: EngineDocument,
-  section: EngineSection,
-  column: string,
-): IdTextSegment[] {
-  return [
-    ...directSectionTableColumnSegments(document, section, column),
-    ...section.childSections.flatMap((childTarget) => {
-      const childSection = documentQueries.sections(document, {
-        targetId: childTarget.id,
-      })[0];
-
-      return childSection === undefined
-        ? []
-        : sectionTableColumnSegments(document, childSection, column);
-    }),
-  ];
-}
-
-function directSectionTableColumnSegments(
-  document: EngineDocument,
-  section: EngineSection,
-  column: string,
-): IdTextSegment[] {
-  return section.bodyTargets.flatMap((bodyTarget) =>
-    nodeTableColumnSegments(
-      document,
-      documentQueries.nodes(document, { targetId: bodyTarget.id })[0],
-      column,
-      section,
-    ),
-  );
-}
-
-function nodeTableColumnSegments(
-  document: EngineDocument,
-  node: EngineNode | undefined,
-  column: string,
-  section: EngineSection,
-): IdTextSegment[] {
-  if (node === undefined) {
-    return [];
-  }
-
-  if (node.type === "table" && node.target !== undefined) {
-    const table = documentQueries.tables(document, { targetId: node.target.id })[0];
-
-    return table === undefined
-      ? []
-      : tableDataColumnSegments(table, column, section);
-  }
-
-  return (node.children ?? []).flatMap((child) =>
-    nodeTableColumnSegments(document, child, column, section),
-  );
-}
-
-function tableDataColumnSegments(
-  table: EngineTable,
-  column: string,
-  section?: EngineSection,
-): IdTextSegment[] {
-  const columnIndex = columnIndexForHeader(table, column);
-
-  if (columnIndex === undefined) {
-    return [];
-  }
-
-  return table.cells
-    .filter((cell) => !cell.header && cell.columnIndex === columnIndex)
-    .sort(compareCells)
-    .map((cell) => tableCellSegment(table, cell, section));
-}
-
-function columnIndexForHeader(
-  table: EngineTable,
-  column: string,
-): number | undefined {
-  return table.cells
-    .filter((cell) => cell.header)
-    .sort(compareCells)
-    .find((cell) => cell.text === column)?.columnIndex;
 }
 
 function sectionHeadingSegment(
