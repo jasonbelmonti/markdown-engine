@@ -3,13 +3,14 @@ import type { MarkdownDiagnostic } from "./diagnostics.js";
 import type { ValidationRuleResult } from "./validate.js";
 import {
   evaluateCompiledDeclarativeAllOfRule,
+  evaluateCompiledDeclarativeAnyOfRule,
   evaluateCompiledDeclarativeRule,
   sortValidationRuleResults,
 } from "../declarative-validation/assertions/index.js";
 import { compileValidationProfile } from "../declarative-validation/compiler/index.js";
 import type {
   CompiledDeclarativeValidationAllOfRuleV2,
-  CompiledDeclarativeValidationGroupRuleV2,
+  CompiledDeclarativeValidationAnyOfRuleV2,
   CompiledDeclarativeValidationRule,
 } from "../declarative-validation/compiler/index.js";
 import { parseValidationProfileInput } from "../declarative-validation/profile/index.js";
@@ -127,15 +128,11 @@ export function validateWithProfile(
 
   const compileResult = compileValidationProfile(materializedProfile.profile);
   const compiledRules = compileResult.plan?.rules ?? [];
-  const deferredGroupDiagnostics = compiledRules.flatMap(
-    deferredGroupDiagnosticsForRule,
-  );
   const ruleResults = sortValidationRuleResults(
     compiledRules.flatMap((rule) => evaluateCompiledRule(document, rule)),
   );
   const diagnostics = [
     ...compileResult.diagnostics,
-    ...deferredGroupDiagnostics,
     ...ruleResults.flatMap((result) => result.diagnostics),
   ];
   return createDeclarativeValidationResult({
@@ -147,22 +144,16 @@ export function validateWithProfile(
   });
 }
 
-function isCompiledGroupRule(
-  rule: CompiledDeclarativeValidationRule,
-): rule is CompiledDeclarativeValidationGroupRuleV2 {
-  return "kind" in rule && rule.kind !== "flat";
-}
-
 function evaluateCompiledRule(
   document: EngineDocument,
   rule: CompiledDeclarativeValidationRule,
 ): ValidationRuleResult[] {
-  if (isCompiledAllOfRule(rule)) {
-    return [evaluateCompiledDeclarativeAllOfRule(rule, document)];
+  if (isCompiledAnyOfRule(rule)) {
+    return [evaluateCompiledDeclarativeAnyOfRule(rule, document)];
   }
 
-  if (isCompiledGroupRule(rule)) {
-    return [];
+  if (isCompiledAllOfRule(rule)) {
+    return [evaluateCompiledDeclarativeAllOfRule(rule, document)];
   }
 
   return [
@@ -173,37 +164,16 @@ function evaluateCompiledRule(
   ];
 }
 
+function isCompiledAnyOfRule(
+  rule: CompiledDeclarativeValidationRule,
+): rule is CompiledDeclarativeValidationAnyOfRuleV2 {
+  return "kind" in rule && rule.kind === "anyOf";
+}
+
 function isCompiledAllOfRule(
   rule: CompiledDeclarativeValidationRule,
 ): rule is CompiledDeclarativeValidationAllOfRuleV2 {
   return "kind" in rule && rule.kind === "allOf";
-}
-
-function isDeferredGroupRule(
-  rule: CompiledDeclarativeValidationRule,
-): rule is Exclude<
-  CompiledDeclarativeValidationGroupRuleV2,
-  CompiledDeclarativeValidationAllOfRuleV2
-> {
-  return isCompiledGroupRule(rule) && !isCompiledAllOfRule(rule);
-}
-
-function deferredGroupDiagnosticsForRule(
-  rule: CompiledDeclarativeValidationRule,
-): MarkdownDiagnostic[] {
-  return isDeferredGroupRule(rule) ? [deferredGroupDiagnostic(rule)] : [];
-}
-
-function deferredGroupDiagnostic(
-  rule: CompiledDeclarativeValidationGroupRuleV2,
-): MarkdownDiagnostic {
-  return {
-    code: "profile.validation.groupEvaluationDeferred",
-    ruleId: rule.ruleId,
-    message:
-      "Grouped rule runtime evaluation is not implemented in this package slice.",
-    severity: "error" as const,
-  };
 }
 
 function documentVersionMismatchDiagnostic(
