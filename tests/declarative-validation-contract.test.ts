@@ -321,7 +321,7 @@ describe("declarative validation public contract scaffold", () => {
     });
   });
 
-  it("keeps v2 grouped rules from silently evaluating before runtime support exists", () => {
+  it("evaluates v2 anyOf grouped rules through the public result contract", () => {
     const document = normalize(parse("# Mission\n\nReady for launch.\n").parsed, {
       documentVersion: "1.0.0",
     }).document;
@@ -342,22 +342,38 @@ describe("declarative validation public contract scaffold", () => {
       ],
     });
 
-    expect(result.valid).toBe(false);
-    expect(result.ruleResults).toEqual([]);
+    expect(result.valid).toBe(true);
+    expect(result.diagnostics).toEqual([]);
+    expect(result.ruleResults).toEqual([
+      {
+        ruleId: "mission.grouped",
+        status: "passed",
+        passed: true,
+        diagnostics: [],
+        evaluation: {
+          kind: "anyOf",
+          selectedBranch: {
+            branchIndex: 0,
+            label: "document-text",
+          },
+          branches: [
+            {
+              branchIndex: 0,
+              label: "document-text",
+              status: "passed",
+              diagnostics: [],
+            },
+          ],
+        },
+      },
+    ]);
     expect(result.profile).toEqual({
       syntaxVersion: "markdown-engine.validation@v2",
       documentVersion: "1.0.0",
       ruleCount: 1,
-      evaluatedRuleCount: 0,
+      evaluatedRuleCount: 1,
       skippedRuleCount: 0,
     });
-    expect(result.diagnostics).toEqual([
-      expect.objectContaining({
-        code: "profile.validation.groupEvaluationDeferred",
-        ruleId: "mission.grouped",
-        severity: "error",
-      }),
-    ]);
   });
 
   it("returns source-grounded v2 flat-rule diagnostics with failed status", () => {

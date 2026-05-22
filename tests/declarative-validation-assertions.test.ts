@@ -1529,7 +1529,7 @@ describe("declarative validation assertion proof", () => {
     expect(firstResult.evidence?.diagnostics).toEqual(firstResult.diagnostics);
   });
 
-  it("keeps v2 anyOf grouped rules deferred in the allOf runtime slice", () => {
+  it("passes v2 anyOf when a branch passes and keeps failed branch diagnostics nested", () => {
     const document = normalize(parse("# Mission\n\nReady for launch.\n").parsed, {
       documentVersion: "1.0.0",
     }).document;
@@ -1538,12 +1538,117 @@ describe("declarative validation assertion proof", () => {
       documentVersion: "1.0.0",
       rules: [
         {
-          id: "mission.anyof.deferred",
+          id: "mission.anyof.passes",
           anyOf: [
             {
-              label: "document-exists",
-              select: { target: "document" },
+              label: "verification-section",
+              select: { target: "section", title: "Verification" },
               assert: { exists: true },
+            },
+            {
+              label: "mission-ready",
+              select: { target: "section", title: "Mission" },
+              assert: { text: { contains: "Ready" } },
+            },
+            {
+              label: "mission-complete",
+              select: { target: "section", title: "Mission" },
+              assert: { text: { contains: "Complete" } },
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(result.valid).toBe(true);
+    expect(result.diagnostics).toEqual([]);
+    expect(result.ruleResults).toEqual([
+      {
+        ruleId: "mission.anyof.passes",
+        status: "passed",
+        passed: true,
+        diagnostics: [],
+        evaluation: {
+          kind: "anyOf",
+          selectedBranch: {
+            branchIndex: 1,
+            label: "mission-ready",
+          },
+          branches: [
+            {
+              branchIndex: 0,
+              label: "verification-section",
+              status: "failed",
+              diagnostics: [
+                {
+                  code: "profile.validation.emptySelection",
+                  ruleId: "mission.anyof.passes",
+                  message: "Rule selector did not match any document targets.",
+                  severity: "error",
+                },
+              ],
+            },
+            {
+              branchIndex: 1,
+              label: "mission-ready",
+              status: "passed",
+              diagnostics: [],
+            },
+            {
+              branchIndex: 2,
+              label: "mission-complete",
+              status: "failed",
+              diagnostics: [
+                expect.objectContaining({
+                  code: "profile.validation.textMissing",
+                  ruleId: "mission.anyof.passes",
+                  message: 'Selected section text must contain "Complete".',
+                  severity: "error",
+                  sourceRange: expect.objectContaining({
+                    start: expect.objectContaining({ line: 1, column: 1 }),
+                  }),
+                }),
+              ],
+            },
+          ],
+        },
+      },
+    ]);
+    expect(result.profile).toEqual({
+      syntaxVersion: "markdown-engine.validation@v2",
+      documentVersion: "1.0.0",
+      ruleCount: 1,
+      evaluatedRuleCount: 1,
+      skippedRuleCount: 0,
+    });
+  });
+
+  it("fails v2 anyOf with one top-level summary diagnostic and nested branch diagnostics", () => {
+    const document = normalize(parse("# Mission\n\nReady for launch.\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    const summaryDiagnostic = {
+      code: "profile.validation.noAlternativeMatched",
+      ruleId: "mission.anyof.fails",
+      message: "No anyOf branch matched the grouped rule.",
+      severity: "error" as const,
+    };
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v2",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "mission.anyof.fails",
+          anyOf: [
+            {
+              label: "verification-section",
+              select: { target: "section", title: "Verification" },
+              assert: { exists: true },
+            },
+            {
+              label: "mission-complete",
+              select: { target: "section", title: "Mission" },
+              assert: { text: { contains: "Complete" } },
             },
           ],
         },
@@ -1551,23 +1656,109 @@ describe("declarative validation assertion proof", () => {
     });
 
     expect(result.valid).toBe(false);
-    expect(result.ruleResults).toEqual([]);
-    expect(result.profile).toEqual({
-      syntaxVersion: "markdown-engine.validation@v2",
-      documentVersion: "1.0.0",
-      ruleCount: 1,
-      evaluatedRuleCount: 0,
-      skippedRuleCount: 0,
-    });
-    expect(result.diagnostics).toEqual([
+    expect(result.diagnostics).toEqual([summaryDiagnostic]);
+    expect(result.ruleResults).toEqual([
       {
-        code: "profile.validation.groupEvaluationDeferred",
-        ruleId: "mission.anyof.deferred",
-        message:
-          "Grouped rule runtime evaluation is not implemented in this package slice.",
-        severity: "error",
+        ruleId: "mission.anyof.fails",
+        status: "failed",
+        passed: false,
+        diagnostics: [summaryDiagnostic],
+        evaluation: {
+          kind: "anyOf",
+          branches: [
+            {
+              branchIndex: 0,
+              label: "verification-section",
+              status: "failed",
+              diagnostics: [
+                {
+                  code: "profile.validation.emptySelection",
+                  ruleId: "mission.anyof.fails",
+                  message: "Rule selector did not match any document targets.",
+                  severity: "error",
+                },
+              ],
+            },
+            {
+              branchIndex: 1,
+              label: "mission-complete",
+              status: "failed",
+              diagnostics: [
+                expect.objectContaining({
+                  code: "profile.validation.textMissing",
+                  ruleId: "mission.anyof.fails",
+                  message: 'Selected section text must contain "Complete".',
+                  severity: "error",
+                  sourceRange: expect.objectContaining({
+                    start: expect.objectContaining({ line: 1, column: 1 }),
+                  }),
+                }),
+              ],
+            },
+          ],
+        },
       },
     ]);
+  });
+
+  it("keeps v2 anyOf branch results stable across repeated evidence runs", () => {
+    const document = normalize(parse("# Mission\n\nReady for launch.\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    const profile = {
+      syntaxVersion: "markdown-engine.validation@v2",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "mission.anyof.repeatable",
+          anyOf: [
+            {
+              select: { target: "section", title: "Missing" },
+              assert: { exists: true },
+            },
+            {
+              label: "mission-ready",
+              select: { target: "section", title: "Mission" },
+              assert: { text: { contains: "Ready" } },
+            },
+          ],
+        },
+      ],
+    } satisfies ValidationProfile;
+    const firstResult = validateWithProfile(document, profile, {
+      includeEvidence: true,
+    });
+    const secondResult = validateWithProfile(document, profile, {
+      includeEvidence: true,
+    });
+
+    expect(secondResult).toEqual(firstResult);
+    expect(firstResult.diagnostics).toEqual([]);
+    expect(firstResult.ruleResults[0]).toMatchObject({
+      ruleId: "mission.anyof.repeatable",
+      status: "passed",
+      evaluation: {
+        kind: "anyOf",
+        selectedBranch: {
+          branchIndex: 1,
+          label: "mission-ready",
+        },
+        branches: [
+          {
+            branchIndex: 0,
+            status: "failed",
+          },
+          {
+            branchIndex: 1,
+            label: "mission-ready",
+            status: "passed",
+            diagnostics: [],
+          },
+        ],
+      },
+    });
+    expect(firstResult.evidence?.ruleResults).toEqual(firstResult.ruleResults);
+    expect(firstResult.evidence?.diagnostics).toEqual(firstResult.diagnostics);
   });
 
   it("honors case-sensitive and case-insensitive ID policies", () => {
