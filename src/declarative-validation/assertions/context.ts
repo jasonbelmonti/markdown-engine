@@ -1,8 +1,8 @@
-import type { CompiledDeclarativeValidationRule } from "../compiler/plan.js";
+import type { CompiledDeclarativeValidationExecutableRule } from "../compiler/plan.js";
 import type { DeclarativeSelection } from "../selectors/index.js";
 
 export interface AssertionEvaluationContext {
-  rule: CompiledDeclarativeValidationRule;
+  rule: CompiledDeclarativeValidationExecutableRule;
   selection: DeclarativeSelection;
   assertionIndex: number;
 }

@@ -3,7 +3,10 @@ import "./declarative-validation-compiler-direct-profile.js";
 
 import { describe, expect, it } from "vitest";
 
-import type { ValidationProfile } from "@jasonbelmonti/markdown-engine";
+import type {
+  DeclarativeAssertion,
+  ValidationProfile,
+} from "@jasonbelmonti/markdown-engine";
 import type { evaluateCompiledDeclarativeRule } from "../src/declarative-validation/assertions/index.js";
 import { compileValidationProfile } from "../src/declarative-validation/compiler/index.js";
 
@@ -208,21 +211,100 @@ describe("declarative validation compiler proof", () => {
     expect(containsFunction(result.plan)).toBe(false);
   });
 
-  it("rejects deferred v2 grouped and applicability constructs before plan creation", () => {
+  it("compiles v2 grouped rules into private plan variants with stable branch order", () => {
     const result = compileValidationProfile({
       syntaxVersion: "markdown-engine.validation@v2",
       rules: [
         {
-          id: "v2-anyof-not-admitted",
+          id: "v2-anyof-rule",
+          severity: "warning",
           anyOf: [
             {
+              label: "document-branch",
               select: { target: "document" },
+              assert: { exists: true },
+            },
+            {
+              label: "text-branch",
+              select: { target: "section", title: "Mission" },
               assert: { text: { contains: "Mission" } },
             },
           ],
         },
         {
-          id: "v2-allof-not-admitted",
+          id: "v2-allof-rule",
+          allOf: [
+            {
+              select: { target: "document" },
+              assert: { sectionsRequired: { headings: ["Mission"] } },
+            },
+            {
+              label: "table-branch",
+              select: { target: "table", section: "Mission" },
+              assert: { tableColumnsRequired: { columns: ["ID"] } },
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([]);
+    expect(result.plan?.syntaxVersion).toBe("markdown-engine.validation@v2");
+    expect(result.plan?.rules).toEqual([
+      expect.objectContaining({
+        kind: "anyOf",
+        ruleId: "v2-anyof-rule",
+        severity: "warning",
+        branches: [
+          expect.objectContaining({
+            branchIndex: 0,
+            label: "document-branch",
+            selector: { target: "document" },
+            assertions: [{ kind: "exists" }],
+          }),
+          expect.objectContaining({
+            branchIndex: 1,
+            label: "text-branch",
+            selector: { target: "section", title: "Mission" },
+            assertions: [{ kind: "text", contains: "Mission" }],
+          }),
+        ],
+      }),
+      expect.objectContaining({
+        kind: "allOf",
+        ruleId: "v2-allof-rule",
+        severity: "error",
+        branches: [
+          expect.objectContaining({
+            branchIndex: 0,
+            assertions: [
+              { kind: "sectionsRequired", headings: ["Mission"], order: "none" },
+            ],
+          }),
+          expect.objectContaining({
+            branchIndex: 1,
+            label: "table-branch",
+            selector: { target: "table", section: "Mission" },
+            assertions: [{ kind: "tableColumnsRequired", columns: ["ID"] }],
+          }),
+        ],
+      }),
+    ]);
+    expect(containsFunction(result.plan)).toBe(false);
+  });
+
+  it("rejects invalid v2 grouped constructs before plan creation", () => {
+    const result = compileValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v2",
+      rules: [
+        {
+          id: "v2-empty-anyof",
+          anyOf: [],
+        },
+        {
+          id: "v2-ambiguous-group",
+          select: { target: "document" },
+          assert: { exists: true },
           allOf: [
             {
               select: { target: "document" },
@@ -230,36 +312,27 @@ describe("declarative validation compiler proof", () => {
             },
           ],
         },
-        {
-          id: "v2-when-not-admitted",
-          when: {
-            select: { target: "document" },
-            assert: { text: { contains: "Mission" } },
-          },
-          select: { target: "document" },
-          assert: { text: { contains: "Mission" } },
-        },
       ],
     } as unknown as ValidationProfile);
 
     expect(result.plan).toBeUndefined();
-    expect(result.diagnostics).toEqual([
-      {
-        code: "profile.config.unsupportedKey",
-        message: 'Unsupported validation profile key "anyOf".',
-        severity: "error",
-      },
-      {
-        code: "profile.config.unsupportedKey",
-        message: 'Unsupported validation profile key "allOf".',
-        severity: "error",
-      },
-      {
-        code: "profile.config.unsupportedKey",
-        message: 'Unsupported validation profile key "when".',
-        severity: "error",
-      },
-    ]);
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        {
+          code: "profile.config.invalidShape",
+          ruleId: "v2-empty-anyof",
+          message: "Rule anyOf must be a non-empty array.",
+          severity: "error",
+        },
+        {
+          code: "profile.config.invalidShape",
+          ruleId: "v2-ambiguous-group",
+          message:
+            "V2 rule at index 1 must declare exactly one of select/assert, anyOf, or allOf.",
+          severity: "error",
+        },
+      ]),
+    );
   });
 
   it("rejects incompatible selector and assertion pairs before execution", () => {
@@ -303,7 +376,7 @@ describe("declarative validation compiler proof", () => {
       },
     ] satisfies {
       id: string;
-      assert: ValidationProfile["rules"][number]["assert"] & Record<string, unknown>;
+      assert: DeclarativeAssertion & Record<string, unknown>;
     }[];
 
     for (const { id, assert } of removedColumnAssertions) {

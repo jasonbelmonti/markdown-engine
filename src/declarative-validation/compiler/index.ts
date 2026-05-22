@@ -1,7 +1,6 @@
 import type { MarkdownDiagnostic } from "../../api/diagnostics.js";
 import { isPlainRecord } from "../../internal/plain-record.js";
 import type {
-  DeclarativeValidationRule,
   DeclarativeValidationSeverity,
   ValidationProfile,
 } from "../profile/index.js";
@@ -15,22 +14,35 @@ import {
   PROFILE_SYNTAX_VERSION_V2,
   type ValidationProfileSyntaxVersion,
 } from "../profile/syntax-version.js";
-import { compiledAssertionsFromValue } from "./assertions.js";
 import { compileDiagnostic } from "./diagnostics.js";
+import {
+  compiledGroupRuleFromValue,
+  type CompiledGroupKind,
+} from "./group-plans.js";
 import type {
   CompiledDeclarativeValidationPlan,
+  CompiledDeclarativeValidationRule,
   CompiledDeclarativeValidationRuleFields,
+  CompiledDeclarativeValidationRuleV2,
   DeclarativeValidationCompileResult,
 } from "./plan.js";
+import { compiledRuleFieldsFromValue } from "./rule-fields.js";
 
 export type {
   CompiledDeclarativeValidationPlan,
   CompiledDeclarativeValidationPlanV1,
   CompiledDeclarativeValidationPlanV2,
+  CompiledDeclarativeValidationAnyOfRuleV2,
+  CompiledDeclarativeValidationAllOfRuleV2,
+  CompiledDeclarativeValidationBranchV2,
+  CompiledDeclarativeValidationExecutableRule,
   CompiledDeclarativeValidationRule,
   CompiledDeclarativeValidationRuleFields,
+  CompiledDeclarativeValidationRuleV2,
   CompiledDeclarativeValidationRuleV1,
   CompiledDeclarativeValidationFlatRuleV2,
+  CompiledDeclarativeValidationGroupRuleV2,
+  CompiledDeclarativeValidationGroupRuleFields,
   CompiledDeclarativeAssertion,
   DeclarativeValidationCompileResult,
 } from "./plan.js";
@@ -40,6 +52,7 @@ const SEVERITIES = new Set<DeclarativeValidationSeverity>([
   "warning",
   "info",
 ]);
+const GROUP_KINDS = ["anyOf", "allOf"] as const;
 
 export function compileValidationProfile(
   profile: ValidationProfile,
@@ -75,7 +88,7 @@ export function compileValidationProfile(
     return { diagnostics };
   }
 
-  const rules: CompiledDeclarativeValidationRuleFields[] = [];
+  const rules: CompiledDeclarativeValidationRule[] = [];
   const seenRuleIds = new Set<string>();
 
   for (let index = 0; index < profileRules.length; index += 1) {
@@ -106,102 +119,121 @@ export function compileValidationProfile(
       continue;
     }
 
-    const selectorInput = closeProfileDataTree(
-      rule.select,
-      "Rule select",
-      diagnostics,
+    const compiledRule = compiledRuleFromValue(
+      rule,
+      index,
       ruleId,
-    );
-    if (selectorInput === DATA_CLOSURE_FAILED) {
-      continue;
-    }
-
-    const diagnosticCountBeforeSelector = diagnostics.length;
-    const selector = selectorFromValue(selectorInput, diagnostics);
-    if (
-      selector === undefined ||
-      diagnostics.length > diagnosticCountBeforeSelector
-    ) {
-      continue;
-    }
-
-    const assertionInput = closeProfileDataTree(
-      rule.assert,
-      "Rule assert",
-      diagnostics,
-      ruleId,
-    );
-    if (assertionInput === DATA_CLOSURE_FAILED) {
-      continue;
-    }
-
-    const diagnosticCountBeforeAssertions = diagnostics.length;
-    if (!isPlainRecord(assertionInput)) {
-      diagnostics.push(
-        compileDiagnostic(
-          "profile.config.invalidShape",
-          "Rule assert must be an object.",
-          ruleId,
-        ),
-      );
-
-      continue;
-    }
-
-    const assertions = compiledAssertionsFromValue(
-      assertionInput as ValidationProfile["rules"][number]["assert"],
-      selector,
-      ruleId,
+      severity ?? "error",
       profile.syntaxVersion,
       diagnostics,
     );
 
-    if (assertions.length === 0) {
-      if (diagnostics.length === diagnosticCountBeforeAssertions) {
-        diagnostics.push(
-          compileDiagnostic(
-            "profile.config.invalidShape",
-            "Rule assert must include at least one supported assertion.",
-            ruleId,
-          ),
-        );
-      }
-
-      continue;
+    if (compiledRule !== undefined) {
+      rules.push(compiledRule);
     }
-
-    rules.push({
-      ruleId,
-      severity: severity ?? "error",
-      selector,
-      assertions,
-    });
   }
 
   return diagnostics.length > 0
     ? { diagnostics }
     : {
-        plan: compiledPlanFromRuleFields(profile.syntaxVersion, rules),
+        plan: compiledPlanFromRules(profile.syntaxVersion, rules),
         diagnostics,
       };
 }
 
-function compiledPlanFromRuleFields(
+function compiledPlanFromRules(
   syntaxVersion: ValidationProfileSyntaxVersion,
-  rules: readonly CompiledDeclarativeValidationRuleFields[],
+  rules: readonly CompiledDeclarativeValidationRule[],
 ): CompiledDeclarativeValidationPlan {
   return syntaxVersion === PROFILE_SYNTAX_VERSION_V2
     ? {
         syntaxVersion,
-        rules: rules.map((rule) => ({
-          kind: "flat",
-          syntaxVersion,
-          ...rule,
-        })),
+        rules: rules.map((rule) => v2RulePlanFromRule(rule, syntaxVersion)),
       }
     : {
-        rules,
+        rules: rules as readonly CompiledDeclarativeValidationRuleFields[],
       };
+}
+
+function v2RulePlanFromRule(
+  rule: CompiledDeclarativeValidationRule,
+  syntaxVersion: typeof PROFILE_SYNTAX_VERSION_V2,
+): CompiledDeclarativeValidationRuleV2 {
+  return "kind" in rule
+    ? rule
+    : {
+        kind: "flat",
+        syntaxVersion,
+        ...rule,
+      };
+}
+
+function compiledRuleFromValue(
+  rule: Record<string, unknown>,
+  ruleIndex: number,
+  ruleId: string,
+  severity: DeclarativeValidationSeverity,
+  syntaxVersion: ValidationProfileSyntaxVersion,
+  diagnostics: MarkdownDiagnostic[],
+): CompiledDeclarativeValidationRule | undefined {
+  if (syntaxVersion !== PROFILE_SYNTAX_VERSION_V2) {
+    return compiledRuleFieldsFromValue(
+      rule.select,
+      rule.assert,
+      ruleId,
+      severity,
+      syntaxVersion,
+      diagnostics,
+    );
+  }
+
+  const hasFlatShapeInput = rule.select !== undefined || rule.assert !== undefined;
+  const groupKind = groupKindFromRule(rule);
+  const shapeCount = Number(hasFlatShapeInput) + GROUP_KINDS.reduce(
+    (count, kind) => count + Number(rule[kind] !== undefined),
+    0,
+  );
+
+  if (shapeCount !== 1) {
+    diagnostics.push(
+      compileDiagnostic(
+        "profile.config.invalidShape",
+        `V2 rule at index ${ruleIndex} must declare exactly one of select/assert, anyOf, or allOf.`,
+        ruleId,
+      ),
+    );
+
+    return undefined;
+  }
+
+  if (groupKind !== undefined) {
+    return compiledGroupRuleFromValue(
+      rule[groupKind],
+      groupKind,
+      ruleId,
+      severity,
+      diagnostics,
+    );
+  }
+
+  return compiledRuleFieldsFromValue(
+    rule.select,
+    rule.assert,
+    ruleId,
+    severity,
+    syntaxVersion,
+    diagnostics,
+  );
+}
+
+function groupKindFromRule(
+  rule: Record<string, unknown>,
+): CompiledGroupKind | undefined {
+  if (rule.anyOf !== undefined) {
+    return "anyOf";
+  }
+
+  return rule.allOf !== undefined ? "allOf" : undefined;
 }
 
 function profileRulesFromValue(
@@ -243,7 +275,7 @@ function ruleFromValue(
   value: unknown,
   index: number,
   diagnostics: MarkdownDiagnostic[],
-): DeclarativeValidationRule | undefined {
+): Record<string, unknown> | undefined {
   if (!isPlainRecord(value)) {
     diagnostics.push({
       code: "profile.config.invalidShape",
@@ -262,7 +294,7 @@ function ruleFromValue(
 
   return closedRule === DATA_CLOSURE_FAILED || !isPlainRecord(closedRule)
     ? undefined
-    : (closedRule as unknown as DeclarativeValidationRule);
+    : closedRule;
 }
 
 function ruleIdFromValue(

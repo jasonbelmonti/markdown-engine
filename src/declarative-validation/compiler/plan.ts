@@ -18,13 +18,23 @@ export interface CompiledDeclarativeValidationPlanV1 {
 /** @internal */
 export interface CompiledDeclarativeValidationPlanV2 {
   syntaxVersion: typeof PROFILE_SYNTAX_VERSION_V2;
-  rules: readonly CompiledDeclarativeValidationFlatRuleV2[];
+  rules: readonly CompiledDeclarativeValidationRuleV2[];
 }
 
 /** @internal Private rule-plan records are owned by the compiler package. */
 export type CompiledDeclarativeValidationRule =
+  | CompiledDeclarativeValidationExecutableRule
+  | CompiledDeclarativeValidationGroupRuleV2;
+
+/** @internal */
+export type CompiledDeclarativeValidationExecutableRule =
   | CompiledDeclarativeValidationRuleV1
   | CompiledDeclarativeValidationFlatRuleV2;
+
+/** @internal */
+export type CompiledDeclarativeValidationRuleV2 =
+  | CompiledDeclarativeValidationFlatRuleV2
+  | CompiledDeclarativeValidationGroupRuleV2;
 
 /** @internal */
 export type CompiledDeclarativeValidationRuleV1 =
@@ -35,6 +45,38 @@ export interface CompiledDeclarativeValidationFlatRuleV2
   extends CompiledDeclarativeValidationRuleFields {
   kind: "flat";
   syntaxVersion: typeof PROFILE_SYNTAX_VERSION_V2;
+}
+
+/** @internal */
+export type CompiledDeclarativeValidationGroupRuleV2 =
+  | CompiledDeclarativeValidationAnyOfRuleV2
+  | CompiledDeclarativeValidationAllOfRuleV2;
+
+/** @internal */
+export interface CompiledDeclarativeValidationAnyOfRuleV2
+  extends CompiledDeclarativeValidationGroupRuleFields {
+  kind: "anyOf";
+}
+
+/** @internal */
+export interface CompiledDeclarativeValidationAllOfRuleV2
+  extends CompiledDeclarativeValidationGroupRuleFields {
+  kind: "allOf";
+}
+
+/** @internal */
+export interface CompiledDeclarativeValidationGroupRuleFields {
+  syntaxVersion: typeof PROFILE_SYNTAX_VERSION_V2;
+  ruleId: string;
+  severity: DeclarativeValidationSeverity;
+  branches: readonly CompiledDeclarativeValidationBranchV2[];
+}
+
+/** @internal */
+export interface CompiledDeclarativeValidationBranchV2
+  extends CompiledDeclarativeValidationRuleFields {
+  branchIndex: number;
+  label?: string;
 }
 
 /** @internal */

@@ -261,6 +261,45 @@ describe("declarative validation public contract scaffold", () => {
     });
   });
 
+  it("keeps v2 grouped rules from silently evaluating before runtime support exists", () => {
+    const document = normalize(parse("# Mission\n\nReady for launch.\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v2",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "mission.grouped",
+          anyOf: [
+            {
+              label: "document-text",
+              select: { target: "document" },
+              assert: { text: { contains: "Mission" } },
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(result.valid).toBe(false);
+    expect(result.ruleResults).toEqual([]);
+    expect(result.profile).toEqual({
+      syntaxVersion: "markdown-engine.validation@v2",
+      documentVersion: "1.0.0",
+      ruleCount: 1,
+      evaluatedRuleCount: 0,
+      skippedRuleCount: 0,
+    });
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.groupEvaluationDeferred",
+        ruleId: "mission.grouped",
+        severity: "error",
+      }),
+    ]);
+  });
+
   it("returns source-grounded v2 flat-rule diagnostics with failed status", () => {
     const document = normalize(parse("# Mission\n\nReady for launch.\n").parsed, {
       documentVersion: "1.0.0",
