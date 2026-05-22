@@ -19,6 +19,7 @@ interface TableColumnCoverageFixtureSuite {
 interface TableColumnCoverageFixtureCase {
   name: string;
   contract: string;
+  stripFirstDataCellSourceEvidence?: boolean;
   stripSourceEvidence?: boolean;
   markdown: string;
   profile: unknown;
@@ -62,6 +63,7 @@ const expectedFixtureNames = [
   "missing-target-section",
   "missing-target-column",
   "source-less-missing-id",
+  "later-duplicate-source-evidence",
   "case-insensitive-pass",
 ];
 
@@ -113,9 +115,15 @@ function fixtureDocument(
     { documentVersion: "1.0.0" },
   ).document;
 
-  return fixtureCase.stripSourceEvidence === true
-    ? withoutSourceEvidence(document)
-    : document;
+  if (fixtureCase.stripSourceEvidence === true) {
+    return withoutSourceEvidence(document);
+  }
+
+  if (fixtureCase.stripFirstDataCellSourceEvidence === true) {
+    return withoutFirstDataCellSourceEvidence(document);
+  }
+
+  return document;
 }
 
 function expectedDiagnostics(diagnostics: ExpectedDiagnostic[]): unknown[] {
@@ -167,6 +175,17 @@ function expectCompiledTableColumnCoverageAssertions(
 function withoutSourceEvidence(document: EngineDocument): EngineDocument {
   const copy = structuredClone(document);
   stripSourceEvidence(copy);
+  return copy;
+}
+
+function withoutFirstDataCellSourceEvidence(document: EngineDocument): EngineDocument {
+  const copy = structuredClone(document);
+  const firstDataCell = copy.tables?.[0]?.cells.find((cell) => !cell.header);
+
+  if (firstDataCell !== undefined) {
+    delete firstDataCell.sourceRange;
+  }
+
   return copy;
 }
 

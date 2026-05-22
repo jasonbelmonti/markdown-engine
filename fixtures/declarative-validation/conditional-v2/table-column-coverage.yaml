@@ -238,6 +238,56 @@ cases:
             section: Traceability
             column: Requirement
 
+  - name: later-duplicate-source-evidence
+    contract: use later duplicate source evidence when the first matching source ID has no source range
+    stripFirstDataCellSourceEvidence: true
+    markdown: |
+      # Requirements
+
+      | ID | Statement |
+      | --- | --- |
+      | REQ-1 | First source occurrence has no source evidence |
+      | REQ-1 | Later source occurrence has source evidence |
+
+      # Traceability
+
+      | Requirement | Evidence |
+      | --- | --- |
+      | Design note | REQ-1 appears outside the target column |
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: coverage.later-source-evidence
+          select:
+            target: document
+          assert:
+            tableColumnCoverage:
+              source:
+                section: Requirements
+                column: ID
+                prefix: REQ
+              target:
+                section: Traceability
+                column: Requirement
+              require: everySourceId
+    expected:
+      valid: false
+      diagnostics:
+        - code: profile.validation.tableColumnCoverageIdMissing
+          ruleId: coverage.later-source-evidence
+          message: 'ID "REQ-1" must appear in target table column "Requirement" of section "Traceability".'
+          sourceLine: 6
+      compiledAssertions:
+        - ruleId: coverage.later-source-evidence
+          source:
+            section: Requirements
+            column: ID
+            prefix: REQ
+          target:
+            section: Traceability
+            column: Requirement
+
   - name: case-insensitive-pass
     contract: use source case sensitivity when comparing source and target IDs
     markdown: |

@@ -103,7 +103,19 @@ function uniqueSourceIds(tokens: readonly TargetIdToken[]): CoverageSourceId[] {
   const sourceIdsByComparisonValue = new Map<string, CoverageSourceId>();
 
   for (const token of tokens) {
-    if (sourceIdsByComparisonValue.has(token.comparisonValue)) {
+    const existingSourceId = sourceIdsByComparisonValue.get(token.comparisonValue);
+
+    if (existingSourceId !== undefined) {
+      if (
+        existingSourceId.sourceRange === undefined &&
+        token.sourceRange !== undefined
+      ) {
+        sourceIdsByComparisonValue.set(token.comparisonValue, {
+          ...existingSourceId,
+          sourceRange: token.sourceRange,
+        });
+      }
+
       continue;
     }
 
