@@ -77,6 +77,73 @@ const v2FlatFailingProfile = {
   ],
 };
 
+const v2GroupedProfile = {
+  syntaxVersion: "markdown-engine.validation@v2",
+  documentVersion: "1.0.0",
+  rules: [
+    {
+      id: "v2.grouped.anyof.pass",
+      anyOf: [
+        {
+          label: "controls-table",
+          select: { target: "table", section: "Controls" },
+          assert: { tableColumnsRequired: { columns: ["Owner"] } },
+        },
+        {
+          label: "explicit-none",
+          select: { target: "section", title: "Mission" },
+          assert: { text: { contains: "None" } },
+        },
+      ],
+    },
+    {
+      id: "v2.grouped.anyof.fail",
+      anyOf: [
+        {
+          label: "controls-table",
+          select: { target: "table", section: "Controls" },
+          assert: { tableColumnsRequired: { columns: ["Owner"] } },
+        },
+        {
+          label: "approval-text",
+          select: { target: "section", title: "Mission" },
+          assert: { text: { contains: "Approved" } },
+        },
+      ],
+    },
+    {
+      id: "v2.grouped.allof.pass",
+      allOf: [
+        {
+          label: "heading",
+          select: { target: "document" },
+          assert: { sectionsRequired: { headings: ["Mission"] } },
+        },
+        {
+          label: "owner-table",
+          select: { target: "table", section: "Mission" },
+          assert: { tableColumnsRequired: { columns: ["Owner"] } },
+        },
+      ],
+    },
+    {
+      id: "v2.grouped.allof.fail",
+      allOf: [
+        {
+          label: "heading",
+          select: { target: "document" },
+          assert: { sectionsRequired: { headings: ["Mission"] } },
+        },
+        {
+          label: "missing-column",
+          select: { target: "table", section: "Mission" },
+          assert: { tableColumnsRequired: { columns: ["Reviewer"] } },
+        },
+      ],
+    },
+  ],
+};
+
 const textLengthProfile = {
   syntaxVersion: "markdown-engine.validation@v1",
   documentVersion: "1.0.0",
@@ -136,6 +203,17 @@ export function buildDeclarativeValidationRepeatabilityCases(repoRoot, engine) {
     document,
     v2FlatFailingProfile,
   );
+  const groupedDocument = normalize(
+    parse(groupedMarkdown(), {
+      path: "fixtures/declarative-validation/conditional-v2/grouped-repeatability.md",
+    }).parsed,
+    { documentVersion: "1.0.0" },
+  ).document;
+  const v2GroupedResult = validateWithEvidence(
+    validateWithProfile,
+    groupedDocument,
+    v2GroupedProfile,
+  );
   const textLengthResult = validateWithEvidence(
     validateWithProfile,
     document,
@@ -178,6 +256,14 @@ export function buildDeclarativeValidationRepeatabilityCases(repoRoot, engine) {
       result: requiredEvidence(v2FlatFailingResult),
     },
     {
+      name: "declarative-validation:v2-grouped-result",
+      result: v2GroupedResult,
+    },
+    {
+      name: "declarative-validation:v2-grouped-evidence",
+      result: requiredEvidence(v2GroupedResult),
+    },
+    {
       name: "declarative-validation:text-length-result",
       result: textLengthResult,
     },
@@ -192,6 +278,19 @@ export function buildDeclarativeValidationRepeatabilityCases(repoRoot, engine) {
 
 function validateWithEvidence(validateWithProfile, document, profile) {
   return validateWithProfile(document, profile, { includeEvidence: true });
+}
+
+function groupedMarkdown() {
+  return [
+    "# Mission",
+    "",
+    "None.",
+    "",
+    "| Owner | Status |",
+    "| --- | --- |",
+    "| Flight | Ready |",
+    "",
+  ].join("\n");
 }
 
 function requiredEvidence(result) {

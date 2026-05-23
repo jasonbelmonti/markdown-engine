@@ -1,0 +1,213 @@
+cases:
+  - name: anyof-selected-second-branch-pass
+    contract: pass anyOf when a later branch passes while earlier branch diagnostics remain nested
+    markdown: |
+      # Mission
+
+      None
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: grouped.anyof.pass
+          anyOf:
+            - label: table
+              select:
+                target: table
+                section: Mission
+              assert:
+                tableColumnsRequired:
+                  columns:
+                    - Owner
+            - label: explicit-none
+              select:
+                target: section
+                title: Mission
+              assert:
+                text:
+                  contains: None
+    expected:
+      valid: true
+      ruleResult:
+        ruleId: grouped.anyof.pass
+        status: passed
+        passed: true
+        evaluation:
+          kind: anyOf
+          selectedBranch:
+            branchIndex: 1
+            label: explicit-none
+          branches:
+            - branchIndex: 0
+              label: table
+              status: failed
+              diagnostics:
+                - code: profile.validation.emptySelection
+                  ruleId: grouped.anyof.pass
+                  message: Rule selector did not match any document targets.
+            - branchIndex: 1
+              label: explicit-none
+              status: passed
+
+  - name: anyof-all-branches-fail
+    contract: fail anyOf with one top-level summary diagnostic and nested branch diagnostics
+    markdown: |
+      # Mission
+
+      Pending review.
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: grouped.anyof.fail
+          anyOf:
+            - label: table
+              select:
+                target: table
+                section: Mission
+              assert:
+                tableColumnsRequired:
+                  columns:
+                    - Owner
+            - label: explicit-none
+              select:
+                target: section
+                title: Mission
+              assert:
+                text:
+                  contains: None
+    expected:
+      valid: false
+      diagnostics:
+        - code: profile.validation.noAlternativeMatched
+          ruleId: grouped.anyof.fail
+          message: No anyOf branch matched the grouped rule.
+      ruleResult:
+        ruleId: grouped.anyof.fail
+        status: failed
+        passed: false
+        diagnostics:
+          - code: profile.validation.noAlternativeMatched
+            ruleId: grouped.anyof.fail
+            message: No anyOf branch matched the grouped rule.
+        evaluation:
+          kind: anyOf
+          branches:
+            - branchIndex: 0
+              label: table
+              status: failed
+              diagnostics:
+                - code: profile.validation.emptySelection
+                  ruleId: grouped.anyof.fail
+                  message: Rule selector did not match any document targets.
+            - branchIndex: 1
+              label: explicit-none
+              status: failed
+              diagnostics:
+                - code: profile.validation.textMissing
+                  ruleId: grouped.anyof.fail
+                  message: 'Selected section text must contain "None".'
+                  sourceLine: 1
+
+  - name: allof-all-branches-pass
+    contract: pass allOf when every branch passes in profile order
+    markdown: |
+      # Mission
+
+      | Owner | Status |
+      | --- | --- |
+      | Flight | Ready |
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: grouped.allof.pass
+          allOf:
+            - label: heading
+              select:
+                target: document
+              assert:
+                sectionsRequired:
+                  headings:
+                    - Mission
+            - label: table
+              select:
+                target: table
+                section: Mission
+              assert:
+                tableColumnsRequired:
+                  columns:
+                    - Owner
+    expected:
+      valid: true
+      ruleResult:
+        ruleId: grouped.allof.pass
+        status: passed
+        passed: true
+        evaluation:
+          kind: allOf
+          branches:
+            - branchIndex: 0
+              label: heading
+              status: passed
+            - branchIndex: 1
+              label: table
+              status: passed
+
+  - name: allof-one-branch-fail
+    contract: fail allOf with one top-level summary diagnostic and nested failed-branch diagnostics
+    markdown: |
+      # Mission
+
+      | Status |
+      | --- |
+      | Ready |
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: grouped.allof.fail
+          allOf:
+            - label: heading
+              select:
+                target: document
+              assert:
+                sectionsRequired:
+                  headings:
+                    - Mission
+            - label: table
+              select:
+                target: table
+                section: Mission
+              assert:
+                tableColumnsRequired:
+                  columns:
+                    - Owner
+    expected:
+      valid: false
+      diagnostics:
+        - code: profile.validation.groupRequirementFailed
+          ruleId: grouped.allof.fail
+          message: One or more allOf branches failed the grouped rule.
+      ruleResult:
+        ruleId: grouped.allof.fail
+        status: failed
+        passed: false
+        diagnostics:
+          - code: profile.validation.groupRequirementFailed
+            ruleId: grouped.allof.fail
+            message: One or more allOf branches failed the grouped rule.
+        evaluation:
+          kind: allOf
+          branches:
+            - branchIndex: 0
+              label: heading
+              status: passed
+            - branchIndex: 1
+              label: table
+              status: failed
+              diagnostics:
+                - code: profile.validation.assertionFailed
+                  ruleId: grouped.allof.fail
+                  message: 'Selected table must include column "Owner".'
+                  sourceLine: 3
