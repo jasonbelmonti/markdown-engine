@@ -14,6 +14,7 @@ import {
   PROFILE_SYNTAX_VERSION_V2,
   type ValidationProfileSyntaxVersion,
 } from "../profile/syntax-version.js";
+import { compiledApplicabilityPlanFromValue } from "./applicability-plan.js";
 import { compileDiagnostic } from "./diagnostics.js";
 import {
   compiledGroupRuleFromValue,
@@ -43,6 +44,7 @@ export type {
   CompiledDeclarativeValidationFlatRuleV2,
   CompiledDeclarativeValidationGroupRuleV2,
   CompiledDeclarativeValidationGroupRuleFields,
+  CompiledDeclarativeValidationApplicabilityPlan,
   CompiledDeclarativeAssertion,
   DeclarativeValidationCompileResult,
 } from "./plan.js";
@@ -189,6 +191,13 @@ function compiledRuleFromValue(
 
   const hasFlatShapeInput = rule.select !== undefined || rule.assert !== undefined;
   const groupKind = groupKindFromRule(rule);
+  const applicability =
+    rule.when === undefined
+      ? undefined
+      : compiledApplicabilityPlanFromValue(rule.when, ruleId, severity, diagnostics);
+  if (rule.when !== undefined && applicability === undefined) {
+    return undefined;
+  }
   const shapeCount = Number(hasFlatShapeInput) + GROUP_KINDS.reduce(
     (count, kind) => count + Number(rule[kind] !== undefined),
     0,
@@ -207,16 +216,23 @@ function compiledRuleFromValue(
   }
 
   if (groupKind !== undefined) {
-    return compiledGroupRuleFromValue(
+    const groupRule = compiledGroupRuleFromValue(
       rule[groupKind],
       groupKind,
       ruleId,
       severity,
       diagnostics,
     );
+
+    return groupRule === undefined
+      ? undefined
+      : {
+          ...groupRule,
+          ...(applicability !== undefined ? { applicability } : {}),
+        };
   }
 
-  return compiledRuleFieldsFromValue(
+  const fields = compiledRuleFieldsFromValue(
     rule.select,
     rule.assert,
     ruleId,
@@ -224,6 +240,15 @@ function compiledRuleFromValue(
     syntaxVersion,
     diagnostics,
   );
+
+  return fields === undefined
+    ? undefined
+    : {
+        kind: "flat",
+        syntaxVersion: PROFILE_SYNTAX_VERSION_V2,
+        ...fields,
+        ...(applicability !== undefined ? { applicability } : {}),
+      };
 }
 
 function groupKindFromRule(

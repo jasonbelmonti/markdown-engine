@@ -30,6 +30,7 @@ import { resolveDeclarativeSelector } from "../declarative-validation/selectors/
 
 export type {
   DeclarativeAssertion,
+  DeclarativeValidationApplicability,
   DeclarativeValidationAllOfRule,
   DeclarativeValidationAnyOfRule,
   DeclarativeValidationBranch,
@@ -128,11 +129,16 @@ export function validateWithProfile(
 
   const compileResult = compileValidationProfile(materializedProfile.profile);
   const compiledRules = compileResult.plan?.rules ?? [];
+  const applicabilityDiagnostics =
+    unsupportedApplicabilityRuntimeDiagnostics(compiledRules);
   const ruleResults = sortValidationRuleResults(
-    compiledRules.flatMap((rule) => evaluateCompiledRule(document, rule)),
+    applicabilityDiagnostics.length > 0
+      ? []
+      : compiledRules.flatMap((rule) => evaluateCompiledRule(document, rule)),
   );
   const diagnostics = [
     ...compileResult.diagnostics,
+    ...applicabilityDiagnostics,
     ...ruleResults.flatMap((result) => result.diagnostics),
   ];
   return createDeclarativeValidationResult({
@@ -142,6 +148,30 @@ export function validateWithProfile(
     diagnostics,
     options,
   });
+}
+
+function unsupportedApplicabilityRuntimeDiagnostics(
+  rules: readonly CompiledDeclarativeValidationRule[],
+): MarkdownDiagnostic[] {
+  return rules.flatMap((rule) =>
+    hasCompiledApplicability(rule)
+      ? [
+          {
+            code: "profile.compile.unsupportedApplicability",
+            ruleId: rule.ruleId,
+            message:
+              "Rule-level when is supported by schema and compiler only; validation runtime applicability evaluation is not implemented.",
+            severity: "error" as const,
+          },
+        ]
+      : [],
+  );
+}
+
+function hasCompiledApplicability(
+  rule: CompiledDeclarativeValidationRule,
+): boolean {
+  return "applicability" in rule && rule.applicability !== undefined;
 }
 
 function evaluateCompiledRule(

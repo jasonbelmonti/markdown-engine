@@ -31,6 +31,12 @@ export type DeclarativeValidationRule =
 export interface DeclarativeValidationRuleFields {
   id: string;
   severity?: DeclarativeValidationSeverity;
+  when?: DeclarativeValidationApplicability;
+}
+
+export interface DeclarativeValidationApplicability {
+  select: DeclarativeSelector;
+  assert: DeclarativeAssertion;
 }
 
 export interface DeclarativeValidationFlatRule

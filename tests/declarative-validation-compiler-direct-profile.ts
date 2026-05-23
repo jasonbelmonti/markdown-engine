@@ -192,6 +192,35 @@ describe("declarative validation compiler direct profile proof", () => {
     }
   });
 
+  it("rejects unsafe direct typed v2 applicability data before plan creation", () => {
+    const result = compileValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v2",
+      rules: [
+        {
+          id: "when.callback",
+          when: {
+            select: { target: "document" },
+            assert: { exists: true },
+            callback: () => "not part of the applicability contract",
+          },
+          select: { target: "document" },
+          assert: { exists: true },
+        },
+      ],
+    } as unknown as ValidationProfile);
+
+    expect(result.plan).toBeUndefined();
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.config.invalidShape",
+        message:
+          "Profile.rules[0].when.callback must contain only JSON-safe data properties.",
+        severity: "error",
+      },
+    ]);
+    expect(containsFunction(result.plan)).toBe(false);
+  });
+
   it("ignores caller-owned array methods and iterators before plan creation", () => {
     const rules = [
       {

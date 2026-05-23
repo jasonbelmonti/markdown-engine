@@ -668,6 +668,41 @@ rules:
     expect(result.profile?.rules).toEqual(rules);
   });
 
+  it("accepts v2 rule-level when on flat and grouped rules", () => {
+    const when = {
+      select: { target: "document" },
+      assert: { text: { contains: "Mission" } },
+    } as const;
+    const branch = {
+      label: "mission-text",
+      select: { target: "document" },
+      assert: { exists: true },
+    } as const;
+    const rules = [
+      {
+        id: "v2-flat-with-when",
+        when,
+        select: { target: "document" },
+        assert: { exists: true },
+      },
+      { id: "v2-anyof-with-when", when, anyOf: [branch] },
+      { id: "v2-allof-with-when", when, allOf: [branch] },
+    ] as const;
+
+    const result = parseValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v2",
+      rules,
+    });
+
+    expect(result).toEqual({
+      profile: {
+        syntaxVersion: "markdown-engine.validation@v2",
+        rules,
+      },
+      diagnostics: [],
+    });
+  });
+
   it("rejects invalid v2 group shapes with deterministic diagnostics", () => {
     const branch = {
       select: { target: "document" },
@@ -709,6 +744,22 @@ rules:
         { id: "v2-branch-callback", anyOf: [{ ...branch, callback: "isReady" }] },
         "profile.config.unsupportedKey",
         'Unsupported validation profile key "callback".',
+      ],
+      [
+        {
+          id: "v2-branch-nested-when",
+          anyOf: [
+            {
+              ...branch,
+              when: {
+                select: { target: "document" },
+                assert: { exists: true },
+              },
+            },
+          ],
+        },
+        "profile.config.unsupportedKey",
+        'Unsupported validation profile key "when".',
       ],
     ] as const;
 
@@ -1921,29 +1972,67 @@ rules:
     });
   });
 
-  it("rejects unsupported v2 future constructs with deterministic diagnostics", () => {
-    const result = parseValidationProfile({
-      syntaxVersion: "markdown-engine.validation@v2",
-      rules: [
+  it("rejects invalid v2 rule-level when shapes with deterministic diagnostics", () => {
+    const invalidWhenProfiles = [
+      [
         {
-          id: "v2-when-not-admitted",
+          id: "v2-when-not-object",
+          when: "document",
+          select: { target: "document" },
+          assert: { exists: true },
+        },
+        "profile.config.invalidShape",
+        "Rule when must be an object.",
+      ],
+      [
+        {
+          id: "v2-when-extra-key",
           when: {
             select: { target: "document" },
-            assert: { text: { contains: "Mission" } },
+            assert: { exists: true },
+            callback: "isApplicable",
           },
           select: { target: "document" },
-          assert: { text: { contains: "Mission" } },
+          assert: { exists: true },
         },
+        "profile.config.unsupportedKey",
+        'Unsupported validation profile key "callback".',
       ],
-    } as ProfileInput);
+      [
+        {
+          id: "v2-when-missing-assert",
+          when: { select: { target: "document" } },
+          select: { target: "document" },
+          assert: { exists: true },
+        },
+        "profile.config.invalidShape",
+        "Rule assert must be an object.",
+      ],
+      [
+        {
+          id: "v2-when-expression-predicate",
+          when: {
+            select: { target: "document" },
+            assert: { expression: "document.title === 'Mission'" },
+          },
+          select: { target: "document" },
+          assert: { exists: true },
+        },
+        "profile.config.unsupportedKey",
+        'Unsupported validation profile key "expression".',
+      ],
+    ] as const;
 
-    expect(result.profile).toBeUndefined();
-    expect(result.diagnostics).toEqual([
-      {
-        code: "profile.config.unsupportedKey",
-        message: 'Unsupported validation profile key "when".',
-        severity: "error",
-      },
-    ]);
+    for (const [rule, code, message] of invalidWhenProfiles) {
+      const result = parseValidationProfile({
+        syntaxVersion: "markdown-engine.validation@v2",
+        rules: [rule],
+      } as ProfileInput);
+
+      expect(result.profile).toBeUndefined();
+      expect(result.diagnostics).toContainEqual(
+        expect.objectContaining({ code, message, severity: "error" }),
+      );
+    }
   });
 });

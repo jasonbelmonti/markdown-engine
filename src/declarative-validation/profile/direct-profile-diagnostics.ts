@@ -7,7 +7,7 @@ import { PROFILE_SYNTAX_VERSION_V2 } from "./syntax-version.js";
 
 export const PROFILE_KEYS = ["syntaxVersion", "documentVersion", "rules"] as const;
 export const RULE_KEYS_V1 = ["id", "severity", "select", "assert"] as const;
-export const RULE_KEYS_V2 = [...RULE_KEYS_V1, "anyOf", "allOf"] as const;
+export const RULE_KEYS_V2 = [...RULE_KEYS_V1, "when", "anyOf", "allOf"] as const;
 
 export function pushDirectProfileUnsupportedKeyDiagnostics(
   value: unknown,
