@@ -590,7 +590,7 @@ describe("declarative validation public contract scaffold", () => {
     );
   });
 
-  it("preserves v2 direct profile metadata when unsupported rule keys fail materialization", () => {
+  it("preserves v2 direct profile metadata when rule-level when reaches deferred runtime support", () => {
     expect(
       validateWithProfile(document, {
         syntaxVersion: "markdown-engine.validation@v2",
@@ -611,8 +611,10 @@ describe("declarative validation public contract scaffold", () => {
       valid: false,
       diagnostics: [
         {
-          code: "profile.config.unsupportedKey",
-          message: 'Unsupported validation profile key "when".',
+          code: "profile.compile.unsupportedApplicability",
+          ruleId: "future-when",
+          message:
+            "Rule-level when is supported by schema and compiler only; validation runtime applicability evaluation is not implemented.",
           severity: "error",
         },
       ],
@@ -620,7 +622,7 @@ describe("declarative validation public contract scaffold", () => {
       profile: {
         syntaxVersion: "markdown-engine.validation@v2",
         documentVersion: "1.0.0",
-        ruleCount: 0,
+        ruleCount: 1,
         evaluatedRuleCount: 0,
         skippedRuleCount: 0,
       },

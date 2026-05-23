@@ -108,6 +108,10 @@ describe("declarative validation compiler proof", () => {
         {
           id: "v2-flat-rule",
           severity: "info",
+          when: {
+            select: { target: "document" },
+            assert: { exists: true },
+          },
           select: { target: "document" },
           assert: { text: { contains: "Mission" } },
         },
@@ -154,6 +158,10 @@ describe("declarative validation compiler proof", () => {
           syntaxVersion: "markdown-engine.validation@v2",
           ruleId: "v2-flat-rule",
           severity: "info",
+          applicability: {
+            selector: { target: "document" },
+            assertions: [{ kind: "exists" }],
+          },
           selector: { target: "document" },
           assertions: [{ kind: "text", contains: "Mission" }],
         },
@@ -218,6 +226,10 @@ describe("declarative validation compiler proof", () => {
         {
           id: "v2-anyof-rule",
           severity: "warning",
+          when: {
+            select: { target: "document" },
+            assert: { text: { contains: "Mission" } },
+          },
           anyOf: [
             {
               label: "document-branch",
@@ -233,6 +245,10 @@ describe("declarative validation compiler proof", () => {
         },
         {
           id: "v2-allof-rule",
+          when: {
+            select: { target: "document" },
+            assert: { exists: true },
+          },
           allOf: [
             {
               select: { target: "document" },
@@ -255,6 +271,10 @@ describe("declarative validation compiler proof", () => {
         kind: "anyOf",
         ruleId: "v2-anyof-rule",
         severity: "warning",
+        applicability: {
+          selector: { target: "document" },
+          assertions: [{ kind: "text", contains: "Mission" }],
+        },
         branches: [
           expect.objectContaining({
             branchIndex: 0,
@@ -274,6 +294,10 @@ describe("declarative validation compiler proof", () => {
         kind: "allOf",
         ruleId: "v2-allof-rule",
         severity: "error",
+        applicability: {
+          selector: { target: "document" },
+          assertions: [{ kind: "exists" }],
+        },
         branches: [
           expect.objectContaining({
             branchIndex: 0,
@@ -329,6 +353,47 @@ describe("declarative validation compiler proof", () => {
           ruleId: "v2-ambiguous-group",
           message:
             "V2 rule at index 1 must declare exactly one of select/assert, anyOf, or allOf.",
+          severity: "error",
+        },
+      ]),
+    );
+  });
+
+  it("rejects invalid v2 applicability constructs before plan creation", () => {
+    const result = compileValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v2",
+      rules: [
+        {
+          id: "v2-when-not-object",
+          when: "document",
+          select: { target: "document" },
+          assert: { exists: true },
+        },
+        {
+          id: "v2-when-extra-key",
+          when: {
+            select: { target: "document" },
+            assert: { exists: true },
+            callback: "isApplicable",
+          },
+          select: { target: "document" },
+          assert: { exists: true },
+        },
+      ],
+    } as unknown as ValidationProfile);
+
+    expect(result.plan).toBeUndefined();
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        {
+          code: "profile.config.invalidShape",
+          ruleId: "v2-when-not-object",
+          message: "Rule when must be an object.",
+          severity: "error",
+        },
+        {
+          code: "profile.config.unsupportedKey",
+          message: 'Unsupported validation profile key "callback".',
           severity: "error",
         },
       ]),

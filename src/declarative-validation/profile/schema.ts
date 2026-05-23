@@ -3,11 +3,13 @@ import type { MarkdownDiagnostic } from "../../api/diagnostics.js";
 import { isPlainRecord } from "../../internal/plain-record.js";
 import { unsupportedSyntaxVersion } from "../diagnostics/profile-config-diagnostics.js";
 import type {
+  DeclarativeValidationApplicability,
   DeclarativeValidationRule,
   DeclarativeValidationSeverity,
   JsonSafeValue,
   ValidationProfile,
 } from "./index.js";
+import { applicabilityFromValue } from "./applicability-schema.js";
 import { assertionFromValue } from "./assertion-schema.js";
 import { branchesFromValue } from "./group-schema.js";
 import { selectorFromValue } from "./selector-schema.js";
@@ -29,7 +31,7 @@ const SEVERITIES = new Set<DeclarativeValidationSeverity>([
   "info",
 ]);
 const RULE_KEYS_V1 = ["id", "severity", "select", "assert"] as const;
-const RULE_KEYS_V2 = [...RULE_KEYS_V1, "anyOf", "allOf"] as const;
+const RULE_KEYS_V2 = [...RULE_KEYS_V1, "when", "anyOf", "allOf"] as const;
 
 interface ProfileSchemaResult {
   profile?: ValidationProfile;
@@ -200,6 +202,14 @@ function v2RuleFromValue(
   const hasAllOf = value.allOf !== undefined;
   const shapeCount =
     Number(hasFlatShapeInput) + Number(hasAnyOf) + Number(hasAllOf);
+  const when =
+    value.when === undefined
+      ? undefined
+      : applicabilityFromValue(value.when, syntaxVersion, diagnostics);
+
+  if (value.when !== undefined && when === undefined) {
+    return undefined;
+  }
 
   if (shapeCount !== 1) {
     diagnostics.push(
@@ -219,6 +229,7 @@ function v2RuleFromValue(
       : {
           id,
           ...(severity !== undefined ? { severity } : {}),
+          ...(when !== undefined ? { when } : {}),
           anyOf,
         };
   }
@@ -231,11 +242,12 @@ function v2RuleFromValue(
       : {
           id,
           ...(severity !== undefined ? { severity } : {}),
+          ...(when !== undefined ? { when } : {}),
           allOf,
         };
   }
 
-  return flatRuleFromValue(value, id, severity, syntaxVersion, diagnostics);
+  return flatRuleFromValue(value, id, severity, syntaxVersion, diagnostics, when);
 }
 
 function flatRuleFromValue(
@@ -244,6 +256,7 @@ function flatRuleFromValue(
   severity: DeclarativeValidationSeverity | undefined,
   syntaxVersion: ValidationProfile["syntaxVersion"],
   diagnostics: MarkdownDiagnostic[],
+  when?: DeclarativeValidationApplicability,
 ): DeclarativeValidationRule | undefined {
   const select = selectorFromValue(value.select, diagnostics);
   const assert = assertionFromValue(value.assert, syntaxVersion, diagnostics);
@@ -253,6 +266,7 @@ function flatRuleFromValue(
     : {
         id,
         ...(severity !== undefined ? { severity } : {}),
+        ...(when !== undefined ? { when } : {}),
         select,
         assert,
       };

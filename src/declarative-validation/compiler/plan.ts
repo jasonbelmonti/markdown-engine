@@ -42,7 +42,8 @@ export type CompiledDeclarativeValidationRuleV1 =
 
 /** @internal */
 export interface CompiledDeclarativeValidationFlatRuleV2
-  extends CompiledDeclarativeValidationRuleFields {
+  extends CompiledDeclarativeValidationRuleFields,
+    CompiledDeclarativeValidationApplicabilityOwnerV2 {
   kind: "flat";
   syntaxVersion: typeof PROFILE_SYNTAX_VERSION_V2;
 }
@@ -65,7 +66,8 @@ export interface CompiledDeclarativeValidationAllOfRuleV2
 }
 
 /** @internal */
-export interface CompiledDeclarativeValidationGroupRuleFields {
+export interface CompiledDeclarativeValidationGroupRuleFields
+  extends CompiledDeclarativeValidationApplicabilityOwnerV2 {
   syntaxVersion: typeof PROFILE_SYNTAX_VERSION_V2;
   ruleId: string;
   severity: DeclarativeValidationSeverity;
@@ -83,6 +85,17 @@ export interface CompiledDeclarativeValidationBranchV2
 export interface CompiledDeclarativeValidationRuleFields {
   ruleId: string;
   severity: DeclarativeValidationSeverity;
+  selector: DeclarativeSelector;
+  assertions: readonly CompiledDeclarativeAssertion[];
+}
+
+/** @internal */
+export interface CompiledDeclarativeValidationApplicabilityOwnerV2 {
+  applicability?: CompiledDeclarativeValidationApplicabilityPlan;
+}
+
+/** @internal */
+export interface CompiledDeclarativeValidationApplicabilityPlan {
   selector: DeclarativeSelector;
   assertions: readonly CompiledDeclarativeAssertion[];
 }

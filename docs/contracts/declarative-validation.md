@@ -1,28 +1,33 @@
 # Declarative Validation Contract
 
 Status: package 2.0.0, v1 profile syntax with v2 profile admission, document contract 1.0.0
-Last updated: 2026-05-22
+Last updated: 2026-05-23
 Current v2 surface: flat-rule result/evidence shell, ID count-bound schema and
 runtime evaluator contract, plus `tableColumnCoverage` schema, compiled-plan,
-and runtime evaluator contract.
+and runtime evaluator contract, grouped rule runtime contract, and rule-level
+`when` schema plus private compiler-plan contract with deferred runtime
+applicability.
 
 This document defines the public declarative validation contract for
 `@jasonbelmonti/markdown-engine`. The stable surface is the package-root API,
-the v1 profile syntax, the narrow v2 flat-profile admission path, the CLI
-validation command, diagnostic codes, serialized result shapes, and evidence
+the v1 profile syntax, the admitted v2 profile syntax and runtime subset, the
+CLI validation command, diagnostic codes, serialized result shapes, and evidence
 fields. Internal parser output, compiled rule-plan records, selector target
 records, and evaluator implementation modules are not public contracts.
 
-Package 2.0 does not introduce `documentVersion: "2.0.0"`, CLI JSON
-discrimination, grouped-rule, or `when` behavior.
+Package 2.0 does not introduce `documentVersion: "2.0.0"` or CLI JSON
+discrimination.
 Declarative validation continues to use the existing `documentVersion: "1.0.0"`
 rich IR document contract, while the profile admission path recognizes
 `markdown-engine.validation@v2` for the same flat rule shape with `id`, optional
-`severity`, `select`, and `assert`. The admitted v2 flat path exposes the
-minimal result and evidence shell needed to distinguish flat assertion
-evaluation output from v1 output, plus the ID count-bound schema, compiled-plan,
-and runtime evaluator contract, and the `tableColumnCoverage` schema,
-compiled-plan, and runtime evaluator contract.
+`severity`, `select`, and `assert`; non-recursive `anyOf` and `allOf`; and
+optional rule-level `when`. The admitted v2 path exposes the minimal result and
+evidence shell needed to distinguish assertion and grouped evaluation output
+from v1 output, plus the ID count-bound schema, compiled-plan, and runtime
+evaluator contract; the `tableColumnCoverage` schema, compiled-plan, and
+runtime evaluator contract; and the `when` schema plus private compiled-plan
+contract. Runtime applicability matching, matched/not-matched applicability
+results, skipped rule results, and skipped evidence remain deferred.
 
 ## 1.0 Contract
 
@@ -62,7 +67,7 @@ syntaxVersion: markdown-engine.validation@v1
 `syntaxVersion` is required. Missing or unsupported values emit
 `profile.config.unsupportedSyntaxVersion`.
 
-The v2 syntax is admitted with the same flat-rule profile shape:
+The v2 syntax is admitted as an additive profile syntax:
 
 ```yaml
 syntaxVersion: markdown-engine.validation@v2
@@ -70,9 +75,13 @@ syntaxVersion: markdown-engine.validation@v2
 
 This release recognizes v2 as a distinct syntax version at profile admission,
 admits ID count bounds at the schema, compiled-plan, and runtime evaluator
-layers, and admits `tableColumnCoverage` at the schema, internal compiled-plan,
-and runtime evaluator layers. Other v2-only constructs such as grouped rules and
-`when` remain unsupported and emit deterministic profile diagnostics.
+layers, admits `tableColumnCoverage` at the schema, internal compiled-plan, and
+runtime evaluator layers, admits non-recursive grouped rules at the schema,
+compiled-plan, and runtime evaluator layers, and admits optional rule-level
+`when` at the schema and internal compiled-plan layers. Runtime applicability
+matching is not implemented; `validateWithProfile` emits
+`profile.compile.unsupportedApplicability` for configured `when` rules instead
+of evaluating those rules unconditionally.
 
 The admitted v1/v2 flat vocabulary is closed. Unknown profile keys, rule keys,
 selector keys, known assertion keys, and nested assertion keys emit
@@ -144,9 +153,42 @@ interface ValidationProfile {
   rules: readonly DeclarativeValidationRule[];
 }
 
-interface DeclarativeValidationRule {
+type DeclarativeValidationRule =
+  | DeclarativeValidationFlatRule
+  | DeclarativeValidationGroupRule;
+
+interface DeclarativeValidationRuleFields {
   id: string;
   severity?: "error" | "warning" | "info";
+  when?: DeclarativeValidationApplicability;
+}
+
+interface DeclarativeValidationFlatRule extends DeclarativeValidationRuleFields {
+  select: DeclarativeSelector;
+  assert: DeclarativeAssertion;
+}
+
+interface DeclarativeValidationApplicability {
+  select: DeclarativeSelector;
+  assert: DeclarativeAssertion;
+}
+
+type DeclarativeValidationGroupRule =
+  | DeclarativeValidationAnyOfRule
+  | DeclarativeValidationAllOfRule;
+
+interface DeclarativeValidationAnyOfRule
+  extends DeclarativeValidationRuleFields {
+  anyOf: readonly DeclarativeValidationBranch[];
+}
+
+interface DeclarativeValidationAllOfRule
+  extends DeclarativeValidationRuleFields {
+  allOf: readonly DeclarativeValidationBranch[];
+}
+
+interface DeclarativeValidationBranch {
+  label?: string;
   select: DeclarativeSelector;
   assert: DeclarativeAssertion;
 }
@@ -158,6 +200,9 @@ evidence identify output by `ruleId`.
 
 Rule `severity` defaults to `error` when omitted. Unsupported severity values
 emit `profile.config.invalidShape`.
+
+Rule-level `when` is allowed only on v2 rules. Branch-level `when` remains
+unsupported.
 
 Profile values must be JSON-safe data properties after YAML materialization.
 Functions, accessors, proxies, cyclic structures, sparse arrays, `undefined`
@@ -360,6 +405,7 @@ rather than fabricated when unavailable.
 | `profile.compile.unsupportedSelector` | `error` | `select.target` is not a supported v1 target. |
 | `profile.compile.unsupportedAssertion` | `error` | Parsed YAML or JSON-safe `assert` input contains an unsupported first-level assertion member that does not have unsupported-key precedence. |
 | `profile.compile.incompatibleSelectorAssertion` | `error` | A supported selector target is paired with an incompatible supported assertion. |
+| `profile.compile.unsupportedApplicability` | `error` | A v2 rule includes `when`, but runtime applicability evaluation is intentionally deferred. |
 | `profile.validation.emptySelection` | Rule severity | A rule cannot evaluate because its selector matches no applicable target. |
 | `profile.validation.assertionFailed` | Rule severity | A supported assertion evaluates and fails without a more specific diagnostic code, including missing table columns, exact occurrence-count mismatches, and text-length bound failures. |
 | `profile.validation.duplicateId` | Rule severity | An `ids.unique` assertion finds repeated IDs. |
@@ -397,24 +443,53 @@ interface DeclarativeValidationResult extends ValidationResult {
 }
 ```
 
-For admitted v2 flat profiles, result metadata records
+For admitted v2 profiles, result metadata records
 `syntaxVersion: "markdown-engine.validation@v2"`, `evaluatedRuleCount`, and
-`skippedRuleCount`. Flat v2 rule results include the v1-compatible `ruleId`,
-`passed`, and `diagnostics` fields plus `status` and assertion evaluation
+`skippedRuleCount`. V2 rule results include the v1-compatible `ruleId`,
+`passed`, and `diagnostics` fields plus `status`, optional applicability
+metadata reserved for later runtime `when`, and flat or grouped evaluation
 metadata:
 
 ```ts
 interface DeclarativeValidationRuleResultV2 extends ValidationRuleResult {
+  status: "passed" | "failed" | "skipped";
+  when?: DeclarativeValidationApplicabilityResult;
+  evaluation:
+    | { kind: "assertions"; diagnostics: readonly MarkdownDiagnostic[] }
+    | {
+        kind: "anyOf";
+        selectedBranch?: DeclarativeValidationBranchReference;
+        branches: readonly DeclarativeValidationBranchResult[];
+      }
+    | {
+        kind: "allOf";
+        branches: readonly DeclarativeValidationBranchResult[];
+      }
+    | { kind: "skipped"; reason: "whenNotMatched" };
+}
+
+interface DeclarativeValidationApplicabilityResult {
+  status: "matched" | "notMatched";
+  diagnostics: readonly MarkdownDiagnostic[];
+}
+
+interface DeclarativeValidationBranchReference {
+  branchIndex: number;
+  label?: string;
+}
+
+interface DeclarativeValidationBranchResult
+  extends DeclarativeValidationBranchReference {
   status: "passed" | "failed";
-  evaluation: {
-    kind: "assertions";
-    diagnostics: readonly MarkdownDiagnostic[];
-  };
+  diagnostics: readonly MarkdownDiagnostic[];
 }
 ```
 
-The current v2 flat path does not produce skipped rule results; `skippedRuleCount`
-is `0` until rule-level applicability is admitted by a later contract update.
+The current v2 runtime path does not produce skipped rule results;
+`skippedRuleCount` is `0` until runtime applicability evaluation is admitted by
+a later contract update. A configured `when` produces
+`profile.compile.unsupportedApplicability` during validation instead of an
+evaluated or skipped rule result.
 
 `valid` is `false` when any error-severity diagnostic exists. Warning and info
 validation diagnostics can make a rule result fail without making the aggregate
@@ -443,10 +518,11 @@ interface DeclarativeValidationEvidence<
 ```
 
 For v1 profiles, `ruleResults` contains the unchanged v1 rule-result shape. For
-admitted v2 flat profiles, `ruleResults` clones the public flat v2 rule-result
-shape, including `status` and `evaluation.kind: "assertions"`. Evidence does
-not serialize compiled rule plans, selector target records, branch evidence,
-skipped-rule evidence, ID count evidence, or table-column coverage evidence.
+admitted v2 profiles, `ruleResults` clones the public v2 rule-result shape,
+including `status`, flat assertion evaluation, and grouped `anyOf` / `allOf`
+branch evaluation. Evidence does not serialize compiled rule plans, selector
+target records, skipped-rule evidence, ID count evidence, or table-column
+coverage evidence.
 
 `inputHash` is a lowercase hexadecimal SHA-256 digest of the stable JSON
 serialization of the supplied normalized `EngineDocument` after omitting only
