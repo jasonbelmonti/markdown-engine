@@ -23,6 +23,10 @@ const expectedRepeatabilityCaseNames = [
   "declarative-validation:v2-flat-failing-result:pretty",
   "declarative-validation:v2-flat-failing-evidence:compact",
   "declarative-validation:v2-flat-failing-evidence:pretty",
+  "declarative-validation:v2-grouped-result:compact",
+  "declarative-validation:v2-grouped-result:pretty",
+  "declarative-validation:v2-grouped-evidence:compact",
+  "declarative-validation:v2-grouped-evidence:pretty",
   "declarative-validation:text-length-result:compact",
   "declarative-validation:text-length-result:pretty",
   "declarative-validation:text-length-evidence:compact",
@@ -109,6 +113,14 @@ describe("BEL-983 declarative validation evidence repeatability", () => {
       casesByName,
       "declarative-validation:v2-flat-failing-evidence:pretty",
     );
+    const v2GroupedResult = parseJsonCase(
+      casesByName,
+      "declarative-validation:v2-grouped-result:pretty",
+    );
+    const v2GroupedEvidence = parseJsonCase(
+      casesByName,
+      "declarative-validation:v2-grouped-evidence:pretty",
+    );
 
     expect(evidenceHash(passingEvidence, "inputHash")).toMatch(
       /^[0-9a-f]{64}$/,
@@ -143,6 +155,15 @@ describe("BEL-983 declarative validation evidence repeatability", () => {
     );
     expect(recordProperty(v2FlatFailingEvidence, "ruleResults")).toEqual(
       recordProperty(v2FlatFailingResult, "ruleResults"),
+    );
+    expect(recordProperty(v2GroupedResult, "evidence")).toEqual(
+      v2GroupedEvidence,
+    );
+    expect(recordProperty(v2GroupedEvidence, "ruleResults")).toEqual(
+      recordProperty(v2GroupedResult, "ruleResults"),
+    );
+    expect(recordProperty(v2GroupedEvidence, "diagnostics")).toEqual(
+      recordProperty(v2GroupedResult, "diagnostics"),
     );
   });
 });
