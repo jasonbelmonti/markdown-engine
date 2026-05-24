@@ -22,7 +22,10 @@ import type {
   JsonSafeValue,
   ValidationProfile,
 } from "../declarative-validation/profile/index.js";
-import { createDeclarativeValidationResult } from "../declarative-validation/results/index.js";
+import {
+  createDeclarativeValidationResult,
+  createSkippedDeclarativeValidationRuleResult,
+} from "../declarative-validation/results/index.js";
 import type {
   DeclarativeValidationOptions,
   DeclarativeValidationResult,
@@ -156,7 +159,12 @@ function evaluateApplicableCompiledRule(
   );
 
   return applicability.status === "notMatched"
-    ? []
+    ? [
+        createSkippedDeclarativeValidationRuleResult({
+          ruleId: rule.ruleId,
+          when: applicability.result,
+        }),
+      ]
     : evaluateCompiledRule(document, rule);
 }
 

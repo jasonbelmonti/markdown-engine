@@ -1,5 +1,5 @@
 .worktrees/
-.codex/
+.codex
 dist/
 dist-bundled/
 node_modules/

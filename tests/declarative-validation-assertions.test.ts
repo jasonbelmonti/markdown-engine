@@ -1810,7 +1810,7 @@ describe("declarative validation assertion proof", () => {
     });
   });
 
-  it("classifies non-matching v2 applicability before final skipped output exists", () => {
+  it("returns deterministic skipped output for non-matching v2 applicability", () => {
     const document = normalize(parse("# Mission\n\nReady for launch.\n").parsed, {
       documentVersion: "1.0.0",
     }).document;
@@ -1844,6 +1844,22 @@ describe("declarative validation assertion proof", () => {
         severity: "error",
       },
     ];
+    const expectedRuleResults = [
+      {
+        ruleId: "mission.when.not-matched",
+        status: "skipped",
+        passed: true,
+        diagnostics: [],
+        when: {
+          status: "notMatched",
+          diagnostics: expectedWhenDiagnostics,
+        },
+        evaluation: {
+          kind: "skipped",
+          reason: "whenNotMatched",
+        },
+      },
+    ];
 
     expect(
       classifyCompiledDeclarativeRuleApplicability(compiledRule, document),
@@ -1855,18 +1871,36 @@ describe("declarative validation assertion proof", () => {
       },
     });
 
-    expect(validateWithProfile(document, profile)).toEqual({
+    const firstResult = validateWithProfile(document, profile, {
+      includeEvidence: true,
+    });
+    const secondResult = validateWithProfile(document, profile, {
+      includeEvidence: true,
+    });
+
+    expect(secondResult).toEqual(firstResult);
+    expect(firstResult).toMatchObject({
       valid: true,
       diagnostics: [],
-      ruleResults: [],
+      ruleResults: expectedRuleResults,
       profile: {
         syntaxVersion: "markdown-engine.validation@v2",
         documentVersion: "1.0.0",
         ruleCount: 1,
         evaluatedRuleCount: 0,
-        skippedRuleCount: 0,
+        skippedRuleCount: 1,
       },
     });
+    expect(firstResult.evidence).toMatchObject({
+      engineVersion: "2.0.0",
+      runtimeVersion: process.version,
+      ruleResults: expectedRuleResults,
+      diagnostics: [],
+    });
+    expect(firstResult.evidence?.inputHash).toMatch(/^[a-f0-9]{64}$/);
+    expect(firstResult.evidence?.profileHash).toMatch(/^[a-f0-9]{64}$/);
+    expect(firstResult.evidence?.ruleResults).toEqual(firstResult.ruleResults);
+    expect(firstResult.evidence?.diagnostics).toEqual(firstResult.diagnostics);
   });
 
   it("continues matched v2 applicability into grouped rule evaluation", () => {

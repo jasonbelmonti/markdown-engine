@@ -13,8 +13,14 @@ export type CompiledRuleApplicabilityClassification =
       status: "notConfigured";
     }
   | {
-      status: "matched" | "notMatched";
-      result: DeclarativeValidationApplicabilityResult;
+      status: "matched";
+      result: DeclarativeValidationApplicabilityResult & { status: "matched" };
+    }
+  | {
+      status: "notMatched";
+      result: DeclarativeValidationApplicabilityResult & {
+        status: "notMatched";
+      };
     };
 
 export function classifyCompiledDeclarativeRuleApplicability(
@@ -31,12 +37,21 @@ export function classifyCompiledDeclarativeRuleApplicability(
     applicabilityRuleFromPlan(rule, applicability),
     resolveDeclarativeSelector(document, applicability.selector),
   );
-  const status = result.diagnostics.length === 0 ? "matched" : "notMatched";
+
+  if (result.diagnostics.length === 0) {
+    return {
+      status: "matched",
+      result: {
+        status: "matched",
+        diagnostics: [],
+      },
+    };
+  }
 
   return {
-    status,
+    status: "notMatched",
     result: {
-      status,
+      status: "notMatched",
       diagnostics: result.diagnostics,
     },
   };
