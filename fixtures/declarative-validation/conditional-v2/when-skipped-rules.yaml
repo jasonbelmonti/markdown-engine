@@ -1,0 +1,286 @@
+cases:
+  - name: flat-when-matched-pass
+    contract: execute a flat rule when rule-level applicability matches
+    markdown: &missionMarkdown |
+      # Mission
+
+      Ready for launch.
+
+      | Owner | Status |
+      | --- | --- |
+      | Flight | Ready |
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: when.flat.matched
+          when:
+            select:
+              target: section
+              title: Mission
+            assert:
+              text:
+                contains: Ready
+          select:
+            target: section
+            title: Mission
+          assert:
+            text:
+              contains: launch
+    expected:
+      valid: true
+      profile:
+        ruleCount: 1
+        evaluatedRuleCount: 1
+        skippedRuleCount: 0
+      ruleResult:
+        ruleId: when.flat.matched
+        status: passed
+        passed: true
+        evaluation:
+          kind: assertions
+
+  - name: flat-when-not-matched-skipped
+    contract: skip a flat rule when rule-level applicability does not match
+    markdown: *missionMarkdown
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: when.flat.skipped
+          when:
+            select:
+              target: section
+              title: Verification
+            assert:
+              exists: true
+          select:
+            target: section
+            title: Mission
+          assert:
+            text:
+              contains: DO NOT EVALUATE
+    expected:
+      valid: true
+      profile:
+        ruleCount: 1
+        evaluatedRuleCount: 0
+        skippedRuleCount: 1
+      ruleResult:
+        ruleId: when.flat.skipped
+        status: skipped
+        passed: true
+        when:
+          status: notMatched
+          diagnostics:
+            - code: profile.validation.emptySelection
+              ruleId: when.flat.skipped
+              message: Rule selector did not match any document targets.
+        evaluation:
+          kind: skipped
+          reason: whenNotMatched
+
+  - name: anyof-when-matched-pass
+    contract: execute grouped anyOf branches when rule-level applicability matches
+    markdown: *missionMarkdown
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: when.anyof.matched
+          when:
+            select:
+              target: document
+            assert:
+              sectionsRequired:
+                headings:
+                  - Mission
+          anyOf:
+            - label: verification
+              select:
+                target: section
+                title: Verification
+              assert:
+                exists: true
+            - label: mission-ready
+              select:
+                target: section
+                title: Mission
+              assert:
+                text:
+                  contains: Ready
+    expected:
+      valid: true
+      profile:
+        ruleCount: 1
+        evaluatedRuleCount: 1
+        skippedRuleCount: 0
+      ruleResult:
+        ruleId: when.anyof.matched
+        status: passed
+        passed: true
+        evaluation:
+          kind: anyOf
+          selectedBranch:
+            branchIndex: 1
+            label: mission-ready
+          branches:
+            - branchIndex: 0
+              label: verification
+              status: failed
+              diagnostics:
+                - code: profile.validation.emptySelection
+                  ruleId: when.anyof.matched
+                  message: Rule selector did not match any document targets.
+            - branchIndex: 1
+              label: mission-ready
+              status: passed
+
+  - name: anyof-when-not-matched-skipped
+    contract: skip grouped anyOf branches when rule-level applicability does not match
+    markdown: *missionMarkdown
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: when.anyof.skipped
+          when:
+            select:
+              target: section
+              title: Verification
+            assert:
+              exists: true
+          anyOf:
+            - label: not-evaluated
+              select:
+                target: section
+                title: Mission
+              assert:
+                text:
+                  contains: DO NOT EVALUATE
+            - label: also-not-evaluated
+              select:
+                target: section
+                title: Verification
+              assert:
+                exists: true
+    expected:
+      valid: true
+      profile:
+        ruleCount: 1
+        evaluatedRuleCount: 0
+        skippedRuleCount: 1
+      ruleResult:
+        ruleId: when.anyof.skipped
+        status: skipped
+        passed: true
+        when:
+          status: notMatched
+          diagnostics:
+            - code: profile.validation.emptySelection
+              ruleId: when.anyof.skipped
+              message: Rule selector did not match any document targets.
+        evaluation:
+          kind: skipped
+          reason: whenNotMatched
+
+  - name: allof-when-matched-pass
+    contract: execute grouped allOf branches when rule-level applicability matches
+    markdown: *missionMarkdown
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: when.allof.matched
+          when:
+            select:
+              target: document
+            assert:
+              sectionsRequired:
+                headings:
+                  - Mission
+          allOf:
+            - label: heading
+              select:
+                target: document
+              assert:
+                sectionsRequired:
+                  headings:
+                    - Mission
+            - label: owner-table
+              select:
+                target: table
+                section: Mission
+              assert:
+                tableColumnsRequired:
+                  columns:
+                    - Owner
+    expected:
+      valid: true
+      profile:
+        ruleCount: 1
+        evaluatedRuleCount: 1
+        skippedRuleCount: 0
+      ruleResult:
+        ruleId: when.allof.matched
+        status: passed
+        passed: true
+        evaluation:
+          kind: allOf
+          branches:
+            - branchIndex: 0
+              label: heading
+              status: passed
+            - branchIndex: 1
+              label: owner-table
+              status: passed
+
+  - name: allof-when-not-matched-skipped
+    contract: skip grouped allOf branches when rule-level applicability does not match
+    markdown: *missionMarkdown
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: when.allof.skipped
+          when:
+            select:
+              target: section
+              title: Verification
+            assert:
+              exists: true
+          allOf:
+            - label: not-evaluated-text
+              select:
+                target: section
+                title: Mission
+              assert:
+                text:
+                  contains: DO NOT EVALUATE
+            - label: not-evaluated-table
+              select:
+                target: table
+                section: Mission
+              assert:
+                tableColumnsRequired:
+                  columns:
+                    - Reviewer
+    expected:
+      valid: true
+      profile:
+        ruleCount: 1
+        evaluatedRuleCount: 0
+        skippedRuleCount: 1
+      ruleResult:
+        ruleId: when.allof.skipped
+        status: skipped
+        passed: true
+        when:
+          status: notMatched
+          diagnostics:
+            - code: profile.validation.emptySelection
+              ruleId: when.allof.skipped
+              message: Rule selector did not match any document targets.
+        evaluation:
+          kind: skipped
+          reason: whenNotMatched

@@ -144,6 +144,41 @@ const v2GroupedProfile = {
   ],
 };
 
+const v2WhenProfile = {
+  syntaxVersion: "markdown-engine.validation@v2",
+  documentVersion: "1.0.0",
+  rules: [
+    {
+      id: "v2.when.flat.matched",
+      when: {
+        select: { target: "document" },
+        assert: { sectionsRequired: { headings: ["Mission"] } },
+      },
+      select: { target: "section", title: "Mission" },
+      assert: { text: { contains: "None" } },
+    },
+    {
+      id: "v2.when.grouped.skipped",
+      when: {
+        select: { target: "section", title: "Verification" },
+        assert: { exists: true },
+      },
+      anyOf: [
+        {
+          label: "not-evaluated-text",
+          select: { target: "section", title: "Mission" },
+          assert: { text: { contains: "DO NOT EVALUATE" } },
+        },
+        {
+          label: "not-evaluated-table",
+          select: { target: "table", section: "Mission" },
+          assert: { tableColumnsRequired: { columns: ["Reviewer"] } },
+        },
+      ],
+    },
+  ],
+};
+
 const textLengthProfile = {
   syntaxVersion: "markdown-engine.validation@v1",
   documentVersion: "1.0.0",
@@ -214,6 +249,11 @@ export function buildDeclarativeValidationRepeatabilityCases(repoRoot, engine) {
     groupedDocument,
     v2GroupedProfile,
   );
+  const v2WhenResult = validateWithEvidence(
+    validateWithProfile,
+    groupedDocument,
+    v2WhenProfile,
+  );
   const textLengthResult = validateWithEvidence(
     validateWithProfile,
     document,
@@ -262,6 +302,14 @@ export function buildDeclarativeValidationRepeatabilityCases(repoRoot, engine) {
     {
       name: "declarative-validation:v2-grouped-evidence",
       result: requiredEvidence(v2GroupedResult),
+    },
+    {
+      name: "declarative-validation:v2-when-result",
+      result: v2WhenResult,
+    },
+    {
+      name: "declarative-validation:v2-when-evidence",
+      result: requiredEvidence(v2WhenResult),
     },
     {
       name: "declarative-validation:text-length-result",
