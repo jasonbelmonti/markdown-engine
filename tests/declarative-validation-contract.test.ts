@@ -632,6 +632,59 @@ describe("declarative validation public contract scaffold", () => {
     });
   });
 
+  it("returns the v2 skipped-rule contract when rule-level when does not match", () => {
+    expect(
+      validateWithProfile(document, {
+        syntaxVersion: "markdown-engine.validation@v2",
+        documentVersion: "1.0.0",
+        rules: [
+          {
+            id: "future-when-skipped",
+            when: {
+              select: { target: "section", title: "Missing" },
+              assert: { exists: true },
+            },
+            select: { target: "document" },
+            assert: { text: { contains: "DO NOT EVALUATE" } },
+          },
+        ],
+      } as unknown as ValidationProfile),
+    ).toEqual({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [
+        {
+          ruleId: "future-when-skipped",
+          status: "skipped",
+          passed: true,
+          diagnostics: [],
+          when: {
+            status: "notMatched",
+            diagnostics: [
+              {
+                code: "profile.validation.emptySelection",
+                ruleId: "future-when-skipped",
+                message: "Rule selector did not match any document targets.",
+                severity: "error",
+              },
+            ],
+          },
+          evaluation: {
+            kind: "skipped",
+            reason: "whenNotMatched",
+          },
+        },
+      ],
+      profile: {
+        syntaxVersion: "markdown-engine.validation@v2",
+        documentVersion: "1.0.0",
+        ruleCount: 1,
+        evaluatedRuleCount: 0,
+        skippedRuleCount: 1,
+      },
+    });
+  });
+
   it("preserves v2 direct profile metadata when JSON-safe closure fails", () => {
     let rulesAccessorRead = false;
     const profileWithAccessorRules = {
