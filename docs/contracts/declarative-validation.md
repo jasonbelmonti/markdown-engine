@@ -1,12 +1,11 @@
 # Declarative Validation Contract
 
 Status: package 2.0.0, v1 profile syntax with v2 profile admission, document contract 1.0.0
-Last updated: 2026-05-23
+Last updated: 2026-05-24
 Current v2 surface: flat-rule result/evidence shell, ID count-bound schema and
 runtime evaluator contract, plus `tableColumnCoverage` schema, compiled-plan,
 and runtime evaluator contract, grouped rule runtime contract, and rule-level
-`when` schema plus private compiler-plan contract with deferred runtime
-applicability.
+`when` schema plus private compiler-plan and matcher contract.
 
 This document defines the public declarative validation contract for
 `@jasonbelmonti/markdown-engine`. The stable surface is the package-root API,
@@ -26,8 +25,10 @@ evidence shell needed to distinguish assertion and grouped evaluation output
 from v1 output, plus the ID count-bound schema, compiled-plan, and runtime
 evaluator contract; the `tableColumnCoverage` schema, compiled-plan, and
 runtime evaluator contract; and the `when` schema plus private compiled-plan
-contract. Runtime applicability matching, matched/not-matched applicability
-results, skipped rule results, and skipped evidence remain deferred.
+and matcher contract. Matched applicability continues into normal rule
+evaluation. Non-matching applicability is classified for skipping, but final
+public skipped rule results, skipped counts, and skipped evidence remain
+deferred.
 
 ## 1.0 Contract
 
@@ -78,10 +79,11 @@ admits ID count bounds at the schema, compiled-plan, and runtime evaluator
 layers, admits `tableColumnCoverage` at the schema, internal compiled-plan, and
 runtime evaluator layers, admits non-recursive grouped rules at the schema,
 compiled-plan, and runtime evaluator layers, and admits optional rule-level
-`when` at the schema and internal compiled-plan layers. Runtime applicability
-matching is not implemented; `validateWithProfile` emits
-`profile.compile.unsupportedApplicability` for configured `when` rules instead
-of evaluating those rules unconditionally.
+`when` at the schema, internal compiled-plan, and matcher layers. Matching
+`when` rules continue through normal flat or grouped evaluation. Non-matching
+`when` rules are classified for future skipped output and are not evaluated;
+the final public skipped result, skipped count, and skipped evidence contract is
+deferred.
 
 The admitted v1/v2 flat vocabulary is closed. Unknown profile keys, rule keys,
 selector keys, known assertion keys, and nested assertion keys emit
@@ -405,7 +407,6 @@ rather than fabricated when unavailable.
 | `profile.compile.unsupportedSelector` | `error` | `select.target` is not a supported v1 target. |
 | `profile.compile.unsupportedAssertion` | `error` | Parsed YAML or JSON-safe `assert` input contains an unsupported first-level assertion member that does not have unsupported-key precedence. |
 | `profile.compile.incompatibleSelectorAssertion` | `error` | A supported selector target is paired with an incompatible supported assertion. |
-| `profile.compile.unsupportedApplicability` | `error` | A v2 rule includes `when`, but runtime applicability evaluation is intentionally deferred. |
 | `profile.validation.emptySelection` | Rule severity | A rule cannot evaluate because its selector matches no applicable target. |
 | `profile.validation.assertionFailed` | Rule severity | A supported assertion evaluates and fails without a more specific diagnostic code, including missing table columns, exact occurrence-count mismatches, and text-length bound failures. |
 | `profile.validation.duplicateId` | Rule severity | An `ids.unique` assertion finds repeated IDs. |
@@ -485,11 +486,12 @@ interface DeclarativeValidationBranchResult
 }
 ```
 
-The current v2 runtime path does not produce skipped rule results;
-`skippedRuleCount` is `0` until runtime applicability evaluation is admitted by
-a later contract update. A configured `when` produces
-`profile.compile.unsupportedApplicability` during validation instead of an
-evaluated or skipped rule result.
+The current v2 runtime path does not produce public skipped rule results;
+`skippedRuleCount` is `0` until final skipped output is admitted by a later
+contract update. A configured `when` that matches continues into normal flat or
+grouped evaluation. A configured `when` that does not match is classified for
+future skipping and is not evaluated, but it is not yet serialized as a public
+skipped rule result.
 
 `valid` is `false` when any error-severity diagnostic exists. Warning and info
 validation diagnostics can make a rule result fail without making the aggregate
