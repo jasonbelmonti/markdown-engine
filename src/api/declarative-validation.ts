@@ -1,6 +1,7 @@
 import type { EngineDocument } from "./document.js";
 import type { MarkdownDiagnostic } from "./diagnostics.js";
 import type { ValidationRuleResult } from "./validate.js";
+import { classifyCompiledDeclarativeRuleApplicability } from "../declarative-validation/applicability/index.js";
 import {
   evaluateCompiledDeclarativeAllOfRule,
   evaluateCompiledDeclarativeAnyOfRule,
@@ -129,16 +130,11 @@ export function validateWithProfile(
 
   const compileResult = compileValidationProfile(materializedProfile.profile);
   const compiledRules = compileResult.plan?.rules ?? [];
-  const applicabilityDiagnostics =
-    unsupportedApplicabilityRuntimeDiagnostics(compiledRules);
   const ruleResults = sortValidationRuleResults(
-    applicabilityDiagnostics.length > 0
-      ? []
-      : compiledRules.flatMap((rule) => evaluateCompiledRule(document, rule)),
+    compiledRules.flatMap((rule) => evaluateApplicableCompiledRule(document, rule)),
   );
   const diagnostics = [
     ...compileResult.diagnostics,
-    ...applicabilityDiagnostics,
     ...ruleResults.flatMap((result) => result.diagnostics),
   ];
   return createDeclarativeValidationResult({
@@ -150,28 +146,18 @@ export function validateWithProfile(
   });
 }
 
-function unsupportedApplicabilityRuntimeDiagnostics(
-  rules: readonly CompiledDeclarativeValidationRule[],
-): MarkdownDiagnostic[] {
-  return rules.flatMap((rule) =>
-    hasCompiledApplicability(rule)
-      ? [
-          {
-            code: "profile.compile.unsupportedApplicability",
-            ruleId: rule.ruleId,
-            message:
-              "Rule-level when is supported by schema and compiler only; validation runtime applicability evaluation is not implemented.",
-            severity: "error" as const,
-          },
-        ]
-      : [],
-  );
-}
-
-function hasCompiledApplicability(
+function evaluateApplicableCompiledRule(
+  document: EngineDocument,
   rule: CompiledDeclarativeValidationRule,
-): boolean {
-  return "applicability" in rule && rule.applicability !== undefined;
+): ValidationRuleResult[] {
+  const applicability = classifyCompiledDeclarativeRuleApplicability(
+    rule,
+    document,
+  );
+
+  return applicability.status === "notMatched"
+    ? []
+    : evaluateCompiledRule(document, rule);
 }
 
 function evaluateCompiledRule(

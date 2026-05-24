@@ -9,7 +9,9 @@ import {
   type EngineDocument,
   type ValidationProfile,
 } from "@jasonbelmonti/markdown-engine";
+import { classifyCompiledDeclarativeRuleApplicability } from "../src/declarative-validation/applicability/index.js";
 import { resolveTableColumnIdTokens } from "../src/declarative-validation/assertions/id-targets.js";
+import { compileValidationProfile } from "../src/declarative-validation/compiler/index.js";
 
 const fixturePath = "fixtures/declarative-validation/proving/representative.md";
 const fixture = readFileSync(
@@ -1759,6 +1761,223 @@ describe("declarative validation assertion proof", () => {
     });
     expect(firstResult.evidence?.ruleResults).toEqual(firstResult.ruleResults);
     expect(firstResult.evidence?.diagnostics).toEqual(firstResult.diagnostics);
+  });
+
+  it("evaluates matched v2 applicability before flat rule evaluation", () => {
+    const document = normalize(parse("# Mission\n\nReady for launch.\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    const profile = {
+      syntaxVersion: "markdown-engine.validation@v2",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "mission.when.matched",
+          when: {
+            select: { target: "section", title: "Mission" },
+            assert: { text: { contains: "Ready" } },
+          },
+          select: { target: "section", title: "Mission" },
+          assert: { text: { contains: "launch" } },
+        },
+      ],
+    } satisfies ValidationProfile;
+
+    const result = validateWithProfile(document, profile);
+
+    expect(result).toMatchObject({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [
+        {
+          ruleId: "mission.when.matched",
+          status: "passed",
+          passed: true,
+          diagnostics: [],
+          evaluation: {
+            kind: "assertions",
+            diagnostics: [],
+          },
+        },
+      ],
+      profile: {
+        syntaxVersion: "markdown-engine.validation@v2",
+        documentVersion: "1.0.0",
+        ruleCount: 1,
+        evaluatedRuleCount: 1,
+        skippedRuleCount: 0,
+      },
+    });
+  });
+
+  it("classifies non-matching v2 applicability before final skipped output exists", () => {
+    const document = normalize(parse("# Mission\n\nReady for launch.\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    const profile = {
+      syntaxVersion: "markdown-engine.validation@v2",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "mission.when.not-matched",
+          when: {
+            select: { target: "section", title: "Verification" },
+            assert: { exists: true },
+          },
+          select: { target: "section", title: "Mission" },
+          assert: { text: { contains: "DO NOT EVALUATE" } },
+        },
+      ],
+    } satisfies ValidationProfile;
+    const compileResult = compileValidationProfile(profile);
+    const compiledRule = compileResult.plan?.rules[0];
+
+    if (compiledRule === undefined) {
+      throw new Error("Expected applicability rule to compile.");
+    }
+
+    const expectedWhenDiagnostics = [
+      {
+        code: "profile.validation.emptySelection",
+        ruleId: "mission.when.not-matched",
+        message: "Rule selector did not match any document targets.",
+        severity: "error",
+      },
+    ];
+
+    expect(
+      classifyCompiledDeclarativeRuleApplicability(compiledRule, document),
+    ).toEqual({
+      status: "notMatched",
+      result: {
+        status: "notMatched",
+        diagnostics: expectedWhenDiagnostics,
+      },
+    });
+
+    expect(validateWithProfile(document, profile)).toEqual({
+      valid: true,
+      diagnostics: [],
+      ruleResults: [],
+      profile: {
+        syntaxVersion: "markdown-engine.validation@v2",
+        documentVersion: "1.0.0",
+        ruleCount: 1,
+        evaluatedRuleCount: 0,
+        skippedRuleCount: 0,
+      },
+    });
+  });
+
+  it("continues matched v2 applicability into grouped rule evaluation", () => {
+    const document = normalize(parse("# Mission\n\nReady for launch.\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v2",
+      documentVersion: "1.0.0",
+      rules: [
+        {
+          id: "mission.when.grouped",
+          when: {
+            select: { target: "document" },
+            assert: { sectionsRequired: { headings: ["Mission"] } },
+          },
+          anyOf: [
+            {
+              label: "verification",
+              select: { target: "section", title: "Verification" },
+              assert: { exists: true },
+            },
+            {
+              label: "mission-ready",
+              select: { target: "section", title: "Mission" },
+              assert: { text: { contains: "Ready" } },
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(result.valid).toBe(true);
+    expect(result.diagnostics).toEqual([]);
+    expect(result.ruleResults).toEqual([
+      {
+        ruleId: "mission.when.grouped",
+        status: "passed",
+        passed: true,
+        diagnostics: [],
+        evaluation: {
+          kind: "anyOf",
+          selectedBranch: {
+            branchIndex: 1,
+            label: "mission-ready",
+          },
+          branches: [
+            {
+              branchIndex: 0,
+              label: "verification",
+              status: "failed",
+              diagnostics: [
+                {
+                  code: "profile.validation.emptySelection",
+                  ruleId: "mission.when.grouped",
+                  message: "Rule selector did not match any document targets.",
+                  severity: "error",
+                },
+              ],
+            },
+            {
+              branchIndex: 1,
+              label: "mission-ready",
+              status: "passed",
+              diagnostics: [],
+            },
+          ],
+        },
+      },
+    ]);
+  });
+
+  it("rejects invalid v2 applicability input before matcher execution", () => {
+    const document = normalize(parse("# Mission\n\nReady for launch.\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+
+    expect(
+      validateWithProfile(document, {
+        syntaxVersion: "markdown-engine.validation@v2",
+        documentVersion: "1.0.0",
+        rules: [
+          {
+            id: "mission.when.invalid",
+            when: {
+              select: { target: "document" },
+              assert: { expression: "document.ready === true" },
+            },
+            select: { target: "document" },
+            assert: { exists: true },
+          },
+        ],
+      } as unknown as ValidationProfile),
+    ).toEqual({
+      valid: false,
+      diagnostics: [
+        {
+          code: "profile.config.unsupportedKey",
+          message: 'Unsupported validation profile key "expression".',
+          severity: "error",
+        },
+      ],
+      ruleResults: [],
+      profile: {
+        syntaxVersion: "markdown-engine.validation@v2",
+        documentVersion: "1.0.0",
+        ruleCount: 1,
+        evaluatedRuleCount: 0,
+        skippedRuleCount: 0,
+      },
+    });
   });
 
   it("honors case-sensitive and case-insensitive ID policies", () => {
