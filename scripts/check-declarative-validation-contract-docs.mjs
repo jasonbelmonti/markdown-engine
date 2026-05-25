@@ -46,6 +46,7 @@ checkFile("docs/contracts/declarative-validation.md", {
     "skippedRuleCount",
     'reason: "whenNotMatched"',
     'evaluation.kind: "skipped"',
+    "any top-level error-severity diagnostic",
     "V1 preservation is explicit",
     "inputHash",
     "profileHash",

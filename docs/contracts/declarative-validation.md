@@ -504,9 +504,11 @@ diagnostics, `evaluation.kind: "skipped"`, and `reason: "whenNotMatched"`.
 Skipped rules increment `skippedRuleCount`, do not increment
 `evaluatedRuleCount`, and do not evaluate flat assertions or grouped branches.
 
-`valid` is `false` when any error-severity diagnostic exists. Warning and info
-validation diagnostics can make a rule result fail without making the aggregate
-result invalid.
+`valid` is `false` when any top-level error-severity diagnostic exists in
+`diagnostics`. Nested skipped applicability diagnostics under
+`ruleResults[].when.diagnostics` do not by themselves make the aggregate result
+invalid. Warning and info validation diagnostics can make a rule result fail
+without making the aggregate result invalid.
 
 Rule results are sorted deterministically. Each rule result includes the public
 `ruleId`, `passed`, and cloned diagnostics. Results do not expose compiled rule
