@@ -43,10 +43,16 @@ checkFile("docs/contracts/declarative-validation.md", {
     "profile.validation.referenceMissing",
     "DeclarativeValidationCliJsonResult",
     "DeclarativeValidationConfigErrorResult",
+    "skippedRuleCount",
+    'reason: "whenNotMatched"',
+    'evaluation.kind: "skipped"',
+    "any top-level error-severity diagnostic",
+    "V1 preservation is explicit",
     "inputHash",
     "profileHash",
     'engineVersion` records the package version',
     '2.0 release line this is `"2.0.0"`',
+    "Conditional V2 EVD-6 reviewer notes",
     "profile-sourced regex compilation",
     "arbitrary JavaScript",
     "expression evaluation",
@@ -110,6 +116,35 @@ checkFile("docs/evidence/wp-5-evd-8-declarative-validation-boundary-audit.md", {
   ],
 });
 
+checkFile("docs/evidence/conditional-v2-evd-6-contract-docs.md", {
+  headings: [
+    "## Scope",
+    "## Reviewed Sources",
+    "## Contract Coverage",
+    "## Commands",
+    "## Recorded Results",
+    "## Residual Risks",
+    "## Review Boundary",
+    "## Conclusion",
+  ],
+  phrases: [
+    "BEL-1108",
+    "Conditional V2 EVD-6",
+    "docs/contracts/declarative-validation.md",
+    "docs/evidence/conditional-v2-evd-5-when-skipped-rules.md",
+    "src/declarative-validation/results/types.ts",
+    "npm run docs:declarative-validation-contract",
+    "markdown-engine.validation@v2",
+    "skippedRuleCount",
+    'evaluation.kind: "skipped"',
+    "whenNotMatched",
+    "V1 preservation",
+    "CLI JSON union",
+    "evidence hashes",
+    "non-goals",
+  ],
+});
+
 checkFile("README.md", {
   headings: ["## Public API", "## CLI", "## Validation"],
   phrases: [
@@ -135,7 +170,7 @@ if (failures.length > 0) {
 
 console.log("Declarative validation contract documentation gate PASS");
 console.log(
-  "Checked files: docs/contracts/declarative-validation.md, README.md, docs/evidence/wp-5-evd-7-declarative-validation-contract-review.md, docs/evidence/wp-5-evd-8-declarative-validation-boundary-audit.md, package.json",
+  "Checked files: docs/contracts/declarative-validation.md, README.md, docs/evidence/wp-5-evd-7-declarative-validation-contract-review.md, docs/evidence/wp-5-evd-8-declarative-validation-boundary-audit.md, docs/evidence/conditional-v2-evd-6-contract-docs.md, package.json",
 );
 
 function checkFile(file, check) {
