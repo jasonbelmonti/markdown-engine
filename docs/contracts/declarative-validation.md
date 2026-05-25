@@ -615,8 +615,8 @@ profiles, that same validation-result JSON can include `evaluatedRuleCount`,
 
 | Exit code | Meaning |
 | --- | --- |
-| `0` | Validation completed with no error-severity diagnostics. |
-| `1` | Profile/config/compile, Markdown normalization, document-version mismatch, or validation diagnostics include at least one error. |
+| `0` | Validation completed with no top-level error-severity diagnostics. |
+| `1` | Profile/config/compile, Markdown normalization, document-version mismatch, or top-level validation diagnostics include at least one error. |
 | `2` | CLI usage, unsupported format, unknown argument, missing argument value, repeated singleton flag, unsupported `--document-version`, or local file read error. |
 
 ## Compatibility And Migration
