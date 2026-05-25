@@ -5,7 +5,8 @@ Last updated: 2026-05-24
 Current v2 surface: flat-rule result/evidence shell, ID count-bound schema and
 runtime evaluator contract, plus `tableColumnCoverage` schema, compiled-plan,
 and runtime evaluator contract, grouped rule runtime contract, and rule-level
-`when` schema plus private compiler-plan and matcher contract.
+`when` schema, matcher, public skipped-rule result, skipped counts, and evidence
+cloning contract.
 
 This document defines the public declarative validation contract for
 `@jasonbelmonti/markdown-engine`. The stable surface is the package-root API,
@@ -20,15 +21,16 @@ Declarative validation continues to use the existing `documentVersion: "1.0.0"`
 rich IR document contract, while the profile admission path recognizes
 `markdown-engine.validation@v2` for the same flat rule shape with `id`, optional
 `severity`, `select`, and `assert`; non-recursive `anyOf` and `allOf`; and
-optional rule-level `when`. The admitted v2 path exposes the minimal result and
-evidence shell needed to distinguish assertion and grouped evaluation output
+optional rule-level `when`. The admitted v2 path exposes the result and evidence
+shell needed to distinguish assertion, grouped, and skipped evaluation output
 from v1 output, plus the ID count-bound schema, compiled-plan, and runtime
 evaluator contract; the `tableColumnCoverage` schema, compiled-plan, and
-runtime evaluator contract; and the `when` schema plus private compiled-plan
-and matcher contract. Matched applicability continues into normal rule
-evaluation. Non-matching applicability is classified for skipping, but final
-public skipped rule results, skipped counts, and skipped evidence remain
-deferred.
+runtime evaluator contract; and the `when` schema plus private compiled-plan and
+matcher contract. Matched applicability continues into normal rule evaluation.
+Non-matching applicability returns a public skipped rule result with
+`status: "skipped"`, `passed: true`, `evaluation.kind: "skipped"`,
+`reason: "whenNotMatched"`, `skippedRuleCount`, no top-level diagnostics, and a
+nested `when` applicability result.
 
 ## 1.0 Contract
 
@@ -80,10 +82,10 @@ layers, admits `tableColumnCoverage` at the schema, internal compiled-plan, and
 runtime evaluator layers, admits non-recursive grouped rules at the schema,
 compiled-plan, and runtime evaluator layers, and admits optional rule-level
 `when` at the schema, internal compiled-plan, and matcher layers. Matching
-`when` rules continue through normal flat or grouped evaluation. Non-matching
-`when` rules are classified for future skipped output and are not evaluated;
-the final public skipped result, skipped count, and skipped evidence contract is
-deferred.
+`when` rules continue through normal flat or grouped evaluation and do not add a
+public `when` field to the evaluated rule result. Non-matching `when` rules are
+not evaluated; they return the public skipped-rule result shape, increment
+`skippedRuleCount`, and leave `evaluatedRuleCount` unchanged.
 
 The admitted v1/v2 flat vocabulary is closed. Unknown profile keys, rule keys,
 selector keys, known assertion keys, and nested assertion keys emit
@@ -204,7 +206,9 @@ Rule `severity` defaults to `error` when omitted. Unsupported severity values
 emit `profile.config.invalidShape`.
 
 Rule-level `when` is allowed only on v2 rules. Branch-level `when` remains
-unsupported.
+unsupported. V1 profiles preserve the original flat rule authoring contract;
+grouped `anyOf` / `allOf`, ID count bounds, `tableColumnCoverage`, and
+rule-level `when` are v2 additions.
 
 Profile values must be JSON-safe data properties after YAML materialization.
 Functions, accessors, proxies, cyclic structures, sparse arrays, `undefined`
@@ -396,6 +400,12 @@ error severity. Validation diagnostics use the rule severity. Source ranges are
 included when a selected target has source evidence; locations are omitted
 rather than fabricated when unavailable.
 
+Rule-level `when` uses the existing validation diagnostic codes. When
+applicability does not match, those diagnostics are cloned into
+`ruleResults[].when.diagnostics`; they are not promoted into top-level
+`diagnostics`, so a skipped rule with a nested error-severity applicability
+diagnostic can still leave the aggregate `valid` value `true`.
+
 | Code | Severity source | Emitted when |
 | --- | --- | --- |
 | `profile.config.invalidYaml` | `error` | YAML text cannot be parsed or materialized as JSON-safe profile data. |
@@ -447,9 +457,8 @@ interface DeclarativeValidationResult extends ValidationResult {
 For admitted v2 profiles, result metadata records
 `syntaxVersion: "markdown-engine.validation@v2"`, `evaluatedRuleCount`, and
 `skippedRuleCount`. V2 rule results include the v1-compatible `ruleId`,
-`passed`, and `diagnostics` fields plus `status`, optional applicability
-metadata reserved for later runtime `when`, and flat or grouped evaluation
-metadata:
+`passed`, and `diagnostics` fields plus `status`, optional skipped
+applicability metadata, and flat, grouped, or skipped evaluation metadata:
 
 ```ts
 interface DeclarativeValidationRuleResultV2 extends ValidationRuleResult {
@@ -486,12 +495,14 @@ interface DeclarativeValidationBranchResult
 }
 ```
 
-The current v2 runtime path does not produce public skipped rule results;
-`skippedRuleCount` is `0` until final skipped output is admitted by a later
-contract update. A configured `when` that matches continues into normal flat or
-grouped evaluation. A configured `when` that does not match is classified for
-future skipping and is not evaluated, but it is not yet serialized as a public
-skipped rule result.
+For configured `when`, matched applicability continues into normal flat or
+grouped evaluation and contributes one evaluated rule. The evaluated rule result
+does not serialize a `when` field. Non-matching applicability returns one
+skipped rule result with `status: "skipped"`, `passed: true`, empty top-level
+rule `diagnostics`, `when.status: "notMatched"`, nested applicability
+diagnostics, `evaluation.kind: "skipped"`, and `reason: "whenNotMatched"`.
+Skipped rules increment `skippedRuleCount`, do not increment
+`evaluatedRuleCount`, and do not evaluate flat assertions or grouped branches.
 
 `valid` is `false` when any error-severity diagnostic exists. Warning and info
 validation diagnostics can make a rule result fail without making the aggregate
@@ -522,9 +533,11 @@ interface DeclarativeValidationEvidence<
 For v1 profiles, `ruleResults` contains the unchanged v1 rule-result shape. For
 admitted v2 profiles, `ruleResults` clones the public v2 rule-result shape,
 including `status`, flat assertion evaluation, and grouped `anyOf` / `allOf`
-branch evaluation. Evidence does not serialize compiled rule plans, selector
-target records, skipped-rule evidence, ID count evidence, or table-column
-coverage evidence.
+branch evaluation. Skipped v2 rule results are cloned through evidence in the
+same `ruleResults` array, and `evidence.diagnostics` clones the top-level
+diagnostics array. Evidence does not serialize compiled rule plans, selector
+target records, assertion-specific ID count evidence, or assertion-specific
+table-column coverage evidence.
 
 `inputHash` is a lowercase hexadecimal SHA-256 digest of the stable JSON
 serialization of the supplied normalized `EngineDocument` after omitting only
@@ -562,7 +575,9 @@ validate the Markdown file.
 
 After profile compilation succeeds, the CLI emits a validation-result JSON
 shape whether the document passes or fails. Validation CLI results include
-evidence.
+evidence. V2 CLI results use the same validation-result arm of the CLI JSON
+union; there is no extra CLI discriminator beyond
+`profile.syntaxVersion: "markdown-engine.validation@v2"`.
 
 ## CLI JSON Union
 
@@ -589,7 +604,10 @@ unsupported assertion members, and incompatible selector/assertion pairs. It
 contains no `profile` and no `evidence`.
 
 Validation-result JSON is used after profile compilation succeeds. It contains
-`profile`, `ruleResults`, `diagnostics`, `valid`, and `evidence`.
+`profile`, `ruleResults`, `diagnostics`, `valid`, and `evidence`. For v2
+profiles, that same validation-result JSON can include `evaluatedRuleCount`,
+`skippedRuleCount`, `status: "skipped"`, nested `when` diagnostics, and
+`evaluation.kind: "skipped"`.
 
 ## Exit Codes
 
@@ -606,6 +624,10 @@ The v1 declarative validation syntax is a durable authoring contract for the
 assertion names, result fields, diagnostic codes, CLI flags, CLI JSON shape, or
 evidence hash inputs require explicit compatibility review.
 
+V1 preservation is explicit: v1 authoring syntax, v1 rule result shape, v1
+diagnostic inventory, v1 CLI JSON behavior, and v1 evidence hash inputs remain
+unchanged by the admitted v2 syntax.
+
 Migration notes:
 
 - Consumers using fixed `validate(document, config)` rule families can continue
@@ -616,6 +638,11 @@ Migration notes:
 - Consumers parsing CLI validation output must handle the
   `DeclarativeValidationCliJsonResult` union. Profile-stage failures do not
   include `profile` or `evidence`.
+- Consumers opting into `markdown-engine.validation@v2` must handle rule
+  `status` values of `"passed"`, `"failed"`, and `"skipped"`, plus
+  `evaluatedRuleCount`, `skippedRuleCount`, grouped branch results, and nested
+  skipped-rule `when` diagnostics. Aggregate validity is still determined from
+  top-level diagnostics.
 - Consumers that compare evidence hashes must normalize expectations around
   resolved `documentVersion`, default rule severity, stable key order, and
   exclusion of only top-level `document.path` from `inputHash`.
@@ -679,6 +706,34 @@ rules:
         count: 1
 ```
 
+Conditional v2 grouped rule with applicability:
+
+```yaml
+syntaxVersion: markdown-engine.validation@v2
+rules:
+  - id: release.when.docs-ready
+    when:
+      select:
+        target: section
+        title: Release
+      assert:
+        exists: true
+    anyOf:
+      - label: contract-link
+        select:
+          target: link
+          section: Release
+          text: contract
+        assert:
+          exists: true
+      - label: contract-heading
+        select:
+          target: heading
+          text: Contract
+        assert:
+          exists: true
+```
+
 CLI invocation:
 
 ```sh
@@ -718,6 +773,11 @@ The v1 contract explicitly excludes:
 - operational-design-spec, AGENTS.md, TASK.md, or other domain-specific rule
   meaning in core engine code
 
+The admitted v2 Conditional V2 surface also excludes `documentVersion: "2.0.0"`,
+recursive grouped rules, branch-level `when`, profile-defined predicates,
+assertion-specific evidence payloads, a separate skipped-rule evidence channel,
+and a new CLI JSON discriminator.
+
 The CLI reads only the caller-specified local Markdown and profile files. The
 API owns no file traversal, daemon, database, browser runtime, network service,
 agent adapter, MCP transport, runtime lens, or persistent cache.
@@ -731,7 +791,8 @@ npm run docs:declarative-validation-contract
 npm run audit:declarative-validation-boundary
 ```
 
-The documentation gate checks this contract, README links, evidence files, and
-package script wiring. The boundary audit checks dependency drift, source-level
-runtime boundary patterns, unsupported regex-like and executable profile-key
-coverage, and declarative validation boundary evidence.
+The documentation gate checks this contract, README links, legacy contract and
+boundary evidence files, Conditional V2 EVD-6 reviewer notes, and package script
+wiring. The boundary audit checks dependency drift, source-level runtime
+boundary patterns, unsupported regex-like and executable profile-key coverage,
+and declarative validation boundary evidence.
