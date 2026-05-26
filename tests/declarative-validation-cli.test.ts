@@ -54,6 +54,57 @@ rules:
       text:
         contains: ready for launch
 `;
+const v2GroupedProfile = `syntaxVersion: markdown-engine.validation@v2
+rules:
+  - id: v2.grouped.anyof
+    anyOf:
+      - label: missing-verification
+        select:
+          target: section
+          title: Verification
+        assert:
+          exists: true
+      - label: mission-ready
+        select:
+          target: document
+        assert:
+          text:
+            contains: REQ-1
+`;
+const v2SkippedProfile = `syntaxVersion: markdown-engine.validation@v2
+rules:
+  - id: v2.when.skipped
+    when:
+      select:
+        target: section
+        title: Verification
+      assert:
+        exists: true
+    select:
+      target: document
+    assert:
+      text:
+        contains: DO NOT EVALUATE
+`;
+const v2IdCountMarkdown = `# Requirements
+
+| ID | Statement |
+| --- | --- |
+| OBJ-1 | Build safely |
+| SYS-1 | Ignore non-objective IDs |
+| OBJ-1 | Repeated objective occurrence |
+`;
+const v2IdCountProfile = `syntaxVersion: markdown-engine.validation@v2
+rules:
+  - id: v2.ids.min-count
+    select:
+      target: tableCell
+      column: ID
+    assert:
+      ids:
+        prefix: OBJ
+        minCount: 2
+`;
 const warningProfile = `syntaxVersion: !custom markdown-engine.validation@v1
 rules:
   - id: sections.present
@@ -315,6 +366,195 @@ describe("declarative validation CLI", () => {
           },
           passed: false,
           ruleId: "v2.text.missing",
+          status: "failed",
+        },
+      ],
+      valid: false,
+    });
+    expect(result).not.toHaveProperty("stage");
+    expect(result.evidence).toMatchObject({
+      diagnostics: result.diagnostics,
+      ruleResults: result.ruleResults,
+    });
+  });
+
+  it("emits documented v2 grouped validation JSON with evidence", async () => {
+    const cwd = await makeTempDir();
+    await writeFile(join(cwd, "mission.md"), validMarkdown);
+    await writeFile(join(cwd, "profile.yaml"), v2GroupedProfile);
+
+    const { exitCode, stderr, stdout } = await runCliWithOutput({
+      args: [
+        "validate",
+        "--file",
+        "mission.md",
+        "--profile",
+        "profile.yaml",
+      ],
+      cwd,
+    });
+
+    expect(exitCode).toBe(0);
+    expect(stderr.text()).toBe("");
+
+    const result = parseStdout(stdout.text());
+    expect(result).toMatchObject({
+      diagnostics: [],
+      profile: {
+        documentVersion: "1.0.0",
+        evaluatedRuleCount: 1,
+        ruleCount: 1,
+        skippedRuleCount: 0,
+        syntaxVersion: "markdown-engine.validation@v2",
+      },
+      ruleResults: [
+        {
+          diagnostics: [],
+          evaluation: {
+            branches: [
+              {
+                branchIndex: 0,
+                diagnostics: [
+                  expect.objectContaining({
+                    code: "profile.validation.emptySelection",
+                    ruleId: "v2.grouped.anyof",
+                    severity: "error",
+                  }),
+                ],
+                label: "missing-verification",
+                status: "failed",
+              },
+              {
+                branchIndex: 1,
+                diagnostics: [],
+                label: "mission-ready",
+                status: "passed",
+              },
+            ],
+            kind: "anyOf",
+            selectedBranch: {
+              branchIndex: 1,
+              label: "mission-ready",
+            },
+          },
+          passed: true,
+          ruleId: "v2.grouped.anyof",
+          status: "passed",
+        },
+      ],
+      valid: true,
+    });
+    expect(result).not.toHaveProperty("stage");
+    expect(result.evidence).toMatchObject({
+      diagnostics: [],
+      ruleResults: result.ruleResults,
+    });
+  });
+
+  it("emits documented v2 skipped validation JSON with evidence", async () => {
+    const cwd = await makeTempDir();
+    await writeFile(join(cwd, "mission.md"), validMarkdown);
+    await writeFile(join(cwd, "profile.yaml"), v2SkippedProfile);
+
+    const { exitCode, stderr, stdout } = await runCliWithOutput({
+      args: [
+        "validate",
+        "--file",
+        "mission.md",
+        "--profile",
+        "profile.yaml",
+      ],
+      cwd,
+    });
+
+    expect(exitCode).toBe(0);
+    expect(stderr.text()).toBe("");
+
+    const result = parseStdout(stdout.text());
+    expect(result).toMatchObject({
+      diagnostics: [],
+      profile: {
+        documentVersion: "1.0.0",
+        evaluatedRuleCount: 0,
+        ruleCount: 1,
+        skippedRuleCount: 1,
+        syntaxVersion: "markdown-engine.validation@v2",
+      },
+      ruleResults: [
+        {
+          diagnostics: [],
+          evaluation: {
+            kind: "skipped",
+            reason: "whenNotMatched",
+          },
+          passed: true,
+          ruleId: "v2.when.skipped",
+          status: "skipped",
+          when: {
+            diagnostics: [
+              expect.objectContaining({
+                code: "profile.validation.emptySelection",
+                ruleId: "v2.when.skipped",
+                severity: "error",
+              }),
+            ],
+            status: "notMatched",
+          },
+        },
+      ],
+      valid: true,
+    });
+    expect(result).not.toHaveProperty("stage");
+    expect(result.evidence).toMatchObject({
+      diagnostics: [],
+      ruleResults: result.ruleResults,
+    });
+  });
+
+  it("emits documented v2 assertion-extension validation JSON with evidence", async () => {
+    const cwd = await makeTempDir();
+    await writeFile(join(cwd, "mission.md"), v2IdCountMarkdown);
+    await writeFile(join(cwd, "profile.yaml"), v2IdCountProfile);
+
+    const { exitCode, stderr, stdout } = await runCliWithOutput({
+      args: [
+        "validate",
+        "--file",
+        "mission.md",
+        "--profile",
+        "profile.yaml",
+      ],
+      cwd,
+    });
+
+    expect(exitCode).toBe(1);
+    expect(stderr.text()).toBe("");
+
+    const result = parseStdout(stdout.text());
+    const expectedDiagnostic = expect.objectContaining({
+      code: "profile.validation.idCountTooLow",
+      ruleId: "v2.ids.min-count",
+      severity: "error",
+    });
+
+    expect(result).toMatchObject({
+      diagnostics: [expectedDiagnostic],
+      profile: {
+        documentVersion: "1.0.0",
+        evaluatedRuleCount: 1,
+        ruleCount: 1,
+        skippedRuleCount: 0,
+        syntaxVersion: "markdown-engine.validation@v2",
+      },
+      ruleResults: [
+        {
+          diagnostics: [expectedDiagnostic],
+          evaluation: {
+            diagnostics: [expectedDiagnostic],
+            kind: "assertions",
+          },
+          passed: false,
+          ruleId: "v2.ids.min-count",
           status: "failed",
         },
       ],
