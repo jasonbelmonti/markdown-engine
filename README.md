@@ -155,6 +155,40 @@ Successful validation exits with code `0`; validation or normalization error
 diagnostics exit with code `1`. Validation JSON includes `profile`,
 `ruleResults`, `diagnostics`, and `evidence`.
 
+Declarative validation compatibility is syntax-versioned. Existing v1 profiles
+remain on the v1 result and evidence shape by keeping:
+
+```yaml
+syntaxVersion: markdown-engine.validation@v1
+```
+
+Conditional V2 behavior is selected only by an explicit v2 profile:
+
+```yaml
+syntaxVersion: markdown-engine.validation@v2
+rules:
+  - id: release.docs
+    anyOf:
+      - label: release-section
+        select:
+          target: section
+          title: Release
+        assert:
+          exists: true
+      - label: changelog-link
+        select:
+          target: link
+          text: changelog
+        assert:
+          exists: true
+```
+
+CLI validation output uses `profile.syntaxVersion` as the v1/v2 discriminator.
+V1 rule results keep the existing flat `ruleId`, `passed`, and `diagnostics`
+fields. V2 rule results add `status` and `evaluation`; v2 profile metadata adds
+`evaluatedRuleCount` and `skippedRuleCount` when the profile explicitly opts into
+`markdown-engine.validation@v2`.
+
 Reader-facing declarative validation examples live under
 `fixtures/declarative-validation/examples/**`. From the repository or package
 root after building, run one passing and one intentionally failing example with:
