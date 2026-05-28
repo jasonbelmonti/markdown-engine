@@ -79,6 +79,12 @@ The package script runs:
 npm run build && vitest run tests/declarative-validation-cli.test.ts "--exclude=.worktrees/**"
 ```
 
+Final diff hygiene was checked with:
+
+```sh
+git diff --check
+```
+
 ## Recorded Results
 
 Run from `.worktrees/BEL-1110` on 2026-05-28:
@@ -105,10 +111,20 @@ $ npm run test:validation:cli
 
 RUN  v3.2.4 /Users/jasonbelmonti/Documents/Development/markdown-engine/.worktrees/BEL-1110
 
-PASS tests/declarative-validation-cli.test.ts (36 tests)
+<pass> tests/declarative-validation-cli.test.ts (36 tests) 85ms
 
 Test Files  1 passed (1)
-Tests  36 passed (36)
+     Tests  36 passed (36)
+  Start at  11:54:12
+  Duration  887ms (transform 316ms, setup 0ms, collect 529ms, tests 85ms, environment 0ms, prepare 67ms)
+```
+
+The Vitest pass marker was rendered as `<pass>` in this ASCII evidence record.
+Vitest timing values are recorded from the final local run and may vary on rerun.
+
+```text
+$ git diff --check
+# exit 0; no stdout or stderr
 ```
 
 ## CLI Compatibility Coverage

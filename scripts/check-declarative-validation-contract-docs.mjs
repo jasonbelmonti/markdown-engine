@@ -170,6 +170,7 @@ checkFile("docs/evidence/conditional-v2-evd-6-contract-cli-compatibility.md", {
     "tests/declarative-validation-cli.test.ts",
     "npm run docs:declarative-validation-contract",
     "npm run test:validation:cli",
+    "git diff --check",
     "markdown-engine.validation@v1",
     "markdown-engine.validation@v2",
     "V1 preservation",
