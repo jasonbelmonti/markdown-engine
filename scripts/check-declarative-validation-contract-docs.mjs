@@ -52,6 +52,9 @@ checkFile("docs/contracts/declarative-validation.md", {
     "profileHash",
     'engineVersion` records the package version',
     '2.0 release line this is `"2.0.0"`',
+    "Compatibility examples",
+    "v1 compatibility profile",
+    "v2 opt-in profile",
     "Conditional V2 EVD-6 reviewer notes",
     "profile-sourced regex compilation",
     "arbitrary JavaScript",
@@ -145,11 +148,46 @@ checkFile("docs/evidence/conditional-v2-evd-6-contract-docs.md", {
   ],
 });
 
+checkFile("docs/evidence/conditional-v2-evd-6-contract-cli-compatibility.md", {
+  headings: [
+    "## Scope",
+    "## Reviewed Sources",
+    "## Migration Documentation Evidence",
+    "## Commands",
+    "## Recorded Results",
+    "## CLI Compatibility Coverage",
+    "## V1/V2 Compatibility Notes",
+    "## Public Contract Gap Review",
+    "## Reviewer Approval Notes",
+    "## Residual Risks",
+    "## Review Boundary",
+    "## Conclusion",
+  ],
+  phrases: [
+    "BEL-1110",
+    "Conditional V2 EVD-6",
+    "docs/contracts/declarative-validation.md",
+    "tests/declarative-validation-cli.test.ts",
+    "npm run docs:declarative-validation-contract",
+    "npm run test:validation:cli",
+    "markdown-engine.validation@v1",
+    "markdown-engine.validation@v2",
+    "V1 preservation",
+    "V2 selection",
+    "CLI JSON union",
+    "Profile-stage failures",
+    "Reviewer checks requested",
+    "Approval status: pending review",
+  ],
+});
+
 checkFile("README.md", {
   headings: ["## Public API", "## CLI", "## Validation"],
   phrases: [
     "parseValidationProfile",
     "validateWithProfile",
+    "Declarative validation compatibility is syntax-versioned",
+    "Conditional V2 behavior is selected only by an explicit v2 profile",
     "docs/contracts/declarative-validation.md",
     "docs/evidence/wp-5-evd-7-declarative-validation-contract-review.md",
     "docs/evidence/wp-5-evd-8-declarative-validation-boundary-audit.md",
@@ -170,7 +208,7 @@ if (failures.length > 0) {
 
 console.log("Declarative validation contract documentation gate PASS");
 console.log(
-  "Checked files: docs/contracts/declarative-validation.md, README.md, docs/evidence/wp-5-evd-7-declarative-validation-contract-review.md, docs/evidence/wp-5-evd-8-declarative-validation-boundary-audit.md, docs/evidence/conditional-v2-evd-6-contract-docs.md, package.json",
+  "Checked files: docs/contracts/declarative-validation.md, README.md, docs/evidence/wp-5-evd-7-declarative-validation-contract-review.md, docs/evidence/wp-5-evd-8-declarative-validation-boundary-audit.md, docs/evidence/conditional-v2-evd-6-contract-docs.md, docs/evidence/conditional-v2-evd-6-contract-cli-compatibility.md, package.json",
 );
 
 function checkFile(file, check) {

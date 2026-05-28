@@ -630,6 +630,47 @@ V1 preservation is explicit: v1 authoring syntax, v1 rule result shape, v1
 diagnostic inventory, v1 CLI JSON behavior, and v1 evidence hash inputs remain
 unchanged by the admitted v2 syntax.
 
+Compatibility examples:
+
+```yaml
+# v1 compatibility profile: remains on the v1 authoring and result contract.
+syntaxVersion: markdown-engine.validation@v1
+rules:
+  - id: sections.present
+    select:
+      target: document
+    assert:
+      sectionsRequired:
+        headings:
+          - Mission Brief
+```
+
+```yaml
+# v2 opt-in profile: selects Conditional V2 behavior explicitly.
+syntaxVersion: markdown-engine.validation@v2
+rules:
+  - id: release.docs
+    anyOf:
+      - label: release-section
+        select:
+          target: section
+          title: Release
+        assert:
+          exists: true
+      - label: changelog-link
+        select:
+          target: link
+          text: changelog
+        assert:
+          exists: true
+```
+
+The v1 profile above continues to emit the v1 validation-result shape. The v2
+profile above emits the syntax-versioned v2 shape with `status`, `evaluation`,
+`evaluatedRuleCount`, and `skippedRuleCount`. The CLI does not add a second
+discriminator for v2; consumers branch on
+`profile.syntaxVersion: "markdown-engine.validation@v2"`.
+
 Migration notes:
 
 - Consumers using fixed `validate(document, config)` rule families can continue
