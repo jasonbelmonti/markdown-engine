@@ -666,9 +666,10 @@ rules:
 ```
 
 The v1 profile above continues to emit the v1 validation-result shape. The v2
-profile above emits the syntax-versioned v2 shape with `status`, `evaluation`,
-`evaluatedRuleCount`, and `skippedRuleCount`. The CLI does not add a second
-discriminator for v2; consumers branch on
+profile above emits syntax-versioned v2 result metadata with
+`evaluatedRuleCount` and `skippedRuleCount`; v2 rule results include `status`
+and `evaluation`. The CLI does not add a second discriminator for v2; consumers
+branch on
 `profile.syntaxVersion: "markdown-engine.validation@v2"`.
 
 Migration notes:

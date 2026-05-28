@@ -185,8 +185,8 @@ rules:
 
 CLI validation output uses `profile.syntaxVersion` as the v1/v2 discriminator.
 V1 rule results keep the existing flat `ruleId`, `passed`, and `diagnostics`
-fields. V2 rule results add `status`, `evaluation`, `evaluatedRuleCount`, and
-`skippedRuleCount` when the profile explicitly opts into
+fields. V2 rule results add `status` and `evaluation`; v2 profile metadata adds
+`evaluatedRuleCount` and `skippedRuleCount` when the profile explicitly opts into
 `markdown-engine.validation@v2`.
 
 Reader-facing declarative validation examples live under

@@ -43,8 +43,8 @@ shows:
   discriminator;
 - v1 rule results keep the existing flat `ruleId`, `passed`, and
   `diagnostics` fields;
-- v2 rule results add `status`, `evaluation`, `evaluatedRuleCount`, and
-  `skippedRuleCount`.
+- v2 rule results add `status` and `evaluation`, while v2 profile metadata adds
+  `evaluatedRuleCount` and `skippedRuleCount`.
 
 `docs/contracts/declarative-validation.md` now includes compatibility examples
 for:
