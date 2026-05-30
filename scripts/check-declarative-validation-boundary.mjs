@@ -118,6 +118,7 @@ for (const source of declarativeValidationSources()) {
 checkUnsupportedKeyContracts();
 checkRejectionCoverage();
 checkEvidenceCoverage();
+checkConditionalV2EvidenceCoverage();
 checkPatternCoverage();
 
 if (failures.length > 0) {
@@ -235,6 +236,15 @@ function checkRejectionCoverage() {
     "does not execute nested profile payloads while generating evidence",
     "containsFunction(result.plan)",
     "profile.config.unsupportedKey",
+    "v2-when-regex-key",
+    "v2-when-script-key",
+    "v2-when-assertion-regexp-key",
+    "v2-branch-regexp-key",
+    "v2-branch-script-key",
+    "v2-branch-selector-pattern-key",
+    "v2-branch-selector-plugin-key",
+    "v2-branch-assertion-matches-key",
+    "v2-branch-assertion-callback-key",
   ];
 
   for (const phrase of phrases) {
@@ -263,6 +273,35 @@ function checkEvidenceCoverage() {
   for (const phrase of phrases) {
     if (!evidence.includes(phrase)) {
       failures.push(`boundary evidence: missing phrase ${phrase}`);
+    }
+  }
+}
+
+function checkConditionalV2EvidenceCoverage() {
+  const evidence = readRepoFile(
+    "docs/evidence/conditional-v2-evd-7-repeatability-boundary.md",
+  );
+  const phrases = [
+    "Issue: BEL-1112",
+    "Conditional V2 EVD-7: Repeatability and Boundary Audit",
+    "npm run audit:declarative-validation-boundary",
+    "Declarative validation boundary audit PASS",
+    "Regex-like key rejection checks: present",
+    "Unsafe executable key rejection checks: present",
+    "v2-when-regex-key",
+    "v2-branch-selector-pattern-key",
+    "Boundary/security reviewer notes",
+    "Approval status: pending boundary/security review",
+    "No runtime behavior",
+    "public result shape",
+    "CLI JSON",
+    "parser, rich IR",
+    "feature semantics changed",
+  ];
+
+  for (const phrase of phrases) {
+    if (!evidence.includes(phrase)) {
+      failures.push(`conditional v2 EVD-7 evidence: missing phrase ${phrase}`);
     }
   }
 }
