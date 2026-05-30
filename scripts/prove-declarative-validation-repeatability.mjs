@@ -41,6 +41,9 @@ if (failures.length > 0) {
     console.error(
       `run ${failure.run} ${failure.name}: expected ${failure.expected}, actual ${failure.actual}`,
     );
+    if (failure.detail !== undefined) {
+      console.error(`  ${failure.detail}`);
+    }
   }
   process.exit(1);
 }
@@ -57,6 +60,12 @@ for (const testCase of baseline) {
 console.log("Observed evidence hashes:");
 printEvidenceHashes(baseline, "passing");
 printEvidenceHashes(baseline, "failing");
+printEvidenceHashes(baseline, "v2-flat-passing");
+printEvidenceHashes(baseline, "v2-grouped");
+printEvidenceHashes(baseline, "v2-when");
+printEvidenceHashes(baseline, "v2-id-count");
+printEvidenceHashes(baseline, "v2-table-column-coverage");
+printEvidenceHashes(baseline, "v2-composite");
 
 function compareCase(run, observedCase, baselineCase) {
   if (
@@ -73,9 +82,43 @@ function compareCase(run, observedCase, baselineCase) {
   return {
     run,
     name: observedCase?.name ?? baselineCase?.name ?? "missing case",
-    expected: baselineCase?.sha256 ?? "missing",
-    actual: observedCase?.sha256 ?? "missing",
+    expected: caseSummary(baselineCase),
+    actual: caseSummary(observedCase),
+    detail: caseFailureDetail(observedCase, baselineCase),
   };
+}
+
+function caseSummary(testCase) {
+  return testCase === undefined
+    ? "missing"
+    : `${testCase.sha256} (${testCase.byteLength} bytes)`;
+}
+
+function caseFailureDetail(observedCase, baselineCase) {
+  if (observedCase === undefined || baselineCase === undefined) {
+    return undefined;
+  }
+
+  if (observedCase.name !== baselineCase.name) {
+    return `case order mismatch: expected ${baselineCase.name}, actual ${observedCase.name}`;
+  }
+
+  return `first differing byte offset: ${firstDifferingByteOffset(
+    Buffer.from(observedCase.json, "utf8"),
+    Buffer.from(baselineCase.json, "utf8"),
+  )}`;
+}
+
+function firstDifferingByteOffset(actual, expected) {
+  const maxComparableLength = Math.min(actual.length, expected.length);
+
+  for (let index = 0; index < maxComparableLength; index += 1) {
+    if (actual[index] !== expected[index]) {
+      return index;
+    }
+  }
+
+  return actual.length === expected.length ? "none" : maxComparableLength;
 }
 
 function printEvidenceHashes(cases, resultName) {

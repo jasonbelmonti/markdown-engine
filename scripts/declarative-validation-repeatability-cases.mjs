@@ -2,6 +2,8 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
+import { buildConditionalV2RepeatabilityCases } from "./declarative-validation-conditional-v2-repeatability-cases.mjs";
+
 const fixturePath = "fixtures/declarative-validation/proving/representative.md";
 
 const defaultedPassingProfile = {
@@ -199,6 +201,8 @@ const textLengthProfile = {
 export function buildDeclarativeValidationRepeatabilityCases(repoRoot, engine) {
   const { normalize, parse, serialize, validateWithProfile } = engine;
   const markdown = readFileSync(join(repoRoot, fixturePath), "utf8");
+  const conditionalV2RepeatabilityCases =
+    buildConditionalV2RepeatabilityCases(repoRoot, engine);
   const document = normalize(parse(markdown, { path: fixturePath }).parsed, {
     documentVersion: "1.0.0",
   }).document;
@@ -311,6 +315,7 @@ export function buildDeclarativeValidationRepeatabilityCases(repoRoot, engine) {
       name: "declarative-validation:v2-when-evidence",
       result: requiredEvidence(v2WhenResult),
     },
+    ...conditionalV2RepeatabilityCases.resultEntries,
     {
       name: "declarative-validation:text-length-result",
       result: textLengthResult,
@@ -321,7 +326,7 @@ export function buildDeclarativeValidationRepeatabilityCases(repoRoot, engine) {
     },
   ].flatMap(({ name, result }) =>
     serializedFormatCases(serialize, name, result),
-  );
+  ).concat(conditionalV2RepeatabilityCases.cliCase);
 }
 
 function validateWithEvidence(validateWithProfile, document, profile) {

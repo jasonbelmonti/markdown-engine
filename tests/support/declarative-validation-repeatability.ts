@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import {
   normalize,
   parse,
+  parseValidationProfile,
   serialize,
   validateWithProfile,
 } from "@jasonbelmonti/markdown-engine";
@@ -22,6 +23,7 @@ export function declarativeValidationRepeatabilityCases(): DeclarativeValidation
   return buildDeclarativeValidationRepeatabilityCases(repoRoot, {
     normalize,
     parse,
+    parseValidationProfile,
     serialize,
     validateWithProfile,
   }) as DeclarativeValidationRepeatabilityCase[];

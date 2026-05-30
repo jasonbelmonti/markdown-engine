@@ -31,10 +31,23 @@ const expectedRepeatabilityCaseNames = [
   "declarative-validation:v2-when-result:pretty",
   "declarative-validation:v2-when-evidence:compact",
   "declarative-validation:v2-when-evidence:pretty",
+  "declarative-validation:v2-id-count-result:compact",
+  "declarative-validation:v2-id-count-result:pretty",
+  "declarative-validation:v2-id-count-evidence:compact",
+  "declarative-validation:v2-id-count-evidence:pretty",
+  "declarative-validation:v2-table-column-coverage-result:compact",
+  "declarative-validation:v2-table-column-coverage-result:pretty",
+  "declarative-validation:v2-table-column-coverage-evidence:compact",
+  "declarative-validation:v2-table-column-coverage-evidence:pretty",
+  "declarative-validation:v2-composite-result:compact",
+  "declarative-validation:v2-composite-result:pretty",
+  "declarative-validation:v2-composite-evidence:compact",
+  "declarative-validation:v2-composite-evidence:pretty",
   "declarative-validation:text-length-result:compact",
   "declarative-validation:text-length-result:pretty",
   "declarative-validation:text-length-evidence:compact",
   "declarative-validation:text-length-evidence:pretty",
+  "declarative-validation:v2-composite-cli-json",
 ] as const;
 
 describe("BEL-983 declarative validation evidence repeatability", () => {
@@ -133,6 +146,34 @@ describe("BEL-983 declarative validation evidence repeatability", () => {
       casesByName,
       "declarative-validation:v2-when-evidence:pretty",
     );
+    const v2IdCountResult = parseJsonCase(
+      casesByName,
+      "declarative-validation:v2-id-count-result:pretty",
+    );
+    const v2IdCountEvidence = parseJsonCase(
+      casesByName,
+      "declarative-validation:v2-id-count-evidence:pretty",
+    );
+    const v2TableColumnCoverageResult = parseJsonCase(
+      casesByName,
+      "declarative-validation:v2-table-column-coverage-result:pretty",
+    );
+    const v2TableColumnCoverageEvidence = parseJsonCase(
+      casesByName,
+      "declarative-validation:v2-table-column-coverage-evidence:pretty",
+    );
+    const v2CompositeResult = parseJsonCase(
+      casesByName,
+      "declarative-validation:v2-composite-result:pretty",
+    );
+    const v2CompositeEvidence = parseJsonCase(
+      casesByName,
+      "declarative-validation:v2-composite-evidence:pretty",
+    );
+    const v2CompositeCliJson = parseJsonCase(
+      casesByName,
+      "declarative-validation:v2-composite-cli-json",
+    );
 
     expect(evidenceHash(passingEvidence, "inputHash")).toMatch(
       /^[0-9a-f]{64}$/,
@@ -188,6 +229,64 @@ describe("BEL-983 declarative validation evidence repeatability", () => {
     expect(recordProperty(v2WhenProfile, "ruleCount")).toBe(2);
     expect(recordProperty(v2WhenProfile, "evaluatedRuleCount")).toBe(1);
     expect(recordProperty(v2WhenProfile, "skippedRuleCount")).toBe(1);
+    expect(recordProperty(v2IdCountResult, "evidence")).toEqual(
+      v2IdCountEvidence,
+    );
+    expect(recordProperty(v2IdCountEvidence, "ruleResults")).toEqual(
+      recordProperty(v2IdCountResult, "ruleResults"),
+    );
+    expect(recordProperty(v2TableColumnCoverageResult, "evidence")).toEqual(
+      v2TableColumnCoverageEvidence,
+    );
+    expect(
+      recordProperty(v2TableColumnCoverageEvidence, "ruleResults"),
+    ).toEqual(recordProperty(v2TableColumnCoverageResult, "ruleResults"));
+    expect(recordProperty(v2CompositeResult, "evidence")).toEqual(
+      v2CompositeEvidence,
+    );
+    expect(recordProperty(v2CompositeEvidence, "ruleResults")).toEqual(
+      recordProperty(v2CompositeResult, "ruleResults"),
+    );
+    expect(recordProperty(v2CompositeEvidence, "diagnostics")).toEqual(
+      recordProperty(v2CompositeResult, "diagnostics"),
+    );
+    expect(recordProperty(v2CompositeCliJson, "valid")).toBe(true);
+    const v2CompositeCliProfile = recordProperty(
+      v2CompositeCliJson,
+      "profile",
+    );
+    expect(recordProperty(v2CompositeCliProfile, "syntaxVersion")).toBe(
+      "markdown-engine.validation@v2",
+    );
+    expect(recordProperty(v2CompositeCliProfile, "ruleCount")).toBe(5);
+    expect(recordProperty(v2CompositeCliProfile, "evaluatedRuleCount")).toBe(
+      4,
+    );
+    expect(recordProperty(v2CompositeCliProfile, "skippedRuleCount")).toBe(1);
+    const v2CompositeCliRuleResults = recordProperty(
+      v2CompositeCliJson,
+      "ruleResults",
+    );
+    expect(Array.isArray(v2CompositeCliRuleResults)).toBe(true);
+    if (!Array.isArray(v2CompositeCliRuleResults)) {
+      throw new TypeError("Expected CLI ruleResults to be an array.");
+    }
+    expect(
+      v2CompositeCliRuleResults.map((ruleResult) =>
+        recordProperty(ruleResult, "ruleId"),
+      ),
+    ).toEqual([
+      "repeatability.flat.text",
+      "repeatability.grouped.anyof",
+      "repeatability.ids.count",
+      "repeatability.table.coverage",
+      "repeatability.when.skipped",
+    ]);
+    expect(
+      v2CompositeCliRuleResults.map((ruleResult) =>
+        recordProperty(ruleResult, "status"),
+      ),
+    ).toEqual(["passed", "passed", "passed", "passed", "skipped"]);
   });
 });
 
