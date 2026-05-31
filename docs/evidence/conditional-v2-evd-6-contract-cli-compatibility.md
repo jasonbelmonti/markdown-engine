@@ -180,6 +180,13 @@ an issue or approved deviation before MS-3 approval.
 
 Approval status: pending review.
 
+BEL-1114 MS-3 gate status on 2026-05-31: not approved for final
+implementation merge readiness. The BEL-1114 gate record at
+`docs/evidence/conditional-v2-ms-3-gate-bel-1114.md` found that this EVD-6
+artifact exists and the contract/docs/CLI validation gates pass, but no
+independent contract/API reviewer approval was recorded in this artifact or in
+the fetched GitHub PR #164 metadata.
+
 Reviewer checks requested:
 
 - Confirm `README.md` and `docs/contracts/declarative-validation.md` make v1

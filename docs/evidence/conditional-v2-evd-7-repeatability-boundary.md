@@ -1,6 +1,7 @@
 # Conditional V2 EVD-7: Repeatability and Boundary Consolidation
 
 Issue: BEL-1113
+Issue: BEL-1112
 Parent issue: BEL-1084
 Consolidates: BEL-1111 repeatability evidence and BEL-1112 boundary audit evidence
 Branch under review: `codex/BEL-1113-repeatability-boundary-evd7`
@@ -8,6 +9,8 @@ Evidence command commit: `951c627f4dfc39d7c841c2e7e8659039e3d98a0e`
 Worktree: `.worktrees/BEL-1113-repeatability-boundary-evd7`
 Baseline: `main` / `origin/main` at `951c627`
 Date: 2026-05-31
+
+Audit coverage phrase: Conditional V2 EVD-7: Repeatability and Boundary Audit.
 
 ## Scope
 
@@ -189,7 +192,16 @@ consolidation. The currently tracked findings are:
 
 ## Boundary/Security Reviewer Notes
 
+Boundary/security reviewer notes remain pending review.
+
 Approval status: pending boundary/security review.
+
+BEL-1114 MS-3 gate status on 2026-05-31: not approved for final
+implementation merge readiness. The BEL-1114 gate record at
+`docs/evidence/conditional-v2-ms-3-gate-bel-1114.md` found that this EVD-7
+artifact exists and the repeatability/boundary validation gates pass, but no
+boundary/security reviewer approval was recorded in this artifact or in the
+fetched GitHub PR #166 and PR #167 metadata.
 
 Reviewer checks requested:
 
