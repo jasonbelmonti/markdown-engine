@@ -2035,4 +2035,157 @@ rules:
       );
     }
   });
+
+  it("rejects regex-like and executable-like keys at v2 nested boundaries", () => {
+    const branch = {
+      select: { target: "document" },
+      assert: { exists: true },
+    };
+    const invalidNestedBoundaryProfiles = [
+      [
+        {
+          id: "v2-when-regex-key",
+          when: {
+            select: { target: "document" },
+            assert: { exists: true },
+            regex: "^(a+)+$",
+          },
+          select: { target: "document" },
+          assert: { exists: true },
+        },
+        "profile.config.unsupportedKey",
+        'Unsupported validation profile key "regex".',
+      ],
+      [
+        {
+          id: "v2-when-script-key",
+          when: {
+            select: { target: "document" },
+            assert: { exists: true },
+            script: "return true",
+          },
+          select: { target: "document" },
+          assert: { exists: true },
+        },
+        "profile.config.unsupportedKey",
+        'Unsupported validation profile key "script".',
+      ],
+      [
+        {
+          id: "v2-when-assertion-regexp-key",
+          when: {
+            select: { target: "document" },
+            assert: {
+              text: {
+                contains: "Mission",
+                regexp: "^(a+)+$",
+              },
+            },
+          },
+          select: { target: "document" },
+          assert: { exists: true },
+        },
+        "profile.config.unsupportedKey",
+        'Unsupported validation profile key "regexp".',
+      ],
+      [
+        { id: "v2-branch-regexp-key", anyOf: [{ ...branch, regexp: "^(a+)+$" }] },
+        "profile.config.unsupportedKey",
+        'Unsupported validation profile key "regexp".',
+      ],
+      [
+        { id: "v2-branch-script-key", anyOf: [{ ...branch, script: "return true" }] },
+        "profile.config.unsupportedKey",
+        'Unsupported validation profile key "script".',
+      ],
+      [
+        {
+          id: "v2-branch-selector-pattern-key",
+          anyOf: [
+            {
+              select: {
+                target: "tableRow",
+                where: {
+                  column: "Status",
+                  equals: "Ready",
+                  pattern: "^(a+)+$",
+                },
+              },
+              assert: { exists: true },
+            },
+          ],
+        },
+        "profile.config.unsupportedKey",
+        'Unsupported validation profile key "pattern".',
+      ],
+      [
+        {
+          id: "v2-branch-selector-plugin-key",
+          anyOf: [
+            {
+              select: {
+                target: "tableRow",
+                where: {
+                  column: "Status",
+                  equals: "Ready",
+                  plugin: "mission-control",
+                },
+              },
+              assert: { exists: true },
+            },
+          ],
+        },
+        "profile.config.unsupportedKey",
+        'Unsupported validation profile key "plugin".',
+      ],
+      [
+        {
+          id: "v2-branch-assertion-matches-key",
+          anyOf: [
+            {
+              select: { target: "document" },
+              assert: {
+                text: {
+                  contains: "Mission",
+                  matches: "^(a+)+$",
+                },
+              },
+            },
+          ],
+        },
+        "profile.config.unsupportedKey",
+        'Unsupported validation profile key "matches".',
+      ],
+      [
+        {
+          id: "v2-branch-assertion-callback-key",
+          anyOf: [
+            {
+              select: { target: "document" },
+              assert: {
+                text: {
+                  contains: "Mission",
+                  callback: "isMissionReady",
+                },
+              },
+            },
+          ],
+        },
+        "profile.config.unsupportedKey",
+        'Unsupported validation profile key "callback".',
+      ],
+    ] as const;
+
+    for (const [rule, code, message] of invalidNestedBoundaryProfiles) {
+      const result = parseValidationProfile({
+        syntaxVersion: "markdown-engine.validation@v2",
+        rules: [rule],
+      } as ProfileInput);
+
+      expect(result.profile).toBeUndefined();
+      expect(result.diagnostics).toContainEqual(
+        expect.objectContaining({ code, message, severity: "error" }),
+      );
+    }
+  });
 });
