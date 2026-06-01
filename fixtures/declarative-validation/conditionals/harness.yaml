@@ -2,9 +2,9 @@ harness:
   id: conditional-v2-downstream-fixture-harness
   issue: BEL-1115
   directory: fixtures/declarative-validation/conditionals
-  scope: harness-only
+  scope: incremental-downstream-fixtures
   naming:
-    caseNamePattern: l8a-<capability>-<expectation>
+    caseNamePattern: l8<leaf>-<capability>-<expectation>
     ruleIdPattern: conditionals.downstream.<capability>.<expectation>
   expectedOutput:
     - expected.valid records aggregate validation outcome.
@@ -13,8 +13,8 @@ harness:
     - expected.ruleResults records rule status, compatibility passed value, diagnostics, and evaluation shape.
   includes:
     - A representative Conditional V2 downstream subset that proves durable fixture loading and false-acceptance protection.
+    - Section 4 table-or-none fixtures for a valid constraints table branch, an authorized explicit none/N/A branch, and a neither-branch failure.
   excludes:
-    - Full Section 4 table-or-none downstream breadth.
     - Full Section 15 table-or-N/A downstream breadth.
     - Full R1 traceability downstream breadth.
     - Full mixed ID count downstream breadth.
@@ -137,3 +137,194 @@ cases:
                 ruleId: conditionals.downstream.table-column-coverage.fail
                 message: 'ID "ODS-REQ-2" must appear in target table column "Requirement" of section "Traceability".'
                 sourceLine: 6
+
+  - name: l8b-section4-table-pass
+    contract: pass when Section 4 contains the required constraints table branch
+    markdown: |
+      # 4. Constraints, Invariants, and Assumptions
+
+      | ID | Type | Statement | Source or rationale | Validation or resolution plan |
+      | --- | --- | --- | --- | --- |
+      | CON-1 | Constraint | Implementation must remain deterministic. | Conditional V2 design | Covered by downstream validation. |
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: conditionals.downstream.section4.table-or-none.pass
+          anyOf:
+            - label: constraints-table
+              select:
+                target: table
+                section: 4. Constraints, Invariants, and Assumptions
+              assert:
+                tableColumnsRequired:
+                  columns:
+                    - ID
+                    - Type
+                    - Statement
+                    - Source or rationale
+                    - Validation or resolution plan
+            - label: explicit-none-or-na
+              select:
+                target: textSpan
+                section: 4. Constraints, Invariants, and Assumptions
+                nodeType: paragraph
+                textIncludes: "None / N/A"
+              assert:
+                exists: true
+    expected:
+      valid: true
+      profile:
+        ruleCount: 1
+        evaluatedRuleCount: 1
+        skippedRuleCount: 0
+      ruleResults:
+        - ruleId: conditionals.downstream.section4.table-or-none.pass
+          status: passed
+          passed: true
+          evaluation:
+            kind: anyOf
+            selectedBranch:
+              branchIndex: 0
+              label: constraints-table
+            branches:
+              - branchIndex: 0
+                label: constraints-table
+                status: passed
+              - branchIndex: 1
+                label: explicit-none-or-na
+                status: failed
+                diagnostics:
+                  - code: profile.validation.emptySelection
+                    ruleId: conditionals.downstream.section4.table-or-none.pass
+                    message: Rule selector did not match any document targets.
+
+  - name: l8b-section4-none-pass
+    contract: pass when Section 4 explicitly records None / N/A and the downstream profile authorizes that branch
+    markdown: |
+      # 4. Constraints, Invariants, and Assumptions
+
+      None / N/A. This document declares no Section 4 constraints.
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: conditionals.downstream.section4.table-or-none.pass
+          anyOf:
+            - label: constraints-table
+              select:
+                target: table
+                section: 4. Constraints, Invariants, and Assumptions
+              assert:
+                tableColumnsRequired:
+                  columns:
+                    - ID
+                    - Type
+                    - Statement
+                    - Source or rationale
+                    - Validation or resolution plan
+            - label: explicit-none-or-na
+              select:
+                target: textSpan
+                section: 4. Constraints, Invariants, and Assumptions
+                nodeType: paragraph
+                textIncludes: "None / N/A"
+              assert:
+                exists: true
+    expected:
+      valid: true
+      profile:
+        ruleCount: 1
+        evaluatedRuleCount: 1
+        skippedRuleCount: 0
+      ruleResults:
+        - ruleId: conditionals.downstream.section4.table-or-none.pass
+          status: passed
+          passed: true
+          evaluation:
+            kind: anyOf
+            selectedBranch:
+              branchIndex: 1
+              label: explicit-none-or-na
+            branches:
+              - branchIndex: 0
+                label: constraints-table
+                status: failed
+                diagnostics:
+                  - code: profile.validation.emptySelection
+                    ruleId: conditionals.downstream.section4.table-or-none.pass
+                    message: Rule selector did not match any document targets.
+              - branchIndex: 1
+                label: explicit-none-or-na
+                status: passed
+
+  - name: l8b-section4-neither-fail
+    contract: fail when Section 4 has a table that is missing required constraints columns and no authorized none/N/A text
+    markdown: |
+      # 4. Constraints, Invariants, and Assumptions
+
+      | Type | Statement | Source or rationale | Validation or resolution plan |
+      | --- | --- | --- | --- |
+      | Assumption | Constraint handling is pending. | Draft intake | Assign owner before approval. |
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: conditionals.downstream.section4.table-or-none.fail
+          anyOf:
+            - label: constraints-table
+              select:
+                target: table
+                section: 4. Constraints, Invariants, and Assumptions
+              assert:
+                tableColumnsRequired:
+                  columns:
+                    - ID
+                    - Type
+                    - Statement
+                    - Source or rationale
+                    - Validation or resolution plan
+            - label: explicit-none-or-na
+              select:
+                target: textSpan
+                section: 4. Constraints, Invariants, and Assumptions
+                nodeType: paragraph
+                textIncludes: "None / N/A"
+              assert:
+                exists: true
+    expected:
+      valid: false
+      profile:
+        ruleCount: 1
+        evaluatedRuleCount: 1
+        skippedRuleCount: 0
+      diagnostics:
+        - code: profile.validation.noAlternativeMatched
+          ruleId: conditionals.downstream.section4.table-or-none.fail
+          message: No anyOf branch matched the grouped rule.
+      ruleResults:
+        - ruleId: conditionals.downstream.section4.table-or-none.fail
+          status: failed
+          passed: false
+          diagnostics:
+            - code: profile.validation.noAlternativeMatched
+              ruleId: conditionals.downstream.section4.table-or-none.fail
+              message: No anyOf branch matched the grouped rule.
+          evaluation:
+            kind: anyOf
+            branches:
+              - branchIndex: 0
+                label: constraints-table
+                status: failed
+                diagnostics:
+                  - code: profile.validation.assertionFailed
+                    ruleId: conditionals.downstream.section4.table-or-none.fail
+                    message: 'Selected table must include column "ID".'
+                    sourceLine: 3
+              - branchIndex: 1
+                label: explicit-none-or-na
+                status: failed
+                diagnostics:
+                  - code: profile.validation.emptySelection
+                    ruleId: conditionals.downstream.section4.table-or-none.fail
+                    message: Rule selector did not match any document targets.

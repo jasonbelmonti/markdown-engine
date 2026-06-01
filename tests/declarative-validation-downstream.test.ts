@@ -54,11 +54,29 @@ interface ExpectedRuleResult {
   status: "passed" | "failed" | "skipped";
   passed: boolean;
   diagnostics?: ExpectedDiagnostic[];
-  evaluation: ExpectedAssertionsEvaluation;
+  evaluation: ExpectedEvaluation;
 }
+
+type ExpectedEvaluation = ExpectedAssertionsEvaluation | ExpectedGroupEvaluation;
 
 interface ExpectedAssertionsEvaluation {
   kind: "assertions";
+  diagnostics?: ExpectedDiagnostic[];
+}
+
+interface ExpectedGroupEvaluation {
+  kind: "anyOf" | "allOf";
+  selectedBranch?: ExpectedBranchReference;
+  branches: ExpectedBranchResult[];
+}
+
+interface ExpectedBranchReference {
+  branchIndex: number;
+  label?: string;
+}
+
+interface ExpectedBranchResult extends ExpectedBranchReference {
+  status: "passed" | "failed";
   diagnostics?: ExpectedDiagnostic[];
 }
 
@@ -115,6 +133,9 @@ const expectedRuleIds = [
 const expectedConditionalHarnessCaseNames = [
   "l8a-table-column-coverage-pass",
   "l8a-table-column-coverage-fail",
+  "l8b-section4-table-pass",
+  "l8b-section4-none-pass",
+  "l8b-section4-neither-fail",
 ];
 
 describe("declarative validation downstream ODS structural exercise", () => {
@@ -166,14 +187,14 @@ describe("declarative validation downstream ODS structural exercise", () => {
 });
 
 describe("conditional v2 downstream fixture harness", () => {
-  it("documents BEL-1115 fixture naming and expected-output conventions", () => {
+  it("documents fixture naming and expected-output conventions", () => {
     expect(conditionalHarness.harness).toEqual({
       id: "conditional-v2-downstream-fixture-harness",
       issue: "BEL-1115",
       directory: "fixtures/declarative-validation/conditionals",
-      scope: "harness-only",
+      scope: "incremental-downstream-fixtures",
       naming: {
-        caseNamePattern: "l8a-<capability>-<expectation>",
+        caseNamePattern: "l8<leaf>-<capability>-<expectation>",
         ruleIdPattern: "conditionals.downstream.<capability>.<expectation>",
       },
       expectedOutput: [
@@ -184,9 +205,9 @@ describe("conditional v2 downstream fixture harness", () => {
       ],
       includes: [
         "A representative Conditional V2 downstream subset that proves durable fixture loading and false-acceptance protection.",
+        "Section 4 table-or-none fixtures for a valid constraints table branch, an authorized explicit none/N/A branch, and a neither-branch failure.",
       ],
       excludes: [
-        "Full Section 4 table-or-none downstream breadth.",
         "Full Section 15 table-or-N/A downstream breadth.",
         "Full R1 traceability downstream breadth.",
         "Full mixed ID count downstream breadth.",
@@ -202,7 +223,7 @@ describe("conditional v2 downstream fixture harness", () => {
     it(`${fixtureCase.name}: ${fixtureCase.contract}`, () => {
       const { result } = validateConditionalHarnessCase(fixtureCase);
 
-      expect(fixtureCase.name).toMatch(/^l8a-[a-z0-9]+(?:-[a-z0-9]+)*-(pass|fail)$/);
+      expect(fixtureCase.name).toMatch(/^l8[a-z]-[a-z0-9]+(?:-[a-z0-9]+)*-(pass|fail)$/);
       expect(fixtureCase.expected.ruleResults.map(({ ruleId }) => ruleId)).toEqual(
         expect.arrayContaining([
           expect.stringMatching(/^conditionals\.downstream\.[a-z0-9.-]+\.(pass|fail)$/),
@@ -273,10 +294,33 @@ function expectedRuleResult(expected: ExpectedRuleResult): unknown {
     status: expected.status,
     passed: expected.passed,
     diagnostics: expectedDiagnostics(expected.diagnostics ?? []),
-    evaluation: {
-      kind: expected.evaluation.kind,
-      diagnostics: expectedDiagnostics(expected.evaluation.diagnostics ?? []),
-    },
+    evaluation: expectedEvaluation(expected.evaluation),
+  };
+}
+
+function expectedEvaluation(expected: ExpectedEvaluation): unknown {
+  if (expected.kind === "assertions") {
+    return {
+      kind: expected.kind,
+      diagnostics: expectedDiagnostics(expected.diagnostics ?? []),
+    };
+  }
+
+  return {
+    kind: expected.kind,
+    ...(expected.selectedBranch !== undefined
+      ? { selectedBranch: expected.selectedBranch }
+      : {}),
+    branches: expected.branches.map(expectedBranchResult),
+  };
+}
+
+function expectedBranchResult(expected: ExpectedBranchResult): unknown {
+  return {
+    branchIndex: expected.branchIndex,
+    ...(expected.label !== undefined ? { label: expected.label } : {}),
+    status: expected.status,
+    diagnostics: expectedDiagnostics(expected.diagnostics ?? []),
   };
 }
 
