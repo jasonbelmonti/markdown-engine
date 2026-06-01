@@ -139,6 +139,9 @@ const expectedConditionalHarnessCaseNames = [
   "l8c-section15-table-pass",
   "l8c-section15-na-pass",
   "l8c-section15-neither-fail",
+  "l8d-r1-traceability-standard-pass",
+  "l8d-r1-traceability-replacement-pass",
+  "l8d-r1-traceability-neither-fail",
 ];
 
 describe("declarative validation downstream ODS structural exercise", () => {
@@ -210,9 +213,10 @@ describe("conditional v2 downstream fixture harness", () => {
         "A representative Conditional V2 downstream subset that proves durable fixture loading and false-acceptance protection.",
         "Section 4 table-or-none fixtures for a valid constraints table branch, an authorized explicit none/N/A branch, and a neither-branch failure.",
         "Section 15 table-or-N/A fixtures for a valid controls table branch, an authorized N/A rationale branch, and a neither-branch failure.",
+        "R1 standard-or-replacement traceability fixtures for a valid standard matrix branch, a valid replacement matrix branch, and a neither-branch failure.",
       ],
       excludes: [
-        "Full R1 traceability downstream breadth.",
+        "Non-R1 applicability skip fixture breadth.",
         "Full mixed ID count downstream breadth.",
         "Full Section 11 target-column downstream breadth.",
       ],
