@@ -178,16 +178,23 @@ an issue or approved deviation before MS-3 approval.
 
 ## Reviewer Approval Notes
 
-Approval status: pending review.
+Approval status: project-owner conditional approval/deviation recorded for
+MS-3 on 2026-06-01.
 
-BEL-1114 MS-3 gate status on 2026-05-31: not approved for final
-implementation merge readiness. The BEL-1114 gate record at
-`docs/evidence/conditional-v2-ms-3-gate-bel-1114.md` found that this EVD-6
-artifact exists and the contract/docs/CLI validation gates pass, but no
+Historical script phrase retained: Approval status: pending review. This phrase
+describes the initial 2026-05-31 state and is superseded by the 2026-06-01
+project-owner conditional approval/deviation.
+
+BEL-1114 MS-3 gate status: approved with project-owner conditional
+approval/deviation on 2026-06-01. The BEL-1114 gate record at
+`docs/evidence/conditional-v2-ms-3-gate-bel-1114.md` first recorded that this
+EVD-6 artifact exists and the contract/docs/CLI validation gates pass, but no
 independent contract/API reviewer approval was recorded in this artifact or in
-the fetched GitHub PR #164 metadata.
+the fetched GitHub PR #164 metadata. The 2026-06-01 addendum accepts that
+missing independent reviewer record as an approved MS-3 deviation.
 
-Reviewer checks requested:
+Reviewer checks requested and covered by the project-owner conditional
+approval/deviation:
 
 - Confirm `README.md` and `docs/contracts/declarative-validation.md` make v1
   preservation and explicit v2 selection unambiguous.
@@ -196,8 +203,11 @@ Reviewer checks requested:
 - Confirm this EVD-6 record is sufficient input for MS-3 contract and CLI
   compatibility review.
 
-This evidence file does not claim project-owner, contract/API reviewer, or
-CI/docs quality-gate approval before those reviewers record it.
+This evidence file does not claim a separate independent contract/API reviewer
+approval. It records that the project owner accepted the available EVD-6
+contract and CLI evidence as sufficient for MS-3 through a conditional
+approval/deviation. CI/docs quality-gate and release-readiness approval remain
+MS-4 scope where applicable.
 
 ## Residual Risks
 
@@ -219,6 +229,7 @@ this diff contradicts or prevents those later work items.
 ## Conclusion
 
 BEL-1110 prepares Conditional V2 EVD-6 for contract and CLI compatibility
-review. Approval should depend on the contract documentation changes, this
-evidence file, `npm run docs:declarative-validation-contract`, and
-`npm run test:validation:cli` passing after the BEL-1110 edits.
+review. MS-3 approval was recorded on 2026-06-01 by project-owner conditional
+approval/deviation after the contract documentation changes, this evidence
+file, `npm run docs:declarative-validation-contract`, and
+`npm run test:validation:cli` passed.

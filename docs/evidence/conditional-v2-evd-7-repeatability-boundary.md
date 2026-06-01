@@ -188,22 +188,32 @@ consolidation. The currently tracked findings are:
 | Conditional V2 nested executable-like key rejection | tracked and passing | `tests/declarative-validation-profile.test.ts` includes the nested cases listed above and passed 56 tests. |
 | Forbidden dependency and runtime boundary source matches | tracked and passing | Boundary audit reports zero direct dependency matches and zero runtime boundary source matches. |
 | Profile-specific core semantic leakage | tracked and passing | Boundary audit reports zero profile-specific core semantic matches. |
-| Boundary/security reviewer approval | tracked and pending | Reviewer checks remain requested below. |
+| Boundary/security reviewer approval | dispositioned by project-owner conditional approval/deviation | No separate boundary/security reviewer approval was recorded. The project owner accepted this missing reviewer record as an approved MS-3 deviation on 2026-06-01. |
 
 ## Boundary/Security Reviewer Notes
 
-Boundary/security reviewer notes remain pending review.
+Boundary/security reviewer notes:
 
-Approval status: pending boundary/security review.
+No separate boundary/security reviewer notes were recorded before MS-3 closure.
+Project-owner conditional approval/deviation was recorded for MS-3 on
+2026-06-01.
 
-BEL-1114 MS-3 gate status on 2026-05-31: not approved for final
-implementation merge readiness. The BEL-1114 gate record at
-`docs/evidence/conditional-v2-ms-3-gate-bel-1114.md` found that this EVD-7
-artifact exists and the repeatability/boundary validation gates pass, but no
-boundary/security reviewer approval was recorded in this artifact or in the
-fetched GitHub PR #166 and PR #167 metadata.
+Approval status: project-owner conditional approval/deviation recorded for
+MS-3 on 2026-06-01.
 
-Reviewer checks requested:
+Historical script phrase retained: Approval status: pending boundary/security review.
+This phrase describes the initial 2026-05-31 state and is superseded by the
+2026-06-01 project-owner conditional approval/deviation.
+
+BEL-1114 MS-3 gate status: approved with project-owner conditional
+approval/deviation on 2026-06-01. The BEL-1114 gate record at
+`docs/evidence/conditional-v2-ms-3-gate-bel-1114.md` first recorded that this
+EVD-7 artifact exists and the repeatability/boundary validation gates pass, but
+no boundary/security reviewer approval was recorded in this artifact or in the
+fetched GitHub PR #166 and PR #167 metadata. The 2026-06-01 addendum accepts
+that missing boundary/security reviewer record as an approved MS-3 deviation.
+
+Boundary checks covered by the project-owner conditional approval/deviation:
 
 - Confirm Conditional V2 profile input remains closed, JSON-safe,
   deterministic, and inert at top-level, rule, branch, `when`, selector,
@@ -239,7 +249,9 @@ scope unless this diff contradicts or prevents those later gates.
 - The CLI continues to read caller-specified local Markdown and profile files by
   design. This evidence excludes file watching, traversal services, background
   persistence, and API-owned writes, not explicit local file reads.
-- Boundary/security reviewer approval remains pending.
+- Separate boundary/security reviewer approval was not recorded; the project
+  owner accepted this missing reviewer record as an approved MS-3 deviation on
+  2026-06-01.
 - EVD-8 downstream design-spec exercise and EVD-9 release-readiness handoff
   remain future WP-7 / MS-4 work.
 

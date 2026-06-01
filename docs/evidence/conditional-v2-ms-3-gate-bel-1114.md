@@ -26,8 +26,8 @@ adoption claims.
 | --- | --- | --- | --- |
 | EVD-4 | `docs/evidence/conditional-v2-evd-4-grouped-rules.md` | present | Contains grouped-rule fixture coverage, representative JSON, diagnostic promotion proof, and command output. |
 | EVD-5 | `docs/evidence/conditional-v2-evd-5-when-skipped-rules.md` | present | Contains matched/not-matched `when` fixture coverage, skipped result JSON, skipped count proof, and command output. |
-| EVD-6 | `docs/evidence/conditional-v2-evd-6-contract-cli-compatibility.md` | present | Contains contract docs and CLI command evidence; reviewer approval remains pending. |
-| EVD-7 | `docs/evidence/conditional-v2-evd-7-repeatability-boundary.md` | present | Contains repeatability and boundary audit evidence; boundary/security reviewer approval remains pending. |
+| EVD-6 | `docs/evidence/conditional-v2-evd-6-contract-cli-compatibility.md` | present | Contains contract docs and CLI command evidence; independent reviewer approval was not separately recorded and is dispositioned by the 2026-06-01 project-owner conditional approval addendum below. |
+| EVD-7 | `docs/evidence/conditional-v2-evd-7-repeatability-boundary.md` | present | Contains repeatability and boundary audit evidence; boundary/security reviewer approval was not separately recorded and is dispositioned by the 2026-06-01 project-owner conditional approval addendum below. |
 
 ## Source State
 
@@ -67,11 +67,11 @@ restores those phrases in EVD-7 without changing runtime behavior.
 
 | Required approval | Status | Evidence |
 | --- | --- | --- |
-| Independent contract/API reviewer | not recorded | EVD-6 says `Approval status: pending review`; GitHub PR #164 has no fetched review records or comments. |
-| Boundary/security reviewer | not recorded | EVD-7 says `Approval status: pending boundary/security review`; GitHub PR #166 and PR #167 have no fetched review records or comments. |
-| Project-owner MS-3 decision | not recorded | BEL-1114 had no comments before this gate execution; no explicit approval, rejection, or conditional approval source was loaded. |
+| Independent contract/API reviewer | not separately recorded; project-owner deviation accepted | EVD-6 originally said `Approval status: pending review`; GitHub PR #164 had no fetched review records or comments. The 2026-06-01 project-owner conditional approval addendum below accepts this missing reviewer record as an approved MS-3 deviation. |
+| Boundary/security reviewer | not separately recorded; project-owner deviation accepted | EVD-7 originally said `Approval status: pending boundary/security review`; GitHub PR #166 and PR #167 had no fetched review records or comments. The 2026-06-01 project-owner conditional approval addendum below accepts this missing reviewer record as an approved MS-3 deviation. |
+| Project-owner MS-3 decision | conditionally approved | Project-owner approval/deviation is recorded in BEL-1114 and in the 2026-06-01 addendum below. |
 
-## Gate Decision
+## Gate Decision (Initial 2026-05-31 Execution)
 
 Decision: reject final implementation merge readiness at this time.
 
@@ -82,11 +82,11 @@ approval evidence before final implementation merge readiness can be approved.
 Those approvals are not recorded in the loaded Linear, evidence, or GitHub PR
 sources.
 
-Final implementation merge remains blocked until the missing approvals are
-recorded or an explicit conditional approval/deviation is recorded by the
-proper authority.
+At the initial 2026-05-31 gate execution, final implementation merge remained
+blocked until the missing approvals were recorded or an explicit conditional
+approval/deviation was recorded by the proper authority.
 
-## Required Follow-up
+## Required Follow-up From Initial Gate
 
 - Record independent contract/API reviewer approval or findings disposition in
   EVD-6 or BEL-1114.
@@ -96,3 +96,41 @@ proper authority.
   and the relevant evidence record.
 - Rerun `npm run audit:declarative-validation-boundary` after any EVD-7 edits
   and rerun the affected MS-3 gates if reviewer findings require changes.
+
+## Approval Addendum (2026-06-01)
+
+Decision: approve MS-3 final implementation merge readiness with project-owner
+conditional approval/deviation.
+
+Recorded in: Linear BEL-1114.
+
+Approval scope:
+
+- Approves Conditional V2 MS-3 final implementation merge readiness.
+- Accepts EVD-4 through EVD-7 as sufficient MS-3 evidence after PR #168 merged
+  the gate record into `origin/main` at merge commit
+  `299ef99a3dba79d885fd567a5338a48da31ccbc8`.
+- Accepts the absence of separately recorded independent contract/API reviewer
+  approval and boundary/security reviewer approval as an approved MS-3
+  deviation.
+
+Non-approved scope:
+
+- Does not approve MS-4 release readiness.
+- Does not approve downstream design-spec exercise completion.
+- Does not approve package tag creation, package publication, release
+  completion, or downstream adoption claims.
+
+Unblocked next work:
+
+- BEL-1115 may start as the first MS-4 downstream/release-readiness leaf.
+
+Residual controls:
+
+- EVD-8 downstream design-spec exercise remains required before MS-4.
+- EVD-9 release-readiness handoff remains required before MS-4.
+- Any release, tag, publication, downstream adoption claim, or completion claim
+  remains blocked until MS-4 approval.
+
+Final MS-3 state: approved with project-owner conditional
+approval/deviation.
