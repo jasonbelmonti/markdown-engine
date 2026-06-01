@@ -1,0 +1,139 @@
+harness:
+  id: conditional-v2-downstream-fixture-harness
+  issue: BEL-1115
+  directory: fixtures/declarative-validation/conditionals
+  scope: harness-only
+  naming:
+    caseNamePattern: l8a-<capability>-<expectation>
+    ruleIdPattern: conditionals.downstream.<capability>.<expectation>
+  expectedOutput:
+    - expected.valid records aggregate validation outcome.
+    - expected.profile records v2 rule, evaluated, and skipped counts.
+    - expected.diagnostics records top-level diagnostics in deterministic order.
+    - expected.ruleResults records rule status, compatibility passed value, diagnostics, and evaluation shape.
+  includes:
+    - A representative Conditional V2 downstream subset that proves durable fixture loading and false-acceptance protection.
+  excludes:
+    - Full Section 4 table-or-none downstream breadth.
+    - Full Section 15 table-or-N/A downstream breadth.
+    - Full R1 traceability downstream breadth.
+    - Full mixed ID count downstream breadth.
+    - Full Section 11 target-column downstream breadth.
+
+cases:
+  - name: l8a-table-column-coverage-pass
+    contract: pass when every downstream source ID appears in the configured target table column
+    markdown: |
+      # Functional Requirements
+
+      | ID | Statement |
+      | --- | --- |
+      | ODS-REQ-1 | The downstream profile SHALL trace source requirements. |
+      | ODS-REQ-2 | The downstream profile SHALL reject non-column mentions. |
+
+      # Traceability
+
+      ODS-REQ-2 appears in traceability narrative text for false-acceptance coverage.
+
+      | Requirement | Evidence |
+      | --- | --- |
+      | ODS-REQ-1 | Design record |
+      | ODS-REQ-2 | Test plan |
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: conditionals.downstream.table-column-coverage.pass
+          select:
+            target: document
+          assert:
+            tableColumnCoverage:
+              source:
+                section: Functional Requirements
+                column: ID
+                prefix: ODS-REQ
+              target:
+                section: Traceability
+                tableHeader:
+                  - Requirement
+                  - Evidence
+                column: Requirement
+              require: everySourceId
+    expected:
+      valid: true
+      profile:
+        ruleCount: 1
+        evaluatedRuleCount: 1
+        skippedRuleCount: 0
+      ruleResults:
+        - ruleId: conditionals.downstream.table-column-coverage.pass
+          status: passed
+          passed: true
+          evaluation:
+            kind: assertions
+
+  - name: l8a-table-column-coverage-fail
+    contract: fail when a downstream source ID appears in narrative text and non-target evidence text but not the configured target column
+    markdown: |
+      # Functional Requirements
+
+      | ID | Statement |
+      | --- | --- |
+      | ODS-REQ-1 | The downstream profile SHALL trace source requirements. |
+      | ODS-REQ-2 | The downstream profile SHALL reject non-column mentions. |
+
+      # Traceability
+
+      ODS-REQ-2 appears in traceability narrative text for false-acceptance coverage.
+
+      | Requirement | Evidence |
+      | --- | --- |
+      | ODS-REQ-1 | Design record |
+      | Design note | ODS-REQ-2 appears in non-target evidence text |
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: conditionals.downstream.table-column-coverage.fail
+          select:
+            target: document
+          assert:
+            tableColumnCoverage:
+              source:
+                section: Functional Requirements
+                column: ID
+                prefix: ODS-REQ
+              target:
+                section: Traceability
+                tableHeader:
+                  - Requirement
+                  - Evidence
+                column: Requirement
+              require: everySourceId
+    expected:
+      valid: false
+      profile:
+        ruleCount: 1
+        evaluatedRuleCount: 1
+        skippedRuleCount: 0
+      diagnostics:
+        - code: profile.validation.tableColumnCoverageIdMissing
+          ruleId: conditionals.downstream.table-column-coverage.fail
+          message: 'ID "ODS-REQ-2" must appear in target table column "Requirement" of section "Traceability".'
+          sourceLine: 6
+      ruleResults:
+        - ruleId: conditionals.downstream.table-column-coverage.fail
+          status: failed
+          passed: false
+          diagnostics:
+            - code: profile.validation.tableColumnCoverageIdMissing
+              ruleId: conditionals.downstream.table-column-coverage.fail
+              message: 'ID "ODS-REQ-2" must appear in target table column "Requirement" of section "Traceability".'
+              sourceLine: 6
+          evaluation:
+            kind: assertions
+            diagnostics:
+              - code: profile.validation.tableColumnCoverageIdMissing
+                ruleId: conditionals.downstream.table-column-coverage.fail
+                message: 'ID "ODS-REQ-2" must appear in target table column "Requirement" of section "Traceability".'
+                sourceLine: 6

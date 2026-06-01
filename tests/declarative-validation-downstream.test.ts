@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { parse as parseYaml } from "yaml";
 
 import {
   normalize,
@@ -10,14 +11,70 @@ import {
   type ValidationProfile,
 } from "@jasonbelmonti/markdown-engine";
 
+interface ConditionalHarnessSuite {
+  harness: ConditionalHarnessMetadata;
+  cases: ConditionalHarnessCase[];
+}
+
+interface ConditionalHarnessMetadata {
+  id: string;
+  issue: string;
+  directory: string;
+  scope: string;
+  naming: {
+    caseNamePattern: string;
+    ruleIdPattern: string;
+  };
+  expectedOutput: string[];
+  includes: string[];
+  excludes: string[];
+}
+
+interface ConditionalHarnessCase {
+  name: string;
+  contract: string;
+  markdown: string;
+  profile: Parameters<typeof parseValidationProfile>[0];
+  expected: {
+    valid: boolean;
+    profile: ExpectedProfileCounts;
+    diagnostics?: ExpectedDiagnostic[];
+    ruleResults: ExpectedRuleResult[];
+  };
+}
+
+interface ExpectedProfileCounts {
+  ruleCount: number;
+  evaluatedRuleCount: number;
+  skippedRuleCount: number;
+}
+
+interface ExpectedRuleResult {
+  ruleId: string;
+  status: "passed" | "failed" | "skipped";
+  passed: boolean;
+  diagnostics?: ExpectedDiagnostic[];
+  evaluation: ExpectedAssertionsEvaluation;
+}
+
+interface ExpectedAssertionsEvaluation {
+  kind: "assertions";
+  diagnostics?: ExpectedDiagnostic[];
+}
+
+interface ExpectedDiagnostic {
+  code: string;
+  ruleId: string;
+  message: string;
+  sourceLine?: number;
+}
+
 const fixturePath =
   "fixtures/declarative-validation/downstream/operational-design-spec.md";
 const profilePath =
   "fixtures/declarative-validation/downstream/operational-design-spec-profile.yaml";
-const columnCoverageSubsetFixturePath =
-  "fixtures/declarative-validation/downstream/table-column-coverage-subset.md";
-const columnCoverageSubsetProfilePath =
-  "fixtures/declarative-validation/downstream/table-column-coverage-subset-profile.yaml";
+const conditionalsHarnessPath =
+  "fixtures/declarative-validation/conditionals/harness.yaml";
 const fixture = readFileSync(
   new URL(
     "../fixtures/declarative-validation/downstream/operational-design-spec.md",
@@ -25,42 +82,6 @@ const fixture = readFileSync(
   ),
   "utf8",
 );
-const columnCoverageSubsetFixture = `# Functional Requirements
-
-| ID | Statement |
-| --- | --- |
-| ODS-REQ-1 | The downstream profile SHALL trace source requirements. |
-| ODS-REQ-2 | The downstream profile SHALL reject non-column mentions. |
-
-# Traceability
-
-ODS-REQ-2 appears in traceability narrative text for false-acceptance coverage.
-
-| Requirement | Evidence |
-| --- | --- |
-| ODS-REQ-1 | Design record |
-| ODS-REQ-2 | Test plan |
-`;
-const columnCoverageSubsetProfile = `syntaxVersion: markdown-engine.validation@v2
-documentVersion: "1.0.0"
-rules:
-  - id: downstream.traceability.column-coverage
-    select:
-      target: document
-    assert:
-      tableColumnCoverage:
-        source:
-          section: Functional Requirements
-          column: ID
-          prefix: ODS-REQ
-        target:
-          section: Traceability
-          tableHeader:
-            - Requirement
-            - Evidence
-          column: Requirement
-        require: everySourceId
-`;
 const profileYaml = readFileSync(
   new URL(
     "../fixtures/declarative-validation/downstream/operational-design-spec-profile.yaml",
@@ -68,6 +89,12 @@ const profileYaml = readFileSync(
   ),
   "utf8",
 );
+const conditionalHarness = parseYaml(
+  readFileSync(
+    new URL("../fixtures/declarative-validation/conditionals/harness.yaml", import.meta.url),
+    "utf8",
+  ),
+) as ConditionalHarnessSuite;
 
 const expectedRuleIds = [
   "constraints.text",
@@ -84,6 +111,11 @@ const expectedRuleIds = [
   "validation.ids.unique",
   "validation.matrix.columns",
 ].sort();
+
+const expectedConditionalHarnessCaseNames = [
+  "l8a-table-column-coverage-pass",
+  "l8a-table-column-coverage-fail",
+];
 
 describe("declarative validation downstream ODS structural exercise", () => {
   it("validates an operational-design-spec fixture with generic declarative syntax", () => {
@@ -131,78 +163,83 @@ describe("declarative validation downstream ODS structural exercise", () => {
       }),
     ]);
   });
+});
 
-  it("covers the Conditional V2 table-column coverage downstream subset", () => {
-    const { result: passResult } = validateMarkdownWithProfile(
-      columnCoverageSubsetFixture,
-      columnCoverageSubsetProfile,
-      columnCoverageSubsetFixturePath,
-      columnCoverageSubsetProfilePath,
-    );
-
-    expect(passResult.valid).toBe(true);
-    expect(passResult.diagnostics).toEqual([]);
-    expect(passResult.profile).toEqual({
-      syntaxVersion: "markdown-engine.validation@v2",
-      documentVersion: "1.0.0",
-      ruleCount: 1,
-      evaluatedRuleCount: 1,
-      skippedRuleCount: 0,
+describe("conditional v2 downstream fixture harness", () => {
+  it("documents BEL-1115 fixture naming and expected-output conventions", () => {
+    expect(conditionalHarness.harness).toEqual({
+      id: "conditional-v2-downstream-fixture-harness",
+      issue: "BEL-1115",
+      directory: "fixtures/declarative-validation/conditionals",
+      scope: "harness-only",
+      naming: {
+        caseNamePattern: "l8a-<capability>-<expectation>",
+        ruleIdPattern: "conditionals.downstream.<capability>.<expectation>",
+      },
+      expectedOutput: [
+        "expected.valid records aggregate validation outcome.",
+        "expected.profile records v2 rule, evaluated, and skipped counts.",
+        "expected.diagnostics records top-level diagnostics in deterministic order.",
+        "expected.ruleResults records rule status, compatibility passed value, diagnostics, and evaluation shape.",
+      ],
+      includes: [
+        "A representative Conditional V2 downstream subset that proves durable fixture loading and false-acceptance protection.",
+      ],
+      excludes: [
+        "Full Section 4 table-or-none downstream breadth.",
+        "Full Section 15 table-or-N/A downstream breadth.",
+        "Full R1 traceability downstream breadth.",
+        "Full mixed ID count downstream breadth.",
+        "Full Section 11 target-column downstream breadth.",
+      ],
     });
-    expect(passResult.ruleResults).toEqual([
-      expect.objectContaining({
-        ruleId: "downstream.traceability.column-coverage",
-        status: "passed",
-        passed: true,
-        diagnostics: [],
-        evaluation: {
-          kind: "assertions",
-          diagnostics: [],
-        },
-      }),
-    ]);
-
-    const falseAcceptanceFixture = columnCoverageSubsetFixture.replace(
-      "| ODS-REQ-2 | Test plan |",
-      "| Design note | ODS-REQ-2 appears in non-target evidence text |",
+    expect(conditionalHarness.cases.map((fixtureCase) => fixtureCase.name)).toEqual(
+      expectedConditionalHarnessCaseNames,
     );
-    const { result: failResult } = validateMarkdownWithProfile(
-      falseAcceptanceFixture,
-      columnCoverageSubsetProfile,
-      columnCoverageSubsetFixturePath,
-      columnCoverageSubsetProfilePath,
-    );
-
-    expect(failResult.valid).toBe(false);
-    expect(failResult.diagnostics).toEqual([
-      expect.objectContaining({
-        code: "profile.validation.tableColumnCoverageIdMissing",
-        ruleId: "downstream.traceability.column-coverage",
-        message:
-          'ID "ODS-REQ-2" must appear in target table column "Requirement" of section "Traceability".',
-        severity: "error",
-        sourceRange: expect.objectContaining({
-          start: expect.objectContaining({ line: 6 }),
-        }),
-      }),
-    ]);
-    expect(failResult.ruleResults).toEqual([
-      expect.objectContaining({
-        ruleId: "downstream.traceability.column-coverage",
-        status: "failed",
-        passed: false,
-      }),
-    ]);
   });
+
+  for (const fixtureCase of conditionalHarness.cases) {
+    it(`${fixtureCase.name}: ${fixtureCase.contract}`, () => {
+      const { result } = validateConditionalHarnessCase(fixtureCase);
+
+      expect(fixtureCase.name).toMatch(/^l8a-[a-z0-9]+(?:-[a-z0-9]+)*-(pass|fail)$/);
+      expect(fixtureCase.expected.ruleResults.map(({ ruleId }) => ruleId)).toEqual(
+        expect.arrayContaining([
+          expect.stringMatching(/^conditionals\.downstream\.[a-z0-9.-]+\.(pass|fail)$/),
+        ]),
+      );
+      expect(result.valid).toBe(fixtureCase.expected.valid);
+      expect(result.diagnostics).toEqual(
+        expectedDiagnostics(fixtureCase.expected.diagnostics ?? []),
+      );
+      expect(result.profile).toEqual({
+        syntaxVersion: "markdown-engine.validation@v2",
+        documentVersion: "1.0.0",
+        ...fixtureCase.expected.profile,
+      });
+      expect(result.ruleResults).toEqual(
+        fixtureCase.expected.ruleResults.map(expectedRuleResult),
+      );
+    });
+  }
 });
 
 function validateFixture(markdown: string) {
   return validateMarkdownWithProfile(markdown, profileYaml, fixturePath, profilePath);
 }
 
+function validateConditionalHarnessCase(fixtureCase: ConditionalHarnessCase) {
+  return validateMarkdownWithProfile(
+    fixtureCase.markdown,
+    fixtureCase.profile,
+    `fixtures/declarative-validation/conditionals/${fixtureCase.name}.md`,
+    `${conditionalsHarnessPath}#${fixtureCase.name}`,
+  );
+}
+
 function validateMarkdownWithProfile(
   markdown: string,
-  profileSource: string,
+  profileSource: Parameters<typeof parseValidationProfile>[0],
   markdownPath: string,
   validationProfilePath: string,
 ) {
@@ -228,4 +265,37 @@ function requireProfile(result: ReturnType<typeof parseValidationProfile>): Vali
 
 function missingProfile(): never {
   throw new Error(`Expected ${profilePath} to parse into a validation profile.`);
+}
+
+function expectedRuleResult(expected: ExpectedRuleResult): unknown {
+  return {
+    ruleId: expected.ruleId,
+    status: expected.status,
+    passed: expected.passed,
+    diagnostics: expectedDiagnostics(expected.diagnostics ?? []),
+    evaluation: {
+      kind: expected.evaluation.kind,
+      diagnostics: expectedDiagnostics(expected.evaluation.diagnostics ?? []),
+    },
+  };
+}
+
+function expectedDiagnostics(diagnostics: ExpectedDiagnostic[]): unknown[] {
+  return diagnostics.map((diagnostic) => {
+    const expected = {
+      code: diagnostic.code,
+      ruleId: diagnostic.ruleId,
+      message: diagnostic.message,
+      severity: "error",
+    };
+
+    return diagnostic.sourceLine === undefined
+      ? expected
+      : expect.objectContaining({
+          ...expected,
+          sourceRange: expect.objectContaining({
+            start: expect.objectContaining({ line: diagnostic.sourceLine }),
+          }),
+        });
+  });
 }
