@@ -16,10 +16,12 @@ harness:
     - Section 4 table-or-none fixtures for a valid constraints table branch, an authorized explicit none/N/A branch, and a neither-branch failure.
     - Section 15 table-or-N/A fixtures for a valid controls table branch, an authorized N/A rationale branch, and a neither-branch failure.
     - R1 standard-or-replacement traceability fixtures for a valid standard matrix branch, a valid replacement matrix branch, and a neither-branch failure.
+    - Mixed ID-family count fixtures for prefix-filtered downstream ID count pass/fail behavior.
+    - Section 11 and Section 17 target-column coverage fixtures for standard and replacement matrix downstream scenarios.
   excludes:
     - Non-R1 applicability skip fixture breadth.
-    - Full mixed ID count downstream breadth.
-    - Full Section 11 target-column downstream breadth.
+    - Release-readiness and rollback content.
+    - False-acceptance negative consolidation reserved for BEL-1120.
 
 cases:
   - name: l8a-table-column-coverage-pass
@@ -847,3 +849,358 @@ cases:
                     ruleId: conditionals.downstream.r1-traceability.neither.fail
                     message: 'ID "REQ-1" must appear in target table column "Requirement" of section "17. Verification Strategy and Behavior-to-Mechanism Traceability".'
                     sourceLine: 11
+
+  - name: l8e-mixed-id-count-pass
+    contract: pass when mixed downstream ID families satisfy prefix-filtered count bounds
+    markdown: |
+      # 5. Requirements
+
+      | ID | Statement |
+      | --- | --- |
+      | REQ-1 | The downstream document SHALL count requirement IDs. |
+      | CTRL-1 | The downstream document SHALL keep control IDs separate. |
+      | REQ-2 | The downstream document SHALL ignore non-requirement IDs for REQ counts. |
+      | EVD-1 | The downstream document SHALL keep evidence IDs separate. |
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: conditionals.downstream.mixed-id-count.requirements.pass
+          select:
+            target: tableCell
+            section: 5. Requirements
+            column: ID
+          assert:
+            ids:
+              prefix: REQ
+              minCount: 2
+              maxCount: 2
+        - id: conditionals.downstream.mixed-id-count.controls.pass
+          select:
+            target: tableCell
+            section: 5. Requirements
+            column: ID
+          assert:
+            ids:
+              prefix: CTRL
+              minCount: 1
+              maxCount: 1
+    expected:
+      valid: true
+      profile:
+        ruleCount: 2
+        evaluatedRuleCount: 2
+        skippedRuleCount: 0
+      ruleResults:
+        - ruleId: conditionals.downstream.mixed-id-count.controls.pass
+          status: passed
+          passed: true
+          evaluation:
+            kind: assertions
+        - ruleId: conditionals.downstream.mixed-id-count.requirements.pass
+          status: passed
+          passed: true
+          evaluation:
+            kind: assertions
+
+  - name: l8e-mixed-id-count-fail
+    contract: fail when a mixed downstream ID family exceeds its prefix-filtered count bound
+    markdown: |
+      # 5. Requirements
+
+      | ID | Statement |
+      | --- | --- |
+      | REQ-1 | The downstream document SHALL count requirement IDs. |
+      | CTRL-1 | The downstream document SHALL keep control IDs separate. |
+      | REQ-2 | The downstream document SHALL ignore non-requirement IDs for REQ counts. |
+      | REQ-3 | The downstream document SHALL fail the REQ max count. |
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: conditionals.downstream.mixed-id-count.requirements.fail
+          select:
+            target: tableCell
+            section: 5. Requirements
+            column: ID
+          assert:
+            ids:
+              prefix: REQ
+              minCount: 2
+              maxCount: 2
+        - id: conditionals.downstream.mixed-id-count.controls.pass
+          select:
+            target: tableCell
+            section: 5. Requirements
+            column: ID
+          assert:
+            ids:
+              prefix: CTRL
+              minCount: 1
+              maxCount: 1
+    expected:
+      valid: false
+      profile:
+        ruleCount: 2
+        evaluatedRuleCount: 2
+        skippedRuleCount: 0
+      diagnostics:
+        - code: profile.validation.idCountTooHigh
+          ruleId: conditionals.downstream.mixed-id-count.requirements.fail
+          message: 'Expected at most 2 unique IDs matching prefix "REQ" but found 3.'
+          sourceLine: 8
+      ruleResults:
+        - ruleId: conditionals.downstream.mixed-id-count.controls.pass
+          status: passed
+          passed: true
+          evaluation:
+            kind: assertions
+        - ruleId: conditionals.downstream.mixed-id-count.requirements.fail
+          status: failed
+          passed: false
+          diagnostics:
+            - code: profile.validation.idCountTooHigh
+              ruleId: conditionals.downstream.mixed-id-count.requirements.fail
+              message: 'Expected at most 2 unique IDs matching prefix "REQ" but found 3.'
+              sourceLine: 8
+          evaluation:
+            kind: assertions
+            diagnostics:
+              - code: profile.validation.idCountTooHigh
+                ruleId: conditionals.downstream.mixed-id-count.requirements.fail
+                message: 'Expected at most 2 unique IDs matching prefix "REQ" but found 3.'
+                sourceLine: 8
+
+  - name: l8e-section11-target-column-pass
+    contract: pass when Section 11 traces every source requirement ID in the configured target column
+    markdown: |
+      # 5. Requirements
+
+      | ID | Statement |
+      | --- | --- |
+      | REQ-1 | The standard matrix SHALL trace the first requirement. |
+      | REQ-2 | The standard matrix SHALL trace the second requirement. |
+
+      # 11. Requirements-to-Behavior Traceability
+
+      REQ-2 appears in Section 11 narrative text but must also appear in the target column.
+
+      | Requirement | Behavior |
+      | --- | --- |
+      | REQ-1 | Standard behavior trace one |
+      | REQ-2 | Standard behavior trace two |
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: conditionals.downstream.section11-target-column.pass
+          select:
+            target: document
+          assert:
+            tableColumnCoverage:
+              source:
+                section: 5. Requirements
+                column: ID
+                prefix: REQ
+              target:
+                section: 11. Requirements-to-Behavior Traceability
+                tableHeader:
+                  - Requirement
+                  - Behavior
+                column: Requirement
+              require: everySourceId
+    expected:
+      valid: true
+      profile:
+        ruleCount: 1
+        evaluatedRuleCount: 1
+        skippedRuleCount: 0
+      ruleResults:
+        - ruleId: conditionals.downstream.section11-target-column.pass
+          status: passed
+          passed: true
+          evaluation:
+            kind: assertions
+
+  - name: l8e-section11-target-column-fail
+    contract: fail when a Section 11 source ID appears only in narrative text and a non-target column
+    markdown: |
+      # 5. Requirements
+
+      | ID | Statement |
+      | --- | --- |
+      | REQ-1 | The standard matrix SHALL trace the first requirement. |
+      | REQ-2 | The standard matrix SHALL reject non-target-column mentions. |
+
+      # 11. Requirements-to-Behavior Traceability
+
+      REQ-2 appears in Section 11 narrative text for false-acceptance coverage.
+
+      | Requirement | Behavior |
+      | --- | --- |
+      | REQ-1 | Standard behavior trace one |
+      | Standard note | REQ-2 appears outside the target Requirement column |
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: conditionals.downstream.section11-target-column.fail
+          select:
+            target: document
+          assert:
+            tableColumnCoverage:
+              source:
+                section: 5. Requirements
+                column: ID
+                prefix: REQ
+              target:
+                section: 11. Requirements-to-Behavior Traceability
+                tableHeader:
+                  - Requirement
+                  - Behavior
+                column: Requirement
+              require: everySourceId
+    expected:
+      valid: false
+      profile:
+        ruleCount: 1
+        evaluatedRuleCount: 1
+        skippedRuleCount: 0
+      diagnostics:
+        - code: profile.validation.tableColumnCoverageIdMissing
+          ruleId: conditionals.downstream.section11-target-column.fail
+          message: 'ID "REQ-2" must appear in target table column "Requirement" of section "11. Requirements-to-Behavior Traceability".'
+          sourceLine: 6
+      ruleResults:
+        - ruleId: conditionals.downstream.section11-target-column.fail
+          status: failed
+          passed: false
+          diagnostics:
+            - code: profile.validation.tableColumnCoverageIdMissing
+              ruleId: conditionals.downstream.section11-target-column.fail
+              message: 'ID "REQ-2" must appear in target table column "Requirement" of section "11. Requirements-to-Behavior Traceability".'
+              sourceLine: 6
+          evaluation:
+            kind: assertions
+            diagnostics:
+              - code: profile.validation.tableColumnCoverageIdMissing
+                ruleId: conditionals.downstream.section11-target-column.fail
+                message: 'ID "REQ-2" must appear in target table column "Requirement" of section "11. Requirements-to-Behavior Traceability".'
+                sourceLine: 6
+
+  - name: l8e-section17-replacement-target-column-pass
+    contract: pass when Section 17 replacement traceability covers every source requirement ID in the configured target column
+    markdown: |
+      # 5. Requirements
+
+      | ID | Statement |
+      | --- | --- |
+      | REQ-1 | The replacement matrix SHALL trace the first requirement. |
+      | REQ-2 | The replacement matrix SHALL trace the second requirement. |
+
+      # 17. Verification Strategy and Behavior-to-Mechanism Traceability
+
+      REQ-2 appears in Section 17 narrative text but must also appear in the target column.
+
+      | Requirement | Verification |
+      | --- | --- |
+      | REQ-1 | Replacement verification trace one |
+      | REQ-2 | Replacement verification trace two |
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: conditionals.downstream.section17-replacement-target-column.pass
+          select:
+            target: document
+          assert:
+            tableColumnCoverage:
+              source:
+                section: 5. Requirements
+                column: ID
+                prefix: REQ
+              target:
+                section: 17. Verification Strategy and Behavior-to-Mechanism Traceability
+                tableHeader:
+                  - Requirement
+                  - Verification
+                column: Requirement
+              require: everySourceId
+    expected:
+      valid: true
+      profile:
+        ruleCount: 1
+        evaluatedRuleCount: 1
+        skippedRuleCount: 0
+      ruleResults:
+        - ruleId: conditionals.downstream.section17-replacement-target-column.pass
+          status: passed
+          passed: true
+          evaluation:
+            kind: assertions
+
+  - name: l8e-section17-replacement-target-column-fail
+    contract: fail when a Section 17 replacement source ID appears only in narrative text and a non-target column
+    markdown: |
+      # 5. Requirements
+
+      | ID | Statement |
+      | --- | --- |
+      | REQ-1 | The replacement matrix SHALL trace the first requirement. |
+      | REQ-2 | The replacement matrix SHALL reject non-target-column mentions. |
+
+      # 17. Verification Strategy and Behavior-to-Mechanism Traceability
+
+      REQ-2 appears in Section 17 narrative text for false-acceptance coverage.
+
+      | Requirement | Verification |
+      | --- | --- |
+      | REQ-1 | Replacement verification trace one |
+      | Replacement note | REQ-2 appears outside the target Requirement column |
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: conditionals.downstream.section17-replacement-target-column.fail
+          select:
+            target: document
+          assert:
+            tableColumnCoverage:
+              source:
+                section: 5. Requirements
+                column: ID
+                prefix: REQ
+              target:
+                section: 17. Verification Strategy and Behavior-to-Mechanism Traceability
+                tableHeader:
+                  - Requirement
+                  - Verification
+                column: Requirement
+              require: everySourceId
+    expected:
+      valid: false
+      profile:
+        ruleCount: 1
+        evaluatedRuleCount: 1
+        skippedRuleCount: 0
+      diagnostics:
+        - code: profile.validation.tableColumnCoverageIdMissing
+          ruleId: conditionals.downstream.section17-replacement-target-column.fail
+          message: 'ID "REQ-2" must appear in target table column "Requirement" of section "17. Verification Strategy and Behavior-to-Mechanism Traceability".'
+          sourceLine: 6
+      ruleResults:
+        - ruleId: conditionals.downstream.section17-replacement-target-column.fail
+          status: failed
+          passed: false
+          diagnostics:
+            - code: profile.validation.tableColumnCoverageIdMissing
+              ruleId: conditionals.downstream.section17-replacement-target-column.fail
+              message: 'ID "REQ-2" must appear in target table column "Requirement" of section "17. Verification Strategy and Behavior-to-Mechanism Traceability".'
+              sourceLine: 6
+          evaluation:
+            kind: assertions
+            diagnostics:
+              - code: profile.validation.tableColumnCoverageIdMissing
+                ruleId: conditionals.downstream.section17-replacement-target-column.fail
+                message: 'ID "REQ-2" must appear in target table column "Requirement" of section "17. Verification Strategy and Behavior-to-Mechanism Traceability".'
+                sourceLine: 6
