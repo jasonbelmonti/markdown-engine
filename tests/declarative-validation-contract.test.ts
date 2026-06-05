@@ -449,7 +449,7 @@ describe("declarative validation public contract scaffold", () => {
 
     expect(secondResult).toEqual(firstResult);
     expect(firstResult.evidence).toMatchObject({
-      engineVersion: "2.0.0",
+      engineVersion: "3.0.0",
       runtimeVersion: process.version,
       ruleResults: firstResult.ruleResults,
       diagnostics: firstResult.diagnostics,
@@ -491,7 +491,7 @@ describe("declarative validation public contract scaffold", () => {
     );
 
     expect(result.evidence).toMatchObject({
-      engineVersion: "2.0.0",
+      engineVersion: "3.0.0",
       runtimeVersion: process.version,
       ruleResults: result.ruleResults,
       diagnostics: result.diagnostics,

@@ -1892,7 +1892,7 @@ describe("declarative validation assertion proof", () => {
       },
     });
     expect(firstResult.evidence).toMatchObject({
-      engineVersion: "2.0.0",
+      engineVersion: "3.0.0",
       runtimeVersion: process.version,
       ruleResults: expectedRuleResults,
       diagnostics: [],

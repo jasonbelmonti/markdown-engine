@@ -6,12 +6,12 @@ profile and runtime work.
 Current package release:
 
 - package name: `@jasonbelmonti/markdown-engine`
-- version: `2.0.0`
-- published npm versions: `0.1.0`, `1.0.0`, `2.0.0`
+- version: `3.0.0`
+- published npm versions: `0.1.0`, `1.0.0`, `2.0.0`, `3.0.0`
 - website: <https://jasonbelmonti.github.io/markdown-engine/>
-- release focus: package-level 2.0 hardening with the existing
-  `documentVersion: "1.0.0"` rich IR contract as the default API and CLI
-  document shape
+- release focus: Conditional V2 explicit validation-profile syntax while
+  retaining the existing `documentVersion: "1.0.0"` rich IR contract as the
+  default API and CLI document shape
 - maintainer documentation map: [docs/README.md](docs/README.md)
 - design reference:
   [Markdown Engine 1.0 Rich IR design](docs/design/markdown-engine-1.0-rich-ir-operational-design-spec.md)
@@ -82,7 +82,7 @@ console.log(validationResult.valid);
 console.log(serialize(validationResult, { pretty: true }));
 ```
 
-Package 2.0 keeps the serialized document contract at
+Package 3.0 keeps the serialized document contract at
 `documentVersion: "1.0.0"` and makes that rich IR path the default for
 `normalize(parsed)`. Callers may still pass
 `normalize(parsed, { documentVersion: "1.0.0" })` explicitly. That path adds
@@ -201,12 +201,12 @@ node dist/cli/index.js validate --file fixtures/declarative-validation/examples/
 The passing example exits `0`; the failing example exits `1` and prints JSON
 diagnostics for review.
 
-Package 2.0 classifies the API normalization default as breaking for consumers
-that call `normalize(parsed)` and expect the legacy `0.0.0` shape. Migration is
-to either consume the rich IR fields (`target`, `sections`, `textSpans`,
-`tables`, `lists`, and `links`) or pin
-`normalize(parsed, { documentVersion: "0.0.0" })` until the downstream consumer
-is ready. The CLI already defaults to the rich IR document contract and keeps
+Package 3.0 keeps the 2.0 API normalization default: callers that invoke
+`normalize(parsed)` receive the rich IR `1.0.0` document shape. Consumers that
+still need the legacy `0.0.0` shape should consume the rich IR fields
+(`target`, `sections`, `textSpans`, `tables`, `lists`, and `links`) or pin
+`normalize(parsed, { documentVersion: "0.0.0" })` until they are ready. The CLI
+continues to default to the rich IR document contract and keeps
 `--document-version 0.0.0` for explicit legacy output.
 
 Package and contract references:
