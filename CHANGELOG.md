@@ -6,6 +6,13 @@
 
 - Added a GitHub Pages consumer site under `docs/` with value proposition,
   workflow examples, and quickstart material for package 2.0 users.
+- Added Conditional V2 release-readiness notes for MS-4 review, summarizing the
+  explicit `markdown-engine.validation@v2` opt-in, retained v1 profile
+  compatibility, v2 grouped-rule and `when` behavior, ID count and table-column
+  coverage evidence, downstream false-acceptance proof, and BEL-1121 release
+  verification handoff. This is documentation readiness only and does not claim
+  a tag, npm publication, npm dist-tag mutation, GitHub Release, downstream
+  adoption, release completion, or MS-4 approval.
 
 ## 2.0.0 - 2026-05-13
 
