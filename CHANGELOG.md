@@ -2,10 +2,14 @@
 
 ## Unreleased
 
+No unreleased changes.
+
+## 3.0.0 - 2026-06-05
+
 ### Added
 
 - Added a GitHub Pages consumer site under `docs/` with value proposition,
-  workflow examples, and quickstart material for package 2.0 users.
+  workflow examples, and quickstart material for package users.
 - Added Conditional V2 release-readiness notes for MS-4 review, summarizing the
   explicit `markdown-engine.validation@v2` opt-in, retained v1 profile
   compatibility, v2 grouped-rule and `when` behavior, ID count and table-column
@@ -13,6 +17,20 @@
   verification handoff. This is documentation readiness only and does not claim
   a tag, npm publication, npm dist-tag mutation, GitHub Release, downstream
   adoption, release completion, or MS-4 approval.
+- Added Conditional V2 public validation support behind explicit
+  `markdown-engine.validation@v2` profile opt-in, including ID count bounds,
+  table column coverage, non-recursive `anyOf` / `allOf` grouped rules,
+  rule-level `when` applicability, skipped-rule result metadata, downstream
+  false-acceptance proof, repeatability evidence, and boundary-audit coverage.
+
+### Changed
+
+- Promoted package metadata to `@jasonbelmonti/markdown-engine@3.0.0` while
+  retaining the serialized rich IR document contract at
+  `documentVersion: "1.0.0"`.
+- Preserved v1 declarative validation profile behavior and result shape;
+  Conditional V2 behavior is selected only by
+  `syntaxVersion: markdown-engine.validation@v2`.
 
 ## 2.0.0 - 2026-05-13
 

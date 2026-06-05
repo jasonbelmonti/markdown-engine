@@ -49,7 +49,7 @@ describe("declarative validation WP-1B proving path", () => {
       }),
     ]);
     expect(result.evidence).toMatchObject({
-      engineVersion: "2.0.0",
+      engineVersion: "3.0.0",
       runtimeVersion: process.version,
       ruleResults: result.ruleResults,
       diagnostics: result.diagnostics,

@@ -30,7 +30,7 @@ const validationConfig = {
 } satisfies ValidationConfig;
 
 describe("BEL-948 rich IR compatibility contract gate", () => {
-  it("uses the 1.0 rich IR document contract by default in the 2.0 package", () => {
+  it("uses the 1.0 rich IR document contract by default in the 3.0 package", () => {
     const parseResult = parse(markdown, { path: fixturePath });
     const normalizeResult = normalize(parseResult.parsed);
     const validationResult = validate(normalizeResult.document, validationConfig);

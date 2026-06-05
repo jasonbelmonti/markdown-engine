@@ -1,7 +1,7 @@
 # Declarative Validation Contract
 
-Status: package 2.0.0, v1 profile syntax with v2 profile admission, document contract 1.0.0
-Last updated: 2026-05-24
+Status: package 3.0.0, v1 profile syntax with v2 Conditional V2, document contract 1.0.0
+Last updated: 2026-06-05
 Current v2 surface: flat-rule result/evidence shell, ID count-bound schema and
 runtime evaluator contract, plus `tableColumnCoverage` schema, compiled-plan,
 and runtime evaluator contract, grouped rule runtime contract, and rule-level
@@ -15,7 +15,7 @@ CLI validation command, diagnostic codes, serialized result shapes, and evidence
 fields. Internal parser output, compiled rule-plan records, selector target
 records, and evaluator implementation modules are not public contracts.
 
-Package 2.0 does not introduce `documentVersion: "2.0.0"` or CLI JSON
+Package 3.0 does not introduce `documentVersion: "3.0.0"` or CLI JSON
 discrimination.
 Declarative validation continues to use the existing `documentVersion: "1.0.0"`
 rich IR document contract, while the profile admission path recognizes
@@ -553,7 +553,7 @@ serialization of the resolved `ValidationProfile` after applying the resolved
 the same profile hash for the same document version and rules.
 
 `engineVersion` records the package version that produced the evidence. In the
-2.0 release line this is `"2.0.0"` even though `documentVersion` remains
+3.0 release line this is `"3.0.0"` even though `documentVersion` remains
 `"1.0.0"`.
 
 Raw Markdown bytes, raw YAML bytes, YAML comments, caller file paths, and
@@ -622,7 +622,7 @@ profiles, that same validation-result JSON can include `evaluatedRuleCount`,
 ## Compatibility And Migration
 
 The v1 declarative validation syntax is a durable authoring contract for the
-2.0 package release line. Changes to profile syntax names, selector names,
+3.0 package release line. Changes to profile syntax names, selector names,
 assertion names, result fields, diagnostic codes, CLI flags, CLI JSON shape, or
 evidence hash inputs require explicit compatibility review.
 
@@ -817,7 +817,7 @@ The v1 contract explicitly excludes:
 - operational-design-spec, AGENTS.md, TASK.md, or other domain-specific rule
   meaning in core engine code
 
-The admitted v2 Conditional V2 surface also excludes `documentVersion: "2.0.0"`,
+The admitted v2 Conditional V2 surface also excludes `documentVersion: "3.0.0"`,
 recursive grouped rules, branch-level `when`, profile-defined predicates,
 assertion-specific evidence payloads, a separate skipped-rule evidence channel,
 and a new CLI JSON discriminator.

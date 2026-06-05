@@ -47,7 +47,7 @@
         <div class="hero-shade" aria-hidden="true"></div>
         <div class="section-inner hero-content">
           <p class="proof-line">
-            Package 2.0 | Rich IR document contract 1.0.0 | Local validation
+            Package 3.0 | Conditional V2 validation | Rich IR document contract 1.0.0
           </p>
           <h1 id="hero-title">Markdown Engine</h1>
           <p class="hero-copy">
@@ -523,10 +523,10 @@ console.log(result.valid, result.diagnostics);</code></pre>
             <p class="eyebrow">Stable contracts</p>
             <h2 id="contracts-title">Built for downstream consumers.</h2>
             <p>
-              Package 2.0 keeps the serialized rich IR at
-              `documentVersion: "1.0.0"` and makes that shape the default output
-              for `normalize(parsed)`. Legacy consumers can still request the
-              retained `0.0.0` document shape explicitly.
+              Package 3.0 adds explicit Conditional V2 validation while keeping
+              the serialized rich IR at `documentVersion: "1.0.0"` as the default
+              output for `normalize(parsed)`. Legacy consumers can still request
+              the retained `0.0.0` document shape explicitly.
             </p>
           </div>
           <div class="contract-links" aria-label="Reference documents">
