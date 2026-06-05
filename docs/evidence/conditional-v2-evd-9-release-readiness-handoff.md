@@ -330,13 +330,32 @@ BEL-1123 handoff state:
   npm dist-tag mutation, downstream adoption claim, or release-completion claim;
   the wrapper-file full-suite transient should be investigated only if it recurs.
 
+## MS-4 Approval Addendum
+
+BEL-1124 approval state:
+
+- Linear issue: BEL-1124
+- Decision comment: `c87836cd-8661-4bed-a779-06ff00830789`
+- Recorded at: 2026-06-05T12:37:05Z
+- Decision: approve Conditional V2 MS-4 release readiness and downstream proof.
+- Approved evidence: EVD-8 downstream design-spec exercise proof and this EVD-9
+  release-readiness handoff.
+- Accepted state: final `npm run release:verify` pass, rollback containment,
+  milestone approval status, unresolved follow-ups, exact commit/branch handoff
+  state, and release-action containment language.
+- Release action state: no git tag, npm publication, npm dist-tag mutation,
+  GitHub Release, release-completion claim, or downstream adoption claim is
+  authorized by BEL-1124 alone.
+- Next release-action task: BEL-1268 records the separate version cutover,
+  publication, GitHub Release, dist-tag, and post-publish verification scope.
+
 ## Review Boundary
 
-Review this BEL-1121 / BEL-1122 / BEL-1123 evidence for release verification command
-accuracy, EVD-1 through EVD-8 registry accuracy, blocker disposition, release
-containment language, changelog or release-note coverage, rollback containment
-language, approval-state accuracy, exact branch or commit handoff state,
-unresolved follow-up clarity, and MS-4 handoff completeness.
+Review this BEL-1121 / BEL-1122 / BEL-1123 / BEL-1124 evidence for release
+verification command accuracy, EVD-1 through EVD-8 registry accuracy, blocker
+disposition, release containment language, changelog or release-note coverage,
+rollback containment language, approval-state accuracy, exact branch or commit
+handoff state, unresolved follow-up clarity, and MS-4 handoff completeness.
 
 Runtime behavior, production Conditional V2 semantics, parser behavior, rich IR
 behavior, tag creation, npm publication, GitHub Release creation, downstream
@@ -345,7 +364,7 @@ or prevents those later gates.
 
 ## Conclusion
 
-BEL-1123 release-readiness handoff evidence is ready for MS-4 review input.
+BEL-1124 approves Conditional V2 MS-4 release readiness and downstream proof.
 The final `npm run release:verify` gate passed on the clean post-BEL-1122
 candidate, EVD-1 through EVD-8 are present, the known MS-3 reviewer-record gaps
 are already dispositioned by project-owner conditional approval/deviation, and
@@ -354,7 +373,8 @@ rollback, approval, handoff, or release-mechanics blocker remains inside the
 release-readiness documentation boundary. BEL-1122 provides the
 changelog/release-note summary, rollback/containment notes, branch handoff
 state, approval-state notes, and follow-up list; BEL-1123 refreshes the final
-verification result and MS-4 handoff disposition.
+verification result and MS-4 handoff disposition; BEL-1124 records project-owner
+MS-4 approval.
 
 This is not a release-completion claim and does not authorize tag creation,
 package publication, npm dist-tag mutation, GitHub Release creation, downstream
