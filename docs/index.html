@@ -3,15 +3,15 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Markdown Engine | Deterministic Markdown contracts</title>
+    <title>Markdown Engine | Conditional Markdown validation</title>
     <meta
       name="description"
-      content="A deterministic Markdown parsing and validation engine for release workflows, operational docs, and agent runtime contracts."
+      content="A deterministic Markdown parsing and conditional validation engine for release workflows, operational docs, requirements evidence, and agent runtime contracts."
     />
     <meta property="og:title" content="Markdown Engine" />
     <meta
       property="og:description"
-      content="Turn Markdown from informal prose into stable, local, machine-checkable contracts."
+      content="Turn Markdown from informal prose into stable, local, conditionally validated contracts."
     />
     <meta property="og:type" content="website" />
     <meta
@@ -29,6 +29,7 @@
       <nav class="nav-links" aria-label="Site sections">
         <a href="#story">Story</a>
         <a href="#value">Value</a>
+        <a href="#conditional-v2">Conditional V2</a>
         <a href="#workflows">Workflows</a>
         <a href="#quickstart">Quickstart</a>
       </nav>
@@ -51,13 +52,13 @@
           </p>
           <h1 id="hero-title">Markdown Engine</h1>
           <p class="hero-copy">
-            A deterministic parsing and validation boundary for teams that need
-            Markdown to behave like an operational contract, not an unchecked
-            blob of prose.
+            A deterministic parsing and conditional validation boundary for
+            teams that need Markdown to behave like an operational contract, not
+            an unchecked blob of prose.
           </p>
           <div class="hero-actions" aria-label="Primary actions">
-            <a class="button primary" href="#quickstart">Start in five minutes</a>
-            <a class="button secondary" href="#workflows">Inspect workflows</a>
+            <a class="button primary" href="#conditional-v2">Inspect Conditional V2</a>
+            <a class="button secondary" href="#quickstart">Start in five minutes</a>
           </div>
           <dl class="mission-stats" aria-label="Package guarantees">
             <div>
@@ -66,11 +67,11 @@
             </div>
             <div>
               <dt>Output</dt>
-              <dd>Stable JSON, rich IR, precise diagnostics</dd>
+              <dd>Stable JSON, rich IR, conditional rule results</dd>
             </div>
             <div>
               <dt>Boundary</dt>
-              <dd>No network, no arbitrary plugins, no hidden semantics</dd>
+              <dd>Syntax-versioned profiles, no hidden execution</dd>
             </div>
           </dl>
         </div>
@@ -99,8 +100,11 @@
               Markdown Engine lets a team write simple rules for the document:
               these sections must exist, these fields at the top must be present,
               these IDs must be unique, and these links must point to the right
-              evidence. Then it checks the file locally and returns clear
-              pass/fail results that a person, CI job, or agent can trust.
+              evidence. Conditional V2 profiles can also say when a rule
+              applies, which document shapes are acceptable, how many IDs are
+              required, and where traceability IDs must appear. Then it checks
+              the file locally and returns clear pass/fail or skipped results
+              that a person, CI job, or agent can trust.
             </p>
           </div>
 
@@ -118,7 +122,8 @@
               <h3>The expected shape is written down.</h3>
               <p>
                 A small rules file says which headings, fields, tables, IDs,
-                text, and links the document must contain.
+                text, links, alternatives, and conditional checks the document
+                must satisfy.
               </p>
             </article>
             <article>
@@ -155,26 +160,102 @@
               </p>
             </article>
             <article class="value-card">
-              <h3>Make document rules explicit</h3>
+              <h3>Make conditional rules explicit</h3>
               <p>
                 Express required headings, frontmatter fields, table columns,
-                IDs, literal text, links, and trace references with closed,
-                YAML-friendly profile data.
+                IDs, literal text, links, trace references, alternatives, and
+                rule-level applicability with closed YAML-friendly profile data.
               </p>
             </article>
             <article class="value-card">
               <h3>Fail locally before review</h3>
               <p>
                 Run the CLI or API before a release, handoff, or agent task and
-                get structured diagnostics instead of late reviewer discovery.
+                get structured diagnostics, grouped rule details, and evaluated
+                or skipped rule counts instead of late reviewer discovery.
               </p>
             </article>
             <article class="value-card">
               <h3>Protect the deterministic boundary</h3>
               <p>
-                Profile inputs are data. Regex-like keys, executable-like keys,
-                accessors, proxies, cycles, and unsafe shapes are rejected as
-                inert config errors.
+                V1 profiles keep their existing behavior. V2 profiles opt into
+                conditional validation while regex-like keys, executable-like
+                keys, accessors, proxies, cycles, and unsafe shapes stay inert.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="conditional-v2" class="section" aria-labelledby="conditional-title">
+        <div class="section-inner">
+          <div class="split-copy">
+            <div>
+              <p class="eyebrow">Conditional V2 release</p>
+              <h2 id="conditional-title">Profiles can branch on document reality.</h2>
+            </div>
+            <p>
+              `markdown-engine.validation@v2` adds conditional validation without
+              changing the rich IR document contract. A profile can validate
+              alternative shapes, skip non-applicable rules explicitly, enforce
+              ID cardinality, and prove table-column traceability while v1
+              profiles remain on the established flat result shape.
+            </p>
+          </div>
+
+          <div class="capability-grid" aria-label="Conditional validation capabilities">
+            <article>
+              <span class="capability-label">when</span>
+              <h3>Apply rules only when their precondition matches.</h3>
+              <p>
+                Rule-level applicability keeps one profile useful across
+                variants without duplicating profile files or fabricating
+                failures for absent sections.
+              </p>
+            </article>
+            <article>
+              <span class="capability-label">anyOf / allOf</span>
+              <h3>Model acceptable alternatives and grouped requirements.</h3>
+              <p>
+                Branch results stay nested and deterministic, so successful
+                alternatives do not leak failed-branch diagnostics into the
+                top-level outcome.
+              </p>
+            </article>
+            <article>
+              <span class="capability-label">ID counts</span>
+              <h3>Set minimum and maximum counts for ID families.</h3>
+              <p>
+                `ids.minCount` and `ids.maxCount` let release, requirement, and
+                evidence tables prove expected cardinality instead of only
+                uniqueness.
+              </p>
+            </article>
+            <article>
+              <span class="capability-label">Coverage</span>
+              <h3>Prove source IDs appear in the right target column.</h3>
+              <p>
+                `tableColumnCoverage` verifies configured source IDs in a
+                configured target table column, not just somewhere in nearby
+                prose.
+              </p>
+            </article>
+            <article>
+              <span class="capability-label">Skipped results</span>
+              <h3>Represent non-applicable checks as explicit evidence.</h3>
+              <p>
+                Non-matching `when` rules return `status: "skipped"`,
+                `evaluation.kind: "skipped"`, and `skippedRuleCount` instead of
+                disappearing from the result.
+              </p>
+            </article>
+            <article>
+              <span class="capability-label">Compatibility</span>
+              <h3>Keep v1 stable while v2 advances.</h3>
+              <p>
+                `profile.syntaxVersion` is the discriminator. Existing v1
+                profiles keep their flat rule results, evidence shape, and
+                validation semantics.
               </p>
             </article>
           </div>
@@ -235,20 +316,31 @@
             <p class="eyebrow">Grounded workflows</p>
             <h2 id="workflow-title">Fixture workflows and profile patterns.</h2>
             <p>
-              The first three narratives map to shipped fixture profiles and
-              passing Markdown documents. The `SKILL.md` and `PLAYBOOK.md`
-              patterns show how consumers can define their own document types
-              with the same deterministic contract model.
+              The Conditional V2 example maps to the release fixture suite. The
+              v1 examples map to shipped reader fixtures, and the `SKILL.md` and
+              `PLAYBOOK.md` patterns show how consumers can define their own
+              document types with the same deterministic contract model.
             </p>
           </div>
 
           <div class="segmented-control" role="tablist" aria-label="Workflow examples">
             <button
-              id="tab-operational-spec"
+              id="tab-conditional-v2"
               class="segment is-active"
               type="button"
               role="tab"
               aria-selected="true"
+              aria-controls="workflow-panel"
+              data-example-button="conditionalV2"
+            >
+              Conditional V2
+            </button>
+            <button
+              id="tab-operational-spec"
+              class="segment"
+              type="button"
+              role="tab"
+              aria-selected="false"
               aria-controls="workflow-panel"
               data-example-button="operationalSpec"
             >
@@ -304,133 +396,125 @@
             id="workflow-panel"
             class="workflow-panel"
             role="tabpanel"
-            aria-labelledby="tab-operational-spec"
+            aria-labelledby="tab-conditional-v2"
           >
             <div class="workflow-narrative">
-              <p class="eyebrow" data-example-kicker>Operational spec</p>
-              <h3 data-example-title>Confirm every handoff carries the same structure.</h3>
+              <p class="eyebrow" data-example-kicker>Conditional V2</p>
+              <h3 data-example-title>Validate alternatives, applicability, counts, and coverage.</h3>
               <p data-example-story>
-                A platform team wants each operating spec to include objective,
-                constraints, execution plan, risk register, and handoff links.
-                Markdown Engine validates those sections, checks table shape,
-                enforces `OPS-RISK` IDs, and proves the expected handoff link is
-                present.
+                A release team wants one profile to handle optional verification
+                sections, grouped structural alternatives, exact requirement
+                counts, and traceability coverage. Conditional V2 makes the
+                skipped path explicit and still proves every REQ ID appears in
+                the Traceability table's Requirement column.
               </p>
               <ul class="outcome-list" aria-label="Validation outcome" data-example-outcomes>
-                <li>Frontmatter includes `title`, `owner`, and `status`.</li>
-                <li>Required sections appear in strict order.</li>
-                <li>Risk IDs are unique and use the `OPS-RISK` prefix.</li>
+                <li>`anyOf` accepts the matching Mission branch.</li>
+                <li>A non-matching `when` rule returns a skipped result.</li>
+                <li>REQ IDs hit exact count bounds and table-column coverage.</li>
               </ul>
             </div>
             <div class="code-stack" aria-label="Workflow example code">
               <div class="code-frame">
                 <div class="code-frame-header">
-                  <span data-example-profile-path>profile.yaml</span>
+                  <span data-example-profile-path>fixtures/declarative-validation/conditional-v2/repeatability-profile.yaml</span>
                   <button class="copy-button" type="button" data-copy-target="profile-code">
                     Copy
                   </button>
                 </div>
-                <pre><code id="profile-code" data-example-profile>syntaxVersion: markdown-engine.validation@v1
-documentVersion: 1.0.0
+                <pre><code id="profile-code" data-example-profile>syntaxVersion: markdown-engine.validation@v2
+documentVersion: "1.0.0"
 rules:
-  - id: frontmatter.required
+  - id: repeatability.flat.text
+    select:
+      target: section
+      title: Mission
+    assert:
+      text:
+        contains: launch
+
+  - id: repeatability.grouped.anyof
+    anyOf:
+      - label: verification-section
+        select:
+          target: section
+          title: Verification
+        assert:
+          exists: true
+      - label: mission-ready
+        select:
+          target: section
+          title: Mission
+        assert:
+          text:
+            contains: Ready
+
+  - id: repeatability.when.skipped
+    when:
+      select:
+        target: section
+        title: Verification
+      assert:
+        exists: true
     select:
       target: document
     assert:
-      frontmatterRequired:
-        fields:
-          - title
-          - owner
-          - status
+      text:
+        contains: DO NOT EVALUATE
 
-  - id: sections.required
-    select:
-      target: document
-    assert:
-      sectionsRequired:
-        order: strict
-        headings:
-          - Objective
-          - Context / Constraints
-          - Execution Plan
-          - Risk Register
-          - Handoff Links
-
-  - id: risk.table.columns
-    select:
-      target: table
-      section: Risk Register
-      header:
-        - ID
-        - Mitigation
-        - Status
-    assert:
-      tableColumnsRequired:
-        columns:
-          - ID
-          - Mitigation
-          - Status
-
-  - id: risk.ids.unique
+  - id: repeatability.ids.count
     select:
       target: tableCell
-      section: Risk Register
       column: ID
     assert:
       ids:
-        prefix: OPS-RISK
-        unique: true
+        prefix: REQ
+        minCount: 2
+        maxCount: 2
 
-  - id: handoff.link
+  - id: repeatability.table.coverage
     select:
-      target: link
-      section: Handoff Links
-      text: handoff packet
-      url: ./handoff-packet.md
+      target: document
     assert:
-      exists: true</code></pre>
+      tableColumnCoverage:
+        source:
+          section: Requirements
+          column: ID
+          prefix: REQ
+        target:
+          section: Traceability
+          column: Requirement
+        require: everySourceId</code></pre>
               </div>
               <div class="code-frame">
                 <div class="code-frame-header">
-                  <span data-example-document-path>pass.md</span>
+                  <span data-example-document-path>fixtures/declarative-validation/conditional-v2/repeatability.md</span>
                   <button class="copy-button" type="button" data-copy-target="document-code">
                     Copy
                   </button>
                 </div>
-                <pre><code id="document-code" data-example-document>---
-title: Operational Spec Example
-owner: platform-team
-status: ready
----
+                <pre><code id="document-code" data-example-document># Mission
 
-# Objective
+Ready for launch.
 
-Mission control uses this structural profile to confirm a small operating spec
-has the required sections, handoff links, and risk tracking details.
+| Owner | Status |
+| --- | --- |
+| Flight | Ready |
 
-# Context / Constraints
+# Requirements
 
-The example stays generic. It validates Markdown headings, tables, IDs, list
-content, literal text, and links without attaching domain meaning to the core
-engine.
+| ID | Statement |
+| --- | --- |
+| REQ-1 | Build safely |
+| SYS-1 | Ignore non-requirement IDs |
+| REQ-2 | Launch safely |
 
-# Execution Plan
+# Traceability
 
-- MUST Validate profile fixtures locally.
-- MUST Record evidence before requesting review.
-- Keep the checks deterministic and local-only.
-
-# Risk Register
-
-| ID | Mitigation | Status |
-| --- | --- | --- |
-| OPS-RISK-1 | Keep examples structural. | tracked |
-| OPS-RISK-2 | Keep commands local. | closed |
-
-# Handoff Links
-
-The [handoff packet](./handoff-packet.md) records follow-up review notes for the
-next operator.</code></pre>
+| Requirement | Evidence |
+| --- | --- |
+| REQ-1 | Unit test |
+| REQ-2 | Integration test |</code></pre>
               </div>
             </div>
           </article>
@@ -441,10 +525,13 @@ next operator.</code></pre>
         <div class="section-inner">
           <div class="section-heading">
             <p class="eyebrow">Quickstart</p>
-            <h2 id="quickstart-title">Install, validate, then integrate.</h2>
+            <h2 id="quickstart-title">Install, validate, then opt into v2.</h2>
             <p>
               Start with the CLI to inspect behavior against bundled fixtures,
               then move the same deterministic path into your application code.
+              Existing v1 profiles continue to run unchanged; Conditional V2
+              begins when a profile declares `syntaxVersion:
+              markdown-engine.validation@v2`.
             </p>
           </div>
           <div class="quickstart-grid">
@@ -465,7 +552,10 @@ next operator.</code></pre>
             <article class="quickstart-step">
               <div class="step-number">2</div>
               <h3>Run a bundled profile</h3>
-              <p>Validate a real release checklist fixture and inspect JSON output.</p>
+              <p>
+                Validate a real release checklist fixture and inspect JSON
+                output before authoring your own v2 profile.
+              </p>
               <div class="code-frame">
                 <div class="code-frame-header">
                   <span>shell</span>
@@ -481,7 +571,10 @@ next operator.</code></pre>
             <article class="quickstart-step">
               <div class="step-number">3</div>
               <h3>Use the API in your workflow</h3>
-              <p>Parse, normalize to rich IR, compile the profile, and validate locally.</p>
+              <p>
+                Parse, normalize to rich IR, compile the syntax-versioned
+                profile, and validate locally.
+              </p>
               <div class="code-frame">
                 <div class="code-frame-header">
                   <span>TypeScript</span>
@@ -525,8 +618,11 @@ console.log(result.valid, result.diagnostics);</code></pre>
             <p>
               Package 3.0 adds explicit Conditional V2 validation while keeping
               the serialized rich IR at `documentVersion: "1.0.0"` as the default
-              output for `normalize(parsed)`. Legacy consumers can still request
-              the retained `0.0.0` document shape explicitly.
+              output for `normalize(parsed)`. V1 profiles keep their existing
+              result and evidence shape; v2 results expose rule `status`,
+              `evaluation`, evaluated counts, and skipped counts. Legacy
+              consumers can still request the retained `0.0.0` document shape
+              explicitly.
             </p>
           </div>
           <div class="contract-links" aria-label="Reference documents">
@@ -556,6 +652,6 @@ console.log(result.valid, result.diagnostics);</code></pre>
       </div>
     </footer>
 
-    <script src="./site.js?v=20260514"></script>
+    <script src="./site.js?v=20260605"></script>
   </body>
 </html>
