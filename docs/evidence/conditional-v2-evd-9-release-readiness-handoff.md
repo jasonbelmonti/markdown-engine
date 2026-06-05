@@ -1,12 +1,17 @@
 # Conditional V2 EVD-9: Release Readiness Handoff
 
 Issue: BEL-1121
+Supplemental issue: BEL-1122
 Parent issue: BEL-1084
 Branch: `codex/bel-1121-release-verify-gate`
 Worktree: `.worktrees/BEL-1121`
+BEL-1122 branch: `codex/bel-1122-changelog-rollback-handoff-docs`
+BEL-1122 worktree: `.worktrees/BEL-1122`
 Baseline: `origin/main` at `5d0e2a79790b`
+BEL-1122 baseline: `origin/main` at `633ce74`
 Date: 2026-06-04
 Recorded at: 2026-06-05T01:25:18Z
+Updated for BEL-1122 at: 2026-06-05T02:15:00Z
 
 ## Scope
 
@@ -19,6 +24,43 @@ MS-4 owner decision.
 This record does not approve MS-4 release readiness, create a git tag, publish
 to npm, mutate npm tags, create a GitHub Release, claim release completion, or
 claim downstream adoption.
+
+BEL-1122 extends this record with changelog/release-note coverage,
+rollback/containment instructions, approval-state notes, unresolved follow-ups,
+and exact branch or baseline commit handoff details. BEL-1122 does not rerun or
+replace the BEL-1121 release verification result; it carries that result forward
+as prior gate evidence while preparing documentation for later MS-4 review.
+
+## Conditional V2 Release Note Summary
+
+Conditional V2 remains an explicit profile opt-in, not a default behavior
+change. Existing v1 declarative validation profiles keep the v1 result and
+evidence shape by retaining:
+
+```yaml
+syntaxVersion: markdown-engine.validation@v1
+```
+
+Conditional V2 behavior is selected only when a profile declares:
+
+```yaml
+syntaxVersion: markdown-engine.validation@v2
+```
+
+The release-note-ready behavior summary is:
+
+| Area | Summary | Evidence |
+| --- | --- | --- |
+| Compatibility boundary | V1 profiles remain on the existing flat `ruleId`, `passed`, and `diagnostics` result shape. V2 behavior requires explicit `markdown-engine.validation@v2` opt-in and does not introduce `documentVersion: "2.0.0"`. | EVD-6 contract and CLI compatibility, EVD-6 contract docs |
+| V2 result shape | V2 rule results add `status` and nested `evaluation`; v2 profile metadata reports evaluated and skipped rule counts where applicable. | EVD-1 proving slice, EVD-4 grouped rules, EVD-5 `when` skipped rules, EVD-6 contract and CLI compatibility |
+| Deterministic assertions | Conditional V2 covers ID count bounds, table column coverage, grouped `anyOf` / `allOf` rules, and rule-level `when` applicability without adding arbitrary executable profile behavior. | EVD-2 ID count bounds, EVD-3 table column coverage, EVD-4 grouped rules, EVD-5 `when` skipped rules, EVD-7 repeatability and boundary consolidation |
+| Downstream proof | The downstream design-spec exercise covers expected pass/fail cases and L8-F false-acceptance negatives; no production bug-fix blocker was discovered in BEL-1120. | EVD-8 downstream design-spec exercise |
+| Release verification input | BEL-1121 final `npm run release:verify` passed and EVD-1 through EVD-8 are present for MS-4 review input. | This EVD-9 record |
+
+This summary is suitable for changelog or release-note preparation only. It is
+not a release-completion claim and does not authorize package publication, tag
+creation, GitHub Release creation, npm dist-tag mutation, downstream adoption
+claims, or MS-4 approval.
 
 ## Release Verification Result
 
@@ -145,6 +187,33 @@ successful `npm run release:verify` run.
 - Do not claim downstream adoption completion.
 - Treat this file as MS-4 input, not MS-4 approval.
 
+## Rollback And Containment Notes
+
+Conditional V2 remains containable before any future approved public release
+because v2 behavior is selected only by explicit profile syntax. If validation,
+contract, downstream, repeatability, boundary, or release-readiness review fails
+before MS-4 approval or release action, containment is:
+
+- keep v2 release claims withheld from changelog, release notes, package tags,
+  npm publication, npm dist-tags, GitHub Releases, and downstream adoption
+  messaging;
+- keep v1 profiles documented as the compatible supported path by preserving
+  `markdown-engine.validation@v1` guidance;
+- revert or amend any branch-local documentation that implies release
+  completion, downstream adoption, or MS-4 approval;
+- leave release mechanics unexecuted until the failing validation gate is fixed
+  or an approved deviation is recorded by the project owner;
+- rerun the affected evidence gate and release-readiness validation before
+  requesting a renewed MS-4 decision.
+
+Rollback triggers include any v1 compatibility regression, v2 evidence
+nondeterminism, branch diagnostic promotion ambiguity, executable-profile
+boundary violation, downstream fixture false acceptance, or failed
+release-readiness validation gate. After any future approved public release,
+rollback must preserve semver-compatible behavior or ship a corrective patch;
+public contract changes must not be silently rewritten by documentation-only
+edits.
+
 ## MS-4 Handoff Notes
 
 The MS-4 decision owner should review this file together with:
@@ -171,11 +240,31 @@ Recommended MS-4 decision inputs:
 - Final `npm run release:verify` passed on the BEL-1121 worktree.
 - No release action has been performed by this leaf.
 
+BEL-1122 handoff state:
+
+- Branch: `codex/bel-1122-changelog-rollback-handoff-docs`
+- Worktree: `.worktrees/BEL-1122`
+- Baseline commit: `origin/main` at `633ce74`
+- Approval state: MS-3 final implementation merge readiness is approved with
+  project-owner conditional approval/deviation in BEL-1114; BEL-1120 and
+  BEL-1121 are Done; MS-4 release readiness is not approved by this record.
+- Release action state: no tag, npm publication, npm dist-tag mutation, GitHub
+  Release, release-completion claim, or downstream adoption claim has been made
+  by BEL-1122.
+- Changelog state: `CHANGELOG.md` has an Unreleased Conditional V2
+  release-readiness note for MS-4 review only.
+- Unresolved follow-ups: MS-4 owner decision remains pending; a future
+  release-action task is required before any tag, publication, GitHub Release,
+  npm dist-tag mutation, downstream adoption claim, or release-completion claim;
+  the BEL-1121 transient full-suite failure should be investigated only if it
+  recurs.
+
 ## Review Boundary
 
-Review this BEL-1121 evidence for release verification command accuracy,
-EVD-1 through EVD-8 registry accuracy, blocker disposition, release containment
-language, and MS-4 handoff completeness.
+Review this BEL-1121 / BEL-1122 evidence for release verification command
+accuracy, EVD-1 through EVD-8 registry accuracy, blocker disposition, release
+containment language, changelog or release-note coverage, rollback containment
+language, approval-state accuracy, and MS-4 handoff completeness.
 
 Runtime behavior, production Conditional V2 semantics, parser behavior, rich IR
 behavior, tag creation, npm publication, GitHub Release creation, downstream
@@ -189,7 +278,10 @@ The final `npm run release:verify` gate passed, EVD-1 through EVD-8 are present,
 the known MS-3 reviewer-record gaps are already dispositioned by project-owner
 conditional approval/deviation, and no unresolved validation, contract,
 downstream, repeatability, boundary, or release-mechanics blocker remains
-inside this leaf.
+inside the release-readiness documentation boundary. BEL-1122 adds the
+changelog/release-note summary, rollback/containment notes, branch handoff
+state, approval-state notes, and follow-up list needed for
+documentation-readiness review.
 
 This is not a release-completion claim and does not authorize tag creation,
 package publication, npm dist-tag mutation, GitHub Release creation, downstream
