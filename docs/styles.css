@@ -381,6 +381,7 @@ h3 {
 }
 
 .value-card,
+.capability-grid article,
 .fit-grid article,
 .quickstart-step {
   border: 1px solid var(--line);
@@ -394,10 +395,42 @@ h3 {
 }
 
 .value-card p,
+.capability-grid p,
 .fit-grid p,
 .quickstart-step p {
   margin: 14px 0 0;
   color: var(--muted);
+}
+
+.capability-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.capability-grid article {
+  min-height: 248px;
+  padding: 24px;
+  border-top: 5px solid var(--green);
+}
+
+.capability-grid article:nth-child(2),
+.capability-grid article:nth-child(5) {
+  border-top-color: var(--amber);
+}
+
+.capability-grid article:nth-child(3),
+.capability-grid article:nth-child(6) {
+  border-top-color: var(--teal);
+}
+
+.capability-label {
+  display: inline-block;
+  margin-bottom: 18px;
+  color: var(--green-dark);
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-transform: uppercase;
 }
 
 .split-copy {
@@ -532,6 +565,13 @@ h3 {
   font-weight: 760;
 }
 
+.code-frame-header span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .copy-button {
   min-width: 62px;
   min-height: 30px;
@@ -659,6 +699,7 @@ pre {
   .mission-stats,
   .narrative-layout,
   .value-grid,
+  .capability-grid,
   .fit-grid,
   .workflow-panel,
   .contract-section {
@@ -771,7 +812,8 @@ pre {
   }
 
   .mission-stats div,
-  .value-card {
+  .value-card,
+  .capability-grid article {
     min-height: auto;
   }
 
@@ -800,6 +842,7 @@ pre {
 
   .workflow-narrative,
   .value-card,
+  .capability-grid article,
   .fit-grid article,
   .quickstart-step {
     padding: 18px;

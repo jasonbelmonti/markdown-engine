@@ -1,4 +1,104 @@
 const examples = {
+  conditionalV2: {
+    tabId: "tab-conditional-v2",
+    kicker: "Conditional V2",
+    title: "Validate alternatives, applicability, counts, and coverage.",
+    story:
+      "A release team wants one profile to handle optional verification sections, grouped structural alternatives, exact requirement counts, and traceability coverage. Conditional V2 makes the skipped path explicit and still proves every REQ ID appears in the Traceability table's Requirement column.",
+    profilePath:
+      "fixtures/declarative-validation/conditional-v2/repeatability-profile.yaml",
+    documentPath: "fixtures/declarative-validation/conditional-v2/repeatability.md",
+    outcomes: [
+      "anyOf accepts the matching Mission branch.",
+      "A non-matching when rule returns a skipped result.",
+      "REQ IDs hit exact count bounds and table-column coverage.",
+    ],
+    profile: `syntaxVersion: markdown-engine.validation@v2
+documentVersion: "1.0.0"
+rules:
+  - id: repeatability.flat.text
+    select:
+      target: section
+      title: Mission
+    assert:
+      text:
+        contains: launch
+
+  - id: repeatability.grouped.anyof
+    anyOf:
+      - label: verification-section
+        select:
+          target: section
+          title: Verification
+        assert:
+          exists: true
+      - label: mission-ready
+        select:
+          target: section
+          title: Mission
+        assert:
+          text:
+            contains: Ready
+
+  - id: repeatability.when.skipped
+    when:
+      select:
+        target: section
+        title: Verification
+      assert:
+        exists: true
+    select:
+      target: document
+    assert:
+      text:
+        contains: DO NOT EVALUATE
+
+  - id: repeatability.ids.count
+    select:
+      target: tableCell
+      column: ID
+    assert:
+      ids:
+        prefix: REQ
+        minCount: 2
+        maxCount: 2
+
+  - id: repeatability.table.coverage
+    select:
+      target: document
+    assert:
+      tableColumnCoverage:
+        source:
+          section: Requirements
+          column: ID
+          prefix: REQ
+        target:
+          section: Traceability
+          column: Requirement
+        require: everySourceId`,
+    document: `# Mission
+
+Ready for launch.
+
+| Owner | Status |
+| --- | --- |
+| Flight | Ready |
+
+# Requirements
+
+| ID | Statement |
+| --- | --- |
+| REQ-1 | Build safely |
+| SYS-1 | Ignore non-requirement IDs |
+| REQ-2 | Launch safely |
+
+# Traceability
+
+| Requirement | Evidence |
+| --- | --- |
+| REQ-1 | Unit test |
+| REQ-2 | Integration test |`,
+  },
   operationalSpec: {
     tabId: "tab-operational-spec",
     kicker: "Operational spec",
@@ -663,4 +763,4 @@ document.querySelectorAll("[data-copy-target]").forEach((button) => {
   });
 });
 
-setExample("operationalSpec");
+setExample("conditionalV2");
