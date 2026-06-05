@@ -3,11 +3,12 @@
 Deterministic Markdown parsing and validation engine package for downstream
 profile and runtime work.
 
-Current package release:
+Package release state:
 
 - package name: `@jasonbelmonti/markdown-engine`
-- version: `3.0.0`
-- published npm versions: `0.1.0`, `1.0.0`, `2.0.0`, `3.0.0`
+- package metadata version: `3.0.0`
+- published npm versions before this release: `0.1.0`, `1.0.0`, `2.0.0`
+- npm release target: `3.0.0` on `latest`
 - website: <https://jasonbelmonti.github.io/markdown-engine/>
 - release focus: Conditional V2 explicit validation-profile syntax while
   retaining the existing `documentVersion: "1.0.0"` rich IR contract as the
