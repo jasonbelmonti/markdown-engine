@@ -653,8 +653,10 @@ The `0.1.0` contract was review-gated by WP-2, MS-2, and MS-3 before first
 publication. From the published `0.1.0` baseline forward, changes to public API
 signatures, result fields, diagnostic schema, source-location semantics,
 validation config semantics, or serialized output shape require
-semantic-version classification. The planned 1.0 rich IR contract will update
-this API contract before 1.0 release approval.
+semantic-version classification. The 1.0 rich IR document contract is now the
+retained default document contract for package 3.0, and the explicit legacy
+`0.0.0` path remains the compatibility boundary for consumers that still need
+the first package-line output shape.
 
 The `@jasonbelmonti/markdown-engine` package boundary remains limited to
 parsing, normalization, deterministic validation, diagnostics, and
