@@ -148,6 +148,10 @@ const expectedConditionalHarnessCaseNames = [
   "l8e-section11-target-column-fail",
   "l8e-section17-replacement-target-column-pass",
   "l8e-section17-replacement-target-column-fail",
+  "l8f-section4-decoy-none-fail",
+  "l8f-section15-decoy-rationale-fail",
+  "l8f-r1-traceability-dual-decoy-fail",
+  "l8f-mixed-id-count-decoy-fail",
 ];
 
 describe("declarative validation downstream ODS structural exercise", () => {
@@ -222,11 +226,11 @@ describe("conditional v2 downstream fixture harness", () => {
         "R1 standard-or-replacement traceability fixtures for a valid standard matrix branch, a valid replacement matrix branch, and a neither-branch failure.",
         "Mixed ID-family count fixtures for prefix-filtered downstream ID count pass/fail behavior.",
         "Section 11 and Section 17 target-column coverage fixtures for standard and replacement matrix downstream scenarios.",
+        "L8-F false-acceptance negatives for decoy none/N/A text, decoy rationale text, dual target-column decoys, and mixed ID-family decoys.",
       ],
       excludes: [
         "Non-R1 applicability skip fixture breadth.",
         "Release-readiness and rollback content.",
-        "False-acceptance negative consolidation reserved for BEL-1120.",
       ],
     });
     expect(conditionalHarness.cases.map((fixtureCase) => fixtureCase.name)).toEqual(

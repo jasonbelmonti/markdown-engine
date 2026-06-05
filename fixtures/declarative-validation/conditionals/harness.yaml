@@ -18,10 +18,10 @@ harness:
     - R1 standard-or-replacement traceability fixtures for a valid standard matrix branch, a valid replacement matrix branch, and a neither-branch failure.
     - Mixed ID-family count fixtures for prefix-filtered downstream ID count pass/fail behavior.
     - Section 11 and Section 17 target-column coverage fixtures for standard and replacement matrix downstream scenarios.
+    - L8-F false-acceptance negatives for decoy none/N/A text, decoy rationale text, dual target-column decoys, and mixed ID-family decoys.
   excludes:
     - Non-R1 applicability skip fixture breadth.
     - Release-readiness and rollback content.
-    - False-acceptance negative consolidation reserved for BEL-1120.
 
 cases:
   - name: l8a-table-column-coverage-pass
@@ -1204,3 +1204,317 @@ cases:
                 ruleId: conditionals.downstream.section17-replacement-target-column.fail
                 message: 'ID "REQ-2" must appear in target table column "Requirement" of section "17. Verification Strategy and Behavior-to-Mechanism Traceability".'
                 sourceLine: 6
+
+  - name: l8f-section4-decoy-none-fail
+    contract: fail when Section 4 satisfies neither authorized branch even though decoy None / N/A text appears in a non-paragraph table cell
+    markdown: |
+      # 4. Constraints, Invariants, and Assumptions
+
+      | Type | Statement | Source or rationale | Validation or resolution plan |
+      | --- | --- | --- | --- |
+      | None / N/A | Decoy table text must not satisfy the explicit paragraph branch. | Draft intake | Assign owner before approval. |
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: conditionals.downstream.false-acceptance.section4.fail
+          anyOf:
+            - label: constraints-table
+              select:
+                target: table
+                section: 4. Constraints, Invariants, and Assumptions
+              assert:
+                tableColumnsRequired:
+                  columns:
+                    - ID
+                    - Type
+                    - Statement
+                    - Source or rationale
+                    - Validation or resolution plan
+            - label: explicit-none-or-na
+              select:
+                target: textSpan
+                section: 4. Constraints, Invariants, and Assumptions
+                nodeType: paragraph
+                textIncludes: "None / N/A"
+              assert:
+                exists: true
+    expected:
+      valid: false
+      profile:
+        ruleCount: 1
+        evaluatedRuleCount: 1
+        skippedRuleCount: 0
+      diagnostics:
+        - code: profile.validation.noAlternativeMatched
+          ruleId: conditionals.downstream.false-acceptance.section4.fail
+          message: No anyOf branch matched the grouped rule.
+      ruleResults:
+        - ruleId: conditionals.downstream.false-acceptance.section4.fail
+          status: failed
+          passed: false
+          diagnostics:
+            - code: profile.validation.noAlternativeMatched
+              ruleId: conditionals.downstream.false-acceptance.section4.fail
+              message: No anyOf branch matched the grouped rule.
+          evaluation:
+            kind: anyOf
+            branches:
+              - branchIndex: 0
+                label: constraints-table
+                status: failed
+                diagnostics:
+                  - code: profile.validation.assertionFailed
+                    ruleId: conditionals.downstream.false-acceptance.section4.fail
+                    message: 'Selected table must include column "ID".'
+                    sourceLine: 3
+              - branchIndex: 1
+                label: explicit-none-or-na
+                status: failed
+                diagnostics:
+                  - code: profile.validation.emptySelection
+                    ruleId: conditionals.downstream.false-acceptance.section4.fail
+                    message: Rule selector did not match any document targets.
+
+  - name: l8f-section15-decoy-rationale-fail
+    contract: fail when Section 15 satisfies neither authorized branch even though decoy N/A rationale text appears in a malformed table cell
+    markdown: |
+      # 15. Control Logic and Non-Functional Controls
+
+      | Mechanism | Notes |
+      | --- | --- |
+      | N/A rationale | Decoy table text must not satisfy the explicit paragraph branch. |
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: conditionals.downstream.false-acceptance.section15.fail
+          anyOf:
+            - label: controls-table
+              select:
+                target: table
+                section: 15. Control Logic and Non-Functional Controls
+              assert:
+                tableColumnsRequired:
+                  columns:
+                    - Requirement
+                    - Mechanism
+                    - Notes
+            - label: explicit-na-rationale
+              select:
+                target: textSpan
+                section: 15. Control Logic and Non-Functional Controls
+                nodeType: paragraph
+                textIncludes: "N/A"
+              assert:
+                text:
+                  contains: rationale
+    expected:
+      valid: false
+      profile:
+        ruleCount: 1
+        evaluatedRuleCount: 1
+        skippedRuleCount: 0
+      diagnostics:
+        - code: profile.validation.noAlternativeMatched
+          ruleId: conditionals.downstream.false-acceptance.section15.fail
+          message: No anyOf branch matched the grouped rule.
+      ruleResults:
+        - ruleId: conditionals.downstream.false-acceptance.section15.fail
+          status: failed
+          passed: false
+          diagnostics:
+            - code: profile.validation.noAlternativeMatched
+              ruleId: conditionals.downstream.false-acceptance.section15.fail
+              message: No anyOf branch matched the grouped rule.
+          evaluation:
+            kind: anyOf
+            branches:
+              - branchIndex: 0
+                label: controls-table
+                status: failed
+                diagnostics:
+                  - code: profile.validation.assertionFailed
+                    ruleId: conditionals.downstream.false-acceptance.section15.fail
+                    message: 'Selected table must include column "Requirement".'
+                    sourceLine: 3
+              - branchIndex: 1
+                label: explicit-na-rationale
+                status: failed
+                diagnostics:
+                  - code: profile.validation.emptySelection
+                    ruleId: conditionals.downstream.false-acceptance.section15.fail
+                    message: Rule selector did not match any document targets.
+
+  - name: l8f-r1-traceability-dual-decoy-fail
+    contract: fail when R1 traceability satisfies neither Section 11 nor Section 17 target-column branch despite narrative and non-target-column decoys
+    markdown: |
+      # Document Control
+
+      | Field | Value |
+      | --- | --- |
+      | Rigor level | R1 |
+
+      # 5. Requirements
+
+      | ID | Statement |
+      | --- | --- |
+      | REQ-1 | The R1 path SHALL not pass from dual target-column decoys. |
+
+      # 11. Requirements-to-Behavior Traceability
+
+      REQ-1 appears in Section 11 narrative text for false-acceptance coverage.
+
+      | Requirement | Behavior |
+      | --- | --- |
+      | Standard note | REQ-1 appears in non-target behavior text |
+
+      # 17. Verification Strategy and Behavior-to-Mechanism Traceability
+
+      REQ-1 appears in Section 17 narrative text for false-acceptance coverage.
+
+      | Requirement | Verification |
+      | --- | --- |
+      | Replacement note | REQ-1 appears in non-target verification text |
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: conditionals.downstream.false-acceptance.r1-traceability.fail
+          when:
+            select:
+              target: tableCell
+              section: Document Control
+              tableHeader:
+                - Field
+                - Value
+              column: Value
+              rowWhere:
+                column: Field
+                equals: Rigor level
+            assert:
+              text:
+                contains: R1
+          anyOf:
+            - label: section11-standard
+              select:
+                target: document
+              assert:
+                tableColumnCoverage:
+                  source:
+                    section: 5. Requirements
+                    column: ID
+                    prefix: REQ
+                  target:
+                    section: 11. Requirements-to-Behavior Traceability
+                    tableHeader:
+                      - Requirement
+                      - Behavior
+                    column: Requirement
+                  require: everySourceId
+            - label: section17-replacement
+              select:
+                target: document
+              assert:
+                tableColumnCoverage:
+                  source:
+                    section: 5. Requirements
+                    column: ID
+                    prefix: REQ
+                  target:
+                    section: 17. Verification Strategy and Behavior-to-Mechanism Traceability
+                    tableHeader:
+                      - Requirement
+                      - Verification
+                    column: Requirement
+                  require: everySourceId
+    expected:
+      valid: false
+      profile:
+        ruleCount: 1
+        evaluatedRuleCount: 1
+        skippedRuleCount: 0
+      diagnostics:
+        - code: profile.validation.noAlternativeMatched
+          ruleId: conditionals.downstream.false-acceptance.r1-traceability.fail
+          message: No anyOf branch matched the grouped rule.
+      ruleResults:
+        - ruleId: conditionals.downstream.false-acceptance.r1-traceability.fail
+          status: failed
+          passed: false
+          diagnostics:
+            - code: profile.validation.noAlternativeMatched
+              ruleId: conditionals.downstream.false-acceptance.r1-traceability.fail
+              message: No anyOf branch matched the grouped rule.
+          evaluation:
+            kind: anyOf
+            branches:
+              - branchIndex: 0
+                label: section11-standard
+                status: failed
+                diagnostics:
+                  - code: profile.validation.tableColumnCoverageIdMissing
+                    ruleId: conditionals.downstream.false-acceptance.r1-traceability.fail
+                    message: 'ID "REQ-1" must appear in target table column "Requirement" of section "11. Requirements-to-Behavior Traceability".'
+                    sourceLine: 11
+              - branchIndex: 1
+                label: section17-replacement
+                status: failed
+                diagnostics:
+                  - code: profile.validation.tableColumnCoverageIdMissing
+                    ruleId: conditionals.downstream.false-acceptance.r1-traceability.fail
+                    message: 'ID "REQ-1" must appear in target table column "Requirement" of section "17. Verification Strategy and Behavior-to-Mechanism Traceability".'
+                    sourceLine: 11
+
+  - name: l8f-mixed-id-count-decoy-fail
+    contract: fail when mixed downstream ID-family decoys cannot satisfy the prefix-filtered REQ max count
+    markdown: |
+      # 5. Requirements
+
+      | ID | Statement |
+      | --- | --- |
+      | REQ-1 | The downstream document SHALL count requirement IDs. |
+      | CTRL-1 | Decoy control IDs SHALL stay outside REQ counts. |
+      | REQ-2 | The downstream document SHALL fail the REQ max count. |
+      | EVD-1 | Decoy evidence IDs SHALL stay outside REQ counts. |
+    profile:
+      syntaxVersion: markdown-engine.validation@v2
+      documentVersion: "1.0.0"
+      rules:
+        - id: conditionals.downstream.false-acceptance.mixed-id-count.fail
+          select:
+            target: tableCell
+            section: 5. Requirements
+            column: ID
+          assert:
+            ids:
+              prefix: REQ
+              minCount: 1
+              maxCount: 1
+    expected:
+      valid: false
+      profile:
+        ruleCount: 1
+        evaluatedRuleCount: 1
+        skippedRuleCount: 0
+      diagnostics:
+        - code: profile.validation.idCountTooHigh
+          ruleId: conditionals.downstream.false-acceptance.mixed-id-count.fail
+          message: 'Expected at most 1 unique IDs matching prefix "REQ" but found 2.'
+          sourceLine: 7
+      ruleResults:
+        - ruleId: conditionals.downstream.false-acceptance.mixed-id-count.fail
+          status: failed
+          passed: false
+          diagnostics:
+            - code: profile.validation.idCountTooHigh
+              ruleId: conditionals.downstream.false-acceptance.mixed-id-count.fail
+              message: 'Expected at most 1 unique IDs matching prefix "REQ" but found 2.'
+              sourceLine: 7
+          evaluation:
+            kind: assertions
+            diagnostics:
+              - code: profile.validation.idCountTooHigh
+                ruleId: conditionals.downstream.false-acceptance.mixed-id-count.fail
+                message: 'Expected at most 1 unique IDs matching prefix "REQ" but found 2.'
+                sourceLine: 7
