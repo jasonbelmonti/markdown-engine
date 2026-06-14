@@ -146,6 +146,23 @@ describe("declarative validation compiler proof", () => {
             },
           },
         },
+        {
+          id: "v2-frontmatter-shape-plan",
+          select: { target: "document" },
+          assert: {
+            frontmatterShape: {
+              presence: "required",
+              fields: [
+                {
+                  field: "type",
+                  required: true,
+                  valueType: "string",
+                  nonEmpty: true,
+                },
+              ],
+            },
+          },
+        },
       ],
     });
 
@@ -202,6 +219,27 @@ describe("declarative validation compiler proof", () => {
                 column: "Requirement",
               },
               require: "everySourceId",
+            },
+          ],
+        },
+        {
+          kind: "flat",
+          syntaxVersion: "markdown-engine.validation@v2",
+          ruleId: "v2-frontmatter-shape-plan",
+          severity: "error",
+          selector: { target: "document" },
+          assertions: [
+            {
+              kind: "frontmatterShape",
+              presence: "required",
+              fields: [
+                {
+                  field: "type",
+                  required: true,
+                  valueType: "string",
+                  nonEmpty: true,
+                },
+              ],
             },
           ],
         },
@@ -481,6 +519,29 @@ describe("declarative validation compiler proof", () => {
 
     expect(result.diagnostics).toEqual([]);
     expect(result.plan?.rules).toHaveLength(1);
+  });
+
+  it("keeps frontmatterShape document-scoped before execution", () => {
+    const result = compileValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v2",
+      rules: [
+        {
+          id: "frontmatter.shape.section",
+          select: { target: "section", title: "Metadata" },
+          assert: { frontmatterShape: { presence: "required" } },
+        },
+      ],
+    });
+
+    expect(result.plan).toBeUndefined();
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.compile.incompatibleSelectorAssertion",
+        ruleId: "frontmatter.shape.section",
+        message: 'Assertion "frontmatterShape" is compatible only with document selectors.',
+        severity: "error",
+      },
+    ]);
   });
 
   it("rejects deferred frontmatter selectors before execution", () => {

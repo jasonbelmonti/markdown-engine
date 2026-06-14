@@ -203,6 +203,34 @@ const textLengthAssertion = {
     max: 140,
   },
 } satisfies DeclarativeAssertion;
+const frontmatterShapeAssertion = {
+  frontmatterShape: {
+    presence: "required",
+    fields: [
+      {
+        field: "type",
+        required: true,
+        valueType: "string",
+        nonEmpty: true,
+      },
+      {
+        field: "tags",
+        valueType: "array",
+      },
+    ],
+  },
+} satisfies DeclarativeAssertion;
+const invalidFrontmatterShapeAssertion = {
+  frontmatterShape: {
+    fields: [
+      {
+        field: "type",
+        // @ts-expect-error required must be omitted or true.
+        required: false,
+      },
+    ],
+  },
+} satisfies DeclarativeAssertion;
 const removedTextAssertion = {
   text: {
     // @ts-expect-error containsExactlyOne was removed from public text assertion syntax.
@@ -1203,6 +1231,8 @@ void idCountAssertion;
 void existsAssertion;
 void exactOneTextAssertion;
 void textLengthAssertion;
+void frontmatterShapeAssertion;
+void invalidFrontmatterShapeAssertion;
 void removedTextAssertion;
 void removedIdsColumnAssertion;
 void removedTextColumnAssertion;

@@ -11,6 +11,7 @@ import type {
   DeclarativeTableColumnCoverageSource,
   DeclarativeTableColumnCoverageTarget,
 } from "./index.js";
+import { frontmatterShapeFromValue as frontmatterShapeSchemaFromValue } from "./frontmatter-shape-schema.js";
 import {
   hasEffectiveIdsPredicate,
   hasValidIdsCountRange,
@@ -48,6 +49,7 @@ const SUPPORTED_ASSERTION_KEYS_V1 = [
 const SUPPORTED_ASSERTION_KEYS_V2 = [
   ...SUPPORTED_ASSERTION_KEYS_V1,
   "tableColumnCoverage",
+  "frontmatterShape",
 ] as const;
 
 export function assertionFromValue(
@@ -77,8 +79,11 @@ export function assertionFromValue(
     ...textOccurrenceCountFromValue(value.textOccurrenceCount, diagnostics),
     ...textLengthFromValue(value.textLength, diagnostics),
     ...frontmatterRequiredFromValue(value.frontmatterRequired, diagnostics),
-    ...(supportsTableColumnCoverage(syntaxVersion)
+    ...(supportsV2AssertionSurface(syntaxVersion)
       ? tableColumnCoverageFromValue(value.tableColumnCoverage, diagnostics)
+      : {}),
+    ...(supportsV2AssertionSurface(syntaxVersion)
+      ? frontmatterShapeFromValue(value.frontmatterShape, diagnostics)
       : {}),
   };
 
@@ -133,12 +138,12 @@ type SupportedAssertionKey = (typeof SUPPORTED_ASSERTION_KEYS_V2)[number];
 function assertionKeysForSyntaxVersion(
   syntaxVersion: ValidationProfileSyntaxVersion,
 ): readonly SupportedAssertionKey[] {
-  return supportsTableColumnCoverage(syntaxVersion)
+  return supportsV2AssertionSurface(syntaxVersion)
     ? SUPPORTED_ASSERTION_KEYS_V2
     : SUPPORTED_ASSERTION_KEYS_V1;
 }
 
-function supportsTableColumnCoverage(
+function supportsV2AssertionSurface(
   syntaxVersion: ValidationProfileSyntaxVersion,
 ): boolean {
   return syntaxVersion === PROFILE_SYNTAX_VERSION_V2;
@@ -504,6 +509,27 @@ function optionalTableColumnCoverageTargetStringArray(
     (field) =>
       `tableColumnCoverage.target.${field} must be an array of non-empty strings when provided.`,
   );
+}
+
+function frontmatterShapeFromValue(
+  value: unknown,
+  diagnostics: MarkdownDiagnostic[],
+): Pick<DeclarativeAssertion, "frontmatterShape"> {
+  if (value === undefined) {
+    return {};
+  }
+
+  const result = frontmatterShapeSchemaFromValue(value);
+  for (const key of result.unsupportedKeys) {
+    diagnostics.push(unsupportedProfileKey(key));
+  }
+  for (const message of result.invalidShapes) {
+    diagnostics.push(invalidShape(message));
+  }
+
+  return result.shape === undefined
+    ? {}
+    : { frontmatterShape: result.shape };
 }
 
 function textAssertionFromValue(

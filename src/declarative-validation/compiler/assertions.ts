@@ -26,6 +26,7 @@ const ASSERTION_KEYS_V1 = [
 const ASSERTION_KEYS_V2 = [
   ...ASSERTION_KEYS_V1,
   "tableColumnCoverage",
+  "frontmatterShape",
 ] as const;
 
 export function compiledAssertionsFromValue(

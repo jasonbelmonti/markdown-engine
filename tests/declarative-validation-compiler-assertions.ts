@@ -509,6 +509,94 @@ describe("declarative validation compiler assertion proof", () => {
     ]);
   });
 
+  it("rejects direct typed frontmatterShape payloads before execution", () => {
+    const invalidFrontmatterShapeAssertions = [
+      {
+        frontmatterShape: null,
+        message: "frontmatterShape must be an object.",
+      },
+      {
+        frontmatterShape: {},
+        message: "frontmatterShape must include presence or fields.",
+      },
+      {
+        frontmatterShape: { presence: "optional" },
+        message:
+          'frontmatterShape.presence must be "required" or "forbidden" when provided.',
+      },
+      {
+        frontmatterShape: { fields: [] },
+        message:
+          "frontmatterShape.fields must be a non-empty array when provided.",
+      },
+      {
+        frontmatterShape: { fields: [{ field: "type" }] },
+        message:
+          "frontmatterShape.fields[0] must include required, valueType, or nonEmpty.",
+      },
+      {
+        frontmatterShape: { fields: [{ field: "type", required: false }] },
+        message:
+          "frontmatterShape.fields[0].required must be true when provided.",
+      },
+      {
+        frontmatterShape: { fields: [{ field: "type", valueType: "date" }] },
+        message:
+          'frontmatterShape.fields[0].valueType must be "string", "number", "boolean", "array", "object", or "null" when provided.',
+      },
+      {
+        frontmatterShape: { fields: [{ field: "type", nonEmpty: false }] },
+        message:
+          "frontmatterShape.fields[0].nonEmpty must be true when provided.",
+      },
+      {
+        frontmatterShape: {
+          presence: "forbidden",
+          fields: [{ field: "type", required: true }],
+        },
+        message:
+          "frontmatterShape.fields cannot be provided when presence is forbidden.",
+      },
+      {
+        frontmatterShape: {
+          fields: [
+            { field: "type", required: true },
+            { field: "type", valueType: "string" },
+          ],
+        },
+        message: 'frontmatterShape.fields[1].field duplicates field "type".',
+      },
+    ] satisfies {
+      frontmatterShape: unknown;
+      message: string;
+    }[];
+
+    for (const { frontmatterShape, message } of invalidFrontmatterShapeAssertions) {
+      const result = compileValidationProfile({
+        syntaxVersion: "markdown-engine.validation@v2",
+        rules: [
+          {
+            id: "frontmatter.invalid-shape",
+            select: { target: "document" },
+            assert: {
+              frontmatterShape,
+            } as unknown as ValidationProfile["rules"][number]["assert"],
+          },
+        ],
+      });
+
+      expect(result.plan).toBeUndefined();
+      expect(result.diagnostics).toEqual([
+        {
+          code: "profile.config.invalidShape",
+          ruleId: "frontmatter.invalid-shape",
+          message,
+          severity: "error",
+        },
+      ]);
+    }
+  });
+
   it("rejects direct typed references assertions without idsFrom before execution", () => {
     const result = compileValidationProfile({
       syntaxVersion: "markdown-engine.validation@v1",

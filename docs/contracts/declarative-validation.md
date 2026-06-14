@@ -1,12 +1,12 @@
 # Declarative Validation Contract
 
 Status: package 3.0.0, v1 profile syntax with v2 Conditional V2, document contract 1.0.0
-Last updated: 2026-06-05
+Last updated: 2026-06-14
 Current v2 surface: flat-rule result/evidence shell, ID count-bound schema and
 runtime evaluator contract, plus `tableColumnCoverage` schema, compiled-plan,
-and runtime evaluator contract, grouped rule runtime contract, and rule-level
-`when` schema, matcher, public skipped-rule result, skipped counts, and evidence
-cloning contract.
+and runtime evaluator contract, `frontmatterShape` schema and compiled-plan
+contract, grouped rule runtime contract, and rule-level `when` schema, matcher,
+public skipped-rule result, skipped counts, and evidence cloning contract.
 
 This document defines the public declarative validation contract for
 `@jasonbelmonti/markdown-engine`. The stable surface is the package-root API,
@@ -25,7 +25,8 @@ optional rule-level `when`. The admitted v2 path exposes the result and evidence
 shell needed to distinguish assertion, grouped, and skipped evaluation output
 from v1 output, plus the ID count-bound schema, compiled-plan, and runtime
 evaluator contract; the `tableColumnCoverage` schema, compiled-plan, and
-runtime evaluator contract; and the `when` schema plus private compiled-plan and
+runtime evaluator contract; the `frontmatterShape` schema and private
+compiled-plan contract; and the `when` schema plus private compiled-plan and
 matcher contract. Matched applicability continues into normal rule evaluation.
 Non-matching applicability returns a public skipped rule result with
 `status: "skipped"`, `passed: true`, `evaluation.kind: "skipped"`,
@@ -79,7 +80,8 @@ syntaxVersion: markdown-engine.validation@v2
 This release recognizes v2 as a distinct syntax version at profile admission,
 admits ID count bounds at the schema, compiled-plan, and runtime evaluator
 layers, admits `tableColumnCoverage` at the schema, internal compiled-plan, and
-runtime evaluator layers, admits non-recursive grouped rules at the schema,
+runtime evaluator layers, admits `frontmatterShape` at the schema and internal
+compiled-plan layers, admits non-recursive grouped rules at the schema,
 compiled-plan, and runtime evaluator layers, and admits optional rule-level
 `when` at the schema, internal compiled-plan, and matcher layers. Matching
 `when` rules continue through normal flat or grouped evaluation and do not add a
@@ -300,6 +302,15 @@ interface DeclarativeAssertion {
     };
     require: "everySourceId";
   };
+  frontmatterShape?: {
+    presence?: "required" | "forbidden";
+    fields?: readonly {
+      field: string;
+      required?: true;
+      valueType?: "string" | "number" | "boolean" | "array" | "object" | "null";
+      nonEmpty?: true;
+    }[];
+  };
   text?: {
     contains?: string;
     excludes?: readonly string[];
@@ -335,6 +346,7 @@ Selector/assertion compatibility is part of the public contract:
 | `ids` | all supported selector targets |
 | `references` | `document` |
 | `tableColumnCoverage` | `document` |
+| `frontmatterShape` | `document` |
 | `text` | all supported selector targets |
 | `textOccurrenceCount` | all supported selector targets |
 | `textLength` | all supported selector targets |
@@ -377,6 +389,20 @@ appear in the configured target table column. IDs appearing elsewhere in the
 target section do not satisfy coverage. Missing target sections, missing target
 columns, and missing target-column IDs emit deterministic validation diagnostics
 source-grounded to the source ID when source evidence is available.
+
+For v2 profiles, `frontmatterShape` is admitted as a flat-rule schema and
+internal compiled-plan assertion. It is compatible only with a `document`
+selector because frontmatter is document metadata. `presence` is optional and
+must be exactly `"required"` or `"forbidden"` when provided. `fields` is an
+optional non-empty array of field constraints. Each field constraint has a
+required non-empty `field` name and must include at least one effective
+constraint: `required: true`, `valueType`, or `nonEmpty: true`. Field names
+within one `frontmatterShape.fields` array must be unique. `valueType` must be
+one of `"string"`, `"number"`, `"boolean"`, `"array"`, `"object"`, or `"null"`.
+`presence: "forbidden"` cannot be combined with `fields`. Runtime evaluation of
+`frontmatterShape` is deferred; evaluating a compiled `frontmatterShape`
+assertion emits `profile.validation.assertionUnsupported` until the evaluator
+contract is implemented.
 
 `text` must include `contains` or a non-empty `excludes` array.
 `textOccurrenceCount.count` is a finite number and counts non-overlapping
