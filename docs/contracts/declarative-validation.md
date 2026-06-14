@@ -4,9 +4,10 @@ Status: package 3.0.0, v1 profile syntax with v2 Conditional V2, document contra
 Last updated: 2026-06-14
 Current v2 surface: flat-rule result/evidence shell, ID count-bound schema and
 runtime evaluator contract, plus `tableColumnCoverage` schema, compiled-plan,
-and runtime evaluator contract, `frontmatterShape` schema and compiled-plan
-contract, grouped rule runtime contract, and rule-level `when` schema, matcher,
-public skipped-rule result, skipped counts, and evidence cloning contract.
+and runtime evaluator contract, `frontmatterShape` schema, compiled-plan, and
+runtime evaluator contract, grouped rule runtime contract, and rule-level
+`when` schema, matcher, public skipped-rule result, skipped counts, and
+evidence cloning contract.
 
 This document defines the public declarative validation contract for
 `@jasonbelmonti/markdown-engine`. The stable surface is the package-root API,
@@ -25,9 +26,10 @@ optional rule-level `when`. The admitted v2 path exposes the result and evidence
 shell needed to distinguish assertion, grouped, and skipped evaluation output
 from v1 output, plus the ID count-bound schema, compiled-plan, and runtime
 evaluator contract; the `tableColumnCoverage` schema, compiled-plan, and
-runtime evaluator contract; the `frontmatterShape` schema and private
-compiled-plan contract; and the `when` schema plus private compiled-plan and
-matcher contract. Matched applicability continues into normal rule evaluation.
+runtime evaluator contract; the `frontmatterShape` schema, private
+compiled-plan, and runtime evaluator contract; and the `when` schema plus
+private compiled-plan and matcher contract. Matched applicability continues
+into normal rule evaluation.
 Non-matching applicability returns a public skipped rule result with
 `status: "skipped"`, `passed: true`, `evaluation.kind: "skipped"`,
 `reason: "whenNotMatched"`, `skippedRuleCount`, no top-level diagnostics, and a
@@ -80,14 +82,14 @@ syntaxVersion: markdown-engine.validation@v2
 This release recognizes v2 as a distinct syntax version at profile admission,
 admits ID count bounds at the schema, compiled-plan, and runtime evaluator
 layers, admits `tableColumnCoverage` at the schema, internal compiled-plan, and
-runtime evaluator layers, admits `frontmatterShape` at the schema and internal
-compiled-plan layers, admits non-recursive grouped rules at the schema,
-compiled-plan, and runtime evaluator layers, and admits optional rule-level
-`when` at the schema, internal compiled-plan, and matcher layers. Matching
-`when` rules continue through normal flat or grouped evaluation and do not add a
-public `when` field to the evaluated rule result. Non-matching `when` rules are
-not evaluated; they return the public skipped-rule result shape, increment
-`skippedRuleCount`, and leave `evaluatedRuleCount` unchanged.
+runtime evaluator layers, admits `frontmatterShape` at the schema, internal
+compiled-plan, and runtime evaluator layers, admits non-recursive grouped rules
+at the schema, compiled-plan, and runtime evaluator layers, and admits optional
+rule-level `when` at the schema, internal compiled-plan, and matcher layers.
+Matching `when` rules continue through normal flat or grouped evaluation and do
+not add a public `when` field to the evaluated rule result. Non-matching `when`
+rules are not evaluated; they return the public skipped-rule result shape,
+increment `skippedRuleCount`, and leave `evaluatedRuleCount` unchanged.
 
 The admitted v1/v2 flat vocabulary is closed. Unknown profile keys, rule keys,
 selector keys, known assertion keys, and nested assertion keys emit
@@ -401,10 +403,23 @@ within one `frontmatterShape.fields` array must be unique. `valueType` must be
 one of `"string"`, `"number"`, `"boolean"`, `"array"`, `"object"`, or `"null"`.
 `nonEmpty: true` is a string predicate; when it is combined with `valueType`,
 `valueType` must be `"string"`. `presence: "forbidden"` cannot be combined with
-`fields`. Runtime evaluation of `frontmatterShape` is deferred; evaluating a
-compiled `frontmatterShape` assertion emits
-`profile.validation.assertionUnsupported` until the evaluator contract is
-implemented.
+`fields`.
+
+Runtime evaluation treats frontmatter as present when
+`document.frontmatter !== undefined`. `presence: "required"` fails absent
+frontmatter with `profile.validation.frontmatterMissing`.
+`presence: "forbidden"` fails any present frontmatter value, including empty
+frontmatter, with `profile.validation.frontmatterForbidden`. Field constraints
+evaluate only top-level frontmatter fields and do not coerce values. A required
+field that is absent, or any required field on non-object frontmatter, emits
+`profile.validation.frontmatterFieldMissing`. Optional fields are ignored when
+absent. `valueType` checks distinguish `"string"`, finite `"number"`,
+`"boolean"`, `"array"`, plain `"object"`, and `"null"` values and emit
+`profile.validation.frontmatterFieldTypeMismatch` on mismatch. `nonEmpty: true`
+requires a present field value to be a non-empty string and emits
+`profile.validation.frontmatterFieldEmpty` when that predicate fails. When
+`valueType: "string"` and `nonEmpty: true` are combined, a non-string value
+emits the type-mismatch diagnostic without a duplicate empty-string diagnostic.
 
 `text` must include `contains` or a non-empty `excludes` array.
 `textOccurrenceCount.count` is a finite number and counts non-overlapping
@@ -416,8 +431,8 @@ normalized text.
 
 Empty selector results produce `profile.validation.emptySelection` for exists,
 table, ID, reference, text, occurrence, and text-length assertions.
-Document-scoped required-section and required-frontmatter assertions evaluate
-against the document.
+Document-scoped required-section, required-frontmatter, and frontmatter-shape
+assertions evaluate against the document.
 
 ## Diagnostics
 
@@ -448,7 +463,11 @@ diagnostic can still leave the aggregate `valid` value `true`.
 | `profile.validation.emptySelection` | Rule severity | A rule cannot evaluate because its selector matches no applicable target. |
 | `profile.validation.assertionFailed` | Rule severity | A supported assertion evaluates and fails without a more specific diagnostic code, including missing table columns, exact occurrence-count mismatches, and text-length bound failures. |
 | `profile.validation.duplicateId` | Rule severity | An `ids.unique` assertion finds repeated IDs. |
+| `profile.validation.frontmatterForbidden` | Rule severity | A `frontmatterShape` assertion with `presence: "forbidden"` finds present frontmatter. |
+| `profile.validation.frontmatterFieldEmpty` | Rule severity | A frontmatter field configured with `nonEmpty: true` is not a non-empty string. |
 | `profile.validation.frontmatterFieldMissing` | Rule severity | A required frontmatter field is absent. |
+| `profile.validation.frontmatterFieldTypeMismatch` | Rule severity | A frontmatter field value does not match the configured `frontmatterShape.fields[].valueType` without coercion. |
+| `profile.validation.frontmatterMissing` | Rule severity | A `frontmatterShape` assertion with `presence: "required"` finds absent frontmatter. |
 | `profile.validation.idCountTooHigh` | Rule severity | Unique ID count after filtering is higher than `ids.maxCount`. |
 | `profile.validation.idCountTooLow` | Rule severity | Unique ID count after filtering is lower than `ids.minCount`. |
 | `profile.validation.referenceMissing` | Rule severity | A source ID is absent from a required target section. |

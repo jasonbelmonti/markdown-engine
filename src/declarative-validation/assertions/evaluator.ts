@@ -5,11 +5,9 @@ import type {
 } from "../compiler/plan.js";
 import type { DeclarativeSelection } from "../selectors/index.js";
 import type { AssertionEvaluationContext } from "./context.js";
-import {
-  unsupportedEvaluatorDiagnostic,
-  type AssertionDiagnostic,
-} from "./diagnostics.js";
+import type { AssertionDiagnostic } from "./diagnostics.js";
 import { evaluateExists } from "./exists.js";
+import { evaluateFrontmatterShape } from "./frontmatter-shape.js";
 import { evaluateFrontmatterRequired } from "./frontmatter-required.js";
 import { evaluateIds } from "./ids.js";
 import { sortAssertionDiagnostics } from "./ordering.js";
@@ -78,12 +76,6 @@ function evaluateAssertion(
       return evaluateTableColumnCoverage(assertion, context);
 
     case "frontmatterShape":
-      return [
-        unsupportedEvaluatorDiagnostic(
-          assertion,
-          context.rule,
-          context.assertionIndex,
-        ),
-      ];
+      return evaluateFrontmatterShape(assertion, context);
   }
 }
