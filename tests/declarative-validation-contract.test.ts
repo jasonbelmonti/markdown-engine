@@ -8,6 +8,10 @@ import {
   parseValidationProfile,
   validateWithProfile,
   type DeclarativeAssertion,
+  type DeclarativeFrontmatterFieldShape,
+  type DeclarativeFrontmatterPresence,
+  type DeclarativeFrontmatterShape,
+  type DeclarativeFrontmatterValueType,
   type DeclarativeIdSource,
   type DeclarativeValidationResultV2,
   type DeclarativeValidationRuleResultV2,
@@ -220,6 +224,23 @@ const frontmatterShapeAssertion = {
     ],
   },
 } satisfies DeclarativeAssertion;
+const frontmatterPresence = "required" satisfies DeclarativeFrontmatterPresence;
+const frontmatterValueType = "string" satisfies DeclarativeFrontmatterValueType;
+const frontmatterFieldShape = {
+  field: "type",
+  valueType: "string",
+  nonEmpty: true,
+} satisfies DeclarativeFrontmatterFieldShape;
+const frontmatterShape = {
+  presence: frontmatterPresence,
+  fields: [frontmatterFieldShape],
+} satisfies DeclarativeFrontmatterShape;
+const invalidFrontmatterNonEmptyArray = {
+  field: "tags",
+  valueType: "array",
+  // @ts-expect-error nonEmpty is a string predicate and cannot combine with array valueType.
+  nonEmpty: true,
+} satisfies DeclarativeFrontmatterFieldShape;
 const invalidFrontmatterShapeAssertion = {
   frontmatterShape: {
     fields: [
@@ -1232,6 +1253,11 @@ void existsAssertion;
 void exactOneTextAssertion;
 void textLengthAssertion;
 void frontmatterShapeAssertion;
+void frontmatterPresence;
+void frontmatterValueType;
+void frontmatterFieldShape;
+void frontmatterShape;
+void invalidFrontmatterNonEmptyArray;
 void invalidFrontmatterShapeAssertion;
 void removedTextAssertion;
 void removedIdsColumnAssertion;

@@ -181,7 +181,11 @@ function frontmatterField(
     valid = false;
   }
 
-  const required = trueConstraint(value.required, `${fieldName}.required`, invalidShapes);
+  const required = trueConstraint(
+    value.required,
+    `${fieldName}.required`,
+    invalidShapes,
+  );
   if (value.required !== undefined && required === undefined) {
     valid = false;
   }
@@ -195,8 +199,18 @@ function frontmatterField(
     valid = false;
   }
 
-  const nonEmpty = trueConstraint(value.nonEmpty, `${fieldName}.nonEmpty`, invalidShapes);
+  const nonEmpty = trueConstraint(
+    value.nonEmpty,
+    `${fieldName}.nonEmpty`,
+    invalidShapes,
+  );
   if (value.nonEmpty !== undefined && nonEmpty === undefined) {
+    valid = false;
+  }
+  if (nonEmpty === true && valueType !== undefined && valueType !== "string") {
+    invalidShapes.push(
+      `${fieldName}.nonEmpty can be combined only with valueType "string".`,
+    );
     valid = false;
   }
 
@@ -211,14 +225,27 @@ function frontmatterField(
     valid = false;
   }
 
-  return valid && field !== undefined
-    ? {
-        field,
-        ...(required === true ? { required: true as const } : {}),
-        ...(valueType !== undefined ? { valueType } : {}),
-        ...(nonEmpty === true ? { nonEmpty: true as const } : {}),
-      }
-    : undefined;
+  if (!valid || field === undefined) {
+    return undefined;
+  }
+
+  const baseField = {
+    field,
+    ...(required === true ? { required: true as const } : {}),
+  };
+
+  if (nonEmpty === true) {
+    return {
+      ...baseField,
+      ...(valueType === "string" ? { valueType } : {}),
+      nonEmpty: true as const,
+    };
+  }
+
+  return {
+    ...baseField,
+    ...(valueType !== undefined ? { valueType } : {}),
+  };
 }
 
 function trueConstraint(

@@ -495,6 +495,10 @@ rules:
         "frontmatterShape.fields[0].nonEmpty must be true when provided.",
       ],
       [
+        { fields: [{ field: "tags", valueType: "array", nonEmpty: true }] },
+        'frontmatterShape.fields[0].nonEmpty can be combined only with valueType "string".',
+      ],
+      [
         {
           presence: "forbidden",
           fields: [{ field: "type", required: true }],

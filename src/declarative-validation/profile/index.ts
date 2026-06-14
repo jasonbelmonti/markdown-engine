@@ -173,12 +173,19 @@ export interface DeclarativeFrontmatterShape {
 
 export type DeclarativeFrontmatterPresence = "required" | "forbidden";
 
-export interface DeclarativeFrontmatterFieldShape {
-  field: string;
-  required?: true;
-  valueType?: DeclarativeFrontmatterValueType;
-  nonEmpty?: true;
-}
+export type DeclarativeFrontmatterFieldShape =
+  | {
+      field: string;
+      required?: true;
+      valueType?: "string";
+      nonEmpty?: true;
+    }
+  | {
+      field: string;
+      required?: true;
+      valueType?: Exclude<DeclarativeFrontmatterValueType, "string">;
+      nonEmpty?: never;
+    };
 
 export type DeclarativeFrontmatterValueType =
   | "string"

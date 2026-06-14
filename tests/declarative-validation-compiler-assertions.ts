@@ -551,6 +551,13 @@ describe("declarative validation compiler assertion proof", () => {
       },
       {
         frontmatterShape: {
+          fields: [{ field: "tags", valueType: "array", nonEmpty: true }],
+        },
+        message:
+          'frontmatterShape.fields[0].nonEmpty can be combined only with valueType "string".',
+      },
+      {
+        frontmatterShape: {
           presence: "forbidden",
           fields: [{ field: "type", required: true }],
         },

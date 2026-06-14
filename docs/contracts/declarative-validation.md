@@ -399,10 +399,12 @@ required non-empty `field` name and must include at least one effective
 constraint: `required: true`, `valueType`, or `nonEmpty: true`. Field names
 within one `frontmatterShape.fields` array must be unique. `valueType` must be
 one of `"string"`, `"number"`, `"boolean"`, `"array"`, `"object"`, or `"null"`.
-`presence: "forbidden"` cannot be combined with `fields`. Runtime evaluation of
-`frontmatterShape` is deferred; evaluating a compiled `frontmatterShape`
-assertion emits `profile.validation.assertionUnsupported` until the evaluator
-contract is implemented.
+`nonEmpty: true` is a string predicate; when it is combined with `valueType`,
+`valueType` must be `"string"`. `presence: "forbidden"` cannot be combined with
+`fields`. Runtime evaluation of `frontmatterShape` is deferred; evaluating a
+compiled `frontmatterShape` assertion emits
+`profile.validation.assertionUnsupported` until the evaluator contract is
+implemented.
 
 `text` must include `contains` or a non-empty `excludes` array.
 `textOccurrenceCount.count` is a finite number and counts non-overlapping
