@@ -123,6 +123,7 @@ export interface DeclarativeAssertion {
     mustAppearIn: readonly string[];
   };
   tableColumnCoverage?: DeclarativeTableColumnCoverage;
+  frontmatterShape?: DeclarativeFrontmatterShape;
   text?: {
     contains?: string;
     excludes?: readonly string[];
@@ -164,6 +165,35 @@ export interface DeclarativeTableColumnCoverageTarget {
   tableHeader?: readonly string[];
   column: string;
 }
+
+export interface DeclarativeFrontmatterShape {
+  presence?: DeclarativeFrontmatterPresence;
+  fields?: readonly DeclarativeFrontmatterFieldShape[];
+}
+
+export type DeclarativeFrontmatterPresence = "required" | "forbidden";
+
+export type DeclarativeFrontmatterFieldShape =
+  | {
+      field: string;
+      required?: true;
+      valueType?: "string";
+      nonEmpty?: true;
+    }
+  | {
+      field: string;
+      required?: true;
+      valueType?: Exclude<DeclarativeFrontmatterValueType, "string">;
+      nonEmpty?: never;
+    };
+
+export type DeclarativeFrontmatterValueType =
+  | "string"
+  | "number"
+  | "boolean"
+  | "array"
+  | "object"
+  | "null";
 
 export interface DeclarativeProfileParseOptions {
   path?: string;

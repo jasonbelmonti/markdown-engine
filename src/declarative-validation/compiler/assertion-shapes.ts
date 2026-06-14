@@ -3,10 +3,12 @@ import { isPlainRecord } from "../../internal/plain-record.js";
 import { unsupportedProfileKey } from "../diagnostics/profile-config-diagnostics.js";
 import type {
   DeclarativeAssertion,
+  DeclarativeFrontmatterShape,
   DeclarativeTableColumnCoverage,
   DeclarativeTableColumnCoverageSource,
   DeclarativeTableColumnCoverageTarget,
 } from "../profile/index.js";
+import { frontmatterShapeFromValue } from "../profile/frontmatter-shape-schema.js";
 import { stringArray } from "../profile/schema-values.js";
 import { compileDiagnostic } from "./diagnostics.js";
 
@@ -373,6 +375,28 @@ function closedTableColumnCoverageTarget(
         column: target.column as string,
       }
     : undefined;
+}
+
+export function closedFrontmatterShape(
+  value: unknown,
+  ruleId: string,
+  diagnostics: MarkdownDiagnostic[],
+): DeclarativeFrontmatterShape | undefined {
+  const result = frontmatterShapeFromValue(value);
+  for (const key of result.unsupportedKeys) {
+    diagnostics.push(unsupportedProfileKey(key));
+  }
+  for (const message of result.invalidShapes) {
+    diagnostics.push(
+      compileDiagnostic(
+        "profile.config.invalidShape",
+        message,
+        ruleId,
+      ),
+    );
+  }
+
+  return result.shape;
 }
 
 export function pushOptionalNonEmptyStringDiagnostic(

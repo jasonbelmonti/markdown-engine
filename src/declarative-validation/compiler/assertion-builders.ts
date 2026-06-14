@@ -18,6 +18,7 @@ import {
 import { compileDiagnostic } from "./diagnostics.js";
 import type { CompiledDeclarativeAssertion } from "./plan.js";
 import {
+  closedFrontmatterShape,
   closedTableColumnCoverage,
   closedStringArray,
   hasTextPredicate,
@@ -52,6 +53,7 @@ export const ASSERTION_BUILDERS: readonly AssertionBuilder[] = [
   buildIdsAssertion,
   buildReferencesAssertion,
   buildTableColumnCoverageAssertion,
+  buildFrontmatterShapeAssertion,
   buildTextAssertion,
   buildTextOccurrenceCountAssertion,
   buildTextLengthAssertion,
@@ -376,6 +378,49 @@ function buildTableColumnCoverageAssertion(
         column: tableColumnCoverage.target.column,
       },
       require: tableColumnCoverage.require,
+    };
+  }
+
+  return undefined;
+}
+
+function buildFrontmatterShapeAssertion(
+  assertion: DeclarativeAssertion,
+  selector: DeclarativeSelector,
+  ruleId: string,
+  syntaxVersion: ValidationProfileSyntaxVersion,
+  diagnostics: MarkdownDiagnostic[],
+): CompiledDeclarativeAssertion | undefined {
+  if (
+    assertion.frontmatterShape === undefined ||
+    syntaxVersion !== PROFILE_SYNTAX_VERSION_V2
+  ) {
+    return undefined;
+  }
+
+  const frontmatterShape = closedFrontmatterShape(
+    assertion.frontmatterShape,
+    ruleId,
+    diagnostics,
+  );
+
+  if (
+    frontmatterShape !== undefined &&
+    pushCompatibilityDiagnostic(
+      "frontmatterShape",
+      selector,
+      ruleId,
+      diagnostics,
+    )
+  ) {
+    return {
+      kind: "frontmatterShape",
+      ...(frontmatterShape.presence !== undefined
+        ? { presence: frontmatterShape.presence }
+        : {}),
+      ...(frontmatterShape.fields !== undefined
+        ? { fields: frontmatterShape.fields }
+        : {}),
     };
   }
 

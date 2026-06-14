@@ -210,6 +210,75 @@ rules:
     });
   });
 
+  it("parses v2 frontmatterShape assertions", () => {
+    const result = parseValidationProfile(`
+syntaxVersion: markdown-engine.validation@v2
+documentVersion: 1.0.0
+rules:
+  - id: frontmatter.required
+    select:
+      target: document
+    assert:
+      frontmatterShape:
+        presence: required
+  - id: frontmatter.forbidden
+    select:
+      target: document
+    assert:
+      frontmatterShape:
+        presence: forbidden
+  - id: frontmatter.fields
+    select:
+      target: document
+    assert:
+      frontmatterShape:
+        fields:
+          - field: type
+            required: true
+            valueType: string
+            nonEmpty: true
+          - field: tags
+            valueType: array
+`);
+
+    expect(result).toEqual({
+      profile: {
+        syntaxVersion: "markdown-engine.validation@v2",
+        documentVersion: "1.0.0",
+        rules: [
+          {
+            id: "frontmatter.required",
+            select: { target: "document" },
+            assert: { frontmatterShape: { presence: "required" } },
+          },
+          {
+            id: "frontmatter.forbidden",
+            select: { target: "document" },
+            assert: { frontmatterShape: { presence: "forbidden" } },
+          },
+          {
+            id: "frontmatter.fields",
+            select: { target: "document" },
+            assert: {
+              frontmatterShape: {
+                fields: [
+                  {
+                    field: "type",
+                    required: true,
+                    valueType: "string",
+                    nonEmpty: true,
+                  },
+                  { field: "tags", valueType: "array" },
+                ],
+              },
+            },
+          },
+        ],
+      },
+      diagnostics: [],
+    });
+  });
+
   it("rejects invalid parsed YAML textLength assertions", () => {
     const invalidTextLengthProfiles = [
       {
@@ -395,6 +464,89 @@ rules:
     }
   });
 
+  it("rejects invalid v2 frontmatterShape payloads with deterministic diagnostics", () => {
+    const invalidFrontmatterShapeAssertions = [
+      [
+        { presence: "optional" },
+        'frontmatterShape.presence must be "required" or "forbidden" when provided.',
+      ],
+      [
+        { fields: [] },
+        "frontmatterShape.fields must be a non-empty array when provided.",
+      ],
+      [
+        { fields: [{ field: "type" }] },
+        "frontmatterShape.fields[0] must include required, valueType, or nonEmpty.",
+      ],
+      [
+        { fields: [{ field: "", required: true }] },
+        "frontmatterShape.fields[0].field must be a non-empty string.",
+      ],
+      [
+        { fields: [{ field: "type", required: false }] },
+        "frontmatterShape.fields[0].required must be true when provided.",
+      ],
+      [
+        { fields: [{ field: "type", valueType: "date" }] },
+        'frontmatterShape.fields[0].valueType must be "string", "number", "boolean", "array", "object", or "null" when provided.',
+      ],
+      [
+        { fields: [{ field: "type", nonEmpty: false }] },
+        "frontmatterShape.fields[0].nonEmpty must be true when provided.",
+      ],
+      [
+        { fields: [{ field: "tags", valueType: "array", nonEmpty: true }] },
+        'frontmatterShape.fields[0].nonEmpty can be combined only with valueType "string".',
+      ],
+      [
+        {
+          presence: "forbidden",
+          fields: [{ field: "type", required: true }],
+        },
+        "frontmatterShape.fields cannot be provided when presence is forbidden.",
+      ],
+      [
+        {
+          fields: [
+            { field: "type", required: true },
+            { field: "type", valueType: "string" },
+          ],
+        },
+        'frontmatterShape.fields[1].field duplicates field "type".',
+      ],
+    ] as const;
+
+    for (const [
+      frontmatterShape,
+      message,
+    ] of invalidFrontmatterShapeAssertions) {
+      const result = parseValidationProfile({
+        syntaxVersion: "markdown-engine.validation@v2",
+        rules: [
+          {
+            id: "frontmatter.invalid-shape",
+            select: { target: "document" },
+            assert: { frontmatterShape },
+          },
+        ],
+      } as ProfileInput);
+
+      expect(result.profile).toBeUndefined();
+      expect(result.diagnostics).toEqual([
+        {
+          code: "profile.config.invalidShape",
+          message,
+          severity: "error",
+        },
+        {
+          code: "profile.config.invalidShape",
+          message: "Rule assert must include at least one supported assertion.",
+          severity: "error",
+        },
+      ]);
+    }
+  });
+
   it("keeps ids count bounds invalid for v1 profiles", () => {
     const result = parseValidationProfile({
       syntaxVersion: "markdown-engine.validation@v1",
@@ -440,6 +592,33 @@ rules:
       {
         code: "profile.compile.unsupportedAssertion",
         message: 'Unsupported assertion "tableColumnCoverage".',
+        severity: "error",
+      },
+    ]);
+  });
+
+  it("keeps frontmatterShape invalid for v1 profiles", () => {
+    const result = parseValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      rules: [
+        {
+          id: "v1.frontmatter-shape",
+          select: { target: "document" },
+          assert: {
+            frontmatterShape: {
+              presence: "required",
+              fields: [{ field: "type", required: true }],
+            },
+          },
+        },
+      ],
+    } as ProfileInput);
+
+    expect(result.profile).toBeUndefined();
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.compile.unsupportedAssertion",
+        message: 'Unsupported assertion "frontmatterShape".',
         severity: "error",
       },
     ]);

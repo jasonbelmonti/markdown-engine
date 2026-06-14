@@ -1,5 +1,7 @@
 import type { MarkdownDiagnostic } from "../../api/diagnostics.js";
 import type {
+  DeclarativeFrontmatterFieldShape,
+  DeclarativeFrontmatterPresence,
   DeclarativeSelector,
   DeclarativeValidationSeverity,
 } from "../profile/index.js";
@@ -151,6 +153,11 @@ export type CompiledDeclarativeAssertion =
         column: string;
       };
       require: "everySourceId";
+    }
+  | {
+      kind: "frontmatterShape";
+      presence?: DeclarativeFrontmatterPresence;
+      fields?: readonly DeclarativeFrontmatterFieldShape[];
     }
   | {
       kind: "text";
