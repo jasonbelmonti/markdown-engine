@@ -1,0 +1,10 @@
+syntaxVersion: markdown-engine.validation@v2
+documentVersion: 1.0.0
+rules:
+  - id: okf.log.date-heading
+    select:
+      target: heading
+      depth: 2
+    assert:
+      textFormat:
+        format: isoDate
