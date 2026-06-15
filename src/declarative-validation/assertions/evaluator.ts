@@ -5,10 +5,7 @@ import type {
 } from "../compiler/plan.js";
 import type { DeclarativeSelection } from "../selectors/index.js";
 import type { AssertionEvaluationContext } from "./context.js";
-import {
-  type AssertionDiagnostic,
-  unsupportedEvaluatorDiagnostic,
-} from "./diagnostics.js";
+import type { AssertionDiagnostic } from "./diagnostics.js";
 import { evaluateExists } from "./exists.js";
 import { evaluateFrontmatterShape } from "./frontmatter-shape.js";
 import { evaluateFrontmatterRequired } from "./frontmatter-required.js";
@@ -19,6 +16,7 @@ import { evaluateSectionsRequired } from "./sections-required.js";
 import { evaluateTableColumnCoverage } from "./table-column-coverage.js";
 import { evaluateTableColumnsRequired } from "./table-columns-required.js";
 import { evaluateText } from "./text.js";
+import { evaluateTextFormat } from "./text-format.js";
 import { evaluateTextLength } from "./text-length.js";
 import { evaluateTextOccurrenceCount } from "./text-occurrence-count.js";
 
@@ -64,13 +62,7 @@ function evaluateAssertion(
       return evaluateTextLength(assertion, context);
 
     case "textFormat":
-      return [
-        unsupportedEvaluatorDiagnostic(
-          assertion,
-          context.rule,
-          context.assertionIndex,
-        ),
-      ];
+      return evaluateTextFormat(assertion, context);
 
     case "frontmatterRequired":
       return evaluateFrontmatterRequired(assertion, context);

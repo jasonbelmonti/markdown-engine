@@ -592,16 +592,89 @@ describe("declarative validation assertion proof", () => {
     ]);
   });
 
-  it("fails textFormat with an unsupported evaluator diagnostic before runtime semantics", () => {
-    const document = normalize(parse("# 2026-06-15\n\nbody\n").parsed, {
-      documentVersion: "1.0.0",
-    }).document;
+  it("evaluates textFormat isoDate headings with exact calendar semantics", () => {
+    const document = normalize(
+      parse(
+        [
+          "# 2026-06-14",
+          "",
+          "body",
+          "",
+          "# 2024-02-29",
+          "",
+          "body",
+          "",
+          "# 2026-04-31",
+          "",
+          "body",
+          "",
+          "# 2023-02-29",
+          "",
+          "body",
+          "",
+          "# 2026-13-01",
+          "",
+          "body",
+          "",
+          "# not-a-date",
+          "",
+          "body",
+          "",
+          "# 2026-06-14T00:00:00Z",
+          "",
+          "body",
+          "",
+          "# 2026-06",
+          "",
+          "body",
+          "",
+        ].join("\n"),
+      ).parsed,
+      {
+        documentVersion: "1.0.0",
+      },
+    ).document;
     const result = validateWithProfile(document, {
       syntaxVersion: "markdown-engine.validation@v2",
       rules: [
         {
-          id: "log.date-heading",
-          select: { target: "heading", depth: 1 },
+          id: "date.valid",
+          select: { target: "heading", text: "2026-06-14" },
+          assert: { textFormat: { format: "isoDate" } },
+        },
+        {
+          id: "date.leap-valid",
+          select: { target: "heading", text: "2024-02-29" },
+          assert: { textFormat: { format: "isoDate" } },
+        },
+        {
+          id: "date.day-invalid",
+          select: { target: "heading", text: "2026-04-31" },
+          assert: { textFormat: { format: "isoDate" } },
+        },
+        {
+          id: "date.leap-invalid",
+          select: { target: "heading", text: "2023-02-29" },
+          assert: { textFormat: { format: "isoDate" } },
+        },
+        {
+          id: "date.month-invalid",
+          select: { target: "heading", text: "2026-13-01" },
+          assert: { textFormat: { format: "isoDate" } },
+        },
+        {
+          id: "date.non-date",
+          select: { target: "heading", text: "not-a-date" },
+          assert: { textFormat: { format: "isoDate" } },
+        },
+        {
+          id: "date.timestamp",
+          select: { target: "heading", text: "2026-06-14T00:00:00Z" },
+          assert: { textFormat: { format: "isoDate" } },
+        },
+        {
+          id: "date.partial",
+          select: { target: "heading", text: "2026-06" },
           assert: { textFormat: { format: "isoDate" } },
         },
       ],
@@ -609,32 +682,146 @@ describe("declarative validation assertion proof", () => {
 
     expect(result.valid).toBe(false);
     expect(result.ruleResults).toEqual([
-      {
-        ruleId: "log.date-heading",
-        status: "failed",
+      expect.objectContaining({
+        ruleId: "date.day-invalid",
         passed: false,
-        evaluation: {
-          kind: "assertions",
-          diagnostics: [
-            {
-              code: "profile.validation.assertionUnsupported",
-              ruleId: "log.date-heading",
-              message:
-                'Assertion "textFormat" is compiled but not implemented by the assertion evaluator yet.',
-              severity: "error",
-            },
-          ],
+        diagnostics: [
+          expect.objectContaining({
+            code: "profile.validation.assertionFailed",
+            ruleId: "date.day-invalid",
+            message:
+              "Selected heading text must be an exact ISO date in YYYY-MM-DD form.",
+            sourceRange: expect.objectContaining({
+              start: expect.objectContaining({ line: 9 }),
+            }),
+          }),
+        ],
+      }),
+      expect.objectContaining({
+        ruleId: "date.leap-invalid",
+        passed: false,
+        diagnostics: [
+          expect.objectContaining({
+            code: "profile.validation.assertionFailed",
+            ruleId: "date.leap-invalid",
+            message:
+              "Selected heading text must be an exact ISO date in YYYY-MM-DD form.",
+            sourceRange: expect.objectContaining({
+              start: expect.objectContaining({ line: 13 }),
+            }),
+          }),
+        ],
+      }),
+      expect.objectContaining({
+        ruleId: "date.leap-valid",
+        passed: true,
+        diagnostics: [],
+      }),
+      expect.objectContaining({
+        ruleId: "date.month-invalid",
+        passed: false,
+        diagnostics: [
+          expect.objectContaining({
+            code: "profile.validation.assertionFailed",
+            ruleId: "date.month-invalid",
+            message:
+              "Selected heading text must be an exact ISO date in YYYY-MM-DD form.",
+            sourceRange: expect.objectContaining({
+              start: expect.objectContaining({ line: 17 }),
+            }),
+          }),
+        ],
+      }),
+      expect.objectContaining({
+        ruleId: "date.non-date",
+        passed: false,
+        diagnostics: [
+          expect.objectContaining({
+            code: "profile.validation.assertionFailed",
+            ruleId: "date.non-date",
+            message:
+              "Selected heading text must be an exact ISO date in YYYY-MM-DD form.",
+            sourceRange: expect.objectContaining({
+              start: expect.objectContaining({ line: 21 }),
+            }),
+          }),
+        ],
+      }),
+      expect.objectContaining({
+        ruleId: "date.partial",
+        passed: false,
+        diagnostics: [
+          expect.objectContaining({
+            code: "profile.validation.assertionFailed",
+            ruleId: "date.partial",
+            message:
+              "Selected heading text must be an exact ISO date in YYYY-MM-DD form.",
+            sourceRange: expect.objectContaining({
+              start: expect.objectContaining({ line: 29 }),
+            }),
+          }),
+        ],
+      }),
+      expect.objectContaining({
+        ruleId: "date.timestamp",
+        passed: false,
+        diagnostics: [
+          expect.objectContaining({
+            code: "profile.validation.assertionFailed",
+            ruleId: "date.timestamp",
+            message:
+              "Selected heading text must be an exact ISO date in YYYY-MM-DD form.",
+            sourceRange: expect.objectContaining({
+              start: expect.objectContaining({ line: 25 }),
+            }),
+          }),
+        ],
+      }),
+      expect.objectContaining({
+        ruleId: "date.valid",
+        passed: true,
+        diagnostics: [],
+      }),
+    ]);
+    expect(result.diagnostics).toEqual([
+      ...(result.ruleResults[0]?.diagnostics ?? []),
+      ...(result.ruleResults[1]?.diagnostics ?? []),
+      ...(result.ruleResults[3]?.diagnostics ?? []),
+      ...(result.ruleResults[4]?.diagnostics ?? []),
+      ...(result.ruleResults[5]?.diagnostics ?? []),
+      ...(result.ruleResults[6]?.diagnostics ?? []),
+    ]);
+  });
+
+  it("fails textFormat isoDate when heading selection is empty", () => {
+    const document = normalize(parse("# 2026-06-14\n\nbody\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v2",
+      rules: [
+        {
+          id: "date.empty-selection",
+          select: { target: "heading", text: "2099-01-01" },
+          assert: { textFormat: { format: "isoDate" } },
         },
+      ],
+    });
+
+    expect(result.valid).toBe(false);
+    expect(result.ruleResults).toEqual([
+      expect.objectContaining({
+        ruleId: "date.empty-selection",
+        passed: false,
         diagnostics: [
           {
-            code: "profile.validation.assertionUnsupported",
-            ruleId: "log.date-heading",
-            message:
-              'Assertion "textFormat" is compiled but not implemented by the assertion evaluator yet.',
+            code: "profile.validation.emptySelection",
+            ruleId: "date.empty-selection",
+            message: "Rule selector did not match any document targets.",
             severity: "error",
           },
         ],
-      },
+      }),
     ]);
   });
 
