@@ -1,13 +1,14 @@
 # Declarative Validation Contract
 
 Status: package 3.0.0, v1 profile syntax with v2 Conditional V2, document contract 1.0.0
-Last updated: 2026-06-14
+Last updated: 2026-06-15
 Current v2 surface: flat-rule result/evidence shell, ID count-bound schema and
 runtime evaluator contract, plus `tableColumnCoverage` schema, compiled-plan,
 and runtime evaluator contract, `frontmatterShape` schema, compiled-plan, and
-runtime evaluator contract, grouped rule runtime contract, and rule-level
-`when` schema, matcher, public skipped-rule result, skipped counts, and
-evidence cloning contract.
+runtime evaluator contract, `textFormat` schema, compiled-plan, and runtime
+evaluator contract, grouped rule runtime contract, and rule-level `when`
+schema, matcher, public skipped-rule result, skipped counts, and evidence
+cloning contract.
 
 This document defines the public declarative validation contract for
 `@jasonbelmonti/markdown-engine`. The stable surface is the package-root API,
@@ -27,9 +28,10 @@ shell needed to distinguish assertion, grouped, and skipped evaluation output
 from v1 output, plus the ID count-bound schema, compiled-plan, and runtime
 evaluator contract; the `tableColumnCoverage` schema, compiled-plan, and
 runtime evaluator contract; the `frontmatterShape` schema, private
-compiled-plan, and runtime evaluator contract; and the `when` schema plus
-private compiled-plan and matcher contract. Matched applicability continues
-into normal rule evaluation.
+compiled-plan, and runtime evaluator contract; the `textFormat` schema,
+private compiled-plan, and runtime evaluator contract; and the `when` schema
+plus private compiled-plan and matcher contract. Matched applicability
+continues into normal rule evaluation.
 Non-matching applicability returns a public skipped rule result with
 `status: "skipped"`, `passed: true`, `evaluation.kind: "skipped"`,
 `reason: "whenNotMatched"`, `skippedRuleCount`, no top-level diagnostics, and a
@@ -83,9 +85,11 @@ This release recognizes v2 as a distinct syntax version at profile admission,
 admits ID count bounds at the schema, compiled-plan, and runtime evaluator
 layers, admits `tableColumnCoverage` at the schema, internal compiled-plan, and
 runtime evaluator layers, admits `frontmatterShape` at the schema, internal
-compiled-plan, and runtime evaluator layers, admits non-recursive grouped rules
-at the schema, compiled-plan, and runtime evaluator layers, and admits optional
-rule-level `when` at the schema, internal compiled-plan, and matcher layers.
+compiled-plan, and runtime evaluator layers, admits `textFormat` at the schema,
+internal compiled-plan, and runtime evaluator layers, admits non-recursive
+grouped rules at the schema, compiled-plan, and runtime evaluator layers, and
+admits optional rule-level `when` at the schema, internal compiled-plan, and
+matcher layers.
 Matching `when` rules continue through normal flat or grouped evaluation and do
 not add a public `when` field to the evaluated rule result. Non-matching `when`
 rules are not evaluated; they return the public skipped-rule result shape,
@@ -211,8 +215,8 @@ emit `profile.config.invalidShape`.
 
 Rule-level `when` is allowed only on v2 rules. Branch-level `when` remains
 unsupported. V1 profiles preserve the original flat rule authoring contract;
-grouped `anyOf` / `allOf`, ID count bounds, `tableColumnCoverage`, and
-rule-level `when` are v2 additions.
+grouped `anyOf` / `allOf`, ID count bounds, `tableColumnCoverage`,
+`frontmatterShape`, `textFormat`, and rule-level `when` are v2 additions.
 
 Profile values must be JSON-safe data properties after YAML materialization.
 Functions, accessors, proxies, cyclic structures, sparse arrays, `undefined`
@@ -325,6 +329,9 @@ interface DeclarativeAssertion {
     min?: number;
     max?: number;
   };
+  textFormat?: {
+    format: "isoDate";
+  };
   frontmatterRequired?: {
     fields: readonly string[];
   };
@@ -352,6 +359,7 @@ Selector/assertion compatibility is part of the public contract:
 | `text` | all supported selector targets |
 | `textOccurrenceCount` | all supported selector targets |
 | `textLength` | all supported selector targets |
+| `textFormat` | all supported selector targets |
 | `frontmatterRequired` | `document` |
 
 Incompatible supported selector/assertion pairs emit
@@ -429,10 +437,22 @@ integers, `min` must be less than or equal to `max` when both are present, and
 evaluation uses JavaScript string `.length` for each selected target's
 normalized text.
 
+For v2 profiles, `textFormat` is admitted as a flat-rule schema and internal
+compiled-plan assertion. `textFormat.format` must be exactly `"isoDate"`;
+custom formats, locale options, regex-like formats, profile-supplied patterns,
+and additional `textFormat` members are unsupported. Runtime evaluation checks
+each selected target's normalized text as an exact real calendar date in
+`YYYY-MM-DD` form. Valid dates such as `2026-06-14` and leap dates such as
+`2024-02-29` pass. Non-dates, invalid calendar dates, timestamps, partial
+dates, and strings with extra text fail with
+`profile.validation.assertionFailed`. The evaluator does not compile
+profile-supplied regular expressions, call `Date.parse`, perform locale
+parsing, or implement date ordering.
+
 Empty selector results produce `profile.validation.emptySelection` for exists,
-table, ID, reference, text, occurrence, and text-length assertions.
-Document-scoped required-section, required-frontmatter, and frontmatter-shape
-assertions evaluate against the document.
+table, ID, reference, text, occurrence, text-length, and text-format
+assertions. Document-scoped required-section, required-frontmatter, and
+frontmatter-shape assertions evaluate against the document.
 
 ## Diagnostics
 
@@ -461,7 +481,7 @@ diagnostic can still leave the aggregate `valid` value `true`.
 | `profile.compile.unsupportedAssertion` | `error` | Parsed YAML or JSON-safe `assert` input contains an unsupported first-level assertion member that does not have unsupported-key precedence. |
 | `profile.compile.incompatibleSelectorAssertion` | `error` | A supported selector target is paired with an incompatible supported assertion. |
 | `profile.validation.emptySelection` | Rule severity | A rule cannot evaluate because its selector matches no applicable target. |
-| `profile.validation.assertionFailed` | Rule severity | A supported assertion evaluates and fails without a more specific diagnostic code, including missing table columns, exact occurrence-count mismatches, and text-length bound failures. |
+| `profile.validation.assertionFailed` | Rule severity | A supported assertion evaluates and fails without a more specific diagnostic code, including missing table columns, exact occurrence-count mismatches, text-length bound failures, and text-format `isoDate` failures. |
 | `profile.validation.duplicateId` | Rule severity | An `ids.unique` assertion finds repeated IDs. |
 | `profile.validation.frontmatterForbidden` | Rule severity | A `frontmatterShape` assertion with `presence: "forbidden"` finds present frontmatter. |
 | `profile.validation.frontmatterFieldEmpty` | Rule severity | A frontmatter field configured with `nonEmpty: true` is not a non-empty string. |
@@ -712,8 +732,21 @@ rules:
           exists: true
 ```
 
-The v1 profile above continues to emit the v1 validation-result shape. The v2
-profile above emits syntax-versioned v2 result metadata with
+```yaml
+# v2 date-heading profile: validates exact ISO date heading text.
+syntaxVersion: markdown-engine.validation@v2
+rules:
+  - id: log.date-heading
+    select:
+      target: heading
+      depth: 2
+    assert:
+      textFormat:
+        format: isoDate
+```
+
+The v1 profile above continues to emit the v1 validation-result shape. V2
+profiles emit syntax-versioned v2 result metadata with
 `evaluatedRuleCount` and `skippedRuleCount`; v2 rule results include `status`
 and `evaluation`. The CLI does not add a second discriminator for v2; consumers
 branch on
