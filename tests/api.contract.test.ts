@@ -5,6 +5,9 @@ import {
   parse,
   serialize,
   validate,
+  validateDocumentSet,
+  type ValidateDocumentSetEntry,
+  type ValidateDocumentSetResult,
   type ValidationConfig,
 } from "@jasonbelmonti/markdown-engine";
 
@@ -37,6 +40,7 @@ describe("public API", () => {
     expect(normalize).toEqual(expect.any(Function));
     expect(validate).toEqual(expect.any(Function));
     expect(serialize).toEqual(expect.any(Function));
+    expect(validateDocumentSet).toEqual(expect.any(Function));
   });
 
   it("VAL-7: exposes parse, normalize, validate, and serialize result contracts", () => {
@@ -101,5 +105,40 @@ describe("public API", () => {
     expect(JSON.stringify(parseResult)).not.toContain('"position"');
     expect(JSON.stringify(normalizeResult)).not.toContain('"position"');
     expect(JSON.stringify(normalizeResult)).not.toContain('"value"');
+  });
+
+  it("exports the document set validation public contract", () => {
+    const entry = {
+      path: contractPath,
+      markdown,
+      profile: {
+        syntaxVersion: "markdown-engine.validation@v1",
+        documentVersion: "1.0.0",
+        rules: [],
+      },
+    } satisfies ValidateDocumentSetEntry;
+    const result = validateDocumentSet([entry], {
+      preserveSourceLocations: false,
+    }) satisfies ValidateDocumentSetResult;
+
+    expect(result).toMatchObject({
+      valid: true,
+      diagnostics: [],
+      entries: [
+        {
+          path: contractPath,
+          diagnostics: [],
+          parseDiagnostics: [],
+          normalizationDiagnostics: [],
+          profileDiagnostics: [],
+          validationDiagnostics: [],
+          validationResult: {
+            valid: true,
+            diagnostics: [],
+            ruleResults: [],
+          },
+        },
+      ],
+    });
   });
 });
