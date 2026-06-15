@@ -882,6 +882,14 @@ profiles:
 | Non-root `index.md` | `profiles/non-root-index.yaml` | `frontmatterShape` forbids frontmatter on directory index files. |
 | `log.md` | `profiles/log.yaml` | `textFormat` checks level-2 log headings as real `YYYY-MM-DD` dates. |
 
+Concept validation applies only to non-reserved concept documents. Reserved
+`index.md` and `log.md` files are not routed through the concept profile and do
+not fail merely because they lack concept `type` frontmatter. The bundle-root
+`index.md` may carry the OKF version exception `okf_version: "0.1"` through the
+root-index profile; non-root `index.md` files use the non-root index profile and
+forbid frontmatter. `log.md` is validated as a log with `textFormat`, not as a
+concept document.
+
 A caller-owned routing layer can classify entries by path and choose the
 matching profile before validation:
 
@@ -906,7 +914,8 @@ const result = validateDocumentSet(entries, {
 This composition proves hard OKF conformance only. It does not add CLI
 traversal, an OKF adapter, runtime OKF semantics, directory watching, bundle
 discovery, link checking, unknown-type rejection, optional metadata quality
-checks, or rejection of missing optional `index.md` files.
+checks, or rejection of missing optional `index.md` files. It also does not add
+engine-owned path classification.
 
 CLI invocation:
 

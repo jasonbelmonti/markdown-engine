@@ -276,6 +276,16 @@ that same order. It does not read directories, expand globs, watch files, write
 persistent state, add CLI behavior, classify OKF paths, or choose profiles for
 callers. Consumers own discovery, routing, and IO.
 
+For OKF-style bundles, `validateDocumentSet` stays a generic aggregation API.
+Callers must classify each path before calling the function and provide the
+profile for that caller-classified role. A non-reserved concept document can use
+a concept profile that requires `type` frontmatter, the bundle-root `index.md`
+can use a root-index profile that accepts the `okf_version: "0.1"` exception, a
+non-root `index.md` can use a no-frontmatter profile, and `log.md` can use a
+log profile that checks date headings.
+
+The API does not infer those roles from paths.
+
 `ValidateDocumentSetOptions` forwards supported document normalization and
 validation options:
 

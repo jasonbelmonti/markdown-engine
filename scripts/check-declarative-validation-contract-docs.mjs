@@ -48,6 +48,11 @@ checkFile("docs/contracts/declarative-validation.md", {
     "YYYY-MM-DD",
     "text-format `isoDate` failures",
     "v2 date-heading profile",
+    "OKF v0.1 Hard-Validation Profile Composition",
+    "Concept validation applies only to non-reserved concept documents",
+    'okf_version: "0.1"',
+    "`log.md` is validated as a log",
+    "engine-owned path classification",
     "DeclarativeValidationCliJsonResult",
     "DeclarativeValidationConfigErrorResult",
     "skippedRuleCount",
@@ -72,6 +77,20 @@ checkFile("docs/contracts/declarative-validation.md", {
     "file watching",
     "persistence",
     "profile-specific core semantics",
+  ],
+});
+
+checkFile("docs/contracts/api.md", {
+  headings: [
+    "## `validateDocumentSet`",
+  ],
+  phrases: [
+    "`validateDocumentSet` is a pure aggregate API",
+    "classify OKF paths",
+    "For OKF-style bundles, `validateDocumentSet` stays a generic aggregation API",
+    "Callers must classify each path before calling the function",
+    'okf_version: "0.1"',
+    "The API does not infer those roles from paths.",
   ],
 });
 
@@ -123,6 +142,30 @@ checkFile("docs/evidence/wp-5-evd-8-declarative-validation-boundary-audit.md", {
     "persistence",
     "profile-specific core semantics",
     "profile.config.unsupportedKey",
+  ],
+});
+
+checkFile("docs/evidence/bel-1332-okf-release-readiness.md", {
+  headings: [
+    "## Scope",
+    "## Seal Assertions",
+    "## Commands",
+    "## Recorded Results",
+    "## Release Containment",
+    "## Residual Risks",
+    "## Conclusion",
+  ],
+  phrases: [
+    "Issue: BEL-1332",
+    "OKF validation seal",
+    "caller-owned path classification",
+    "root `index.md`",
+    "non-root `index.md`",
+    "`log.md` is validated as a log",
+    "OKF-specific core semantic matches: 0",
+    "npm run docs:declarative-validation-contract",
+    "npm run audit:declarative-validation-boundary",
+    "No release, publish, tag, version bump, or dist-tag mutation occurred.",
   ],
 });
 
@@ -201,6 +244,14 @@ checkFile("README.md", {
     "docs/evidence/wp-5-evd-8-declarative-validation-boundary-audit.md",
     "npm run docs:declarative-validation-contract",
     "npm run audit:declarative-validation-boundary",
+    "OKF v0.1 example composition",
+    "`frontmatterShape`",
+    "`textFormat`",
+    "`validateDocumentSet`",
+    "caller-owned path classification",
+    "root `index.md`",
+    "non-root `index.md`",
+    "`log.md`",
   ],
 });
 
@@ -216,7 +267,7 @@ if (failures.length > 0) {
 
 console.log("Declarative validation contract documentation gate PASS");
 console.log(
-  "Checked files: docs/contracts/declarative-validation.md, README.md, docs/evidence/wp-5-evd-7-declarative-validation-contract-review.md, docs/evidence/wp-5-evd-8-declarative-validation-boundary-audit.md, docs/evidence/conditional-v2-evd-6-contract-docs.md, docs/evidence/conditional-v2-evd-6-contract-cli-compatibility.md, package.json",
+  "Checked files: docs/contracts/declarative-validation.md, docs/contracts/api.md, README.md, docs/evidence/wp-5-evd-7-declarative-validation-contract-review.md, docs/evidence/wp-5-evd-8-declarative-validation-boundary-audit.md, docs/evidence/bel-1332-okf-release-readiness.md, docs/evidence/conditional-v2-evd-6-contract-docs.md, docs/evidence/conditional-v2-evd-6-contract-cli-compatibility.md, package.json",
 );
 
 function checkFile(file, check) {
