@@ -82,12 +82,15 @@ Primary evidence families:
   boundaries, source safety, determinism, snapshots, and performance.
 - `bel-978-*` through `bel-1043-*` - later contract, substrate, example-suite,
   and targeted verification records.
+- `bel-1332-*` - OKF validation seal records for docs, boundary audit, final
+  validation, and release containment.
 
 Commonly cited records:
 
 - [Rich IR contract documentation gate](evidence/wp-5-evd-6-rich-ir-contract.md)
 - [Declarative validation contract review](evidence/wp-5-evd-7-declarative-validation-contract-review.md)
 - [Declarative validation boundary audit](evidence/wp-5-evd-8-declarative-validation-boundary-audit.md)
+- [OKF validation seal evidence](evidence/bel-1332-okf-release-readiness.md)
 - [Declarative validation MS-2 approval](evidence/bel-986-ms-2-approval.md)
 - [1.0 release readiness and containment](evidence/wp-6-evd-10-release-readiness.md)
 - [Rollback and containment record](evidence/wp-6-evd-10-rollback-containment.md)

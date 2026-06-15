@@ -10,7 +10,7 @@ const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const failures = [];
 const sourceRoots = [
   "src/declarative-validation",
-  "src/api/declarative-validation.ts",
+  "src/api",
   "src/cli",
 ];
 const forbiddenRuntimePatterns = [
@@ -85,6 +85,25 @@ const profileSpecificTerms = [
   /\bsemanticEvaluator\b/,
   /\bSemanticEvaluator\b/,
 ];
+const okfSpecificCoreTerms = [
+  /\bokf(?:[_-][A-Za-z0-9]+)?\b/i,
+  /\bokf[A-Z][A-Za-z0-9]*\b/,
+  /\b(?:OKF|Okf)[A-Z][A-Za-z0-9]*\b/,
+  /\bokf_version\b/,
+  /\bOpenKnowledgeFormat\b/,
+  /\bOpen Knowledge Format\b/i,
+  /\bKnowledgeBundle\b/,
+  /\bknowledge bundle\b/i,
+  /\bconceptDocument\b/,
+  /\bConceptDocument\b/,
+  /\bconcept documents?\b/i,
+  /\brootIndex\b/,
+  /\bnonRootIndex\b/,
+  /\broot-index\b/,
+  /\bnon-root-index\b/,
+  /\bbundle discovery\b/i,
+  /\bpath classification\b/i,
+];
 
 const dependencyAudit = runBoundaryDependencyAudit(repoRoot);
 if (dependencyAudit.dependencyMatches.length > 0) {
@@ -113,12 +132,22 @@ for (const source of declarativeValidationSources()) {
       );
     }
   }
+
+  for (const pattern of okfSpecificCoreTerms) {
+    const match = source.content.match(pattern);
+    if (match !== null) {
+      failures.push(
+        `${source.file}: OKF-specific core semantic term matched ${JSON.stringify(match[0])}`,
+      );
+    }
+  }
 }
 
 checkUnsupportedKeyContracts();
 checkRejectionCoverage();
 checkEvidenceCoverage();
 checkConditionalV2EvidenceCoverage();
+checkOkfEvidenceCoverage();
 checkPatternCoverage();
 
 if (failures.length > 0) {
@@ -135,6 +164,7 @@ console.log("Runtime boundary source matches: 0");
 console.log("Regex-like key rejection checks: present");
 console.log("Unsafe executable key rejection checks: present");
 console.log("Profile-specific core semantic matches: 0");
+console.log("OKF-specific core semantic matches: 0");
 
 function declarativeValidationSources() {
   const sourcesByPath = new Map();
@@ -350,6 +380,24 @@ function checkPatternCoverage() {
     "const semanticScore = 1;",
     'const note = "semantic scoring";',
   ];
+  const okfSpecificCases = [
+    "const okfProfile = {};",
+    "const OkfProfile = {};",
+    "const OKFProfile = {};",
+    "const OKFAdapter = {};",
+    "const OkfDocumentRole = {};",
+    'const version = "okf_version";',
+    'const format = "Open Knowledge Format";',
+    "const bundle = new KnowledgeBundle();",
+    'const note = "knowledge bundle";',
+    "const conceptDocument = {};",
+    "const rootIndex = {};",
+    "const nonRootIndex = {};",
+    'const role = "root-index";',
+    'const role = "non-root-index";',
+    'const note = "bundle discovery";',
+    'const note = "path classification";',
+  ];
 
   for (const { label, content } of runtimeCases) {
     const matched = forbiddenRuntimePatterns.some(
@@ -365,6 +413,33 @@ function checkPatternCoverage() {
       failures.push(
         `profile-specific term self-check: missing coverage for ${content}`,
       );
+    }
+  }
+
+  for (const content of okfSpecificCases) {
+    if (!okfSpecificCoreTerms.some((pattern) => pattern.test(content))) {
+      failures.push(
+        `OKF-specific term self-check: missing coverage for ${content}`,
+      );
+    }
+  }
+}
+
+function checkOkfEvidenceCoverage() {
+  const evidence = readRepoFile("docs/evidence/bel-1332-okf-release-readiness.md");
+  const phrases = [
+    "Issue: BEL-1332",
+    "OKF-specific core semantic matches: 0",
+    "caller-owned path classification",
+    "root `index.md`",
+    "non-root `index.md`",
+    "`log.md` is validated as a log",
+    "No release, publish, tag, version bump, or dist-tag mutation occurred.",
+  ];
+
+  for (const phrase of phrases) {
+    if (!evidence.includes(phrase)) {
+      failures.push(`BEL-1332 OKF evidence: missing phrase ${phrase}`);
     }
   }
 }

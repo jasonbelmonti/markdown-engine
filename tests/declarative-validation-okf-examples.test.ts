@@ -100,6 +100,28 @@ describe("OKF v0.1 document-set examples", () => {
         ruleId: "okf.log.date-heading",
       }),
     ]);
+
+    expectEntryRuleIds(result, "index.md", [
+      "okf.root-index.version-frontmatter",
+    ]);
+    expectEntryRuleIds(result, "datasets/index.md", [
+      "okf.non-root-index.no-frontmatter",
+    ]);
+    expectEntryRuleIds(result, "datasets/sales.md", [
+      "okf.concept.frontmatter",
+    ]);
+    expectEntryRuleIds(result, "playbooks/incident-response.md", [
+      "okf.concept.frontmatter",
+    ]);
+    expect(
+      result.entries
+        .filter(
+          (entry) => entry.path.endsWith("index.md") || entry.path === "log.md",
+        )
+        .flatMap((entry) =>
+          entry.validationResult?.ruleResults.map((rule) => rule.ruleId) ?? [],
+        ),
+    ).not.toContain("okf.concept.frontmatter");
   });
 
   for (const failureCase of failureCases) {
@@ -187,6 +209,18 @@ function requireEntry(
   }
 
   return entry;
+}
+
+function expectEntryRuleIds(
+  result: ValidateDocumentSetResult,
+  path: string,
+  ruleIds: readonly string[],
+): void {
+  expect(
+    requireEntry(result, path).validationResult?.ruleResults.map(
+      (rule) => rule.ruleId,
+    ),
+  ).toEqual([...ruleIds]);
 }
 
 function readRepoFile(path: string): string {

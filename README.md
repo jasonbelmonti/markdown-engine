@@ -203,6 +203,31 @@ node dist/cli/index.js validate --file fixtures/declarative-validation/examples/
 The passing example exits `0`; the failing example exits `1` and prints JSON
 diagnostics for review.
 
+### OKF v0.1 example composition
+
+The packaged OKF v0.1 examples show how callers can compose generic
+declarative-validation primitives without making `markdown-engine` an OKF
+adapter. The example profiles use `frontmatterShape` for role-specific
+frontmatter checks, `textFormat` for `log.md` date headings, and
+`validateDocumentSet` to aggregate caller-supplied Markdown/profile pairs.
+
+The caller remains responsible for caller-owned path classification, bundle
+traversal, IO, and profile selection. A caller-owned router should classify
+non-reserved concept documents separately from reserved files:
+
+- concept documents use `profiles/concept.yaml`, where `frontmatterShape`
+  requires a non-empty string `type`
+- the bundle-root `index.md` uses `profiles/root-index.yaml`, which permits the
+  OKF version exception `okf_version: "0.1"`
+- non-root `index.md` files use `profiles/non-root-index.yaml`, where
+  frontmatter is forbidden
+- `log.md` uses `profiles/log.yaml`, where `textFormat` validates level-2 date
+  headings as real `YYYY-MM-DD` calendar dates
+
+This package does not discover bundles, classify OKF paths, route roles for
+callers, reject unknown concept types, check links, require optional
+`index.md` files, or publish an OKF CLI.
+
 Package 3.0 keeps the 2.0 API normalization default: callers that invoke
 `normalize(parsed)` receive the rich IR `1.0.0` document shape. Consumers that
 still need the legacy `0.0.0` shape should consume the rich IR fields
@@ -249,6 +274,7 @@ currently check these evidence records:
 - [Rich IR contract documentation gate](docs/evidence/wp-5-evd-6-rich-ir-contract.md)
 - [Declarative validation contract review](docs/evidence/wp-5-evd-7-declarative-validation-contract-review.md)
 - [Declarative validation boundary audit](docs/evidence/wp-5-evd-8-declarative-validation-boundary-audit.md)
+- [OKF validation seal evidence](docs/evidence/bel-1332-okf-release-readiness.md)
 
 Snapshot baseline updates are operational changes, not routine test-output
 cleanup. Use the [testing and snapshot operations](docs/testing.md) guide before
