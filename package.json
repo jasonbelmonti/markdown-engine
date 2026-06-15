@@ -69,7 +69,7 @@
     "test:validation:profile": "npm run build && vitest run tests/declarative-validation-profile.test.ts \"--exclude=.worktrees/**\"",
     "test:validation:compiler": "npm run build && vitest run tests/declarative-validation-compiler.test.ts \"--exclude=.worktrees/**\"",
     "test:validation:selectors": "npm run build && vitest run tests/declarative-validation-selectors.test.ts \"--exclude=.worktrees/**\"",
-    "test:validation:assertions": "npm run build && vitest run tests/declarative-validation-assertions.test.ts tests/declarative-validation-table-column-coverage-fixtures.test.ts tests/declarative-validation-grouped-rules-fixtures.test.ts tests/declarative-validation-when-skipped-rules-fixtures.test.ts \"--exclude=.worktrees/**\"",
+    "test:validation:assertions": "npm run build && vitest run tests/declarative-validation-assertions.test.ts tests/declarative-validation-frontmatter-shape-assertions.test.ts tests/declarative-validation-table-column-coverage-fixtures.test.ts tests/declarative-validation-grouped-rules-fixtures.test.ts tests/declarative-validation-when-skipped-rules-fixtures.test.ts \"--exclude=.worktrees/**\"",
     "test:validation:diagnostics": "npm run build && vitest run tests/declarative-validation-diagnostics.test.ts \"--exclude=.worktrees/**\"",
     "test:validation:cli": "npm run build && vitest run tests/declarative-validation-cli.test.ts \"--exclude=.worktrees/**\"",
     "test:validation:examples": "npm run build && vitest run tests/declarative-validation-examples.test.ts \"--exclude=.worktrees/**\"",
