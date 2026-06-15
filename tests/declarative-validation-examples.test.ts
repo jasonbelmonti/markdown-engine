@@ -108,6 +108,20 @@ const examples: readonly ExampleCase[] = [
     ],
   },
 ] as const;
+const okfPackagedExampleFiles = [
+  "fixtures/declarative-validation/examples/okf-v0.1/fail/invalid-log-date/log.md",
+  "fixtures/declarative-validation/examples/okf-v0.1/fail/missing-concept-type/concepts/customer-metric.md",
+  "fixtures/declarative-validation/examples/okf-v0.1/fail/non-root-index-frontmatter/datasets/index.md",
+  "fixtures/declarative-validation/examples/okf-v0.1/pass/datasets/index.md",
+  "fixtures/declarative-validation/examples/okf-v0.1/pass/datasets/sales.md",
+  "fixtures/declarative-validation/examples/okf-v0.1/pass/index.md",
+  "fixtures/declarative-validation/examples/okf-v0.1/pass/log.md",
+  "fixtures/declarative-validation/examples/okf-v0.1/pass/playbooks/incident-response.md",
+  "fixtures/declarative-validation/examples/okf-v0.1/profiles/concept.yaml",
+  "fixtures/declarative-validation/examples/okf-v0.1/profiles/log.yaml",
+  "fixtures/declarative-validation/examples/okf-v0.1/profiles/non-root-index.yaml",
+  "fixtures/declarative-validation/examples/okf-v0.1/profiles/root-index.yaml",
+] as const;
 const supportedSelectorTargets = [
   "document",
   "heading",
@@ -156,6 +170,11 @@ describe("declarative validation example suite", () => {
         .toBe(true);
       expect(example.failingPath.startsWith(packagedExamplesRoot), example.domain)
         .toBe(true);
+    }
+
+    for (const okfFile of okfPackagedExampleFiles) {
+      expect(okfFile.startsWith(packagedExamplesRoot), okfFile).toBe(true);
+      expect(readRepoFile(okfFile).length, okfFile).toBeGreaterThan(0);
     }
   });
 
