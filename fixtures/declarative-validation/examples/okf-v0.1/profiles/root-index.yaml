@@ -1,0 +1,12 @@
+syntaxVersion: markdown-engine.validation@v2
+documentVersion: 1.0.0
+rules:
+  - id: okf.root-index.version-frontmatter
+    select:
+      target: document
+    assert:
+      frontmatterShape:
+        fields:
+          - field: okf_version
+            valueType: string
+            nonEmpty: true

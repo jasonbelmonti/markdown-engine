@@ -1,0 +1,9 @@
+syntaxVersion: markdown-engine.validation@v2
+documentVersion: 1.0.0
+rules:
+  - id: okf.non-root-index.no-frontmatter
+    select:
+      target: document
+    assert:
+      frontmatterShape:
+        presence: forbidden

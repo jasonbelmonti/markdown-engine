@@ -1,0 +1,14 @@
+syntaxVersion: markdown-engine.validation@v2
+documentVersion: 1.0.0
+rules:
+  - id: okf.concept.frontmatter
+    select:
+      target: document
+    assert:
+      frontmatterShape:
+        presence: required
+        fields:
+          - field: type
+            required: true
+            valueType: string
+            nonEmpty: true
