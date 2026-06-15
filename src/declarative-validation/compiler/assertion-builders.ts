@@ -21,6 +21,7 @@ import {
   closedFrontmatterShape,
   closedTableColumnCoverage,
   closedStringArray,
+  closedTextFormat,
   hasTextPredicate,
   hasTextLengthBound,
   optionalNumber,
@@ -57,6 +58,7 @@ export const ASSERTION_BUILDERS: readonly AssertionBuilder[] = [
   buildTextAssertion,
   buildTextOccurrenceCountAssertion,
   buildTextLengthAssertion,
+  buildTextFormatAssertion,
   buildFrontmatterRequiredAssertion,
 ];
 
@@ -560,6 +562,35 @@ function buildTextLengthAssertion(
       kind: "textLength",
       ...optionalNumber("min", assertion.textLength.min),
       ...optionalNumber("max", assertion.textLength.max),
+    };
+  }
+
+  return undefined;
+}
+
+function buildTextFormatAssertion(
+  assertion: DeclarativeAssertion,
+  selector: DeclarativeSelector,
+  ruleId: string,
+  syntaxVersion: ValidationProfileSyntaxVersion,
+  diagnostics: MarkdownDiagnostic[],
+): CompiledDeclarativeAssertion | undefined {
+  if (
+    assertion.textFormat === undefined ||
+    syntaxVersion !== PROFILE_SYNTAX_VERSION_V2
+  ) {
+    return undefined;
+  }
+
+  const textFormat = closedTextFormat(assertion.textFormat, ruleId, diagnostics);
+
+  if (
+    textFormat !== undefined &&
+    pushCompatibilityDiagnostic("textFormat", selector, ruleId, diagnostics)
+  ) {
+    return {
+      kind: "textFormat",
+      format: textFormat.format,
     };
   }
 

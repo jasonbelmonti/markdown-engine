@@ -33,6 +33,10 @@ import {
   PROFILE_SYNTAX_VERSION_V2,
   type ValidationProfileSyntaxVersion,
 } from "./syntax-version.js";
+import {
+  isTextFormatAssertionFormat,
+  TEXT_FORMAT_ASSERTION_KEYS,
+} from "./text-format-contract.js";
 
 const SUPPORTED_ASSERTION_KEYS_V1 = [
   "exists",
@@ -50,6 +54,7 @@ const SUPPORTED_ASSERTION_KEYS_V2 = [
   ...SUPPORTED_ASSERTION_KEYS_V1,
   "tableColumnCoverage",
   "frontmatterShape",
+  "textFormat",
 ] as const;
 
 export function assertionFromValue(
@@ -84,6 +89,9 @@ export function assertionFromValue(
       : {}),
     ...(supportsV2AssertionSurface(syntaxVersion)
       ? frontmatterShapeFromValue(value.frontmatterShape, diagnostics)
+      : {}),
+    ...(supportsV2AssertionSurface(syntaxVersion)
+      ? textFormatFromValue(value.textFormat, diagnostics)
       : {}),
   };
 
@@ -644,6 +652,38 @@ function textLengthFromValue(
   }
 
   return { textLength };
+}
+
+function textFormatFromValue(
+  value: unknown,
+  diagnostics: MarkdownDiagnostic[],
+): Pick<DeclarativeAssertion, "textFormat"> {
+  if (value === undefined) {
+    return {};
+  }
+
+  if (!isPlainRecord(value)) {
+    diagnostics.push(invalidShape("textFormat must be an object."));
+
+    return {};
+  }
+
+  const diagnosticCountBeforeShape = diagnostics.length;
+  unsupportedKeys(value, TEXT_FORMAT_ASSERTION_KEYS, diagnostics);
+  const format = value.format;
+  const hasSupportedFormat = isTextFormatAssertionFormat(format);
+
+  if (!hasSupportedFormat) {
+    diagnostics.push(
+      invalidShape('textFormat.format must be "isoDate".'),
+    );
+  }
+
+  if (diagnostics.length > diagnosticCountBeforeShape || !hasSupportedFormat) {
+    return {};
+  }
+
+  return { textFormat: { format } };
 }
 
 function frontmatterRequiredFromValue(
