@@ -2,6 +2,7 @@ import {
   assertCompatibleResultVersion,
   type EngineCompatibilityMode,
 } from "./compatibility.js";
+import type { ValidateDocumentSetResult } from "./document-set-validation-types.js";
 import type { SerializableEngineResult } from "./document.js";
 import type { NormalizeResult } from "./normalize.js";
 import type { ParseResult } from "./parse.js";
@@ -11,6 +12,7 @@ import { normalizeStableJsonValue } from "../internal/stable-json.js";
 export type SerializableMarkdownEngineResult =
   | ParseResult
   | NormalizeResult
+  | ValidateDocumentSetResult
   | ValidationResult
   | SerializableEngineResult;
 

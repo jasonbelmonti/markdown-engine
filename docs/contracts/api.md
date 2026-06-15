@@ -22,6 +22,7 @@ The package root exports the API functions, helpers, and types from `src/api/**`
 - `validateAnnotations(document, annotations)`
 - `parseValidationProfile(input, options?)`
 - `validateWithProfile(document, profile, options?)`
+- `validateDocumentSet(entries, options?)`
 
 The package root also exports the public result, document, diagnostic, config,
 and function types declared in `src/api/**`.
@@ -249,6 +250,54 @@ defaults, so an omitted `documentVersion` and an explicit matching
 `documentVersion` produce the same profile hash for the same document version
 and rules.
 
+## `validateDocumentSet`
+
+Signature:
+
+```ts
+validateDocumentSet(
+  entries: readonly ValidateDocumentSetEntry[],
+  options?: ValidateDocumentSetOptions,
+): ValidateDocumentSetResult
+```
+
+`validateDocumentSet` is a pure aggregate API for caller-supplied Markdown
+documents and caller-supplied validation profiles. Each entry contains:
+
+- `path`: caller-owned document path or stable identifier
+- `markdown`: Markdown text to parse and normalize
+- `profile`: YAML profile text, JSON-safe profile data, or parsed
+  `ValidationProfile`
+- `profilePath`: optional caller-owned profile path or stable identifier for
+  profile diagnostics
+
+The function processes entries in the supplied order and returns `entries` in
+that same order. It does not read directories, expand globs, watch files, write
+persistent state, add CLI behavior, classify OKF paths, or choose profiles for
+callers. Consumers own discovery, routing, and IO.
+
+`ValidateDocumentSetOptions` forwards supported document normalization and
+validation options:
+
+- `documentVersion`
+- `preserveSourceLocations`
+- `includeEvidence`
+
+Each `ValidateDocumentSetEntryResult` contains:
+
+- `path` and optional `profilePath`
+- `parseDiagnostics`
+- `normalizationDiagnostics`
+- `profileDiagnostics`
+- `validationDiagnostics`
+- aggregate entry `diagnostics`
+- `validationResult` when profile parsing succeeds without error-severity
+  diagnostics
+
+Profile-stage failures on one entry do not stop later entries from processing.
+The aggregate `valid` field is `false` when any aggregate diagnostic has
+severity `error`; otherwise it is `true`.
+
 ## `serialize`
 
 Signature:
@@ -260,6 +309,7 @@ serialize(
     | NormalizeResult
     | ValidationResult
     | DeclarativeValidationResult
+    | ValidateDocumentSetResult
     | EngineDocument
     | AnnotationValidationResult,
   options?: SerializeOptions,

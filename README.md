@@ -43,6 +43,7 @@ The package root exports:
 - `validateAnnotations(document, annotations)`
 - `parseValidationProfile(input, options?)`
 - `validateWithProfile(document, profile, options?)`
+- `validateDocumentSet(entries, options?)`
 
 Example:
 
