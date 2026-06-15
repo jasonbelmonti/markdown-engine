@@ -58,6 +58,11 @@ validateWithProfile(
   profile: ValidationProfile,
   options?: DeclarativeValidationOptions,
 ): DeclarativeValidationResult
+
+validateDocumentSet(
+  entries: readonly ValidateDocumentSetEntry[],
+  options?: ValidateDocumentSetOptions,
+): ValidateDocumentSetResult
 ```
 
 Compiled declarative validation plans are internal. They are not exported from
@@ -857,6 +862,51 @@ rules:
         assert:
           exists: true
 ```
+
+### OKF v0.1 Hard-Validation Profile Composition
+
+`markdown-engine` does not ship a built-in OKF validator. Consumers that want to
+validate OKF v0.1 hard conformance compose generic declarative-validation
+profiles and route documents to those profiles themselves. The caller owns
+bundle traversal, path classification, IO, and role selection before invoking
+`validateDocumentSet`.
+
+The packaged OKF proof under
+`fixtures/declarative-validation/examples/okf-v0.1/**` uses four generic
+profiles:
+
+| Caller-classified role | Example profile | Generic checks |
+| --- | --- | --- |
+| Concept document | `profiles/concept.yaml` | `frontmatterShape` requires parseable frontmatter with a non-empty string `type`. |
+| Bundle-root `index.md` | `profiles/root-index.yaml` | `frontmatterShape` accepts a non-empty string `okf_version` when root version frontmatter is present. |
+| Non-root `index.md` | `profiles/non-root-index.yaml` | `frontmatterShape` forbids frontmatter on directory index files. |
+| `log.md` | `profiles/log.yaml` | `textFormat` checks level-2 log headings as real `YYYY-MM-DD` dates. |
+
+A caller-owned routing layer can classify entries by path and choose the
+matching profile before validation:
+
+```ts
+const entries = bundleMarkdownFiles.map((file) => {
+  const role = classifyOkfPath(file.path);
+
+  return {
+    path: file.path,
+    markdown: file.markdown,
+    profile: profilesByRole[role],
+    profilePath: profilePathsByRole[role],
+  };
+});
+
+const result = validateDocumentSet(entries, {
+  documentVersion: "1.0.0",
+  includeEvidence: true,
+});
+```
+
+This composition proves hard OKF conformance only. It does not add CLI
+traversal, an OKF adapter, runtime OKF semantics, directory watching, bundle
+discovery, link checking, unknown-type rejection, optional metadata quality
+checks, or rejection of missing optional `index.md` files.
 
 CLI invocation:
 
