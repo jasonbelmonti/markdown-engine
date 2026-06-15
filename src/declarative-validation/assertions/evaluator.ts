@@ -5,7 +5,10 @@ import type {
 } from "../compiler/plan.js";
 import type { DeclarativeSelection } from "../selectors/index.js";
 import type { AssertionEvaluationContext } from "./context.js";
-import type { AssertionDiagnostic } from "./diagnostics.js";
+import {
+  type AssertionDiagnostic,
+  unsupportedEvaluatorDiagnostic,
+} from "./diagnostics.js";
 import { evaluateExists } from "./exists.js";
 import { evaluateFrontmatterShape } from "./frontmatter-shape.js";
 import { evaluateFrontmatterRequired } from "./frontmatter-required.js";
@@ -59,6 +62,15 @@ function evaluateAssertion(
 
     case "textLength":
       return evaluateTextLength(assertion, context);
+
+    case "textFormat":
+      return [
+        unsupportedEvaluatorDiagnostic(
+          assertion,
+          context.rule,
+          context.assertionIndex,
+        ),
+      ];
 
     case "frontmatterRequired":
       return evaluateFrontmatterRequired(assertion, context);

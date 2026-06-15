@@ -279,6 +279,36 @@ rules:
     });
   });
 
+  it("parses v2 textFormat assertions", () => {
+    const result = parseValidationProfile(`
+syntaxVersion: markdown-engine.validation@v2
+documentVersion: 1.0.0
+rules:
+  - id: log.date-heading
+    select:
+      target: heading
+      depth: 2
+    assert:
+      textFormat:
+        format: isoDate
+`);
+
+    expect(result).toEqual({
+      profile: {
+        syntaxVersion: "markdown-engine.validation@v2",
+        documentVersion: "1.0.0",
+        rules: [
+          {
+            id: "log.date-heading",
+            select: { target: "heading", depth: 2 },
+            assert: { textFormat: { format: "isoDate" } },
+          },
+        ],
+      },
+      diagnostics: [],
+    });
+  });
+
   it("rejects invalid parsed YAML textLength assertions", () => {
     const invalidTextLengthProfiles = [
       {
@@ -547,6 +577,66 @@ rules:
     }
   });
 
+  it("rejects invalid v2 textFormat payloads with deterministic diagnostics", () => {
+    const invalidTextFormatAssertions = [
+      {
+        textFormat: null,
+        diagnostic: {
+          code: "profile.config.invalidShape",
+          message: "textFormat must be an object.",
+        },
+      },
+      {
+        textFormat: {},
+        diagnostic: {
+          code: "profile.config.invalidShape",
+          message: 'textFormat.format must be "isoDate".',
+        },
+      },
+      {
+        textFormat: { format: "rfc3339" },
+        diagnostic: {
+          code: "profile.config.invalidShape",
+          message: 'textFormat.format must be "isoDate".',
+        },
+      },
+      {
+        textFormat: { format: "isoDate", locale: "en-US" },
+        diagnostic: {
+          code: "profile.config.unsupportedKey",
+          message: 'Unsupported validation profile key "locale".',
+        },
+      },
+    ] as const;
+
+    for (const { textFormat, diagnostic } of invalidTextFormatAssertions) {
+      const result = parseValidationProfile({
+        syntaxVersion: "markdown-engine.validation@v2",
+        rules: [
+          {
+            id: "log.invalid-date-heading",
+            select: { target: "heading", depth: 2 },
+            assert: { textFormat },
+          },
+        ],
+      } as ProfileInput);
+
+      expect(result.profile).toBeUndefined();
+      expect(result.diagnostics).toEqual([
+        {
+          code: diagnostic.code,
+          message: diagnostic.message,
+          severity: "error",
+        },
+        {
+          code: "profile.config.invalidShape",
+          message: "Rule assert must include at least one supported assertion.",
+          severity: "error",
+        },
+      ]);
+    }
+  });
+
   it("keeps ids count bounds invalid for v1 profiles", () => {
     const result = parseValidationProfile({
       syntaxVersion: "markdown-engine.validation@v1",
@@ -619,6 +709,32 @@ rules:
       {
         code: "profile.compile.unsupportedAssertion",
         message: 'Unsupported assertion "frontmatterShape".',
+        severity: "error",
+      },
+    ]);
+  });
+
+  it("keeps textFormat invalid for v1 profiles", () => {
+    const result = parseValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      rules: [
+        {
+          id: "v1.text-format",
+          select: { target: "heading", depth: 2 },
+          assert: {
+            textFormat: {
+              format: "isoDate",
+            },
+          },
+        },
+      ],
+    } as ProfileInput);
+
+    expect(result.profile).toBeUndefined();
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.compile.unsupportedAssertion",
+        message: 'Unsupported assertion "textFormat".',
         severity: "error",
       },
     ]);

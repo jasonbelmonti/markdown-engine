@@ -592,6 +592,52 @@ describe("declarative validation assertion proof", () => {
     ]);
   });
 
+  it("fails textFormat with an unsupported evaluator diagnostic before runtime semantics", () => {
+    const document = normalize(parse("# 2026-06-15\n\nbody\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    const result = validateWithProfile(document, {
+      syntaxVersion: "markdown-engine.validation@v2",
+      rules: [
+        {
+          id: "log.date-heading",
+          select: { target: "heading", depth: 1 },
+          assert: { textFormat: { format: "isoDate" } },
+        },
+      ],
+    });
+
+    expect(result.valid).toBe(false);
+    expect(result.ruleResults).toEqual([
+      {
+        ruleId: "log.date-heading",
+        status: "failed",
+        passed: false,
+        evaluation: {
+          kind: "assertions",
+          diagnostics: [
+            {
+              code: "profile.validation.assertionUnsupported",
+              ruleId: "log.date-heading",
+              message:
+                'Assertion "textFormat" is compiled but not implemented by the assertion evaluator yet.',
+              severity: "error",
+            },
+          ],
+        },
+        diagnostics: [
+          {
+            code: "profile.validation.assertionUnsupported",
+            ruleId: "log.date-heading",
+            message:
+              'Assertion "textFormat" is compiled but not implemented by the assertion evaluator yet.',
+            severity: "error",
+          },
+        ],
+      },
+    ]);
+  });
+
   it("validates strict section order for reordered and duplicate-heading cases", () => {
     const document = normalize(
       parse("# Alpha\n\nReady.\n\n# Beta\n\nDone.\n").parsed,

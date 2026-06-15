@@ -8,6 +8,10 @@ import type {
   DeclarativeTableColumnCoverageSource,
   DeclarativeTableColumnCoverageTarget,
 } from "../profile/index.js";
+import {
+  isTextFormatAssertionFormat,
+  TEXT_FORMAT_ASSERTION_KEYS,
+} from "../profile/text-format-contract.js";
 import { frontmatterShapeFromValue } from "../profile/frontmatter-shape-schema.js";
 import { stringArray } from "../profile/schema-values.js";
 import { compileDiagnostic } from "./diagnostics.js";
@@ -397,6 +401,43 @@ export function closedFrontmatterShape(
   }
 
   return result.shape;
+}
+
+export function closedTextFormat(
+  value: unknown,
+  ruleId: string,
+  diagnostics: MarkdownDiagnostic[],
+): DeclarativeAssertion["textFormat"] | undefined {
+  const diagnosticCountBefore = diagnostics.length;
+
+  if (!pushObjectDiagnostic("textFormat", value, ruleId, diagnostics)) {
+    return undefined;
+  }
+
+  const record = value as Record<string, unknown>;
+  const hasSupportedKeys = pushUnsupportedKeyDiagnostics(
+    record,
+    TEXT_FORMAT_ASSERTION_KEYS,
+    diagnostics,
+  );
+  const format = record.format;
+  const hasSupportedFormat = isTextFormatAssertionFormat(format);
+
+  if (!hasSupportedFormat) {
+    diagnostics.push(
+      compileDiagnostic(
+        "profile.config.invalidShape",
+        'textFormat.format must be "isoDate".',
+        ruleId,
+      ),
+    );
+  }
+
+  return hasSupportedKeys &&
+    diagnostics.length === diagnosticCountBefore &&
+    hasSupportedFormat
+    ? { format }
+    : undefined;
 }
 
 export function pushOptionalNonEmptyStringDiagnostic(

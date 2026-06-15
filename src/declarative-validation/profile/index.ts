@@ -136,6 +136,9 @@ export interface DeclarativeAssertion {
     min?: number;
     max?: number;
   };
+  textFormat?: {
+    format: "isoDate";
+  };
   frontmatterRequired?: {
     fields: readonly string[];
   };

@@ -175,6 +175,10 @@ export type CompiledDeclarativeAssertion =
       max?: number;
     }
   | {
+      kind: "textFormat";
+      format: "isoDate";
+    }
+  | {
       kind: "frontmatterRequired";
       fields: readonly string[];
     };

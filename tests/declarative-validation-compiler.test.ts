@@ -163,6 +163,11 @@ describe("declarative validation compiler proof", () => {
             },
           },
         },
+        {
+          id: "v2-text-format-plan",
+          select: { target: "heading", depth: 2 },
+          assert: { textFormat: { format: "isoDate" } },
+        },
       ],
     });
 
@@ -242,6 +247,14 @@ describe("declarative validation compiler proof", () => {
               ],
             },
           ],
+        },
+        {
+          kind: "flat",
+          syntaxVersion: "markdown-engine.validation@v2",
+          ruleId: "v2-text-format-plan",
+          severity: "error",
+          selector: { target: "heading", depth: 2 },
+          assertions: [{ kind: "textFormat", format: "isoDate" }],
         },
       ],
     });
@@ -539,6 +552,52 @@ describe("declarative validation compiler proof", () => {
         code: "profile.compile.incompatibleSelectorAssertion",
         ruleId: "frontmatter.shape.section",
         message: 'Assertion "frontmatterShape" is compatible only with document selectors.',
+        severity: "error",
+      },
+    ]);
+  });
+
+  it("compiles textFormat for heading selectors before runtime evaluation exists", () => {
+    const result = compileValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v2",
+      rules: [
+        {
+          id: "log.date-heading",
+          select: { target: "heading", depth: 2 },
+          assert: { textFormat: { format: "isoDate" } },
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([]);
+    expect(result.plan?.rules).toEqual([
+      expect.objectContaining({
+        selector: { target: "heading", depth: 2 },
+        assertions: [{ kind: "textFormat", format: "isoDate" }],
+      }),
+    ]);
+    expect(containsFunction(result.plan)).toBe(false);
+  });
+
+  it("rejects unsupported textFormat selector targets before execution", () => {
+    const result = compileValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v2",
+      rules: [
+        {
+          id: "log.date-frontmatter",
+          select: {
+            target: "frontmatter",
+          } as unknown as ValidationProfile["rules"][number]["select"],
+          assert: { textFormat: { format: "isoDate" } },
+        },
+      ],
+    });
+
+    expect(result.plan).toBeUndefined();
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.compile.unsupportedSelector",
+        message: 'Unsupported selector target "frontmatter".',
         severity: "error",
       },
     ]);

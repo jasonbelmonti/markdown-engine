@@ -142,6 +142,76 @@ describe("declarative validation compiler assertion proof", () => {
     }
   });
 
+  it("rejects typed textFormat assertions with invalid shapes before execution", () => {
+    const invalidTextFormatAssertions = [
+      {
+        assert: {
+          textFormat: null,
+        } as unknown as ValidationProfile["rules"][number]["assert"],
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            ruleId: "text-format.invalid-shape",
+            message: "textFormat must be an object.",
+            severity: "error",
+          },
+        ],
+      },
+      {
+        assert: { textFormat: {} },
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            ruleId: "text-format.invalid-shape",
+            message: 'textFormat.format must be "isoDate".',
+            severity: "error",
+          },
+        ],
+      },
+      {
+        assert: {
+          textFormat: { format: "rfc3339" },
+        } as unknown as ValidationProfile["rules"][number]["assert"],
+        diagnostics: [
+          {
+            code: "profile.config.invalidShape",
+            ruleId: "text-format.invalid-shape",
+            message: 'textFormat.format must be "isoDate".',
+            severity: "error",
+          },
+        ],
+      },
+      {
+        assert: {
+          textFormat: { format: "isoDate", regex: "\\d+" },
+        } as unknown as ValidationProfile["rules"][number]["assert"],
+        diagnostics: [
+          {
+            code: "profile.config.unsupportedKey",
+            message: 'Unsupported validation profile key "regex".',
+            severity: "error",
+          },
+        ],
+      },
+    ];
+
+    for (const { assert, diagnostics } of invalidTextFormatAssertions) {
+      const result = compileValidationProfile({
+        syntaxVersion: "markdown-engine.validation@v2",
+        rules: [
+          {
+            id: "text-format.invalid-shape",
+            select: { target: "heading", depth: 2 },
+            assert,
+          },
+        ],
+      });
+
+      expect(result.plan).toBeUndefined();
+      expect(result.diagnostics).toEqual(diagnostics);
+    }
+  });
+
   it("rejects typed v2 ids count assertions with invalid bounds before execution", () => {
     const invalidIdCountAssertions = [
       {
