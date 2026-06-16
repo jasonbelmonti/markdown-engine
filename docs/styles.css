@@ -548,14 +548,18 @@ h3 {
 }
 
 .segmented-control {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+  display: flex;
+  flex-wrap: nowrap;
   gap: 8px;
   margin-bottom: 18px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: thin;
 }
 
 .segment {
-  width: 100%;
+  flex: 1 0 auto;
+  width: auto;
   min-height: 42px;
   padding: 0 16px;
   color: #e9f3e9;
@@ -564,6 +568,7 @@ h3 {
   background: rgba(255, 255, 255, 0.08);
   font: inherit;
   font-weight: 720;
+  white-space: nowrap;
   cursor: pointer;
 }
 
@@ -907,10 +912,6 @@ pre {
   .okf-primer article,
   .okf-callout {
     min-height: auto;
-  }
-
-  .segment {
-    flex: 1 1 180px;
   }
 
   .footer-inner {
