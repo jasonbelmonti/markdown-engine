@@ -6,19 +6,19 @@
     <title>Markdown Engine | Conditional Markdown validation</title>
     <meta
       name="description"
-      content="A deterministic Markdown parsing and conditional validation engine for release workflows, operational docs, requirements evidence, and agent runtime contracts."
+      content="A deterministic Markdown parsing and conditional validation engine for release workflows, operational docs, requirements evidence, OKF examples, and agent runtime contracts."
     />
     <meta property="og:title" content="Markdown Engine" />
     <meta
       property="og:description"
-      content="Turn Markdown from informal prose into stable, local, conditionally validated contracts."
+      content="Turn Markdown from informal prose into stable, local, conditionally validated contracts, including caller-routed OKF v0.1 examples."
     />
     <meta property="og:type" content="website" />
     <meta
       property="og:image"
       content="https://jasonbelmonti.github.io/markdown-engine/assets/markdown-engine-workflow.png"
     />
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?v=20260616" />
   </head>
   <body>
     <header class="site-header" aria-label="Primary navigation">
@@ -30,6 +30,7 @@
         <a href="#story">Story</a>
         <a href="#value">Value</a>
         <a href="#conditional-v2">Conditional V2</a>
+        <a href="#okf">OKF</a>
         <a href="#workflows">Workflows</a>
         <a href="#quickstart">Quickstart</a>
       </nav>
@@ -48,7 +49,7 @@
         <div class="hero-shade" aria-hidden="true"></div>
         <div class="section-inner hero-content">
           <p class="proof-line">
-            Package 3.0 | Conditional V2 validation | Rich IR document contract 1.0.0
+            Package 3.0 | Conditional V2 validation | OKF v0.1 examples | Rich IR 1.0.0
           </p>
           <h1 id="hero-title">Markdown Engine</h1>
           <p class="hero-copy">
@@ -57,7 +58,8 @@
             an unchecked blob of prose.
           </p>
           <div class="hero-actions" aria-label="Primary actions">
-            <a class="button primary" href="#conditional-v2">Inspect Conditional V2</a>
+            <a class="button primary" href="#okf">Review OKF examples</a>
+            <a class="button secondary" href="#conditional-v2">Inspect Conditional V2</a>
             <a class="button secondary" href="#quickstart">Start in five minutes</a>
           </div>
           <dl class="mission-stats" aria-label="Package guarantees">
@@ -71,7 +73,7 @@
             </div>
             <div>
               <dt>Boundary</dt>
-              <dd>Syntax-versioned profiles, no hidden execution</dd>
+              <dd>Caller-owned routing, syntax-versioned profiles, no hidden execution</dd>
             </div>
           </dl>
         </div>
@@ -262,6 +264,104 @@
         </div>
       </section>
 
+      <section id="okf" class="section band-light" aria-labelledby="okf-title">
+        <div class="section-inner">
+          <div class="split-copy">
+            <div>
+              <p class="eyebrow">New OKF v0.1 example seal</p>
+              <h2 id="okf-title">Validate an OKF-style bundle without making the core an OKF adapter.</h2>
+            </div>
+            <p>
+              OKF stands for Open Knowledge Format. Google Cloud introduced it
+              in June 2026 as an open, vendor-neutral way to package curated
+              knowledge as Markdown files with YAML frontmatter so both people
+              and AI agents can read the same source.
+            </p>
+          </div>
+
+          <div class="okf-primer" aria-label="What OKF is and where Markdown Engine helps">
+            <article>
+              <span class="capability-label">What it is</span>
+              <h3>A portable knowledge bundle made from ordinary Markdown.</h3>
+              <p>
+                An OKF bundle is just files: concept documents, optional
+                `index.md` files for navigation, and `log.md` history. YAML
+                frontmatter carries queryable metadata, while the body stays
+                readable Markdown.
+              </p>
+            </article>
+            <article>
+              <span class="capability-label">Why it matters</span>
+              <h3>Agents need context that is not trapped in one tool.</h3>
+              <p>
+                OKF gives teams a common shape for business meaning, schemas,
+                runbooks, metrics, and process knowledge so producers and
+                consumers can exchange context without a proprietary service or
+                custom SDK.
+              </p>
+            </article>
+            <article>
+              <span class="capability-label">Where this package helps</span>
+              <h3>Markdown Engine checks the bundle shape before consumers rely on it.</h3>
+              <p>
+                It does not discover or route OKF files. It validates the
+                Markdown/profile pairs a caller supplies: required frontmatter,
+                reserved-file exceptions, log date headings, and per-document
+                evidence through `validateDocumentSet`.
+              </p>
+            </article>
+            <article>
+              <span class="capability-label">Agentic repair</span>
+              <h3>Agents can write, validate, repair, and retry.</h3>
+              <p>
+                A coding agent can draft OKF Markdown, run Markdown Engine
+                locally, read structured diagnostics, repair the bundle, and
+                repeat until the output is certifiably valid against the chosen
+                OKF profiles.
+              </p>
+            </article>
+            <article>
+              <span class="capability-label">Local policy</span>
+              <h3>Teams can layer narrower rules on top of OKF.</h3>
+              <p>
+                OKF gives the shared interchange shape. Product teams can add
+                stricter profiles for required fields, allowed concept types,
+                naming conventions, evidence links, ownership metadata, or
+                release-specific quality bars.
+              </p>
+            </article>
+
+            <aside
+              class="okf-callout"
+              aria-label="OKF validation proof and boundary"
+            >
+              <p class="eyebrow">Validation proof</p>
+              <h3>One caller-routed bundle, one deterministic result set.</h3>
+              <p>
+                The bundled OKF example checks typed concept frontmatter, root
+                version metadata, reserved `index.md` and `log.md` profiles,
+                and caller-routed document-set results.
+              </p>
+              <p>
+                Domain routing remains outside `markdown-engine`: no traversal,
+                discovery, path classification, or release mutation.
+              </p>
+              <div class="okf-links" aria-label="OKF reference links">
+                <a href="https://github.com/jasonbelmonti/markdown-engine/blob/main/docs/contracts/declarative-validation.md#okf-v01-hard-validation-profile-composition">
+                  Read the OKF contract section
+                </a>
+                <a href="https://cloud.google.com/blog/products/data-analytics/how-the-open-knowledge-format-can-improve-data-sharing">
+                  Read Google Cloud's OKF intro
+                </a>
+                <a href="https://github.com/jasonbelmonti/markdown-engine/blob/main/docs/evidence/bel-1332-okf-release-readiness.md">
+                  Review the BEL-1332 evidence
+                </a>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
       <section class="section" aria-labelledby="fit-title">
         <div class="section-inner">
           <div class="split-copy">
@@ -334,6 +434,17 @@
               data-example-button="conditionalV2"
             >
               Conditional V2
+            </button>
+            <button
+              id="tab-okf-v0-1"
+              class="segment"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              aria-controls="workflow-panel"
+              data-example-button="okfV01"
+            >
+              OKF v0.1
             </button>
             <button
               id="tab-operational-spec"
@@ -632,6 +743,9 @@ console.log(result.valid, result.diagnostics);</code></pre>
             <a href="https://github.com/jasonbelmonti/markdown-engine/blob/main/docs/contracts/declarative-validation.md">
               Declarative validation contract
             </a>
+            <a href="https://github.com/jasonbelmonti/markdown-engine/blob/main/docs/evidence/bel-1332-okf-release-readiness.md">
+              OKF validation seal evidence
+            </a>
             <a href="https://github.com/jasonbelmonti/markdown-engine/blob/main/docs/contracts/frontmatter.md">
               Frontmatter contract
             </a>
@@ -652,6 +766,6 @@ console.log(result.valid, result.diagnostics);</code></pre>
       </div>
     </footer>
 
-    <script src="./site.js?v=20260605"></script>
+    <script src="./site.js?v=20260615"></script>
   </body>
 </html>

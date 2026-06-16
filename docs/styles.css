@@ -433,6 +433,95 @@ h3 {
   text-transform: uppercase;
 }
 
+.okf-primer {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.okf-primer article,
+.okf-callout {
+  min-height: 238px;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.okf-primer article {
+  border-top: 5px solid var(--green);
+}
+
+.okf-primer article:nth-child(2) {
+  border-top-color: var(--teal);
+  background: #f7faf7;
+}
+
+.okf-primer article:nth-child(3) {
+  color: #f6fbf6;
+  border-color: #19241c;
+  background: #19241c;
+}
+
+.okf-primer article:nth-child(3) .capability-label {
+  color: #b8f0d6;
+}
+
+.okf-primer article:nth-child(3) p {
+  color: #dce7dc;
+}
+
+.okf-primer p {
+  margin: 14px 0 0;
+  color: var(--muted);
+}
+
+.okf-primer article:nth-child(4),
+.okf-primer article:nth-child(5) {
+  border-top-color: var(--teal);
+}
+
+.okf-callout p {
+  margin: 14px 0 0;
+  color: #dce7dc;
+}
+
+.okf-callout {
+  display: flex;
+  flex-direction: column;
+  color: #f6fbf6;
+  border-color: #19241c;
+  background: #19241c;
+}
+
+.okf-callout .eyebrow {
+  color: #b8f0d6;
+}
+
+.okf-callout h3 {
+  color: #ffffff;
+}
+
+.okf-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin-top: 22px;
+}
+
+.okf-links a {
+  color: #b8f0d6;
+  font-size: 0.95rem;
+  font-weight: 760;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.okf-links a:hover {
+  color: #ffffff;
+}
+
 .split-copy {
   display: grid;
   grid-template-columns: minmax(0, 0.9fr) minmax(320px, 1fr);
@@ -459,14 +548,18 @@ h3 {
 }
 
 .segmented-control {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+  display: flex;
+  flex-wrap: nowrap;
   gap: 8px;
   margin-bottom: 18px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: thin;
 }
 
 .segment {
-  width: 100%;
+  flex: 1 0 auto;
+  width: auto;
   min-height: 42px;
   padding: 0 16px;
   color: #e9f3e9;
@@ -475,6 +568,7 @@ h3 {
   background: rgba(255, 255, 255, 0.08);
   font: inherit;
   font-weight: 720;
+  white-space: nowrap;
   cursor: pointer;
 }
 
@@ -700,6 +794,7 @@ pre {
   .narrative-layout,
   .value-grid,
   .capability-grid,
+  .okf-primer,
   .fit-grid,
   .workflow-panel,
   .contract-section {
@@ -813,12 +908,10 @@ pre {
 
   .mission-stats div,
   .value-card,
-  .capability-grid article {
+  .capability-grid article,
+  .okf-primer article,
+  .okf-callout {
     min-height: auto;
-  }
-
-  .segment {
-    flex: 1 1 180px;
   }
 
   .footer-inner {
@@ -843,6 +936,8 @@ pre {
   .workflow-narrative,
   .value-card,
   .capability-grid article,
+  .okf-primer article,
+  .okf-callout,
   .fit-grid article,
   .quickstart-step {
     padding: 18px;

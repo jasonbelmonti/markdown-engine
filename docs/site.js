@@ -99,6 +99,80 @@ Ready for launch.
 | REQ-1 | Unit test |
 | REQ-2 | Integration test |`,
   },
+  okfV01: {
+    tabId: "tab-okf-v0-1",
+    kicker: "OKF v0.1",
+    title: "Compose hard-validation checks without engine-owned OKF routing.",
+    story:
+      "Open Knowledge Format packages curated context as Markdown files with YAML frontmatter. Markdown Engine helps at the validation boundary: callers can validate generated OKF, feed diagnostics back into an agentic repair loop, and layer narrower local policies on top of baseline OKF profiles.",
+    profilePath: "caller routing + fixtures/declarative-validation/examples/okf-v0.1/profiles/*",
+    documentPath: "fixtures/declarative-validation/examples/okf-v0.1/pass",
+    outcomes: [
+      "Concept documents require type frontmatter.",
+      "Root and non-root index.md files use separate profiles.",
+      "Diagnostics can drive repair until the bundle satisfies OKF plus local rules.",
+    ],
+    profile: `const okfProfiles = {
+  concept: "profiles/concept.yaml",
+  log: "profiles/log.yaml",
+  "non-root-index": "profiles/non-root-index.yaml",
+  "root-index": "profiles/root-index.yaml",
+};
+
+function classifyOkfDocumentRole(path) {
+  if (path === "index.md") {
+    return "root-index";
+  }
+
+  if (path === "log.md") {
+    return "log";
+  }
+
+  if (path.endsWith("/index.md")) {
+    return "non-root-index";
+  }
+
+  return "concept";
+}
+
+const entries = paths.map((path) => {
+  const role = classifyOkfDocumentRole(path);
+  return {
+    path,
+    markdown: readBundleFile(path),
+    profile: readProfile(okfProfiles[role]),
+    profilePath: okfProfiles[role],
+  };
+});
+
+const result = validateDocumentSet(entries, {
+  includeEvidence: true,
+});`,
+    document: `pass/
+  index.md
+    ---
+    okf_version: "0.1"
+    ---
+
+  datasets/index.md
+    No frontmatter. Validated by the non-root index profile.
+
+  datasets/sales.md
+    ---
+    type: dataset
+    ---
+    # Sales
+
+  playbooks/incident-response.md
+    ---
+    type: playbook
+    ---
+    # Incident Response
+
+  log.md
+    ## 2026-06-15
+    * **Creation**: Added the initial OKF v0.1 example bundle.`,
+  },
   operationalSpec: {
     tabId: "tab-operational-spec",
     kicker: "Operational spec",
