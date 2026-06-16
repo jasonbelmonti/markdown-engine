@@ -104,13 +104,13 @@ Ready for launch.
     kicker: "OKF v0.1",
     title: "Compose hard-validation checks without engine-owned OKF routing.",
     story:
-      "Open Knowledge Format packages curated context as Markdown files with YAML frontmatter. Markdown Engine helps at the validation boundary: the caller classifies each bundle path, selects the matching profile, and sends those Markdown/profile pairs into validateDocumentSet.",
+      "Open Knowledge Format packages curated context as Markdown files with YAML frontmatter. Markdown Engine helps at the validation boundary: callers can validate generated OKF, feed diagnostics back into an agentic repair loop, and layer narrower local policies on top of baseline OKF profiles.",
     profilePath: "caller routing + fixtures/declarative-validation/examples/okf-v0.1/profiles/*",
     documentPath: "fixtures/declarative-validation/examples/okf-v0.1/pass",
     outcomes: [
       "Concept documents require type frontmatter.",
       "Root and non-root index.md files use separate profiles.",
-      "log.md validates date headings as ISO dates, not concept frontmatter.",
+      "Diagnostics can drive repair until the bundle satisfies OKF plus local rules.",
     ],
     profile: `const okfProfiles = {
   concept: "profiles/concept.yaml",
