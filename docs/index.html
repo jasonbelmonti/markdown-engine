@@ -330,54 +330,22 @@
                 release-specific quality bars.
               </p>
             </article>
-          </div>
 
-          <div class="okf-layout">
-            <div class="okf-grid" aria-label="OKF validation capabilities">
-              <article>
-                <span class="capability-label">Concepts</span>
-                <h3>Concept documents require typed frontmatter.</h3>
-                <p>
-                  The concept profile uses `frontmatterShape` to require
-                  parseable frontmatter with a non-empty string `type`.
-                </p>
-              </article>
-              <article>
-                <span class="capability-label">Root index</span>
-                <h3>The bundle root accepts the OKF version exception.</h3>
-                <p>
-                  The root `index.md` profile accepts `okf_version: "0.1"`
-                  without treating the root index as a concept document.
-                </p>
-              </article>
-              <article>
-                <span class="capability-label">Reserved files</span>
-                <h3>Non-root indexes and logs use their own profiles.</h3>
-                <p>
-                  Non-root `index.md` files forbid frontmatter. `log.md` uses
-                  `textFormat` to check level-2 date headings as real ISO dates.
-                </p>
-              </article>
-              <article>
-                <span class="capability-label">Document set</span>
-                <h3>Aggregate caller-supplied Markdown/profile pairs.</h3>
-                <p>
-                  `validateDocumentSet` reports per-entry results after the
-                  caller selects each profile. It does not infer roles from
-                  paths.
-                </p>
-              </article>
-            </div>
-
-            <aside class="okf-callout" aria-label="OKF boundary guarantees">
-              <p class="eyebrow">Boundary guarantee</p>
-              <h3>Domain-specific routing stays outside `markdown-engine`.</h3>
-              <ul class="okf-proof-list">
-                <li>no built-in OKF traversal</li>
-                <li>no bundle discovery or directory watching</li>
-                <li>no engine-owned path classification</li>
-                <li>no release, publish, tag, or version mutation</li>
-              </ul>
+            <aside
+              class="okf-callout"
+              aria-label="OKF validation proof and boundary"
+            >
+              <p class="eyebrow">Validation proof</p>
+              <h3>One caller-routed bundle, one deterministic result set.</h3>
+              <p>
+                The bundled OKF example checks typed concept frontmatter, root
+                version metadata, reserved `index.md` and `log.md` profiles,
+                and caller-routed document-set results.
+              </p>
+              <p>
+                Domain routing remains outside `markdown-engine`: no traversal,
+                discovery, path classification, or release mutation.
+              </p>
               <div class="okf-links" aria-label="OKF reference links">
                 <a href="https://github.com/jasonbelmonti/markdown-engine/blob/main/docs/contracts/declarative-validation.md#okf-v01-hard-validation-profile-composition">
                   Read the OKF contract section
