@@ -6,12 +6,12 @@
     <title>Markdown Engine | Conditional Markdown validation</title>
     <meta
       name="description"
-      content="A deterministic Markdown parsing and conditional validation engine for release workflows, operational docs, requirements evidence, and agent runtime contracts."
+      content="A deterministic Markdown parsing and conditional validation engine for release workflows, operational docs, requirements evidence, OKF examples, and agent runtime contracts."
     />
     <meta property="og:title" content="Markdown Engine" />
     <meta
       property="og:description"
-      content="Turn Markdown from informal prose into stable, local, conditionally validated contracts."
+      content="Turn Markdown from informal prose into stable, local, conditionally validated contracts, including caller-routed OKF v0.1 examples."
     />
     <meta property="og:type" content="website" />
     <meta
@@ -30,6 +30,7 @@
         <a href="#story">Story</a>
         <a href="#value">Value</a>
         <a href="#conditional-v2">Conditional V2</a>
+        <a href="#okf">OKF</a>
         <a href="#workflows">Workflows</a>
         <a href="#quickstart">Quickstart</a>
       </nav>
@@ -48,7 +49,7 @@
         <div class="hero-shade" aria-hidden="true"></div>
         <div class="section-inner hero-content">
           <p class="proof-line">
-            Package 3.0 | Conditional V2 validation | Rich IR document contract 1.0.0
+            Package 3.0 | Conditional V2 validation | OKF v0.1 examples | Rich IR 1.0.0
           </p>
           <h1 id="hero-title">Markdown Engine</h1>
           <p class="hero-copy">
@@ -57,7 +58,8 @@
             an unchecked blob of prose.
           </p>
           <div class="hero-actions" aria-label="Primary actions">
-            <a class="button primary" href="#conditional-v2">Inspect Conditional V2</a>
+            <a class="button primary" href="#okf">Review OKF examples</a>
+            <a class="button secondary" href="#conditional-v2">Inspect Conditional V2</a>
             <a class="button secondary" href="#quickstart">Start in five minutes</a>
           </div>
           <dl class="mission-stats" aria-label="Package guarantees">
@@ -71,7 +73,7 @@
             </div>
             <div>
               <dt>Boundary</dt>
-              <dd>Syntax-versioned profiles, no hidden execution</dd>
+              <dd>Caller-owned routing, syntax-versioned profiles, no hidden execution</dd>
             </div>
           </dl>
         </div>
@@ -262,6 +264,80 @@
         </div>
       </section>
 
+      <section id="okf" class="section band-light" aria-labelledby="okf-title">
+        <div class="section-inner">
+          <div class="split-copy">
+            <div>
+              <p class="eyebrow">New OKF v0.1 example seal</p>
+              <h2 id="okf-title">Validate an OKF-style bundle without making the core an OKF adapter.</h2>
+            </div>
+            <p>
+              The packaged OKF v0.1 examples show how consumers compose generic
+              validation primitives for hard-conformance checks. The caller still
+              owns bundle discovery, path classification, IO, and document-role
+              routing before passing entries to `validateDocumentSet`.
+            </p>
+          </div>
+
+          <div class="okf-layout">
+            <div class="okf-grid" aria-label="OKF validation capabilities">
+              <article>
+                <span class="capability-label">Concepts</span>
+                <h3>Concept documents require typed frontmatter.</h3>
+                <p>
+                  The concept profile uses `frontmatterShape` to require
+                  parseable frontmatter with a non-empty string `type`.
+                </p>
+              </article>
+              <article>
+                <span class="capability-label">Root index</span>
+                <h3>The bundle root accepts the OKF version exception.</h3>
+                <p>
+                  The root `index.md` profile accepts `okf_version: "0.1"`
+                  without treating the root index as a concept document.
+                </p>
+              </article>
+              <article>
+                <span class="capability-label">Reserved files</span>
+                <h3>Non-root indexes and logs use their own profiles.</h3>
+                <p>
+                  Non-root `index.md` files forbid frontmatter. `log.md` uses
+                  `textFormat` to check level-2 date headings as real ISO dates.
+                </p>
+              </article>
+              <article>
+                <span class="capability-label">Document set</span>
+                <h3>Aggregate caller-supplied Markdown/profile pairs.</h3>
+                <p>
+                  `validateDocumentSet` reports per-entry results after the
+                  caller selects each profile. It does not infer roles from
+                  paths.
+                </p>
+              </article>
+            </div>
+
+            <aside class="okf-callout" aria-label="OKF boundary guarantees">
+              <p class="eyebrow">Boundary guarantee</p>
+              <h3>Domain-specific routing stays outside `markdown-engine`.</h3>
+              <ul class="okf-proof-list">
+                <li>no built-in OKF traversal</li>
+                <li>no bundle discovery or directory watching</li>
+                <li>no engine-owned path classification</li>
+                <li>no release, publish, tag, or version mutation</li>
+              </ul>
+              <div class="okf-links" aria-label="OKF reference links">
+                <a href="https://github.com/jasonbelmonti/markdown-engine/blob/main/docs/contracts/declarative-validation.md#okf-v01-hard-validation-profile-composition">
+                  Read the OKF contract section
+                </a>
+                <a href="https://github.com/jasonbelmonti/markdown-engine/blob/main/docs/evidence/bel-1332-okf-release-readiness.md">
+                  Review the BEL-1332 evidence
+                </a>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
       <section class="section" aria-labelledby="fit-title">
         <div class="section-inner">
           <div class="split-copy">
@@ -334,6 +410,17 @@
               data-example-button="conditionalV2"
             >
               Conditional V2
+            </button>
+            <button
+              id="tab-okf-v0-1"
+              class="segment"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              aria-controls="workflow-panel"
+              data-example-button="okfV01"
+            >
+              OKF v0.1
             </button>
             <button
               id="tab-operational-spec"
@@ -632,6 +719,9 @@ console.log(result.valid, result.diagnostics);</code></pre>
             <a href="https://github.com/jasonbelmonti/markdown-engine/blob/main/docs/contracts/declarative-validation.md">
               Declarative validation contract
             </a>
+            <a href="https://github.com/jasonbelmonti/markdown-engine/blob/main/docs/evidence/bel-1332-okf-release-readiness.md">
+              OKF validation seal evidence
+            </a>
             <a href="https://github.com/jasonbelmonti/markdown-engine/blob/main/docs/contracts/frontmatter.md">
               Frontmatter contract
             </a>
@@ -652,6 +742,6 @@ console.log(result.valid, result.diagnostics);</code></pre>
       </div>
     </footer>
 
-    <script src="./site.js?v=20260605"></script>
+    <script src="./site.js?v=20260615"></script>
   </body>
 </html>

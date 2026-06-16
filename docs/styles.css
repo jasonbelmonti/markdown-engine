@@ -433,6 +433,107 @@ h3 {
   text-transform: uppercase;
 }
 
+.okf-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 0.42fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.okf-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.okf-grid article,
+.okf-callout {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.okf-grid article {
+  min-height: 226px;
+  padding: 24px;
+  border-top: 5px solid var(--green);
+}
+
+.okf-grid article:nth-child(2),
+.okf-grid article:nth-child(4) {
+  border-top-color: var(--teal);
+}
+
+.okf-grid p,
+.okf-callout p {
+  margin: 14px 0 0;
+  color: var(--muted);
+}
+
+.okf-callout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  padding: 26px;
+  color: #f6fbf6;
+  background: #19241c;
+}
+
+.okf-callout .eyebrow {
+  color: #b8f0d6;
+}
+
+.okf-callout h3 {
+  color: #ffffff;
+}
+
+.okf-proof-list {
+  display: grid;
+  gap: 10px;
+  margin: 24px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.okf-proof-list li {
+  position: relative;
+  padding-left: 24px;
+  color: #e6f1e6;
+}
+
+.okf-proof-list li::before {
+  position: absolute;
+  top: 0.68em;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  content: "";
+  background: #b8f0d6;
+  border-radius: 50%;
+}
+
+.okf-links {
+  display: grid;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.okf-links a {
+  padding: 12px 14px;
+  color: #f6fbf6;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  font-weight: 760;
+  text-decoration: none;
+}
+
+.okf-links a:hover {
+  color: #092118;
+  border-color: #b8f0d6;
+  background: #b8f0d6;
+}
+
 .split-copy {
   display: grid;
   grid-template-columns: minmax(0, 0.9fr) minmax(320px, 1fr);
@@ -700,6 +801,8 @@ pre {
   .narrative-layout,
   .value-grid,
   .capability-grid,
+  .okf-layout,
+  .okf-grid,
   .fit-grid,
   .workflow-panel,
   .contract-section {
@@ -813,7 +916,8 @@ pre {
 
   .mission-stats div,
   .value-card,
-  .capability-grid article {
+  .capability-grid article,
+  .okf-grid article {
     min-height: auto;
   }
 
@@ -843,6 +947,8 @@ pre {
   .workflow-narrative,
   .value-card,
   .capability-grid article,
+  .okf-grid article,
+  .okf-callout,
   .fit-grid article,
   .quickstart-step {
     padding: 18px;
