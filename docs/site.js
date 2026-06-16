@@ -104,7 +104,7 @@ Ready for launch.
     kicker: "OKF v0.1",
     title: "Compose hard-validation checks without engine-owned OKF routing.",
     story:
-      "An OKF consumer classifies each bundle path, selects the matching profile, and sends those Markdown/profile pairs into validateDocumentSet. Markdown Engine evaluates the generic profile rules; the caller keeps ownership of discovery, traversal, IO, and document roles.",
+      "Open Knowledge Format packages curated context as Markdown files with YAML frontmatter. Markdown Engine helps at the validation boundary: the caller classifies each bundle path, selects the matching profile, and sends those Markdown/profile pairs into validateDocumentSet.",
     profilePath: "caller routing + fixtures/declarative-validation/examples/okf-v0.1/profiles/*",
     documentPath: "fixtures/declarative-validation/examples/okf-v0.1/pass",
     outcomes: [

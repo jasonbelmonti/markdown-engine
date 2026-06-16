@@ -433,6 +433,44 @@ h3 {
   text-transform: uppercase;
 }
 
+.okf-primer {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.okf-primer article {
+  min-height: 238px;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.okf-primer article:nth-child(2) {
+  background: #f7faf7;
+}
+
+.okf-primer article:nth-child(3) {
+  color: #f6fbf6;
+  border-color: #19241c;
+  background: #19241c;
+}
+
+.okf-primer article:nth-child(3) .capability-label {
+  color: #b8f0d6;
+}
+
+.okf-primer article:nth-child(3) p {
+  color: #dce7dc;
+}
+
+.okf-primer p {
+  margin: 14px 0 0;
+  color: var(--muted);
+}
+
 .okf-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(300px, 0.42fr);
@@ -801,6 +839,7 @@ pre {
   .narrative-layout,
   .value-grid,
   .capability-grid,
+  .okf-primer,
   .okf-layout,
   .okf-grid,
   .fit-grid,
@@ -917,6 +956,7 @@ pre {
   .mission-stats div,
   .value-card,
   .capability-grid article,
+  .okf-primer article,
   .okf-grid article {
     min-height: auto;
   }
@@ -947,6 +987,7 @@ pre {
   .workflow-narrative,
   .value-card,
   .capability-grid article,
+  .okf-primer article,
   .okf-grid article,
   .okf-callout,
   .fit-grid article,

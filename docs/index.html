@@ -272,11 +272,44 @@
               <h2 id="okf-title">Validate an OKF-style bundle without making the core an OKF adapter.</h2>
             </div>
             <p>
-              The packaged OKF v0.1 examples show how consumers compose generic
-              validation primitives for hard-conformance checks. The caller still
-              owns bundle discovery, path classification, IO, and document-role
-              routing before passing entries to `validateDocumentSet`.
+              OKF stands for Open Knowledge Format. Google Cloud introduced it
+              in June 2026 as an open, vendor-neutral way to package curated
+              knowledge as Markdown files with YAML frontmatter so both people
+              and AI agents can read the same source.
             </p>
+          </div>
+
+          <div class="okf-primer" aria-label="What OKF is and where Markdown Engine helps">
+            <article>
+              <span class="capability-label">What it is</span>
+              <h3>A portable knowledge bundle made from ordinary Markdown.</h3>
+              <p>
+                An OKF bundle is just files: concept documents, optional
+                `index.md` files for navigation, and `log.md` history. YAML
+                frontmatter carries queryable metadata, while the body stays
+                readable Markdown.
+              </p>
+            </article>
+            <article>
+              <span class="capability-label">Why it matters</span>
+              <h3>Agents need context that is not trapped in one tool.</h3>
+              <p>
+                OKF gives teams a common shape for business meaning, schemas,
+                runbooks, metrics, and process knowledge so producers and
+                consumers can exchange context without a proprietary service or
+                custom SDK.
+              </p>
+            </article>
+            <article>
+              <span class="capability-label">Where this package helps</span>
+              <h3>Markdown Engine checks the bundle shape before consumers rely on it.</h3>
+              <p>
+                It does not discover or route OKF files. It validates the
+                Markdown/profile pairs a caller supplies: required frontmatter,
+                reserved-file exceptions, log date headings, and per-document
+                evidence through `validateDocumentSet`.
+              </p>
+            </article>
           </div>
 
           <div class="okf-layout">
@@ -328,6 +361,9 @@
               <div class="okf-links" aria-label="OKF reference links">
                 <a href="https://github.com/jasonbelmonti/markdown-engine/blob/main/docs/contracts/declarative-validation.md#okf-v01-hard-validation-profile-composition">
                   Read the OKF contract section
+                </a>
+                <a href="https://cloud.google.com/blog/products/data-analytics/how-the-open-knowledge-format-can-improve-data-sharing">
+                  Read Google Cloud's OKF intro
                 </a>
                 <a href="https://github.com/jasonbelmonti/markdown-engine/blob/main/docs/evidence/bel-1332-okf-release-readiness.md">
                   Review the BEL-1332 evidence
