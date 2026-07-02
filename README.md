@@ -228,6 +228,33 @@ This package does not discover bundles, classify OKF paths, route roles for
 callers, reject unknown concept types, check links, require optional
 `index.md` files, or publish an OKF CLI.
 
+### Bundled CLI install for constrained agent harnesses
+
+The package ships a single-file bundled CLI at
+`dist-bundled/markdown-engine-cli.mjs`. Agent harnesses that forbid random
+runtime package execution should install this artifact once and run it through a
+local wrapper instead of using `npx`:
+
+```sh
+scripts/install-markdown-engine-cli.sh
+export PATH="${CODEX_HOME:-$HOME/.codex}/bin:$PATH"
+```
+
+The installer copies the local bundled artifact when present, otherwise it
+downloads `@jasonbelmonti/markdown-engine@3.0.0` with `npm pack
+--ignore-scripts` and extracts only the bundled CLI. It verifies the pinned
+artifact hash before installing:
+
+```text
+f61ab59e28eb92cccf4fd8073c090102e67a9397a7f0d208661ded14b879053d
+```
+
+The installed wrapper is:
+
+```sh
+"${CODEX_HOME:-$HOME/.codex}/bin/markdown-engine" validate --file <file.md> --profile <profile.yaml> --format json
+```
+
 Package 3.0 keeps the 2.0 API normalization default: callers that invoke
 `normalize(parsed)` receive the rich IR `1.0.0` document shape. Consumers that
 still need the legacy `0.0.0` shape should consume the rich IR fields
