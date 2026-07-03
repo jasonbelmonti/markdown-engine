@@ -2,10 +2,16 @@
 
 ## Unreleased
 
+No unreleased changes.
+
+## 3.1.1 - 2026-07-03
+
 ### Fixed
 
-- Corrected the constrained-harness installer pin to use the 3.1.0 bundled CLI
+- Corrected the constrained-harness installer pin to use the 3.1.1 bundled CLI
   package version and artifact hash.
+- Corrected declarative validation evidence so `engineVersion` records the
+  package version that produced the JSON.
 
 ## 3.1.0 - 2026-07-03
 

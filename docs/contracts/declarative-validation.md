@@ -624,8 +624,8 @@ serialization of the resolved `ValidationProfile` after applying the resolved
 `documentVersion` and an explicit matching `documentVersion` therefore produce
 the same profile hash for the same document version and rules.
 
-`engineVersion` records the package version that produced the evidence. In the
-3.0 release line this is `"3.0.0"` even though `documentVersion` remains
+`engineVersion` records the package version that produced the evidence. This
+matches the package metadata version even though `documentVersion` remains
 `"1.0.0"`.
 
 Raw Markdown bytes, raw YAML bytes, YAML comments, caller file paths, and

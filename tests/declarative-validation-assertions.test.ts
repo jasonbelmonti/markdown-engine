@@ -18,6 +18,7 @@ const fixture = readFileSync(
   new URL("../fixtures/declarative-validation/proving/representative.md", import.meta.url),
   "utf8",
 );
+const packageVersion = readPackageVersion();
 
 function withoutFirstDataCellSourceEvidence(document: EngineDocument): EngineDocument {
   const copy = structuredClone(document);
@@ -50,6 +51,18 @@ function stripSourceEvidence(value: unknown): void {
   delete record.source;
   delete record.sourceRange;
   Object.values(record).forEach(stripSourceEvidence);
+}
+
+function readPackageVersion(): string {
+  const packageJson = JSON.parse(
+    readFileSync(new URL("../package.json", import.meta.url), "utf8"),
+  ) as { version?: unknown };
+
+  if (typeof packageJson.version !== "string" || packageJson.version.length === 0) {
+    throw new Error("package.json version must be a non-empty string");
+  }
+
+  return packageJson.version;
 }
 
 describe("declarative validation assertion proof", () => {
@@ -2125,7 +2138,7 @@ describe("declarative validation assertion proof", () => {
       },
     });
     expect(firstResult.evidence).toMatchObject({
-      engineVersion: "3.0.0",
+      engineVersion: packageVersion,
       runtimeVersion: process.version,
       ruleResults: expectedRuleResults,
       diagnostics: [],

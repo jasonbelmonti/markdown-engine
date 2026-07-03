@@ -48,6 +48,7 @@ const forbiddenPublicApiTerms = [
   "unified",
 ] as const;
 const packageJsonPath = join(process.cwd(), "package.json");
+const packageVersion = readPackageVersion();
 const packagedExampleFixturePaths = [
   "fixtures/declarative-validation/examples/operational-spec/fail.md",
   "fixtures/declarative-validation/examples/operational-spec/pass.md",
@@ -74,6 +75,18 @@ const v2Profile = {
   documentVersion: "1.0.0",
   rules: [],
 } satisfies ValidationProfile;
+
+function readPackageVersion(): string {
+  const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8")) as {
+    version?: unknown;
+  };
+
+  if (typeof packageJson.version !== "string" || packageJson.version.length === 0) {
+    throw new Error("package.json version must be a non-empty string");
+  }
+
+  return packageJson.version;
+}
 const representativeV2ResultProfile = {
   syntaxVersion: "markdown-engine.validation@v2",
   documentVersion: "1.0.0",
@@ -498,7 +511,7 @@ describe("declarative validation public contract scaffold", () => {
 
     expect(secondResult).toEqual(firstResult);
     expect(firstResult.evidence).toMatchObject({
-      engineVersion: "3.0.0",
+      engineVersion: packageVersion,
       runtimeVersion: process.version,
       ruleResults: firstResult.ruleResults,
       diagnostics: firstResult.diagnostics,
@@ -540,7 +553,7 @@ describe("declarative validation public contract scaffold", () => {
     );
 
     expect(result.evidence).toMatchObject({
-      engineVersion: "3.0.0",
+      engineVersion: packageVersion,
       runtimeVersion: process.version,
       ruleResults: result.ruleResults,
       diagnostics: result.diagnostics,
