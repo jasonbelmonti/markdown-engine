@@ -150,6 +150,7 @@ const installedExamplesRoot =
 const intentionalPackageFiles = [
   "dist",
   "dist-bundled",
+  "scripts/install-markdown-engine-cli.sh",
   "skills",
   "docs/contracts",
   packagedExamplesRoot,
