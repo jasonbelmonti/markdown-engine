@@ -237,13 +237,26 @@ local wrapper instead of using `npx`:
 
 ```sh
 scripts/install-markdown-engine-cli.sh
-export PATH="${CODEX_HOME:-$HOME/.codex}/bin:$PATH"
+export PATH="${MARKDOWN_ENGINE_BIN_DIR:-$HOME/.local/bin}:$PATH"
 ```
 
-The installer copies the local bundled artifact when present, otherwise it
-downloads `@jasonbelmonti/markdown-engine@3.0.0` with `npm pack
---ignore-scripts` and extracts only the bundled CLI. It verifies the pinned
-artifact hash before installing:
+From a project root where the package is installed as a dependency, invoke the
+packaged installer directly:
+
+```sh
+node_modules/@jasonbelmonti/markdown-engine/scripts/install-markdown-engine-cli.sh
+export PATH="${MARKDOWN_ENGINE_BIN_DIR:-$HOME/.local/bin}:$PATH"
+```
+
+By default, the installer places the CLI under
+`${MARKDOWN_ENGINE_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/markdown-engine}`
+and writes the wrapper to
+`${MARKDOWN_ENGINE_BIN_DIR:-$HOME/.local/bin}/markdown-engine`. The installer
+uses a local bundled artifact only when it matches the pinned artifact hash.
+Otherwise it downloads `@jasonbelmonti/markdown-engine@3.0.0` with `npm pack
+--ignore-scripts` and extracts only
+`package/dist-bundled/markdown-engine-cli.mjs` from the tarball. It verifies the
+pinned artifact hash before installing:
 
 ```text
 f61ab59e28eb92cccf4fd8073c090102e67a9397a7f0d208661ded14b879053d
@@ -252,7 +265,7 @@ f61ab59e28eb92cccf4fd8073c090102e67a9397a7f0d208661ded14b879053d
 The installed wrapper is:
 
 ```sh
-"${CODEX_HOME:-$HOME/.codex}/bin/markdown-engine" validate --file <file.md> --profile <profile.yaml> --format json
+"${MARKDOWN_ENGINE_BIN_DIR:-$HOME/.local/bin}/markdown-engine" validate --file <file.md> --profile <profile.yaml> --format json
 ```
 
 Package 3.0 keeps the 2.0 API normalization default: callers that invoke

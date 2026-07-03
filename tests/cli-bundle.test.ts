@@ -67,6 +67,7 @@ describe("bundled CLI artifact", () => {
     };
 
     expect(manifest.files).toContain("dist-bundled");
+    expect(manifest.files).toContain("scripts/install-markdown-engine-cli.sh");
     expect(manifest.scripts?.["build:cli-bundle"]).toBe(
       "node scripts/build-cli-bundle.mjs",
     );
@@ -75,6 +76,39 @@ describe("bundled CLI artifact", () => {
     expect(manifest.scripts?.["release:verify"]).toContain(
       "npm run build && npm run build:cli:bundled &&",
     );
+  });
+
+  it("packs the bundled CLI and constrained-harness installer", async () => {
+    const result = await execFileAsync(
+      npmCommand,
+      ["pack", "--dry-run", "--json", "--ignore-scripts"],
+      {
+        cwd: repoRoot,
+        maxBuffer,
+        timeout: commandTimeoutMs,
+      },
+    );
+    const [pack] = JSON.parse(result.stdout) as Array<{
+      files: Array<{ path: string }>;
+    }>;
+    const packedPaths = pack.files.map((file) => file.path);
+
+    expect(packedPaths).toContain("dist-bundled/markdown-engine-cli.mjs");
+    expect(packedPaths).toContain("scripts/install-markdown-engine-cli.sh");
+  });
+
+  it("keeps constrained-harness installer paths host-neutral", async () => {
+    const installerText = await readFile(
+      join(repoRoot, "scripts", "install-markdown-engine-cli.sh"),
+      "utf8",
+    );
+    const readmeText = await readFile(join(repoRoot, "README.md"), "utf8");
+    const installContractText = `${installerText}\n${readmeText}`;
+    const codexHomeName = ["CODEX", "HOME"].join("_");
+
+    expect(installContractText).not.toContain(codexHomeName);
+    expect(installContractText).toContain("MARKDOWN_ENGINE_HOME");
+    expect(installContractText).toContain("MARKDOWN_ENGINE_BIN_DIR");
   });
 
   it("keeps the compatibility build command writing the legacy artifact path", async () => {

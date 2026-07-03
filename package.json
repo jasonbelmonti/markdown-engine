@@ -32,6 +32,7 @@
   "files": [
     "dist",
     "dist-bundled",
+    "scripts/install-markdown-engine-cli.sh",
     "skills",
     "docs/contracts",
     "fixtures/declarative-validation/examples",
