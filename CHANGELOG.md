@@ -2,7 +2,10 @@
 
 ## Unreleased
 
-No unreleased changes.
+### Fixed
+
+- Corrected the constrained-harness installer pin to use the 3.1.0 bundled CLI
+  package version and artifact hash.
 
 ## 3.1.0 - 2026-07-03
 

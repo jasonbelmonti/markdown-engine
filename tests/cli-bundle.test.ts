@@ -1,5 +1,15 @@
 import { execFile } from "node:child_process";
-import { access, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import {
+  access,
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  stat,
+  writeFile,
+} from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
@@ -9,6 +19,7 @@ const execFileAsync = promisify(execFile);
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 const artifactDir = join(repoRoot, "dist-bundled");
 const artifactPath = join(artifactDir, "markdown-engine-cli.mjs");
+const installerPath = join(repoRoot, "scripts", "install-markdown-engine-cli.sh");
 const legacyArtifactPath = join(repoRoot, "dist", "cli", "markdown-engine.mjs");
 const packageManifestPath = join(repoRoot, "package.json");
 const staleArtifactPath = join(artifactDir, "stale-artifact.txt");
@@ -78,6 +89,69 @@ describe("bundled CLI artifact", () => {
     );
   });
 
+  it("pins the constrained-harness installer to the package version and bundled artifact hash", async () => {
+    const packageVersion = await readPackageVersion();
+    const installerText = await readFile(installerPath, "utf8");
+    const readmeText = await readFile(join(repoRoot, "README.md"), "utf8");
+    const installDocs = readmeText.slice(
+      readmeText.indexOf("### Bundled CLI install"),
+    );
+    const artifactHash = createHash("sha256")
+      .update(await readFile(artifactPath))
+      .digest("hex");
+
+    expect(installerText).toContain(`VERSION="${packageVersion}"`);
+    expect(installerText).toContain(`EXPECTED_SHA256="${artifactHash}"`);
+    expect(installerText).toContain(
+      'INSTALL_DIR="$MARKDOWN_ENGINE_HOME/tools/markdown-engine/$VERSION"',
+    );
+    expect(installDocs).toContain(
+      `@jasonbelmonti/markdown-engine@${packageVersion}`,
+    );
+    expect(installDocs).toContain(artifactHash);
+    expect(installDocs).not.toContain("@jasonbelmonti/markdown-engine@3.0.0");
+  });
+
+  it("installs a wrapper that points at the current versioned bundled CLI", async () => {
+    if (process.platform === "win32") {
+      return;
+    }
+
+    const packageVersion = await readPackageVersion();
+    const installRoot = await mkdtemp(join(tmpdir(), "markdown-engine-install-"));
+    const markdownEngineHome = join(installRoot, "data");
+    const binDir = join(installRoot, "bin");
+    const expectedInstallCli = join(
+      markdownEngineHome,
+      "tools",
+      "markdown-engine",
+      packageVersion,
+      "markdown-engine-cli.mjs",
+    );
+
+    try {
+      await execFileAsync("sh", [installerPath], {
+        cwd: repoRoot,
+        env: {
+          ...process.env,
+          MARKDOWN_ENGINE_BIN_DIR: binDir,
+          MARKDOWN_ENGINE_HOME: markdownEngineHome,
+        },
+        maxBuffer,
+        timeout: commandTimeoutMs,
+      });
+
+      const wrapperText = await readFile(join(binDir, "markdown-engine"), "utf8");
+      expect(await fileExists(expectedInstallCli)).toBe(true);
+      expect(wrapperText).toContain(
+        `DEFAULT_MARKDOWN_ENGINE_CLI='${expectedInstallCli}'`,
+      );
+      expect(wrapperText).not.toContain("/3.0.0/");
+    } finally {
+      await rm(installRoot, { force: true, recursive: true });
+    }
+  });
+
   it("packs the bundled CLI and constrained-harness installer", async () => {
     const result = await execFileAsync(
       npmCommand,
@@ -98,10 +172,7 @@ describe("bundled CLI artifact", () => {
   });
 
   it("keeps constrained-harness installer paths host-neutral", async () => {
-    const installerText = await readFile(
-      join(repoRoot, "scripts", "install-markdown-engine-cli.sh"),
-      "utf8",
-    );
+    const installerText = await readFile(installerPath, "utf8");
     const readmeText = await readFile(join(repoRoot, "README.md"), "utf8");
     const installContractText = `${installerText}\n${readmeText}`;
     const codexHomeName = ["CODEX", "HOME"].join("_");
@@ -239,4 +310,16 @@ async function fileExists(path: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+async function readPackageVersion(): Promise<string> {
+  const manifest = JSON.parse(await readFile(packageManifestPath, "utf8")) as {
+    version?: unknown;
+  };
+
+  if (typeof manifest.version !== "string" || manifest.version.length === 0) {
+    throw new Error("package.json version must be a non-empty string");
+  }
+
+  return manifest.version;
 }
