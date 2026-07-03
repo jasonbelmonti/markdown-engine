@@ -4,6 +4,25 @@
 
 No unreleased changes.
 
+## 3.1.0 - 2026-07-03
+
+### Added
+
+- Added `validateDocumentSet(...)` as a public API for validating multiple
+  Markdown documents with declarative validation profiles.
+- Added Declarative Validation V2 support for `frontmatterShape` and
+  `textFormat: isoDate` across profile schema validation, compiler contracts,
+  runtime evaluation, API contracts, and fixtures.
+- Added OKF profile examples, role-profile fixtures, document-set proof tests,
+  and release-readiness evidence for profile-backed validation workflows.
+
+### Changed
+
+- Expanded the GitHub Pages consumer site and docs with conditional validation,
+  OKF profile composition, repair-loop, and policy-validation guidance.
+- Made the standalone CLI installer provider-neutral and removed its runtime
+  dependency on `npx markdown-engine`.
+
 ## 3.0.0 - 2026-06-05
 
 ### Added
