@@ -63,7 +63,7 @@ checkFile("docs/contracts/declarative-validation.md", {
     "inputHash",
     "profileHash",
     'engineVersion` records the package version',
-    '3.0 release line this is `"3.0.0"`',
+    "matches the package metadata version",
     "Compatibility examples",
     "v1 compatibility profile",
     "v2 opt-in profile",

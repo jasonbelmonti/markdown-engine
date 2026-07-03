@@ -20,6 +20,7 @@ const profileYaml = readFileSync(
   new URL("../fixtures/declarative-validation/proving/profile.yaml", import.meta.url),
   "utf8",
 );
+const packageVersion = readPackageVersion();
 
 describe("declarative validation WP-1B proving path", () => {
   it("proves parse, compile, select, assert, diagnose, serialize, and evidence", () => {
@@ -49,7 +50,7 @@ describe("declarative validation WP-1B proving path", () => {
       }),
     ]);
     expect(result.evidence).toMatchObject({
-      engineVersion: "3.0.0",
+      engineVersion: packageVersion,
       runtimeVersion: process.version,
       ruleResults: result.ruleResults,
       diagnostics: result.diagnostics,
@@ -77,4 +78,16 @@ function requireProfile(result: ReturnType<typeof parseValidationProfile>): Vali
 
 function missingProfile(): never {
   throw new Error(`Expected ${profilePath} to parse into a validation profile.`);
+}
+
+function readPackageVersion(): string {
+  const packageJson = JSON.parse(
+    readFileSync(new URL("../package.json", import.meta.url), "utf8"),
+  ) as { version?: unknown };
+
+  if (typeof packageJson.version !== "string" || packageJson.version.length === 0) {
+    throw new Error("package.json version must be a non-empty string");
+  }
+
+  return packageJson.version;
 }

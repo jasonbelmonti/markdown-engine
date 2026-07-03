@@ -4,6 +4,7 @@ import type { EngineDocument } from "../../api/document.js";
 import type { MarkdownDiagnostic } from "../../api/diagnostics.js";
 import type { ValidationRuleResult } from "../../api/validate.js";
 import { cloneDiagnostics } from "../../diagnostics/index.js";
+import { MARKDOWN_ENGINE_PACKAGE_VERSION } from "../../internal/package-version.js";
 import { stringifyStableJson } from "../../internal/stable-json.js";
 import type { ValidationProfile } from "../profile/index.js";
 import { cloneValidationRuleResult } from "../results/clone-rule-result.js";
@@ -30,7 +31,7 @@ export function createDeclarativeValidationEvidence<
   return {
     inputHash: sha256(stringifyStableJson(documentWithoutPath(document))),
     profileHash: sha256(stringifyStableJson(resolvedProfile(profile, document))),
-    engineVersion: "3.0.0",
+    engineVersion: MARKDOWN_ENGINE_PACKAGE_VERSION,
     runtimeVersion: process.version,
     ruleResults: cloneRuleResults(ruleResults),
     diagnostics: cloneDiagnostics(diagnostics),

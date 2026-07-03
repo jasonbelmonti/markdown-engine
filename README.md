@@ -6,10 +6,10 @@ profile and runtime work.
 Package release state:
 
 - package name: `@jasonbelmonti/markdown-engine`
-- package metadata version: `3.1.0`
+- package metadata version: `3.1.1`
 - published npm versions before this release: `0.1.0`, `1.0.0`, `2.0.0`,
-  `3.0.0`
-- npm release target: `3.1.0` on `latest`
+  `3.0.0`, `3.1.0`
+- npm release target: `3.1.1` on `latest`
 - website: <https://jasonbelmonti.github.io/markdown-engine/>
 - release focus: document-set validation, V2 `frontmatterShape` and
   `textFormat: isoDate` support, and OKF profile examples while retaining the
@@ -255,13 +255,13 @@ By default, the installer places the CLI under
 and writes the wrapper to
 `${MARKDOWN_ENGINE_BIN_DIR:-$HOME/.local/bin}/markdown-engine`. The installer
 uses a local bundled artifact only when it matches the pinned artifact hash.
-Otherwise it downloads `@jasonbelmonti/markdown-engine@3.1.0` with `npm pack
+Otherwise it downloads `@jasonbelmonti/markdown-engine@3.1.1` with `npm pack
 --ignore-scripts` and extracts only
 `package/dist-bundled/markdown-engine-cli.mjs` from the tarball. It verifies the
 pinned artifact hash before installing:
 
 ```text
-57f6a1a05cd9a6d042de530fe0b38c55048887e2d8387ca07c4f4bc135f49533
+8c7ff572765cbdc6c38b94de52d69709f583ee7b4d2b7e25ba6be8c92125addf
 ```
 
 The installed wrapper is:
