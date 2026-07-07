@@ -1,5 +1,6 @@
 .worktrees/
 .codex
+coverage/
 dist/
 dist-bundled/
 node_modules/

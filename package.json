@@ -80,6 +80,8 @@
     "docs:declarative-validation-contract": "node scripts/check-declarative-validation-contract-docs.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "npm run build && vitest run \"--exclude=.worktrees/**\"",
+    "test:coverage": "npm run build && npm run build:cli:bundled && vitest run --coverage \"--exclude=.worktrees/**\"",
+    "test:coverage:ci": "npm run test:coverage",
     "test:snapshots": "npm run build && vitest run tests/parser-fixtures.test.ts tests/rules.test.ts tests/rich-ir-targets.test.ts tests/rich-ir-queries.test.ts tests/rich-ir-link-references.test.ts tests/serialization-repeatability.test.ts \"--exclude=.worktrees/**\""
   },
   "engines": {
@@ -87,10 +89,11 @@
   },
   "devDependencies": {
     "@types/node": "^22.19.17",
+    "@vitest/coverage-v8": "^3.2.7",
     "cmark-gfm": "^0.9.0",
     "esbuild": "^0.27.7",
     "typescript": "^5.8.3",
-    "vitest": "^3.1.3"
+    "vitest": "^3.2.7"
   },
   "dependencies": {
     "remark-gfm": "^4.0.1",
