@@ -57,10 +57,14 @@ npm run test:coverage
 ```
 
 Coverage uses Vitest's V8 provider and records reports under `coverage/`.
-The local report includes terminal output, HTML, and LCOV artifacts. The
-coverage gate currently enforces at least `60%` line coverage and `75%` branch
-coverage across `src/**/*.ts`, based on the measured repository baseline when
-coverage tracking was introduced.
+The local report includes detailed terminal output, a terminal summary, HTML,
+LCOV, and JSON summary artifacts. Coverage accounting includes executable
+`src/**/*.ts` modules and excludes generated output, tests, type-only
+declaration files, and passive barrel files.
+
+The coverage gate currently enforces at least `60%` line coverage and `75%`
+branch coverage. Keep those thresholds stable during measurement-only changes;
+raise them in later PRs after adding executable behavior coverage.
 
 Run the CI-ready coverage gate:
 
