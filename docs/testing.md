@@ -50,6 +50,28 @@ Run the full suite before review:
 npm test
 ```
 
+Generate line and branch coverage metrics:
+
+```sh
+npm run test:coverage
+```
+
+Coverage uses Vitest's V8 provider and records reports under `coverage/`.
+The local report includes terminal output, HTML, and LCOV artifacts. The
+coverage gate currently enforces at least `60%` line coverage and `75%` branch
+coverage across `src/**/*.ts`, based on the measured repository baseline when
+coverage tracking was introduced.
+
+Run the CI-ready coverage gate:
+
+```sh
+npm run test:coverage:ci
+```
+
+CI systems should run `npm ci` before the gate command. A GitHub Actions job can
+use `npm run typecheck`, `npm test`, and `npm run test:coverage:ci` as separate
+steps when this repository adopts a workflow file.
+
 Run only snapshot-backed tests when narrowing a snapshot failure:
 
 ```sh
