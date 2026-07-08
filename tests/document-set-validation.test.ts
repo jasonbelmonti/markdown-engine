@@ -64,6 +64,75 @@ const entries = [
 ] satisfies readonly ValidateDocumentSetEntry[];
 
 describe("document set validation", () => {
+  it("returns a valid aggregate for multiple passing entries", () => {
+    const result = validateDocumentSet(
+      [
+        {
+          path: "01-pass.md",
+          markdown: "# Objective\n\nReady.\n",
+          profile: objectiveProfile,
+        },
+        {
+          path: "02-pass-yaml-profile.md",
+          markdown: "# Objective\n\nStill ready.\n",
+          profile: objectiveProfileYaml,
+          profilePath: "profiles/objective.yaml",
+        },
+      ],
+      {
+        preserveSourceLocations: true,
+      },
+    ) satisfies ValidateDocumentSetResult;
+
+    expect(result.valid).toBe(true);
+    expect(result.diagnostics).toEqual([]);
+    expect(result.entries.map((entry) => entry.path)).toEqual([
+      "01-pass.md",
+      "02-pass-yaml-profile.md",
+    ]);
+    expect(result.entries).toEqual([
+      expect.objectContaining({
+        path: "01-pass.md",
+        diagnostics: [],
+        parseDiagnostics: [],
+        normalizationDiagnostics: [],
+        profileDiagnostics: [],
+        validationDiagnostics: [],
+        validationResult: expect.objectContaining({
+          valid: true,
+          diagnostics: [],
+          ruleResults: [
+            {
+              ruleId: "objective.required",
+              passed: true,
+              diagnostics: [],
+            },
+          ],
+        }),
+      }),
+      expect.objectContaining({
+        path: "02-pass-yaml-profile.md",
+        profilePath: "profiles/objective.yaml",
+        diagnostics: [],
+        parseDiagnostics: [],
+        normalizationDiagnostics: [],
+        profileDiagnostics: [],
+        validationDiagnostics: [],
+        validationResult: expect.objectContaining({
+          valid: true,
+          diagnostics: [],
+          ruleResults: [
+            {
+              ruleId: "objective.required",
+              passed: true,
+              diagnostics: [],
+            },
+          ],
+        }),
+      }),
+    ]);
+  });
+
   it("returns ordered aggregate results for mixed document and profile outcomes", () => {
     const result = validateDocumentSet(entries, {
       preserveSourceLocations: false,
@@ -116,10 +185,24 @@ describe("document set validation", () => {
       validationDiagnostics: [],
     });
     expect(result.entries[3].profileDiagnostics).toEqual([
-      expect.objectContaining({
+      {
         code: "profile.config.invalidYaml",
+        message:
+          "Flow sequence in block collection must be sufficiently indented and end with a ]",
         severity: "error",
-      }),
+        sourceRange: {
+          start: {
+            line: 1,
+            column: 17,
+            offset: 16,
+          },
+          end: {
+            line: 1,
+            column: 17,
+            offset: 16,
+          },
+        },
+      },
     ]);
     expect(result.entries[3].validationResult).toBeUndefined();
     expect(result.entries[4].validationResult?.valid).toBe(true);
