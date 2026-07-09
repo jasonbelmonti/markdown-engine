@@ -6,7 +6,7 @@ import {
   validateWithProfile,
   type DeclarativeFrontmatterShape,
   type ValidationProfile,
-} from "@jasonbelmonti/markdown-engine";
+} from "../src/index.js";
 
 function profileForFrontmatterShape(
   frontmatterShape: DeclarativeFrontmatterShape,

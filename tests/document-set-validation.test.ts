@@ -6,7 +6,7 @@ import {
   type ValidateDocumentSetEntry,
   type ValidateDocumentSetResult,
   type ValidationProfile,
-} from "@jasonbelmonti/markdown-engine";
+} from "../src/index.js";
 
 const objectiveProfile = {
   syntaxVersion: "markdown-engine.validation@v1",

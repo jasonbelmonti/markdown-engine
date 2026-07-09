@@ -7,7 +7,7 @@ import {
   parseValidationProfile,
   validateWithProfile,
   type ValidationProfile,
-} from "@jasonbelmonti/markdown-engine";
+} from "../src/index.js";
 import { runCli, type TextOutput } from "../src/cli/run.js";
 
 interface ExampleCase {

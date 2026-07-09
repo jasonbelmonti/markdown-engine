@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { parseValidationProfile } from "@jasonbelmonti/markdown-engine";
+import {
+  normalize,
+  parse,
+  parseValidationProfile,
+  validateWithProfile,
+  type ValidationProfile,
+} from "../src/index.js";
 
 type ProfileInput = Parameters<typeof parseValidationProfile>[0];
 
@@ -2483,4 +2489,97 @@ rules:
       );
     }
   });
+
+  it("rejects invalid typed validation profiles before compiler execution", () => {
+    const document = normalize(parse("# Typed Profile\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    const cases = [
+      {
+        profile: null,
+        expected: {
+          code: "profile.config.invalidShape",
+          message: "Profile must be an object.",
+        },
+      },
+      {
+        profile: {
+          syntaxVersion: "markdown-engine.validation@future",
+          rules: [],
+        },
+        expected: {
+          code: "profile.config.unsupportedSyntaxVersion",
+          message:
+            'Profile syntaxVersion must be "markdown-engine.validation@v1" or "markdown-engine.validation@v2".',
+        },
+      },
+      {
+        profile: {
+          syntaxVersion: "markdown-engine.validation@v1",
+          documentVersion: "2.0.0",
+          rules: [],
+        },
+        expected: {
+          code: "profile.config.invalidShape",
+          message:
+            'Profile documentVersion must be "0.0.0" or "1.0.0" when provided.',
+        },
+      },
+      {
+        profile: {
+          syntaxVersion: "markdown-engine.validation@v1",
+          rules: {},
+        },
+        expected: {
+          code: "profile.config.invalidShape",
+          message: "Profile rules must be an array.",
+        },
+      },
+      {
+        profile: {
+          syntaxVersion: "markdown-engine.validation@v1",
+          rules: [null],
+        },
+        expected: {
+          code: "profile.config.invalidShape",
+          message: "Profile rule at index 0 must be an object.",
+        },
+      },
+      {
+        profile: {
+          syntaxVersion: "markdown-engine.validation@v1",
+          rules: [
+            validExistsRule("duplicate.rule"),
+            { ...validExistsRule("non-string-rule-id"), id: 42 },
+            validExistsRule("duplicate.rule"),
+          ],
+        },
+        expected: {
+          code: "profile.config.invalidShape",
+          message: 'Profile rule at index 2 duplicates rule id "duplicate.rule".',
+        },
+      },
+    ];
+
+    for (const { expected, profile } of cases) {
+      const result = validateWithProfile(
+        document,
+        profile as unknown as ValidationProfile,
+      );
+
+      expect(result.valid).toBe(false);
+      expect(result.ruleResults).toEqual([]);
+      expect(result.diagnostics).toContainEqual(
+        expect.objectContaining({ ...expected, severity: "error" }),
+      );
+    }
+  });
 });
+
+function validExistsRule(id: string): ValidationProfile["rules"][number] {
+  return {
+    id,
+    select: { target: "document" },
+    assert: { exists: true },
+  };
+}

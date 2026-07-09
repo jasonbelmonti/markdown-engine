@@ -9,7 +9,7 @@ import {
   type EngineCompatibilityMode,
   type EngineDocumentVersion,
   type ValidationConfig,
-} from "@jasonbelmonti/markdown-engine";
+} from "../src/index.js";
 
 const markdown = `---
 title: Compatibility Gate

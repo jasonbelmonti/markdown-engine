@@ -9,7 +9,7 @@ import {
   type EngineDocument,
   type EngineLink,
   type EngineLinkReference,
-} from "@jasonbelmonti/markdown-engine";
+} from "../src/index.js";
 
 const fixturePath = "fixtures/rich-ir/link-references.md";
 const fixture = readFileSync(

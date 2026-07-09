@@ -9,7 +9,7 @@ import {
   serialize,
   validateWithProfile,
   type ValidationProfile,
-} from "@jasonbelmonti/markdown-engine";
+} from "../src/index.js";
 
 interface ConditionalHarnessSuite {
   harness: ConditionalHarnessMetadata;

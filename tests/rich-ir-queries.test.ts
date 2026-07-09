@@ -13,7 +13,7 @@ import {
   type EngineSection,
   type EngineTable,
   type EngineTextSpan,
-} from "@jasonbelmonti/markdown-engine";
+} from "../src/index.js";
 
 const fixturePath = "fixtures/rich-ir/queries.md";
 const snapshotPath = fileURLToPath(

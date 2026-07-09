@@ -7,8 +7,9 @@ import {
   type SourceRange,
   type ValidationConfig,
   type ValidationProfile,
-} from "@jasonbelmonti/markdown-engine";
+} from "../src/index.js";
 
+import { validateAnnotations } from "../src/api/annotations.js";
 import {
   annotationTargetDiagnostics,
   cloneAnnotationTarget,
@@ -20,7 +21,9 @@ import {
 import {
   ACCESSOR_PLACEHOLDER,
   FUNCTION_PLACEHOLDER,
+  MAX_NORMALIZED_ARRAY_LENGTH,
   normalizeRuntimeValue,
+  UNAVAILABLE_PLACEHOLDER,
 } from "../src/api/annotation-target-runtime.js";
 import {
   cloneSourceRangeCandidate,
@@ -264,6 +267,130 @@ describe("api helper coverage", () => {
     ).toEqual([FUNCTION_PLACEHOLDER, "1", "Infinity"]);
   });
 
+  it("validates annotations through the public helper and reports stable target failures", () => {
+    const document = normalize(parse(helperMarkdown).parsed, {
+      documentVersion: "1.0.0",
+      preserveSourceLocations: true,
+    }).document;
+    const documentWithoutSourceRange = normalize(parse(helperMarkdown).parsed, {
+      documentVersion: "1.0.0",
+      preserveSourceLocations: true,
+    }).document;
+    delete documentWithoutSourceRange.sourceRange;
+    const paragraphTarget = expectDefined(
+      document.children.find((node) => node.type === "paragraph")?.target,
+    );
+    const validAnnotations = [
+      {
+        id: "annotation:node",
+        target: {
+          kind: "node",
+          nodeTarget: paragraphTarget,
+        },
+        payload: { stable: true },
+      },
+    ] satisfies readonly EngineAnnotation[];
+    const validResult = validateAnnotations(document, validAnnotations);
+    const invalidRange = sourceRange(5, 4, 30, 5, 1, 28);
+    const invalidAnnotations = [
+      {
+        id: "annotation:array-target",
+        target: [],
+        payload: null,
+      },
+      {
+        id: "annotation:unknown-kind",
+        target: { kind: "range" },
+        payload: null,
+      },
+      {
+        id: "annotation:unknown-node-no-range",
+        target: {
+          kind: "node",
+          nodeTarget: {
+            kind: "node",
+            id: "node:absent",
+          },
+        },
+        payload: null,
+      },
+      {
+        id: "annotation:invalid-node-range",
+        target: {
+          kind: "node",
+          nodeTarget: {
+            ...paragraphTarget,
+            sourceRange: invalidRange,
+          },
+        },
+        payload: null,
+      },
+      {
+        id: "annotation:invalid-source-range",
+        target: {
+          kind: "source",
+          sourceRange: invalidRange,
+        },
+        payload: null,
+      },
+    ] as unknown as readonly EngineAnnotation[];
+
+    const invalidResult = validateAnnotations(document, invalidAnnotations);
+
+    expect(validResult).toEqual({
+      valid: true,
+      annotations: validAnnotations,
+      diagnostics: [],
+    });
+    expect(validResult.annotations[0]).not.toBe(validAnnotations[0]);
+    expect(validResult.annotations[0]?.target).not.toBe(validAnnotations[0].target);
+    expect(invalidResult.valid).toBe(false);
+    expect(invalidResult.annotations).toMatchObject([
+      { id: "annotation:array-target", target: [] },
+      { id: "annotation:unknown-kind", target: UNAVAILABLE_PLACEHOLDER },
+      { id: "annotation:unknown-node-no-range" },
+      { id: "annotation:invalid-node-range" },
+      { id: "annotation:invalid-source-range" },
+    ]);
+    expect(invalidResult.annotations[0]).not.toBe(invalidAnnotations[0]);
+    expect(invalidResult.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "annotation.target.invalidRange",
+        message: "Annotation node target source range ends before it starts.",
+        sourceRange: invalidRange,
+      }),
+      expect.objectContaining({
+        code: "annotation.target.invalidRange",
+        message: "Annotation source target range ends before it starts.",
+        sourceRange: invalidRange,
+      }),
+      expect.objectContaining({
+        code: "annotation.target.invalidKind",
+        message: "Annotation target kind must be 'node' or 'source'.",
+      }),
+      expect.objectContaining({
+        code: "annotation.target.invalidKind",
+        message: "Annotation target kind must be 'node' or 'source'.",
+      }),
+      expect.objectContaining({
+        code: "annotation.target.unknown",
+        message: "Annotation target 'node:absent' does not exist in the document.",
+      }),
+    ]);
+    expect(
+      annotationTargetDiagnostics(documentWithoutSourceRange, [
+        {
+          id: "annotation:source-without-document-range",
+          target: {
+            kind: "source",
+            sourceRange: sourceRange(99, 1, 999, 99, 2, 1000),
+          },
+          payload: null,
+        },
+      ]),
+    ).toEqual([]);
+  });
+
   it("covers source range helper edge cases", () => {
     const fullRange = sourceRange(1, 1, 0, 3, 1, 20);
     const containedRange = sourceRange(2, 1, 5, 2, 5, 9);
@@ -287,6 +414,36 @@ describe("api helper coverage", () => {
         { line: 1, column: 1, offset: 3 },
       ),
     ).toBe(2);
+    expect(
+      compareSourcePositions(
+        { line: 1, column: 1, offset: 5 },
+        { line: 1, column: 1 },
+      ),
+    ).toBe(-1);
+    expect(
+      sourceRangeContains(
+        { start: { line: 1, column: 1 }, end: { line: 3, column: 1 } },
+        { start: { line: 2, column: 1 }, end: { line: 2, column: 5 } },
+      ),
+    ).toBe(true);
+  });
+
+  it("normalizes hostile runtime values without evaluating user code", () => {
+    const sparse = new Array(3);
+    sparse[1] = "middle";
+    const shared: unknown[] = ["cached"];
+    const oversized = new Array(MAX_NORMALIZED_ARRAY_LENGTH + 1).fill("x");
+    const nested = [shared, shared];
+
+    expect(normalizeRuntimeValue("stable")).toBe("stable");
+    expect(normalizeRuntimeValue(Symbol("stable"))).toBe("Symbol(stable)");
+    expect(normalizeRuntimeValue({ stable: true })).toBe(UNAVAILABLE_PLACEHOLDER);
+    expect(normalizeRuntimeValue([["deep"]], undefined, 0)).toBe(
+      UNAVAILABLE_PLACEHOLDER,
+    );
+    expect(normalizeRuntimeValue(oversized)).toBe(UNAVAILABLE_PLACEHOLDER);
+    expect(normalizeRuntimeValue(sparse)).toEqual([undefined, "middle", undefined]);
+    expect(normalizeRuntimeValue(nested)).toEqual([["cached"], ["cached"]]);
   });
 });
 

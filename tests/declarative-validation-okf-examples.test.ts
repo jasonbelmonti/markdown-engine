@@ -6,7 +6,7 @@ import {
   type ValidateDocumentSetEntry,
   type ValidateDocumentSetEntryResult,
   type ValidateDocumentSetResult,
-} from "@jasonbelmonti/markdown-engine";
+} from "../src/index.js";
 
 type OkfDocumentRole = "concept" | "log" | "non-root-index" | "root-index";
 
