@@ -8,7 +8,7 @@ import {
   serialize,
   validateWithProfile,
   type ValidationProfile,
-} from "@jasonbelmonti/markdown-engine";
+} from "../src/index.js";
 
 const markdownPath = "fixtures/declarative-validation/proving/representative.md";
 const profilePath = "fixtures/declarative-validation/proving/profile.yaml";

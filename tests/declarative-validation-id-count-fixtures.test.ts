@@ -8,7 +8,7 @@ import {
   parseValidationProfile,
   validateWithProfile,
   type ValidationProfile,
-} from "@jasonbelmonti/markdown-engine";
+} from "../src/index.js";
 import { compileValidationProfile } from "../src/declarative-validation/compiler/index.js";
 
 interface IdCountFixtureSuite {

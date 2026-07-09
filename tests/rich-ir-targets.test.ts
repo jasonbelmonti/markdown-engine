@@ -12,7 +12,7 @@ import {
   type EngineSection,
   type ParsedMarkdown,
   type SourceRange,
-} from "@jasonbelmonti/markdown-engine";
+} from "../src/index.js";
 
 const fixturePath = "fixtures/rich-ir/proving.md";
 const snapshotPath = fileURLToPath(

@@ -8,7 +8,7 @@ import {
   validateWithProfile,
   type EngineDocument,
   type ValidationProfile,
-} from "@jasonbelmonti/markdown-engine";
+} from "../src/index.js";
 import { classifyCompiledDeclarativeRuleApplicability } from "../src/declarative-validation/applicability/index.js";
 import { resolveTableColumnIdTokens } from "../src/declarative-validation/assertions/id-targets.js";
 import { compileValidationProfile } from "../src/declarative-validation/compiler/index.js";

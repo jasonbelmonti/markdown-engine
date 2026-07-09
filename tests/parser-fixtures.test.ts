@@ -1,8 +1,8 @@
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
-import { normalize, parse, serialize } from "@jasonbelmonti/markdown-engine";
-import type { EngineNode } from "@jasonbelmonti/markdown-engine";
+import { normalize, parse, serialize } from "../src/index.js";
+import type { EngineNode } from "../src/index.js";
 
 import {
   CMARK_GFM_OPTIONS,

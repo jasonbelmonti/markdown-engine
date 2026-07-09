@@ -5,8 +5,17 @@ import {
   documentQueries,
   normalize,
   parse,
-} from "@jasonbelmonti/markdown-engine";
-import type { EngineDocument, EngineNode } from "@jasonbelmonti/markdown-engine";
+} from "../src/index.js";
+import type { EngineDocument, EngineNode, SourceRange } from "../src/index.js";
+import {
+  cyclicYamlAliasDiagnostic,
+  nonFiniteNumberDiagnostic,
+  nonStringYamlKeyDiagnostic,
+  unsupportedJsonValueDiagnostic,
+  yamlIssueToDiagnostic,
+  yamlMaterializationDiagnostic,
+  yamlNodeRange,
+} from "../src/frontmatter/yaml-diagnostics.js";
 
 const fixture = readFileSync(
   new URL("../fixtures/representative.md", import.meta.url),
@@ -149,6 +158,61 @@ describe("parser and frontmatter adapters", () => {
         },
       },
     });
+  });
+
+  it("maps YAML diagnostics to stable fallback and source ranges", () => {
+    const fallbackRange = sourceRange(1, 1, 0, 1, 6, 5);
+    const diagnosticRange = sourceRange(8, 1, 102, 8, 2, 104);
+
+    expect(
+      yamlIssueToDiagnostic(
+        { message: 42, pos: "bad" },
+        "frontmatter.yaml.invalid",
+        "error",
+        "title: ok",
+        { line: 7, column: 1, offset: 100 },
+        fallbackRange,
+      ),
+    ).toEqual({
+      code: "frontmatter.yaml.invalid",
+      message: "YAML frontmatter could not be parsed.",
+      severity: "error",
+      sourceRange: fallbackRange,
+    });
+    expect(
+      yamlIssueToDiagnostic(
+        { message: "YAML range warning", pos: [2, 4] },
+        "frontmatter.yaml.warning",
+        "warning",
+        "a\r\nbc",
+        { line: 7, column: 1, offset: 100 },
+        fallbackRange,
+      ),
+    ).toEqual({
+      code: "frontmatter.yaml.warning",
+      message: "YAML range warning",
+      severity: "warning",
+      sourceRange: diagnosticRange,
+    });
+    expect(yamlMaterializationDiagnostic("opaque", fallbackRange)).toEqual({
+      code: "frontmatter.yaml.invalid",
+      message: "YAML frontmatter could not be parsed.",
+      severity: "error",
+      sourceRange: fallbackRange,
+    });
+    expect(nonStringYamlKeyDiagnostic(fallbackRange).message).toBe(
+      "YAML frontmatter mapping keys must be strings.",
+    );
+    expect(nonFiniteNumberDiagnostic(fallbackRange).message).toContain(
+      "non-finite numbers",
+    );
+    expect(unsupportedJsonValueDiagnostic(fallbackRange).message).toContain(
+      "not JSON-safe",
+    );
+    expect(cyclicYamlAliasDiagnostic(fallbackRange).message).toContain(
+      "cyclic alias",
+    );
+    expect(yamlNodeRange({}, "title: ok", { line: 1, column: 1 })).toBeUndefined();
   });
 
   it("remaps BOM plus CRLF frontmatter source positions to original offsets", () => {
@@ -633,4 +697,26 @@ function findNode(
   }
 
   return undefined;
+}
+
+function sourceRange(
+  startLine: number,
+  startColumn: number,
+  startOffset: number,
+  endLine: number,
+  endColumn: number,
+  endOffset: number,
+): SourceRange {
+  return {
+    start: {
+      line: startLine,
+      column: startColumn,
+      offset: startOffset,
+    },
+    end: {
+      line: endLine,
+      column: endColumn,
+      offset: endOffset,
+    },
+  };
 }

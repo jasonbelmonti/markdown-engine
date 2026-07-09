@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-import { normalize, parse } from "@jasonbelmonti/markdown-engine";
+import { normalize, parse } from "../src/index.js";
 import { resolveDeclarativeSelector } from "../src/declarative-validation/selectors/index.js";
 import { tableColumnTargets } from "../src/declarative-validation/selectors/table-targets.js";
 

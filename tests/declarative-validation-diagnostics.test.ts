@@ -8,7 +8,7 @@ import {
   validateWithProfile,
   type EngineDocument,
   type ValidationProfile,
-} from "@jasonbelmonti/markdown-engine";
+} from "../src/index.js";
 import {
   groupRequirementFailedDiagnostic,
   noAlternativeMatchedDiagnostic,
