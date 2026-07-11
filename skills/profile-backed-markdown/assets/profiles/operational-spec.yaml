@@ -41,6 +41,14 @@ rules:
         min: 80
         max: 180
 
+  - id: risk.heading.text
+    select:
+      target: heading
+      text: Risk Register
+    assert:
+      text:
+        contains: "Risk Register"
+
   - id: risk.table.columns
     select:
       target: table
@@ -70,6 +78,21 @@ rules:
         prefix: OPS-RISK
         unique: true
 
+  - id: tracked.risk.row
+    select:
+      target: tableRow
+      section: Risk Register
+      tableHeader:
+        - ID
+        - Mitigation
+        - Status
+      where:
+        column: Status
+        equals: tracked
+    assert:
+      text:
+        contains: OPS-RISK-1
+
   - id: execution.must.count
     select:
       target: section
@@ -87,6 +110,16 @@ rules:
     assert:
       text:
         contains: "Validate profile"
+
+  - id: handoff.paragraph
+    select:
+      target: textSpan
+      section: Handoff Links
+      nodeType: paragraph
+      textIncludes: "handoff packet"
+    assert:
+      text:
+        contains: "follow-up"
 
   - id: handoff.link
     select:

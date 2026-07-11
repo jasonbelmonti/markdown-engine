@@ -6,6 +6,10 @@ import type {
   SourcePosition,
   SourceRange,
 } from "../api/diagnostics.js";
+import {
+  createYamlSourcePositionIndex,
+  type YamlSourcePositionIndex,
+} from "./yaml-source-positions.js";
 
 export interface YamlIssueLike {
   message?: unknown;
@@ -20,11 +24,27 @@ export function yamlIssueToDiagnostic(
   contentStart: SourcePosition,
   fallbackRange: SourceRange,
 ): MarkdownDiagnostic {
+  return yamlIssueToDiagnosticFromIndex(
+    issue,
+    code,
+    severity,
+    createYamlSourcePositionIndex(raw, contentStart),
+    fallbackRange,
+  );
+}
+
+export function yamlIssueToDiagnosticFromIndex(
+  issue: YamlIssueLike,
+  code: string,
+  severity: MarkdownDiagnostic["severity"],
+  sourcePositions: YamlSourcePositionIndex,
+  fallbackRange: SourceRange,
+): MarkdownDiagnostic {
   return {
     code,
     message: yamlIssueMessage(issue),
     severity,
-    sourceRange: yamlIssueRange(issue, raw, contentStart) ?? fallbackRange,
+    sourceRange: yamlIssueRange(issue, sourcePositions) ?? fallbackRange,
   };
 }
 
@@ -94,11 +114,21 @@ export function yamlNodeRange(
   raw: string,
   contentStart: SourcePosition,
 ): SourceRange | undefined {
+  return yamlNodeRangeFromIndex(
+    node,
+    createYamlSourcePositionIndex(raw, contentStart),
+  );
+}
+
+export function yamlNodeRangeFromIndex(
+  node: unknown,
+  sourcePositions: YamlSourcePositionIndex,
+): SourceRange | undefined {
   if (!isNode(node) || node.range === undefined || node.range === null) {
     return undefined;
   }
 
-  return yamlRangeToSourceRange(node.range, raw, contentStart);
+  return yamlRangeToSourceRange(node.range, sourcePositions);
 }
 
 function yamlIssueMessage(issue: YamlIssueLike): string {
@@ -111,76 +141,25 @@ function yamlIssueMessage(issue: YamlIssueLike): string {
 
 function yamlIssueRange(
   issue: YamlIssueLike,
-  raw: string,
-  contentStart: SourcePosition,
+  sourcePositions: YamlSourcePositionIndex,
 ): SourceRange | undefined {
   if (!Array.isArray(issue.pos) || typeof issue.pos[0] !== "number") {
     return undefined;
   }
 
-  const startOffset = clampOffset(issue.pos[0], raw);
+  const startOffset = issue.pos[0];
   let endOffset = startOffset;
 
   if (typeof issue.pos[1] === "number") {
-    endOffset = clampOffset(issue.pos[1], raw);
+    endOffset = issue.pos[1];
   }
 
-  return {
-    start: positionFromOffset(raw, startOffset, contentStart),
-    end: positionFromOffset(raw, Math.max(startOffset, endOffset), contentStart),
-  };
+  return sourcePositions.range(startOffset, endOffset);
 }
 
 function yamlRangeToSourceRange(
   range: Range,
-  raw: string,
-  contentStart: SourcePosition,
+  sourcePositions: YamlSourcePositionIndex,
 ): SourceRange {
-  const startOffset = clampOffset(range[0], raw);
-  const endOffset = clampOffset(range[1], raw);
-
-  return {
-    start: positionFromOffset(raw, startOffset, contentStart),
-    end: positionFromOffset(raw, Math.max(startOffset, endOffset), contentStart),
-  };
-}
-
-function positionFromOffset(
-  text: string,
-  targetOffset: number,
-  base: SourcePosition,
-): SourcePosition {
-  let line = base.line;
-  let column = base.column;
-  let offset = 0;
-
-  while (offset < targetOffset) {
-    const character = text[offset];
-
-    if (character === "\r") {
-      if (text[offset + 1] === "\n" && offset + 1 < targetOffset) {
-        offset += 1;
-      }
-
-      line += 1;
-      column = 1;
-    } else if (character === "\n") {
-      line += 1;
-      column = 1;
-    } else {
-      column += 1;
-    }
-
-    offset += 1;
-  }
-
-  return {
-    line,
-    column,
-    offset: (base.offset ?? 0) + targetOffset,
-  };
-}
-
-function clampOffset(offset: number, text: string): number {
-  return Math.max(0, Math.min(offset, text.length));
+  return sourcePositions.range(range[0], range[1]);
 }

@@ -25,6 +25,11 @@ export interface MaterializedValidationProfile {
   diagnostics: readonly MarkdownDiagnostic[];
 }
 
+interface IndexedDeclarativeValidationRule {
+  sourceIndex: number;
+  rule: DeclarativeValidationRule;
+}
+
 export function materializeValidationProfile(
   profile: ValidationProfile,
   fallbackDocumentVersion: EngineDocumentVersion,
@@ -66,14 +71,14 @@ export function materializeValidationProfile(
     closedProfile.documentVersion === undefined
       ? undefined
       : documentVersionFromValue(closedProfile.documentVersion, diagnostics);
-  const rules = rulesFromValue(closedProfile.rules, diagnostics);
-  pushDuplicateRuleIdDiagnostics(rules, diagnostics);
+  const indexedRules = rulesFromValue(closedProfile.rules, diagnostics);
+  pushDuplicateRuleIdDiagnostics(indexedRules, diagnostics);
 
   return {
     profile: {
       syntaxVersion: syntaxVersion ?? PROFILE_SYNTAX_VERSION,
       ...(documentVersion !== undefined ? { documentVersion } : {}),
-      rules: rules ?? [],
+      rules: indexedRules?.map(({ rule }) => rule) ?? [],
     },
     diagnostics,
   };
@@ -116,7 +121,7 @@ function documentVersionFromValue(
 function rulesFromValue(
   value: unknown,
   diagnostics: MarkdownDiagnostic[],
-): ValidationProfile["rules"] | undefined {
+): readonly IndexedDeclarativeValidationRule[] | undefined {
   if (!Array.isArray(value)) {
     diagnostics.push({
       code: "profile.config.invalidShape",
@@ -127,7 +132,7 @@ function rulesFromValue(
     return undefined;
   }
 
-  const rules: DeclarativeValidationRule[] = [];
+  const rules: IndexedDeclarativeValidationRule[] = [];
 
   for (let index = 0; index < value.length; index += 1) {
     const rule = value[index];
@@ -141,14 +146,17 @@ function rulesFromValue(
       continue;
     }
 
-    rules.push(rule as unknown as DeclarativeValidationRule);
+    rules.push({
+      sourceIndex: index,
+      rule: rule as unknown as DeclarativeValidationRule,
+    });
   }
 
   return rules;
 }
 
 function pushDuplicateRuleIdDiagnostics(
-  rules: ValidationProfile["rules"] | undefined,
+  rules: readonly IndexedDeclarativeValidationRule[] | undefined,
   diagnostics: MarkdownDiagnostic[],
 ): void {
   if (rules === undefined) {
@@ -156,8 +164,8 @@ function pushDuplicateRuleIdDiagnostics(
   }
 
   const seenRuleIds = new Set<string>();
-  for (let index = 0; index < rules.length; index += 1) {
-    const ruleId = rules[index]?.id;
+  for (const { rule, sourceIndex } of rules) {
+    const ruleId = rule.id;
     if (typeof ruleId !== "string") {
       continue;
     }
@@ -165,7 +173,7 @@ function pushDuplicateRuleIdDiagnostics(
     if (seenRuleIds.has(ruleId)) {
       diagnostics.push({
         code: "profile.config.invalidShape",
-        message: `Profile rule at index ${index} duplicates rule id "${ruleId}".`,
+        message: `Profile rule at index ${sourceIndex} duplicates rule id "${ruleId}".`,
         severity: "error",
       });
     }

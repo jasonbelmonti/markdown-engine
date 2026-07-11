@@ -1,6 +1,6 @@
 {
   "name": "@jasonbelmonti/markdown-engine",
-  "version": "3.1.1",
+  "version": "3.1.2",
   "description": "Deterministic Markdown parsing and validation engine package.",
   "license": "MIT",
   "type": "module",
@@ -35,6 +35,8 @@
     "scripts/install-markdown-engine-cli.sh",
     "skills",
     "docs/contracts",
+    "docs/README.md",
+    "docs/guides",
     "fixtures/declarative-validation/examples",
     "CHANGELOG.md",
     "SECURITY.md"
@@ -50,7 +52,7 @@
     "prepack": "npm run release:verify",
     "prepublishOnly": "npm run release:verify",
     "release:verify": "npm run typecheck && npm test && node scripts/check-boundaries.mjs && npm run docs:rich-ir-contract && npm run docs:declarative-validation-contract && npm run audit:declarative-validation-boundary && npm run build && npm run build:cli:bundled && node scripts/prove-repeatability.mjs --runs 10 && npm run release:check-clean",
-    "release:check-clean": "git diff --check HEAD -- && git diff --exit-code HEAD --",
+    "release:check-clean": "node scripts/check-release-clean.mjs",
     "snapshots:update:parser": "npm run build && vitest run tests/parser-fixtures.test.ts -u \"--exclude=.worktrees/**\"",
     "snapshots:update:rules": "npm run build && vitest run tests/rules.test.ts -u \"--exclude=.worktrees/**\"",
     "snapshots:update:rich-ir": "npm run build && vitest run tests/rich-ir-targets.test.ts tests/rich-ir-queries.test.ts tests/rich-ir-link-references.test.ts -u \"--exclude=.worktrees/**\"",

@@ -1,10 +1,10 @@
 # Public API Contract
 
-Status: package 3.0.0, document contract 1.0.0
-Last updated: 2026-06-05
+Status: package 3.1.2, document contract 1.0.0
+Last updated: 2026-07-11
 
 This document defines the public `@jasonbelmonti/markdown-engine` package
-contract for the `3.0.0` package release. The serialized rich IR document
+contract for the `3.1.2` package release. The serialized rich IR document
 contract remains `documentVersion: "1.0.0"`. The stable public surface is the
 package export from `@jasonbelmonti/markdown-engine`, not internal adapter
 modules or raw parser output. The 1.0 rich IR design is tracked in
@@ -598,8 +598,8 @@ serialization behavior.
 
 ### Compatibility And Migration
 
-The current package version is `3.0.0`. The serialized document contract
-version remains `"1.0.0"`. Package 3.0 selects that rich IR contract by
+The current package version is `3.1.2`. The serialized document contract
+version remains `"1.0.0"`. Package 3.1 selects that rich IR contract by
 default for `normalize(parsed)`; callers may also request it explicitly with
 `normalize(..., { documentVersion: "1.0.0" })`. Serialization gates check it
 with `compatibilityMode: "default"`.
@@ -612,7 +612,7 @@ compatibility from the absence of rich IR fields.
 Migration from the `0.1.0` document shape, or from pre-2.0 API callers that
 depended on implicit legacy normalization, requires consumers to:
 
-- use package 3.0's default `normalize(parsed)` rich IR output or request
+- use package 3.1's default `normalize(parsed)` rich IR output or request
   `documentVersion: "1.0.0"` during normalization;
 - read `target`, `sections`, `textSpans`, `tables`, `lists`, `links`,
   `linkReferences`, and `source` from the normalized document instead of

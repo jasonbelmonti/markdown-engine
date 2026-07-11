@@ -1096,6 +1096,8 @@ describe("declarative validation public contract scaffold", () => {
     };
 
     expect(packageJson.files).toContain("docs/contracts");
+    expect(packageJson.files).toContain("docs/README.md");
+    expect(packageJson.files).toContain("docs/guides");
     expect(packageJson.files).toContain("fixtures/declarative-validation/examples");
 
     for (const fixturePath of packagedExampleFixturePaths) {

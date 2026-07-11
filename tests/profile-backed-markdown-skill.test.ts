@@ -1,10 +1,20 @@
 import { execFile } from "node:child_process";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  symlink,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { parse as parseYaml } from "yaml";
+
+import { buildCliArtifact } from "../scripts/build-cli-artifact.mjs";
 
 const execFileAsync = promisify(execFile);
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
@@ -15,11 +25,28 @@ const wrapperPath = join(
   "scripts",
   "validate-profile-backed-markdown.mjs",
 );
-const bundlePath = join(repoRoot, "dist-bundled", "markdown-engine-cli.mjs");
+const skillProfilePath = join(
+  repoRoot,
+  "skills",
+  "profile-backed-markdown",
+  "assets",
+  "profiles",
+  "operational-spec.yaml",
+);
+const fixtureProfilePath = join(
+  repoRoot,
+  "fixtures",
+  "declarative-validation",
+  "examples",
+  "operational-spec",
+  "profile.yaml",
+);
 const buildTimeoutMs = 30_000;
 const commandTimeoutMs = 10_000;
 const maxBuffer = 10 * 1024 * 1024;
 const tempDirs: string[] = [];
+let suiteBundleDirectory: string | undefined;
+let suiteBundlePath: string | undefined;
 
 interface CommandResult {
   exitCode: number | string;
@@ -87,17 +114,36 @@ rules:
 
 describe("profile-backed-markdown skill wrapper", () => {
   beforeAll(async () => {
-    await execFileAsync(process.execPath, ["scripts/build-bundled-cli.mjs"], {
-      cwd: repoRoot,
-      maxBuffer,
-      timeout: buildTimeoutMs,
+    suiteBundleDirectory = await mkdtemp(
+      join(tmpdir(), "profile-backed-markdown-cli-"),
+    );
+    suiteBundlePath = join(suiteBundleDirectory, "markdown-engine-cli.mjs");
+
+    await buildCliArtifact({
+      outfile: suiteBundlePath,
+      repoRoot,
     });
   }, buildTimeoutMs);
+
+  afterAll(async () => {
+    if (suiteBundleDirectory !== undefined) {
+      await rm(suiteBundleDirectory, { force: true, recursive: true });
+    }
+  });
 
   afterEach(async () => {
     await Promise.all(
       tempDirs.splice(0).map((dir) => rm(dir, { force: true, recursive: true })),
     );
+  });
+
+  it("keeps the packaged operational profile semantically aligned with the shipped fixture", async () => {
+    const [skillProfile, fixtureProfile] = await Promise.all([
+      readFile(skillProfilePath, "utf8"),
+      readFile(fixtureProfilePath, "utf8"),
+    ]);
+
+    expect(parseYaml(skillProfile)).toEqual(parseYaml(fixtureProfile));
   });
 
   it("routes validationProfile frontmatter to a local profile asset", async () => {
@@ -117,7 +163,7 @@ describe("profile-backed-markdown skill wrapper", () => {
     expect(output.valid).toBe(true);
     expect(output.diagnostics).toEqual([]);
     expect(output.profile).toMatchObject({
-      ruleCount: 9,
+      ruleCount: 12,
       syntaxVersion: "markdown-engine.validation@v1",
     });
   });
@@ -189,6 +235,29 @@ describe("profile-backed-markdown skill wrapper", () => {
     );
   });
 
+  it("enforces every rule from the shipped operational profile", async () => {
+    const cwd = await makeTempDir();
+    const missingFollowUp = passingMarkdown.replace(
+      "records follow-up review notes",
+      "records review notes",
+    );
+    await writeFile(join(cwd, "spec.md"), missingFollowUp);
+
+    const result = await runWrapper(["--file", "spec.md"], cwd);
+    const output = JSON.parse(result.stdout) as {
+      diagnostics: Array<{ ruleId?: string }>;
+      valid: boolean;
+    };
+
+    expect(result.exitCode).toBe(1);
+    expect(output.valid).toBe(false);
+    expect(output.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ ruleId: "handoff.paragraph" }),
+      ]),
+    );
+  });
+
   it("can emit a compact repair brief from validator diagnostics", async () => {
     const cwd = await makeTempDir();
     await writeFile(join(cwd, "spec.md"), failingMarkdown);
@@ -208,7 +277,7 @@ describe("profile-backed-markdown skill wrapper", () => {
     await writeFile(join(cwd, "spec.md"), passingMarkdown);
 
     const result = await runWrapper(["--file", "spec.md"], cwd, {
-      MARKDOWN_ENGINE_CLI: bundlePath,
+      MARKDOWN_ENGINE_CLI: requiredSuiteBundlePath(),
       PATH: "",
     });
 
@@ -231,6 +300,37 @@ describe("profile-backed-markdown skill wrapper", () => {
     expect(result.exitCode).toBe(2);
     expect(result.stdout).toBe("");
     expect(result.stderr).toContain("validationProfile must not contain");
+  });
+
+  it("rejects a profile symlink that escapes the selected profile root", async () => {
+    if (process.platform === "win32") {
+      return;
+    }
+
+    const cwd = await makeTempDir();
+    const profileRoot = join(cwd, "profiles");
+    const outsideProfile = join(cwd, "outside.yaml");
+    await mkdir(profileRoot);
+    await writeFile(outsideProfile, permissiveProfile);
+    await symlink(outsideProfile, join(profileRoot, "escape.yaml"));
+    await writeFile(
+      join(cwd, "spec.md"),
+      passingMarkdown.replace(
+        "validationProfile: operational-spec",
+        "validationProfile: escape",
+      ),
+    );
+
+    const result = await runWrapper(
+      ["--file", "spec.md", "--profile-root", "profiles"],
+      cwd,
+    );
+
+    expect(result.exitCode).toBe(2);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toContain(
+      "outside the local profile root through a symbolic link",
+    );
   });
 
   it("rejects duplicate file targets instead of overwriting the first target", async () => {
@@ -263,7 +363,11 @@ async function runWrapper(
   try {
     const result = await execFileAsync(process.execPath, [wrapperPath, ...args], {
       cwd,
-      env: { ...process.env, ...env },
+      env: {
+        ...process.env,
+        MARKDOWN_ENGINE_CLI: requiredSuiteBundlePath(),
+        ...env,
+      },
       maxBuffer,
       timeout: commandTimeoutMs,
     });
@@ -286,6 +390,14 @@ async function runWrapper(
       stdout: toText(failure.stdout),
     };
   }
+}
+
+function requiredSuiteBundlePath(): string {
+  if (suiteBundlePath === undefined) {
+    throw new Error("Suite-private bundled CLI was not built.");
+  }
+
+  return suiteBundlePath;
 }
 
 function toText(value: string | Buffer | undefined): string {

@@ -4,6 +4,8 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { securityPolicyFailures } from "./security-policy-check.mjs";
+
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
 const checks = [
@@ -21,8 +23,8 @@ const checks = [
       "### Non-Goals And Limits",
     ],
     phrases: [
-      "Status: package 3.0.0, document contract 1.0.0",
-      "The current package version is `3.0.0`",
+      "Status: package 3.1.2, document contract 1.0.0",
+      "The current package version is `3.1.2`",
       "version remains `\"1.0.0\"`",
       'documentVersion: "1.0.0"',
       'compatibilityMode: "default"',
@@ -34,7 +36,7 @@ const checks = [
       "cannot prove source-target",
       "source ranges proven out of bounds",
       "--document-version 0.0.0",
-      "Package 3.0 selects that rich IR contract by",
+      "Package 3.1 selects that rich IR contract by",
       'pin `documentVersion: "0.0.0"`',
       "rowIndex",
       "columnIndex",
@@ -48,7 +50,7 @@ const checks = [
     phrases: [
       "documentQueries",
       "validateAnnotations",
-      "version: `3.1.1`",
+      "version: `3.1.2`",
       "Package 3.1 retains the serialized document contract",
       'documentVersion: "1.0.0"',
       "--document-version 0.0.0",
@@ -136,6 +138,15 @@ for (const check of checks) {
   }
 }
 
+failures.push(
+  ...securityPolicyFailures({
+    packageFile: "package.json",
+    packageJson: readContractFile("package.json"),
+    securityFile: "SECURITY.md",
+    securityMarkdown: readContractFile("SECURITY.md"),
+  }),
+);
+
 if (failures.length > 0) {
   console.error("Rich IR contract documentation gate FAIL");
   for (const failure of failures) {
@@ -145,7 +156,13 @@ if (failures.length > 0) {
 }
 
 console.log("Rich IR contract documentation gate PASS");
-console.log(`Checked files: ${checks.map((check) => check.file).join(", ")}`);
+console.log(
+  `Checked files: ${[
+    ...checks.map((check) => check.file),
+    "SECURITY.md",
+    "package.json",
+  ].join(", ")}`,
+);
 
 function readContractFile(file) {
   try {
