@@ -16,6 +16,7 @@ import {
   yamlMaterializationDiagnostic,
   yamlNodeRange,
 } from "../src/frontmatter/yaml-diagnostics.js";
+import { deeplyNestedMalformedYaml } from "./support/yaml-test-support.js";
 
 const fixture = readFileSync(
   new URL("../fixtures/representative.md", import.meta.url),
@@ -316,6 +317,23 @@ describe("parser and frontmatter adapters", () => {
         text: "Body",
       },
     );
+  });
+
+  it("returns a bounded diagnostic when malformed frontmatter exhausts parser recursion", () => {
+    const result = parse(
+      `---\n${deeplyNestedMalformedYaml(2_000)}\n---\n# Body\n`,
+    );
+
+    expect(result.parsed.frontmatter).toBeUndefined();
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "frontmatter.yaml.invalid",
+        severity: "error",
+      }),
+    );
+    expect(
+      findNode(result.parsed.document, (node) => node.type === "heading"),
+    ).toMatchObject({ text: "Body" });
   });
 
   it("returns structured diagnostics for YAML materialization failures", () => {

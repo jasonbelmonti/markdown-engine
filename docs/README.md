@@ -20,6 +20,18 @@ These documents define the current package-facing contract.
 - [Root README](../README.md) - package purpose, current package/version
   status, API and CLI examples, and contract navigation.
 
+## Interpretation guidance (non-normative)
+
+These documents explain how to read current contracts without adding to or
+changing them.
+
+- [Declarative validation profile interpretation guide](guides/declarative-validation-agent-interpretation.md) -
+  agent-facing `select -> assert` mental model, selector role glossary,
+  natural-language translation template, annotated shipped profile, and common
+  misreads. The
+  [declarative validation contract](contracts/declarative-validation.md)
+  remains authoritative for supported grammar and runtime semantics.
+
 ## Architecture boundary
 
 These documents describe the durable package boundary. Use them to understand
