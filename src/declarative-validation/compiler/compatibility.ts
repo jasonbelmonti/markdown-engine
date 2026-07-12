@@ -14,6 +14,7 @@ export function selectorAssertionCompatibilityError(
     case "references":
     case "tableColumnCoverage":
     case "frontmatterShape":
+    case "sourceLength":
       return selector.target === "document"
         ? undefined
         : selectorCompatibilityMessage(assertionName, "document");

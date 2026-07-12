@@ -19,6 +19,7 @@ import {
   idsAssertionSupportsCountBounds,
   type IdsCountBoundKey,
 } from "./ids-assertion-contract.js";
+import { lengthBoundsFromValue } from "./length-bound-schema.js";
 import {
   invalidShape,
   isFiniteNumber,
@@ -52,6 +53,7 @@ const SUPPORTED_ASSERTION_KEYS_V1 = [
 
 const SUPPORTED_ASSERTION_KEYS_V2 = [
   ...SUPPORTED_ASSERTION_KEYS_V1,
+  "sourceLength",
   "tableColumnCoverage",
   "frontmatterShape",
   "textFormat",
@@ -83,6 +85,9 @@ export function assertionFromValue(
     ...textAssertionFromValue(value.text, diagnostics),
     ...textOccurrenceCountFromValue(value.textOccurrenceCount, diagnostics),
     ...textLengthFromValue(value.textLength, diagnostics),
+    ...(supportsV2AssertionSurface(syntaxVersion)
+      ? sourceLengthFromValue(value.sourceLength, diagnostics)
+      : {}),
     ...frontmatterRequiredFromValue(value.frontmatterRequired, diagnostics),
     ...(supportsV2AssertionSurface(syntaxVersion)
       ? tableColumnCoverageFromValue(value.tableColumnCoverage, diagnostics)
@@ -615,43 +620,18 @@ function textLengthFromValue(
   value: unknown,
   diagnostics: MarkdownDiagnostic[],
 ): Pick<DeclarativeAssertion, "textLength"> {
-  if (value === undefined) {
-    return {};
-  }
+  const bounds = lengthBoundsFromValue(value, "textLength", diagnostics);
 
-  if (!isPlainRecord(value)) {
-    diagnostics.push(invalidShape("textLength must be an object."));
+  return bounds === undefined ? {} : { textLength: bounds };
+}
 
-    return {};
-  }
+function sourceLengthFromValue(
+  value: unknown,
+  diagnostics: MarkdownDiagnostic[],
+): Pick<DeclarativeAssertion, "sourceLength"> {
+  const bounds = lengthBoundsFromValue(value, "sourceLength", diagnostics);
 
-  unsupportedKeys(value, ["min", "max"], diagnostics);
-
-  const diagnosticCountBeforeBounds = diagnostics.length;
-  const textLength = {
-    ...optionalTextLengthBound(value, "min", diagnostics),
-    ...optionalTextLengthBound(value, "max", diagnostics),
-  };
-
-  if (!hasTextLengthBound(textLength)) {
-    if (diagnostics.length === diagnosticCountBeforeBounds) {
-      diagnostics.push(
-        invalidShape("textLength must include min, max, or both."),
-      );
-    }
-
-    return {};
-  }
-
-  if (!hasValidTextLengthRange(textLength)) {
-    diagnostics.push(
-      invalidShape("textLength.min must be less than or equal to textLength.max."),
-    );
-
-    return {};
-  }
-
-  return { textLength };
+  return bounds === undefined ? {} : { sourceLength: bounds };
 }
 
 function textFormatFromValue(
@@ -773,38 +753,6 @@ function optionalBoolean(
   );
 }
 
-function optionalTextLengthBound(
-  record: Record<string, unknown>,
-  key: "min" | "max",
-  diagnostics: MarkdownDiagnostic[],
-): Partial<Record<"min" | "max", number>> {
-  const value = record[key];
-
-  if (value === undefined) {
-    return {};
-  }
-
-  if (!isFiniteNumber(value)) {
-    diagnostics.push(
-      invalidShape(`textLength.${key} must be a number when provided.`),
-    );
-
-    return {};
-  }
-
-  if (!isTextLengthBound(value)) {
-    diagnostics.push(
-      invalidShape(
-        `textLength.${key} must be a non-negative integer when provided.`,
-      ),
-    );
-
-    return {};
-  }
-
-  return { [key]: value } as Partial<Record<"min" | "max", number>>;
-}
-
 function optionalIdCountBound(
   record: Record<string, unknown>,
   key: IdsCountBoundKey,
@@ -848,26 +796,6 @@ function requiredAssertionString(
 
 function hasTextPredicate(text: DeclarativeAssertion["text"]): boolean {
   return text?.contains !== undefined || text?.excludes !== undefined;
-}
-
-function hasTextLengthBound(
-  textLength: DeclarativeAssertion["textLength"],
-): boolean {
-  return textLength?.min !== undefined || textLength?.max !== undefined;
-}
-
-function hasValidTextLengthRange(
-  textLength: DeclarativeAssertion["textLength"],
-): boolean {
-  return (
-    textLength?.min === undefined ||
-    textLength.max === undefined ||
-    textLength.min <= textLength.max
-  );
-}
-
-function isTextLengthBound(value: number): boolean {
-  return isNonNegativeInteger(value);
 }
 
 function isNonNegativeInteger(value: number): boolean {

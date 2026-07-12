@@ -23,6 +23,7 @@ import {
   closedStringArray,
   closedTextFormat,
   hasTextPredicate,
+  hasSourceLengthBound,
   hasTextLengthBound,
   optionalNumber,
   optionalString,
@@ -33,6 +34,7 @@ import {
   pushOptionalBooleanDiagnostic,
   pushOptionalNonEmptyStringDiagnostic,
   pushSectionsRequiredOrderDiagnostic,
+  pushSourceLengthShapeDiagnostics,
   pushTextLengthShapeDiagnostics,
   pushTextOccurrenceCountDiagnostic,
   pushTextShapeDiagnostics,
@@ -58,6 +60,7 @@ export const ASSERTION_BUILDERS: readonly AssertionBuilder[] = [
   buildTextAssertion,
   buildTextOccurrenceCountAssertion,
   buildTextLengthAssertion,
+  buildSourceLengthAssertion,
   buildTextFormatAssertion,
   buildFrontmatterRequiredAssertion,
 ];
@@ -562,6 +565,66 @@ function buildTextLengthAssertion(
       kind: "textLength",
       ...optionalNumber("min", assertion.textLength.min),
       ...optionalNumber("max", assertion.textLength.max),
+    };
+  }
+
+  return undefined;
+}
+
+function buildSourceLengthAssertion(
+  assertion: DeclarativeAssertion,
+  selector: DeclarativeSelector,
+  ruleId: string,
+  syntaxVersion: ValidationProfileSyntaxVersion,
+  diagnostics: MarkdownDiagnostic[],
+): CompiledDeclarativeAssertion | undefined {
+  if (
+    assertion.sourceLength === undefined ||
+    syntaxVersion !== PROFILE_SYNTAX_VERSION_V2
+  ) {
+    return undefined;
+  }
+
+  if (
+    !pushObjectDiagnostic(
+      "sourceLength",
+      assertion.sourceLength,
+      ruleId,
+      diagnostics,
+    ) ||
+    !pushUnsupportedKeyDiagnostics(
+      assertion.sourceLength,
+      ["min", "max"],
+      diagnostics,
+    ) ||
+    !pushSourceLengthShapeDiagnostics(
+      assertion.sourceLength,
+      ruleId,
+      diagnostics,
+    )
+  ) {
+    return undefined;
+  }
+
+  if (!hasSourceLengthBound(assertion.sourceLength)) {
+    diagnostics.push(
+      compileDiagnostic(
+        "profile.config.invalidShape",
+        "sourceLength must include min, max, or both.",
+        ruleId,
+      ),
+    );
+
+    return undefined;
+  }
+
+  if (
+    pushCompatibilityDiagnostic("sourceLength", selector, ruleId, diagnostics)
+  ) {
+    return {
+      kind: "sourceLength",
+      ...optionalNumber("min", assertion.sourceLength.min),
+      ...optionalNumber("max", assertion.sourceLength.max),
     };
   }
 

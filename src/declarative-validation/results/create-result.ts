@@ -107,6 +107,7 @@ function withEvidence<T extends DeclarativeValidationResult>(
       profile,
       result.ruleResults,
       result.diagnostics,
+      options.sourceText,
     ),
   };
 }

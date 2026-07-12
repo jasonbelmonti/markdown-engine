@@ -175,6 +175,11 @@ export type CompiledDeclarativeAssertion =
       max?: number;
     }
   | {
+      kind: "sourceLength";
+      min?: number;
+      max?: number;
+    }
+  | {
       kind: "textFormat";
       format: "isoDate";
     }

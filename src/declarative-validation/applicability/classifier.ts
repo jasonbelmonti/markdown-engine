@@ -6,6 +6,7 @@ import type {
 } from "../compiler/plan.js";
 import type { DeclarativeValidationApplicabilityResult } from "../results/index.js";
 import { evaluateCompiledDeclarativeRule } from "../assertions/evaluator.js";
+import type { DeclarativeValidationRuntimeContext } from "../assertions/context.js";
 import { resolveDeclarativeSelector } from "../selectors/index.js";
 
 export type CompiledRuleApplicabilityClassification =
@@ -26,6 +27,7 @@ export type CompiledRuleApplicabilityClassification =
 export function classifyCompiledDeclarativeRuleApplicability(
   rule: CompiledDeclarativeValidationRule,
   document: EngineDocument,
+  runtimeContext: DeclarativeValidationRuntimeContext = {},
 ): CompiledRuleApplicabilityClassification {
   const applicability = compiledApplicabilityFromRule(rule);
 
@@ -36,6 +38,7 @@ export function classifyCompiledDeclarativeRuleApplicability(
   const result = evaluateCompiledDeclarativeRule(
     applicabilityRuleFromPlan(rule, applicability),
     resolveDeclarativeSelector(document, applicability.selector),
+    runtimeContext,
   );
 
   if (result.diagnostics.length === 0) {

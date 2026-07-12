@@ -2,7 +2,12 @@
 
 ## Unreleased
 
-No unreleased changes.
+### Added
+
+- Added the v2-only, document-scoped `sourceLength` assertion for bounding the
+  complete original Markdown source with JavaScript UTF-16 string-length
+  semantics, including API/CLI source provenance, fail-closed missing-source
+  diagnostics, and measurement-aware evidence hashing.
 
 ## 3.1.1 - 2026-07-03
 

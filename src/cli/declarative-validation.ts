@@ -87,6 +87,7 @@ export async function runDeclarativeValidationCli(
       documentDiagnosticsResult(
         normalizeResult.document,
         profileResult.profile,
+        markdown.content,
         [
           ...documentDiagnostics,
           ...documentVersionDiagnostics(
@@ -102,7 +103,7 @@ export async function runDeclarativeValidationCli(
   const validationResult = validateWithProfile(
     normalizeResult.document,
     profileResult.profile,
-    { includeEvidence: true },
+    { includeEvidence: true, sourceText: markdown.content },
   );
   const result = mergeDocumentDiagnostics(
     validationResult,
@@ -152,6 +153,7 @@ function profileStageResult(
 function documentDiagnosticsResult(
   document: EngineDocument,
   profile: ValidationProfile,
+  sourceText: string,
   diagnostics: readonly MarkdownDiagnostic[],
 ): DeclarativeValidationResult {
   return createDeclarativeValidationResult({
@@ -159,7 +161,7 @@ function documentDiagnosticsResult(
     profile,
     ruleResults: [],
     diagnostics,
-    options: { includeEvidence: true },
+    options: { includeEvidence: true, sourceText },
   });
 }
 

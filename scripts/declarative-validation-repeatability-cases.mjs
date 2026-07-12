@@ -198,6 +198,23 @@ const textLengthProfile = {
   ],
 };
 
+const sourceLengthProfile = {
+  syntaxVersion: "markdown-engine.validation@v2",
+  documentVersion: "1.0.0",
+  rules: [
+    {
+      id: "document.source-length",
+      select: { target: "document" },
+      assert: {
+        sourceLength: {
+          min: 1,
+          max: 10000,
+        },
+      },
+    },
+  ],
+};
+
 export function buildDeclarativeValidationRepeatabilityCases(repoRoot, engine) {
   const { normalize, parse, serialize, validateWithProfile } = engine;
   const markdown = readFileSync(join(repoRoot, fixturePath), "utf8");
@@ -263,6 +280,12 @@ export function buildDeclarativeValidationRepeatabilityCases(repoRoot, engine) {
     document,
     textLengthProfile,
   );
+  const sourceLengthResult = validateWithEvidence(
+    validateWithProfile,
+    document,
+    sourceLengthProfile,
+    markdown,
+  );
 
   return [
     { name: "declarative-validation:passing-result", result: passingResult },
@@ -324,13 +347,29 @@ export function buildDeclarativeValidationRepeatabilityCases(repoRoot, engine) {
       name: "declarative-validation:text-length-evidence",
       result: requiredEvidence(textLengthResult),
     },
+    {
+      name: "declarative-validation:source-length-result",
+      result: sourceLengthResult,
+    },
+    {
+      name: "declarative-validation:source-length-evidence",
+      result: requiredEvidence(sourceLengthResult),
+    },
   ].flatMap(({ name, result }) =>
     serializedFormatCases(serialize, name, result),
   ).concat(conditionalV2RepeatabilityCases.cliCase);
 }
 
-function validateWithEvidence(validateWithProfile, document, profile) {
-  return validateWithProfile(document, profile, { includeEvidence: true });
+function validateWithEvidence(
+  validateWithProfile,
+  document,
+  profile,
+  sourceText,
+) {
+  return validateWithProfile(document, profile, {
+    includeEvidence: true,
+    ...(sourceText === undefined ? {} : { sourceText }),
+  });
 }
 
 function groupedMarkdown() {

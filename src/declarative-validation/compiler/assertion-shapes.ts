@@ -159,6 +159,54 @@ export function pushTextLengthShapeDiagnostics(
   return valid;
 }
 
+export function pushSourceLengthShapeDiagnostics(
+  assertion: DeclarativeAssertion["sourceLength"],
+  ruleId: string,
+  diagnostics: MarkdownDiagnostic[],
+): boolean {
+  let valid = true;
+  const min = assertion?.min;
+  const max = assertion?.max;
+
+  if (
+    min !== undefined &&
+    !pushNonNegativeIntegerDiagnostic(
+      "sourceLength.min",
+      min,
+      ruleId,
+      diagnostics,
+    )
+  ) {
+    valid = false;
+  }
+
+  if (
+    max !== undefined &&
+    !pushNonNegativeIntegerDiagnostic(
+      "sourceLength.max",
+      max,
+      ruleId,
+      diagnostics,
+    )
+  ) {
+    valid = false;
+  }
+
+  if (valid && min !== undefined && max !== undefined && min > max) {
+    diagnostics.push(
+      compileDiagnostic(
+        "profile.config.invalidShape",
+        "sourceLength.min must be less than or equal to sourceLength.max.",
+        ruleId,
+      ),
+    );
+
+    valid = false;
+  }
+
+  return valid;
+}
+
 export function pushIdsCountShapeDiagnostics(
   assertion: DeclarativeAssertion["ids"],
   ruleId: string,
@@ -613,6 +661,12 @@ export function hasTextPredicate(assertion: DeclarativeAssertion["text"]): boole
 
 export function hasTextLengthBound(
   assertion: DeclarativeAssertion["textLength"],
+): boolean {
+  return assertion?.min !== undefined || assertion?.max !== undefined;
+}
+
+export function hasSourceLengthBound(
+  assertion: DeclarativeAssertion["sourceLength"],
 ): boolean {
   return assertion?.min !== undefined || assertion?.max !== undefined;
 }

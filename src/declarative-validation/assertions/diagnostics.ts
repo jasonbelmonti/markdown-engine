@@ -7,6 +7,9 @@ import type {
 } from "../compiler/plan.js";
 import type { DeclarativeSelectionTarget } from "../selectors/index.js";
 
+export const SOURCE_UNAVAILABLE_DIAGNOSTIC_CODE =
+  "profile.validation.sourceUnavailable";
+
 export interface AssertionDiagnostic {
   diagnostic: MarkdownDiagnostic;
   assertionIndex: number;
@@ -60,6 +63,31 @@ export function emptySelectionDiagnostic(
       targetKey: "selection:empty",
     },
   );
+}
+
+export function sourceUnavailableDiagnostic(
+  rule: CompiledDeclarativeValidationExecutableRule,
+  assertionIndex: number,
+): AssertionDiagnostic {
+  return {
+    diagnostic: {
+      code: SOURCE_UNAVAILABLE_DIAGNOSTIC_CODE,
+      ruleId: rule.ruleId,
+      message:
+        "Complete Markdown source is required to evaluate sourceLength.",
+      severity: "error",
+    },
+    assertionIndex,
+    targetOrder: 0,
+    targetKey: "document:source",
+    diagnosticOrder: 0,
+  };
+}
+
+export function isSourceUnavailableDiagnostic(
+  diagnostic: MarkdownDiagnostic,
+): boolean {
+  return diagnostic.code === SOURCE_UNAVAILABLE_DIAGNOSTIC_CODE;
 }
 
 export function validationDiagnostic(

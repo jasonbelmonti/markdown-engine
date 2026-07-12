@@ -2,6 +2,8 @@ import type { EngineDocument } from "./document.js";
 import type { MarkdownDiagnostic } from "./diagnostics.js";
 import type { ValidationRuleResult } from "./validate.js";
 import { classifyCompiledDeclarativeRuleApplicability } from "../declarative-validation/applicability/index.js";
+import type { DeclarativeValidationRuntimeContext } from "../declarative-validation/assertions/context.js";
+import { isSourceUnavailableDiagnostic } from "../declarative-validation/assertions/diagnostics.js";
 import {
   evaluateCompiledDeclarativeAllOfRule,
   evaluateCompiledDeclarativeAnyOfRule,
@@ -27,8 +29,10 @@ import {
   createSkippedDeclarativeValidationRuleResult,
 } from "../declarative-validation/results/index.js";
 import type {
+  DeclarativeValidationApplicabilityResult,
   DeclarativeValidationOptions,
   DeclarativeValidationResult,
+  DeclarativeValidationRuleResultV2,
 } from "../declarative-validation/results/index.js";
 import { resolveDeclarativeSelector } from "../declarative-validation/selectors/index.js";
 
@@ -137,8 +141,12 @@ export function validateWithProfile(
 
   const compileResult = compileValidationProfile(materializedProfile.profile);
   const compiledRules = compileResult.plan?.rules ?? [];
+  const runtimeContext =
+    options.sourceText === undefined ? {} : { sourceText: options.sourceText };
   const ruleResults = sortValidationRuleResults(
-    compiledRules.flatMap((rule) => evaluateApplicableCompiledRule(document, rule)),
+    compiledRules.flatMap((rule) =>
+      evaluateApplicableCompiledRule(document, rule, runtimeContext),
+    ),
   );
   const diagnostics = [
     ...compileResult.diagnostics,
@@ -156,40 +164,71 @@ export function validateWithProfile(
 function evaluateApplicableCompiledRule(
   document: EngineDocument,
   rule: CompiledDeclarativeValidationRule,
+  runtimeContext: DeclarativeValidationRuntimeContext,
 ): ValidationRuleResult[] {
   const applicability = classifyCompiledDeclarativeRuleApplicability(
     rule,
     document,
+    runtimeContext,
   );
 
-  return applicability.status === "notMatched"
-    ? [
-        createSkippedDeclarativeValidationRuleResult({
-          ruleId: rule.ruleId,
-          when: applicability.result,
-        }),
-      ]
-    : evaluateCompiledRule(document, rule);
+  if (applicability.status === "notMatched") {
+    if (applicability.result.diagnostics.some(isSourceUnavailableDiagnostic)) {
+      return [sourceUnavailableApplicabilityResult(rule, applicability.result)];
+    }
+
+    return [
+      createSkippedDeclarativeValidationRuleResult({
+        ruleId: rule.ruleId,
+        when: applicability.result,
+      }),
+    ];
+  }
+
+  return evaluateCompiledRule(document, rule, runtimeContext);
 }
 
 function evaluateCompiledRule(
   document: EngineDocument,
   rule: CompiledDeclarativeValidationRule,
+  runtimeContext: DeclarativeValidationRuntimeContext,
 ): ValidationRuleResult[] {
   if (isCompiledAnyOfRule(rule)) {
-    return [evaluateCompiledDeclarativeAnyOfRule(rule, document)];
+    return [evaluateCompiledDeclarativeAnyOfRule(rule, document, runtimeContext)];
   }
 
   if (isCompiledAllOfRule(rule)) {
-    return [evaluateCompiledDeclarativeAllOfRule(rule, document)];
+    return [evaluateCompiledDeclarativeAllOfRule(rule, document, runtimeContext)];
   }
 
   return [
     evaluateCompiledDeclarativeRule(
       rule,
       resolveDeclarativeSelector(document, rule.selector),
+      runtimeContext,
     ),
   ];
+}
+
+function sourceUnavailableApplicabilityResult(
+  rule: CompiledDeclarativeValidationRule,
+  when: DeclarativeValidationApplicabilityResult,
+): DeclarativeValidationRuleResultV2 {
+  const diagnostics = when.diagnostics.filter(
+    isSourceUnavailableDiagnostic,
+  );
+
+  return {
+    ruleId: rule.ruleId,
+    status: "failed",
+    passed: false,
+    diagnostics,
+    when,
+    evaluation: {
+      kind: "assertions",
+      diagnostics,
+    },
+  };
 }
 
 function isCompiledAnyOfRule(
