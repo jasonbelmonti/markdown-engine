@@ -1,5 +1,4 @@
 import { execFile } from "node:child_process";
-import { createHash } from "node:crypto";
 import {
   access,
   mkdir,
@@ -84,32 +83,12 @@ describe("bundled CLI artifact", () => {
     );
     expect(manifest.scripts?.prepack).toBe("npm run release:verify");
     expect(manifest.scripts?.prepublishOnly).toBe("npm run release:verify");
+    expect(manifest.scripts?.["release:verify:installer-pin"]).toBe(
+      "node scripts/check-installer-pin.mjs",
+    );
     expect(manifest.scripts?.["release:verify"]).toContain(
-      "npm run build && npm run build:cli:bundled &&",
+      "npm run build && npm run build:cli:bundled && npm run release:verify:installer-pin &&",
     );
-  });
-
-  it("pins the constrained-harness installer to the package version and bundled artifact hash", async () => {
-    const packageVersion = await readPackageVersion();
-    const installerText = await readFile(installerPath, "utf8");
-    const readmeText = await readFile(join(repoRoot, "README.md"), "utf8");
-    const installDocs = readmeText.slice(
-      readmeText.indexOf("### Bundled CLI install"),
-    );
-    const artifactHash = createHash("sha256")
-      .update(await readFile(artifactPath))
-      .digest("hex");
-
-    expect(installerText).toContain(`VERSION="${packageVersion}"`);
-    expect(installerText).toContain(`EXPECTED_SHA256="${artifactHash}"`);
-    expect(installerText).toContain(
-      'INSTALL_DIR="$MARKDOWN_ENGINE_HOME/tools/markdown-engine/$VERSION"',
-    );
-    expect(installDocs).toContain(
-      `@jasonbelmonti/markdown-engine@${packageVersion}`,
-    );
-    expect(installDocs).toContain(artifactHash);
-    expect(installDocs).not.toContain("@jasonbelmonti/markdown-engine@3.0.0");
   });
 
   it("installs a wrapper that points at the current versioned bundled CLI", async () => {

@@ -2,7 +2,10 @@
 
 ## Unreleased
 
-No unreleased changes.
+### Changed
+
+- Moved exact bundled CLI installer version and hash alignment from ordinary
+  source tests into a dedicated release verification gate.
 
 ## 3.1.1 - 2026-07-03
 
