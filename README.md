@@ -187,6 +187,24 @@ rules:
           exists: true
 ```
 
+V2 profiles can bound the complete original Markdown source, including
+frontmatter, syntax, whitespace, and line endings:
+
+```yaml
+syntaxVersion: markdown-engine.validation@v2
+rules:
+  - id: document.source-budget
+    select:
+      target: document
+    assert:
+      sourceLength:
+        max: 12000
+```
+
+The CLI supplies the original file content automatically. API callers pass it
+as `sourceText` in `DeclarativeValidationOptions`; missing source context fails
+with `profile.validation.sourceUnavailable`.
+
 CLI validation output uses `profile.syntaxVersion` as the v1/v2 discriminator.
 V1 rule results keep the existing flat `ruleId`, `passed`, and `diagnostics`
 fields. V2 rule results add `status` and `evaluation`; v2 profile metadata adds

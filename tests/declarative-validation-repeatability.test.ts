@@ -47,6 +47,10 @@ const expectedRepeatabilityCaseNames = [
   "declarative-validation:text-length-result:pretty",
   "declarative-validation:text-length-evidence:compact",
   "declarative-validation:text-length-evidence:pretty",
+  "declarative-validation:source-length-result:compact",
+  "declarative-validation:source-length-result:pretty",
+  "declarative-validation:source-length-evidence:compact",
+  "declarative-validation:source-length-evidence:pretty",
   "declarative-validation:v2-composite-cli-json",
 ] as const;
 
@@ -174,6 +178,14 @@ describe("BEL-983 declarative validation evidence repeatability", () => {
       casesByName,
       "declarative-validation:v2-composite-cli-json",
     );
+    const sourceLengthResult = parseJsonCase(
+      casesByName,
+      "declarative-validation:source-length-result:pretty",
+    );
+    const sourceLengthEvidence = parseJsonCase(
+      casesByName,
+      "declarative-validation:source-length-evidence:pretty",
+    );
 
     expect(evidenceHash(passingEvidence, "inputHash")).toMatch(
       /^[0-9a-f]{64}$/,
@@ -224,6 +236,15 @@ describe("BEL-983 declarative validation evidence repeatability", () => {
     );
     expect(recordProperty(v2WhenEvidence, "diagnostics")).toEqual(
       recordProperty(v2WhenResult, "diagnostics"),
+    );
+    expect(recordProperty(sourceLengthResult, "evidence")).toEqual(
+      sourceLengthEvidence,
+    );
+    expect(recordProperty(sourceLengthEvidence, "sourceLength")).toEqual(
+      expect.any(Number),
+    );
+    expect(evidenceHash(sourceLengthEvidence, "inputHash")).not.toBe(
+      evidenceHash(v2FlatPassingEvidence, "inputHash"),
     );
     const v2WhenProfile = recordProperty(v2WhenResult, "profile");
     expect(recordProperty(v2WhenProfile, "ruleCount")).toBe(2);

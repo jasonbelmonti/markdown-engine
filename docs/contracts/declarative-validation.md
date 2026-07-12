@@ -2,7 +2,8 @@
 
 Status: package 3.0.0, v1 profile syntax with v2 Conditional V2, document contract 1.0.0
 Last updated: 2026-06-15
-Current v2 surface: flat-rule result/evidence shell, ID count-bound schema and
+Current v2 surface: flat-rule result/evidence shell, document `sourceLength`
+schema and runtime measurement, ID count-bound schema and
 runtime evaluator contract, plus `tableColumnCoverage` schema, compiled-plan,
 and runtime evaluator contract, `frontmatterShape` schema, compiled-plan, and
 runtime evaluator contract, `textFormat` schema, compiled-plan, and runtime
@@ -63,7 +64,18 @@ validateDocumentSet(
   entries: readonly ValidateDocumentSetEntry[],
   options?: ValidateDocumentSetOptions,
 ): ValidateDocumentSetResult
+
+interface DeclarativeValidationOptions {
+  path?: string;
+  includeEvidence?: boolean;
+  sourceText?: string;
+}
 ```
+
+`sourceText` carries the complete original Markdown string to validation. It is
+required only when an evaluated v2 `sourceLength` assertion needs to measure
+the pre-normalization input; it does not become an enumerable
+`EngineDocument` field.
 
 Compiled declarative validation plans are internal. They are not exported from
 the package root, are not serialized in API or CLI results, and carry no semver
@@ -334,6 +346,10 @@ interface DeclarativeAssertion {
     min?: number;
     max?: number;
   };
+  sourceLength?: {
+    min?: number;
+    max?: number;
+  };
   textFormat?: {
     format: "isoDate";
   };
@@ -364,6 +380,7 @@ Selector/assertion compatibility is part of the public contract:
 | `text` | all supported selector targets |
 | `textOccurrenceCount` | all supported selector targets |
 | `textLength` | all supported selector targets |
+| `sourceLength` | `document` |
 | `textFormat` | all supported selector targets |
 | `frontmatterRequired` | `document` |
 
@@ -442,6 +459,17 @@ integers, `min` must be less than or equal to `max` when both are present, and
 evaluation uses JavaScript string `.length` for each selected target's
 normalized text.
 
+For v2 profiles, `sourceLength` must include `min`, `max`, or both with the same
+non-negative integer and ordered-range rules. It is compatible only with a
+`document` selector and evaluates the complete `sourceText` supplied to
+`validateWithProfile`, including frontmatter, Markdown syntax, whitespace, line
+endings, and surrogate pairs, using JavaScript string `.length` (UTF-16 code
+units). The CLI and `validateDocumentSet` supply the exact Markdown input they
+read. When an evaluated `sourceLength` assertion has no complete source
+context, validation fails closed with
+`profile.validation.sourceUnavailable`; normalized document text and source
+ranges are never used as fallbacks.
+
 For v2 profiles, `textFormat` is admitted as a flat-rule schema and internal
 compiled-plan assertion. `textFormat.format` must be exactly `"isoDate"`;
 custom formats, locale options, regex-like formats, profile-supplied patterns,
@@ -470,9 +498,12 @@ rather than fabricated when unavailable.
 
 Rule-level `when` uses the existing validation diagnostic codes. When
 applicability does not match, those diagnostics are cloned into
-`ruleResults[].when.diagnostics`; they are not promoted into top-level
+`ruleResults[].when.diagnostics`; they are not normally promoted into top-level
 `diagnostics`, so a skipped rule with a nested error-severity applicability
-diagnostic can still leave the aggregate `valid` value `true`.
+diagnostic can still leave the aggregate `valid` value `true`. The
+`profile.validation.sourceUnavailable` safety diagnostic is the exception: it
+is promoted with error severity so unavailable raw-source context cannot yield
+an unproven pass.
 
 | Code | Severity source | Emitted when |
 | --- | --- | --- |
@@ -498,6 +529,7 @@ diagnostic can still leave the aggregate `valid` value `true`.
 | `profile.validation.referenceMissing` | Rule severity | A source ID is absent from a required target section. |
 | `profile.validation.sectionMissing` | Rule severity | A required section heading is absent. |
 | `profile.validation.sectionOrder` | Rule severity | A strict required-section order cannot be satisfied. |
+| `profile.validation.sourceUnavailable` | `error` | An evaluated `sourceLength` assertion cannot access the complete original Markdown source. |
 | `profile.validation.tableColumnCoverageIdMissing` | Rule severity | A source ID is absent from the configured target table column. |
 | `profile.validation.tableColumnCoverageTargetColumnMissing` | Rule severity | The configured target table column cannot be resolved. |
 | `profile.validation.tableColumnCoverageTargetSectionMissing` | Rule severity | The configured target section cannot be resolved. |
@@ -599,6 +631,7 @@ interface DeclarativeValidationEvidence<
   profileHash: string;
   engineVersion: string;
   runtimeVersion: string;
+  sourceLength?: number;
   ruleResults: readonly RuleResult[];
   diagnostics: readonly MarkdownDiagnostic[];
 }
@@ -613,10 +646,18 @@ diagnostics array. Evidence does not serialize compiled rule plans, selector
 target records, assertion-specific ID count evidence, or assertion-specific
 table-column coverage evidence.
 
+When a v2 profile uses `sourceLength` and complete source context is available,
+evidence exposes the measured UTF-16 code-unit count as `sourceLength`.
+Profiles that do not use the assertion omit this field and preserve their
+existing evidence serialization.
+
 `inputHash` is a lowercase hexadecimal SHA-256 digest of the stable JSON
 serialization of the supplied normalized `EngineDocument` after omitting only
 the top-level `document.path` field. Structural target paths remain part of the
-canonical input.
+canonical input. For a profile using `sourceLength`, the canonical input is an
+object containing that normalized document plus the exposed `sourceLength`
+measurement, so otherwise equivalent normalized documents with different raw
+source lengths produce different input hashes.
 
 `profileHash` is a lowercase hexadecimal SHA-256 digest of the stable JSON
 serialization of the resolved `ValidationProfile` after applying the resolved
@@ -628,8 +669,10 @@ the same profile hash for the same document version and rules.
 matches the package metadata version even though `documentVersion` remains
 `"1.0.0"`.
 
-Raw Markdown bytes, raw YAML bytes, YAML comments, caller file paths, and
-`includeEvidence` itself are not part of either evidence hash.
+Raw Markdown content, raw YAML bytes, YAML comments, caller file paths, and
+`includeEvidence` itself are not part of either evidence hash. Only the numeric
+raw-source length measurement is added to `inputHash`, and only for profiles
+that use `sourceLength`.
 
 ## CLI Behavior
 
@@ -750,6 +793,18 @@ rules:
         format: isoDate
 ```
 
+```yaml
+# v2 source budget: bounds the complete original Markdown input.
+syntaxVersion: markdown-engine.validation@v2
+rules:
+  - id: document.source-budget
+    select:
+      target: document
+    assert:
+      sourceLength:
+        max: 12000
+```
+
 The v1 profile above continues to emit the v1 validation-result shape. V2
 profiles emit syntax-versioned v2 result metadata with
 `evaluatedRuleCount` and `skippedRuleCount`; v2 rule results include `status`
@@ -773,8 +828,9 @@ Migration notes:
   skipped-rule `when` diagnostics. Aggregate validity is still determined from
   top-level diagnostics.
 - Consumers that compare evidence hashes must normalize expectations around
-  resolved `documentVersion`, default rule severity, stable key order, and
-  exclusion of only top-level `document.path` from `inputHash`.
+  resolved `documentVersion`, default rule severity, stable key order,
+  exclusion of only top-level `document.path`, and conditional inclusion of the
+  numeric `sourceLength` measurement in `inputHash`.
 - Regex-like matching, JavaScript predicates, plugins, semantic scoring, and
   profile-specific rules belong outside this package unless a future contract
   explicitly expands the engine boundary.

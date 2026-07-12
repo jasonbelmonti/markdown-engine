@@ -136,6 +136,10 @@ export interface DeclarativeAssertion {
     min?: number;
     max?: number;
   };
+  sourceLength?: {
+    min?: number;
+    max?: number;
+  };
   textFormat?: {
     format: "isoDate";
   };

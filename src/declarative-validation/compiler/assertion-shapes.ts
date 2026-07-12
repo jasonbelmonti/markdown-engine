@@ -111,54 +111,6 @@ export function pushTextOccurrenceCountDiagnostic(
   );
 }
 
-export function pushTextLengthShapeDiagnostics(
-  assertion: DeclarativeAssertion["textLength"],
-  ruleId: string,
-  diagnostics: MarkdownDiagnostic[],
-): boolean {
-  let valid = true;
-  const min = assertion?.min;
-  const max = assertion?.max;
-
-  if (
-    min !== undefined &&
-    !pushTextLengthNumberDiagnostic(
-      "textLength.min",
-      min,
-      ruleId,
-      diagnostics,
-    )
-  ) {
-    valid = false;
-  }
-
-  if (
-    max !== undefined &&
-    !pushTextLengthNumberDiagnostic(
-      "textLength.max",
-      max,
-      ruleId,
-      diagnostics,
-    )
-  ) {
-    valid = false;
-  }
-
-  if (valid && min !== undefined && max !== undefined && min > max) {
-    diagnostics.push(
-      compileDiagnostic(
-        "profile.config.invalidShape",
-        "textLength.min must be less than or equal to textLength.max.",
-        ruleId,
-      ),
-    );
-
-    valid = false;
-  }
-
-  return valid;
-}
-
 export function pushIdsCountShapeDiagnostics(
   assertion: DeclarativeAssertion["ids"],
   ruleId: string,
@@ -493,16 +445,7 @@ export function pushNonEmptyStringDiagnostic(
   return false;
 }
 
-function pushTextLengthNumberDiagnostic(
-  fieldName: string,
-  value: unknown,
-  ruleId: string,
-  diagnostics: MarkdownDiagnostic[],
-): boolean {
-  return pushNonNegativeIntegerDiagnostic(fieldName, value, ruleId, diagnostics);
-}
-
-function pushNonNegativeIntegerDiagnostic(
+export function pushNonNegativeIntegerDiagnostic(
   fieldName: string,
   value: unknown,
   ruleId: string,
@@ -609,10 +552,4 @@ export function hasTextPredicate(assertion: DeclarativeAssertion["text"]): boole
     assertion?.contains !== undefined ||
     (assertion?.excludes !== undefined && assertion.excludes.length > 0)
   );
-}
-
-export function hasTextLengthBound(
-  assertion: DeclarativeAssertion["textLength"],
-): boolean {
-  return assertion?.min !== undefined || assertion?.max !== undefined;
 }

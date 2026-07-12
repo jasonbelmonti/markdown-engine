@@ -4,7 +4,10 @@ import type {
   CompiledDeclarativeValidationExecutableRule,
 } from "../compiler/plan.js";
 import type { DeclarativeSelection } from "../selectors/index.js";
-import type { AssertionEvaluationContext } from "./context.js";
+import type {
+  AssertionEvaluationContext,
+  DeclarativeValidationRuntimeContext,
+} from "./context.js";
 import type { AssertionDiagnostic } from "./diagnostics.js";
 import { evaluateExists } from "./exists.js";
 import { evaluateFrontmatterShape } from "./frontmatter-shape.js";
@@ -13,6 +16,7 @@ import { evaluateIds } from "./ids.js";
 import { sortAssertionDiagnostics } from "./ordering.js";
 import { evaluateReferences } from "./references.js";
 import { evaluateSectionsRequired } from "./sections-required.js";
+import { evaluateSourceLength } from "./source-length.js";
 import { evaluateTableColumnCoverage } from "./table-column-coverage.js";
 import { evaluateTableColumnsRequired } from "./table-columns-required.js";
 import { evaluateText } from "./text.js";
@@ -23,6 +27,7 @@ import { evaluateTextOccurrenceCount } from "./text-occurrence-count.js";
 export function evaluateCompiledDeclarativeRule(
   rule: CompiledDeclarativeValidationExecutableRule,
   selection: DeclarativeSelection,
+  runtimeContext: DeclarativeValidationRuntimeContext = {},
 ): ValidationRuleResult {
   const evaluatedDiagnostics = rule.assertions.flatMap(
     (assertion, assertionIndex) =>
@@ -30,6 +35,9 @@ export function evaluateCompiledDeclarativeRule(
         rule,
         selection,
         assertionIndex,
+        ...(runtimeContext.sourceText !== undefined
+          ? { sourceText: runtimeContext.sourceText }
+          : {}),
       }),
   );
   const diagnostics = sortAssertionDiagnostics(evaluatedDiagnostics);
@@ -60,6 +68,9 @@ function evaluateAssertion(
 
     case "textLength":
       return evaluateTextLength(assertion, context);
+
+    case "sourceLength":
+      return evaluateSourceLength(assertion, context);
 
     case "textFormat":
       return evaluateTextFormat(assertion, context);

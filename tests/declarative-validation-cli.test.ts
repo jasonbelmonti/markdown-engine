@@ -322,6 +322,53 @@ describe("declarative validation CLI", () => {
     expect(result.evidence.profileHash).toMatch(/^[0-9a-f]{64}$/);
   });
 
+  it("measures the complete original source for v2 sourceLength", async () => {
+    const cwd = await makeTempDir();
+    const source =
+      "---\r\ntitle: 🚀\r\n---\r\n\r\n# Mission Brief\r\n\r\nReady.\r\n";
+    const profile = `syntaxVersion: markdown-engine.validation@v2
+rules:
+  - id: document.source-length
+    select:
+      target: document
+    assert:
+      sourceLength:
+        min: ${source.length}
+        max: ${source.length}
+`;
+    await writeFile(join(cwd, "mission.md"), source);
+    await writeFile(join(cwd, "profile.yaml"), profile);
+
+    const { exitCode, stderr, stdout } = await runCliWithOutput({
+      args: [
+        "validate",
+        "--file=mission.md",
+        "--profile=profile.yaml",
+        "--format=json",
+      ],
+      cwd,
+    });
+    const result = parseStdout(stdout.text());
+
+    expect(exitCode).toBe(0);
+    expect(stderr.text()).toBe("");
+    expect(result).toMatchObject({
+      valid: true,
+      diagnostics: [],
+      evidence: {
+        sourceLength: source.length,
+      },
+      ruleResults: [
+        {
+          ruleId: "document.source-length",
+          status: "passed",
+          passed: true,
+          diagnostics: [],
+        },
+      ],
+    });
+  });
+
   it("emits failed v2 flat validation JSON without changing the v2 discriminator", async () => {
     const cwd = await makeTempDir();
     await writeFile(join(cwd, "mission.md"), failingMarkdown);
