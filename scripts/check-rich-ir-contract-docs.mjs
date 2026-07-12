@@ -4,6 +4,8 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { securityPolicyFailures } from "./security-policy-check.mjs";
+
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
 const checks = [
@@ -136,6 +138,15 @@ for (const check of checks) {
   }
 }
 
+failures.push(
+  ...securityPolicyFailures({
+    packageFile: "package.json",
+    packageJson: readContractFile("package.json"),
+    securityFile: "SECURITY.md",
+    securityMarkdown: readContractFile("SECURITY.md"),
+  }),
+);
+
 if (failures.length > 0) {
   console.error("Rich IR contract documentation gate FAIL");
   for (const failure of failures) {
@@ -145,7 +156,13 @@ if (failures.length > 0) {
 }
 
 console.log("Rich IR contract documentation gate PASS");
-console.log(`Checked files: ${checks.map((check) => check.file).join(", ")}`);
+console.log(
+  `Checked files: ${[
+    ...checks.map((check) => check.file),
+    "SECURITY.md",
+    "package.json",
+  ].join(", ")}`,
+);
 
 function readContractFile(file) {
   try {
