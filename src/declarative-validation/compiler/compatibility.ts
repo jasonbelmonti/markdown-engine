@@ -1,4 +1,6 @@
+import type { MarkdownDiagnostic } from "../../api/diagnostics.js";
 import type { DeclarativeAssertion, DeclarativeSelector } from "../profile/index.js";
+import { compileDiagnostic } from "./diagnostics.js";
 
 export type DeclarativeAssertionName = keyof DeclarativeAssertion;
 
@@ -36,6 +38,29 @@ export function selectorAssertionCompatibilityError(
         ? undefined
         : selectorCompatibilityMessage(assertionName, "document");
   }
+}
+
+export function pushCompatibilityDiagnostic(
+  assertionName: DeclarativeAssertionName,
+  selector: DeclarativeSelector,
+  ruleId: string,
+  diagnostics: MarkdownDiagnostic[],
+): boolean {
+  const message = selectorAssertionCompatibilityError(assertionName, selector);
+
+  if (message === undefined) {
+    return true;
+  }
+
+  diagnostics.push(
+    compileDiagnostic(
+      "profile.compile.incompatibleSelectorAssertion",
+      message,
+      ruleId,
+    ),
+  );
+
+  return false;
 }
 
 function selectorCompatibilityMessage(

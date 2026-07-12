@@ -11,11 +11,12 @@ import {
   PROFILE_SYNTAX_VERSION_V2,
   type ValidationProfileSyntaxVersion,
 } from "../profile/syntax-version.js";
-import {
-  type DeclarativeAssertionName,
-  selectorAssertionCompatibilityError,
-} from "./compatibility.js";
+import { pushCompatibilityDiagnostic } from "./compatibility.js";
 import { compileDiagnostic } from "./diagnostics.js";
+import {
+  buildSourceLengthAssertion,
+  buildTextLengthAssertion,
+} from "./length-assertion-builders.js";
 import type { CompiledDeclarativeAssertion } from "./plan.js";
 import {
   closedFrontmatterShape,
@@ -23,8 +24,6 @@ import {
   closedStringArray,
   closedTextFormat,
   hasTextPredicate,
-  hasSourceLengthBound,
-  hasTextLengthBound,
   optionalNumber,
   optionalString,
   optionalStringArray,
@@ -34,8 +33,6 @@ import {
   pushOptionalBooleanDiagnostic,
   pushOptionalNonEmptyStringDiagnostic,
   pushSectionsRequiredOrderDiagnostic,
-  pushSourceLengthShapeDiagnostics,
-  pushTextLengthShapeDiagnostics,
   pushTextOccurrenceCountDiagnostic,
   pushTextShapeDiagnostics,
   pushUnsupportedKeyDiagnostics,
@@ -529,108 +526,6 @@ function buildTextOccurrenceCountAssertion(
   return undefined;
 }
 
-function buildTextLengthAssertion(
-  assertion: DeclarativeAssertion,
-  selector: DeclarativeSelector,
-  ruleId: string,
-  _syntaxVersion: ValidationProfileSyntaxVersion,
-  diagnostics: MarkdownDiagnostic[],
-): CompiledDeclarativeAssertion | undefined {
-  if (assertion.textLength === undefined) {
-    return undefined;
-  }
-
-  if (
-    !pushObjectDiagnostic("textLength", assertion.textLength, ruleId, diagnostics) ||
-    !pushUnsupportedKeyDiagnostics(assertion.textLength, ["min", "max"], diagnostics) ||
-    !pushTextLengthShapeDiagnostics(assertion.textLength, ruleId, diagnostics)
-  ) {
-    return undefined;
-  }
-
-  if (!hasTextLengthBound(assertion.textLength)) {
-    diagnostics.push(
-      compileDiagnostic(
-        "profile.config.invalidShape",
-        "textLength must include min, max, or both.",
-        ruleId,
-      ),
-    );
-
-    return undefined;
-  }
-
-  if (pushCompatibilityDiagnostic("textLength", selector, ruleId, diagnostics)) {
-    return {
-      kind: "textLength",
-      ...optionalNumber("min", assertion.textLength.min),
-      ...optionalNumber("max", assertion.textLength.max),
-    };
-  }
-
-  return undefined;
-}
-
-function buildSourceLengthAssertion(
-  assertion: DeclarativeAssertion,
-  selector: DeclarativeSelector,
-  ruleId: string,
-  syntaxVersion: ValidationProfileSyntaxVersion,
-  diagnostics: MarkdownDiagnostic[],
-): CompiledDeclarativeAssertion | undefined {
-  if (
-    assertion.sourceLength === undefined ||
-    syntaxVersion !== PROFILE_SYNTAX_VERSION_V2
-  ) {
-    return undefined;
-  }
-
-  if (
-    !pushObjectDiagnostic(
-      "sourceLength",
-      assertion.sourceLength,
-      ruleId,
-      diagnostics,
-    ) ||
-    !pushUnsupportedKeyDiagnostics(
-      assertion.sourceLength,
-      ["min", "max"],
-      diagnostics,
-    ) ||
-    !pushSourceLengthShapeDiagnostics(
-      assertion.sourceLength,
-      ruleId,
-      diagnostics,
-    )
-  ) {
-    return undefined;
-  }
-
-  if (!hasSourceLengthBound(assertion.sourceLength)) {
-    diagnostics.push(
-      compileDiagnostic(
-        "profile.config.invalidShape",
-        "sourceLength must include min, max, or both.",
-        ruleId,
-      ),
-    );
-
-    return undefined;
-  }
-
-  if (
-    pushCompatibilityDiagnostic("sourceLength", selector, ruleId, diagnostics)
-  ) {
-    return {
-      kind: "sourceLength",
-      ...optionalNumber("min", assertion.sourceLength.min),
-      ...optionalNumber("max", assertion.sourceLength.max),
-    };
-  }
-
-  return undefined;
-}
-
 function buildTextFormatAssertion(
   assertion: DeclarativeAssertion,
   selector: DeclarativeSelector,
@@ -707,27 +602,4 @@ function buildFrontmatterRequiredAssertion(
   }
 
   return undefined;
-}
-
-function pushCompatibilityDiagnostic(
-  assertionName: DeclarativeAssertionName,
-  selector: DeclarativeSelector,
-  ruleId: string,
-  diagnostics: MarkdownDiagnostic[],
-): boolean {
-  const message = selectorAssertionCompatibilityError(assertionName, selector);
-
-  if (message !== undefined) {
-    diagnostics.push(
-      compileDiagnostic(
-        "profile.compile.incompatibleSelectorAssertion",
-        message,
-        ruleId,
-      ),
-    );
-
-    return false;
-  }
-
-  return true;
 }
