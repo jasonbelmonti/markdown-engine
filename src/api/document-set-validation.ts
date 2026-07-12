@@ -64,6 +64,7 @@ function validateDocumentSetEntry(
       profileResult.profile,
       {
         path: entry.path,
+        sourceText: entry.markdown,
         ...(options.includeEvidence !== undefined
           ? { includeEvidence: options.includeEvidence }
           : {}),

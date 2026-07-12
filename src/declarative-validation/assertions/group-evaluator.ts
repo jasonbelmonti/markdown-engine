@@ -1,4 +1,5 @@
 import type { EngineDocument } from "../../api/document.js";
+import type { MarkdownDiagnostic } from "../../api/diagnostics.js";
 import type {
   CompiledDeclarativeValidationAllOfRuleV2,
   CompiledDeclarativeValidationAnyOfRuleV2,
@@ -10,8 +11,10 @@ import type {
   DeclarativeValidationRuleResultV2,
 } from "../results/index.js";
 import { resolveDeclarativeSelector } from "../selectors/index.js";
+import type { DeclarativeValidationRuntimeContext } from "./context.js";
 import {
   groupRequirementFailedDiagnostic,
+  isSourceUnavailableDiagnostic,
   noAlternativeMatchedDiagnostic,
 } from "./diagnostics.js";
 import { evaluateCompiledDeclarativeRule } from "./evaluator.js";
@@ -19,11 +22,22 @@ import { evaluateCompiledDeclarativeRule } from "./evaluator.js";
 export function evaluateCompiledDeclarativeAnyOfRule(
   rule: CompiledDeclarativeValidationAnyOfRuleV2,
   document: EngineDocument,
+  runtimeContext: DeclarativeValidationRuntimeContext = {},
 ): DeclarativeValidationRuleResultV2 {
-  const branches = evaluateCompiledDeclarativeBranches(rule.branches, document);
+  const branches = evaluateCompiledDeclarativeBranches(
+    rule.branches,
+    document,
+    runtimeContext,
+  );
+  const sourceUnavailable = sourceUnavailableDiagnostics(branches);
   const selectedBranch = branches.find((branch) => branch.status === "passed");
-  const passed = selectedBranch !== undefined;
-  const diagnostics = passed ? [] : [noAlternativeMatchedDiagnostic(rule)];
+  const passed = selectedBranch !== undefined && sourceUnavailable.length === 0;
+  let diagnostics: MarkdownDiagnostic[] = [];
+  if (sourceUnavailable.length > 0) {
+    diagnostics = sourceUnavailable;
+  } else if (!passed) {
+    diagnostics = [noAlternativeMatchedDiagnostic(rule)];
+  }
 
   return {
     ruleId: rule.ruleId,
@@ -32,7 +46,7 @@ export function evaluateCompiledDeclarativeAnyOfRule(
     diagnostics,
     evaluation: {
       kind: "anyOf",
-      ...(selectedBranch !== undefined
+      ...(passed && selectedBranch !== undefined
         ? { selectedBranch: branchReferenceFromResult(selectedBranch) }
         : {}),
       branches,
@@ -43,10 +57,23 @@ export function evaluateCompiledDeclarativeAnyOfRule(
 export function evaluateCompiledDeclarativeAllOfRule(
   rule: CompiledDeclarativeValidationAllOfRuleV2,
   document: EngineDocument,
+  runtimeContext: DeclarativeValidationRuntimeContext = {},
 ): DeclarativeValidationRuleResultV2 {
-  const branches = evaluateCompiledDeclarativeBranches(rule.branches, document);
-  const failed = branches.some((branch) => branch.status === "failed");
-  const diagnostics = failed ? [groupRequirementFailedDiagnostic(rule)] : [];
+  const branches = evaluateCompiledDeclarativeBranches(
+    rule.branches,
+    document,
+    runtimeContext,
+  );
+  const sourceUnavailable = sourceUnavailableDiagnostics(branches);
+  const failed =
+    sourceUnavailable.length > 0 ||
+    branches.some((branch) => branch.status === "failed");
+  let diagnostics: MarkdownDiagnostic[] = [];
+  if (sourceUnavailable.length > 0) {
+    diagnostics = sourceUnavailable;
+  } else if (failed) {
+    diagnostics = [groupRequirementFailedDiagnostic(rule)];
+  }
   const status = failed ? "failed" : "passed";
 
   return {
@@ -64,19 +91,22 @@ export function evaluateCompiledDeclarativeAllOfRule(
 function evaluateCompiledDeclarativeBranches(
   branches: readonly CompiledDeclarativeValidationBranchV2[],
   document: EngineDocument,
+  runtimeContext: DeclarativeValidationRuntimeContext,
 ): DeclarativeValidationBranchResult[] {
   return branches.map((branch) =>
-    evaluateCompiledDeclarativeBranch(branch, document),
+    evaluateCompiledDeclarativeBranch(branch, document, runtimeContext),
   );
 }
 
 function evaluateCompiledDeclarativeBranch(
   branch: CompiledDeclarativeValidationBranchV2,
   document: EngineDocument,
+  runtimeContext: DeclarativeValidationRuntimeContext,
 ): DeclarativeValidationBranchResult {
   const result = evaluateCompiledDeclarativeRule(
     branch,
     resolveDeclarativeSelector(document, branch.selector),
+    runtimeContext,
   );
 
   return {
@@ -85,6 +115,14 @@ function evaluateCompiledDeclarativeBranch(
     status: result.diagnostics.length === 0 ? "passed" : "failed",
     diagnostics: result.diagnostics,
   };
+}
+
+function sourceUnavailableDiagnostics(
+  branches: readonly DeclarativeValidationBranchResult[],
+): MarkdownDiagnostic[] {
+  return branches.flatMap((branch) =>
+    branch.diagnostics.filter(isSourceUnavailableDiagnostic),
+  );
 }
 
 function branchReferenceFromResult(

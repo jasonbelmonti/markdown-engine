@@ -227,4 +227,36 @@ describe("document set validation", () => {
       ],
     });
   });
+
+  it("supplies each entry's complete source to v2 sourceLength", () => {
+    const markdown = "# Objective\r\n\r\nReady 🚀.\r\n";
+    const profile = {
+      syntaxVersion: "markdown-engine.validation@v2",
+      rules: [
+        {
+          id: "document.source-length",
+          select: { target: "document" },
+          assert: {
+            sourceLength: { min: markdown.length, max: markdown.length },
+          },
+        },
+      ],
+    } satisfies ValidationProfile;
+    const result = validateDocumentSet(
+      [{ path: "source-budget.md", markdown, profile }],
+      { includeEvidence: true },
+    );
+
+    expect(result).toMatchObject({
+      valid: true,
+      entries: [
+        {
+          validationResult: {
+            valid: true,
+            evidence: { sourceLength: markdown.length },
+          },
+        },
+      ],
+    });
+  });
 });

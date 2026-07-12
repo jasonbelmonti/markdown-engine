@@ -26,6 +26,7 @@ export interface DeclarativeValidationConfigErrorResult {
 export interface DeclarativeValidationOptions {
   path?: string;
   includeEvidence?: boolean;
+  sourceText?: string;
 }
 
 export type DeclarativeValidationResult =

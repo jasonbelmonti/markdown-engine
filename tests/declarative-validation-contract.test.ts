@@ -220,6 +220,12 @@ const textLengthAssertion = {
     max: 140,
   },
 } satisfies DeclarativeAssertion;
+const sourceLengthAssertion = {
+  sourceLength: {
+    min: 10,
+    max: 100,
+  },
+} satisfies DeclarativeAssertion;
 const frontmatterShapeAssertion = {
   frontmatterShape: {
     presence: "required",
@@ -1265,6 +1271,7 @@ void idCountAssertion;
 void existsAssertion;
 void exactOneTextAssertion;
 void textLengthAssertion;
+void sourceLengthAssertion;
 void frontmatterShapeAssertion;
 void frontmatterPresence;
 void frontmatterValueType;

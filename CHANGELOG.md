@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Added
+
+- Added the v2-only, document-scoped `sourceLength` assertion for bounding the
+  complete original Markdown source with JavaScript UTF-16 string-length
+  semantics, including API/CLI source provenance, fail-closed missing-source
+  diagnostics, and measurement-aware evidence hashing.
+
 ### Changed
 
 - Moved exact bundled CLI installer version and hash alignment from ordinary

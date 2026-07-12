@@ -5,4 +5,9 @@ export interface AssertionEvaluationContext {
   rule: CompiledDeclarativeValidationExecutableRule;
   selection: DeclarativeSelection;
   assertionIndex: number;
+  sourceText?: string;
+}
+
+export interface DeclarativeValidationRuntimeContext {
+  sourceText?: string;
 }
