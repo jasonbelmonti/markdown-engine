@@ -11,6 +11,29 @@ import type { evaluateCompiledDeclarativeRule } from "../src/declarative-validat
 import { compileValidationProfile } from "../src/declarative-validation/compiler/index.js";
 
 describe("declarative validation compiler proof", () => {
+  it("rejects missing and unsupported syntax versions at the compiler boundary", () => {
+    const profiles = [
+      { rules: [] },
+      { syntaxVersion: "markdown-engine.validation@future", rules: [] },
+    ];
+
+    for (const profile of profiles) {
+      const result = compileValidationProfile(
+        profile as unknown as ValidationProfile,
+      );
+
+      expect(result.plan).toBeUndefined();
+      expect(result.diagnostics).toEqual([
+        {
+          code: "profile.config.unsupportedSyntaxVersion",
+          message:
+            'Profile syntaxVersion must be "markdown-engine.validation@v1" or "markdown-engine.validation@v2".',
+          severity: "error",
+        },
+      ]);
+    }
+  });
+
   it("compiles supported profiles into private data-only rule records", () => {
     const result = compileValidationProfile(supportedProfile);
 
