@@ -88,6 +88,14 @@ Run the full release gate before package tag or publication review:
 npm run release:verify
 ```
 
+Ordinary `npm test` runs build and behavior checks against the current source
+without requiring that unreleased bundle to match the production installer pin.
+The full release gate builds the candidate and then runs
+`npm run release:verify:installer-pin`, which requires `package.json`, the
+installer version and SHA-256, the README install instructions, and the built
+artifact to agree exactly. Update those release-owned values together only when
+preparing the artifact that will be tagged and published.
+
 ## Bundled CLI And Skill Distribution
 
 The bundled CLI artifact is a Node.js ESM distribution artifact for local
@@ -140,7 +148,14 @@ Pass/fail expectations:
 The focused automated checks for this surface are:
 
 ```sh
-npm run build && npm exec -- vitest run tests/cli-bundle.test.ts tests/profile-backed-markdown-skill.test.ts "--exclude=.worktrees/**"
+npm run build && npm exec -- vitest run tests/cli-bundle.test.ts tests/installer-pin-release-gate.test.ts tests/profile-backed-markdown-skill.test.ts "--exclude=.worktrees/**"
+```
+
+Run the exact production-pin check only against a prepared release candidate:
+
+```sh
+npm run build:cli:bundled
+npm run release:verify:installer-pin
 ```
 
 The `profile-backed-markdown` Agent Skill consumes the bundled artifact through
