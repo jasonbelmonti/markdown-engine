@@ -50,15 +50,19 @@ describe("installer pin release gate", () => {
   });
 
   it.each([
-    ["VERSION", `VERSION="9.9.9"`],
-    ["EXPECTED_SHA256", `EXPECTED_SHA256="${"0".repeat(64)}"`],
-  ])("rejects duplicate %s installer assignments", async (name, duplicate) => {
+    ["direct", "VERSION", `VERSION="9.9.9"`],
+    ["export", "VERSION", `export VERSION="9.9.9"`],
+    ["readonly", "VERSION", `readonly VERSION="9.9.9"`],
+    ["direct", "EXPECTED_SHA256", `EXPECTED_SHA256="${"0".repeat(64)}"`],
+    ["export", "EXPECTED_SHA256", `export EXPECTED_SHA256="${"0".repeat(64)}"`],
+    ["readonly", "EXPECTED_SHA256", `readonly EXPECTED_SHA256="${"0".repeat(64)}"`],
+  ])("rejects additional %s %s assignments", async (_form, name, assignment) => {
     await withReleaseFixture(async (fixtureRoot) => {
       await writeInstaller(
         fixtureRoot,
         packageVersion,
         artifactHash,
-        duplicate,
+        assignment,
       );
 
       await expect(runGate(fixtureRoot)).rejects.toMatchObject({

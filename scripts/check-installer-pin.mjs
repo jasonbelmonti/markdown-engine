@@ -100,7 +100,9 @@ function requiredString(value, label) {
 }
 
 function shellAssignment(source, name) {
-  const assignmentStart = new RegExp(`^\\s*(?:export\\s+)?${name}\\s*=`);
+  const assignmentStart = new RegExp(
+    `^\\s*(?:(?:export|readonly)\\s+)?${name}\\s*=`,
+  );
   const assignmentLines = source
     .split(/\r?\n/)
     .filter((line) => assignmentStart.test(line));
