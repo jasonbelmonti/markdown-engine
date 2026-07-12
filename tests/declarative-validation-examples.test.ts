@@ -153,8 +153,6 @@ const intentionalPackageFiles = [
   "scripts/install-markdown-engine-cli.sh",
   "skills",
   "docs/contracts",
-  "docs/README.md",
-  "docs/guides",
   packagedExamplesRoot,
   "CHANGELOG.md",
   "SECURITY.md",

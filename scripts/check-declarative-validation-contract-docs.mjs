@@ -3,17 +3,9 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import {
-  annotatedProfileFailures,
-  guideSectionFailures,
-} from "./declarative-validation-agent-guide-checks.mjs";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const failures = [];
-const agentGuideFile =
-  "docs/guides/declarative-validation-agent-interpretation.md";
-const annotatedProfileFile =
-  "fixtures/declarative-validation/examples/operational-spec/profile.yaml";
 
 checkFile("docs/contracts/declarative-validation.md", {
   headings: [
@@ -35,7 +27,7 @@ checkFile("docs/contracts/declarative-validation.md", {
     "## Contract Review Gates",
   ],
   phrases: [
-    "Status: package 3.1.2, v1 profile syntax with v2 Conditional V2, document contract 1.0.0",
+    "Status: package 3.0.0, v1 profile syntax with v2 Conditional V2, document contract 1.0.0",
     "Package 3.0 does not introduce",
     "markdown-engine.validation@v1",
     "markdown-engine.validation@v2",
@@ -85,70 +77,6 @@ checkFile("docs/contracts/declarative-validation.md", {
     "file watching",
     "persistence",
     "profile-specific core semantics",
-  ],
-});
-
-checkFile(agentGuideFile, {
-  headings: [
-    "## Authority and scope",
-    "## The select -> assert execution model",
-    "## Selector field roles",
-    "## Table selector pipeline",
-    "## Assertion behavior",
-    "## Conditional and grouped v2 rules",
-    "## Natural-language translation template",
-    "## Annotated shipped profile",
-    "## Common misreads",
-    "## Agent checklist",
-  ],
-  phrases: [
-    "does not add syntax",
-    "scope filter",
-    "target filter",
-    "table-shape filter",
-    "row filter",
-    "extractor",
-    "at least one item has that depth",
-    "`tableHeader` versus `column`",
-    "`where` versus `rowWhere`",
-    "Table-shape checks versus table-cell content checks",
-    "Empty selection versus assertion failure",
-  ],
-});
-
-failures.push(
-  ...guideSectionFailures({
-    file: agentGuideFile,
-    markdown: readContractFile(agentGuideFile),
-    heading: "## The select -> assert execution model",
-    minLength: 600,
-    phrases: [
-      "identity -> optional applicability -> select -> assert -> failure meaning",
-      "They stop the validation run before rule evaluation",
-      "Resolve `select` once into a concrete target set",
-      "Evaluate every member of `assert`",
-      "Empty selection",
-      "Assertion failure",
-    ],
-  }),
-);
-
-failures.push(
-  ...annotatedProfileFailures({
-    guideFile: agentGuideFile,
-    guideMarkdown: readContractFile(agentGuideFile),
-    profileFile: annotatedProfileFile,
-    profileYaml: readContractFile(annotatedProfileFile),
-  }),
-);
-
-checkFile("docs/README.md", {
-  headings: ["## Interpretation guidance (non-normative)"],
-  phrases: [
-    "guides/declarative-validation-agent-interpretation.md",
-    "select -> assert",
-    "declarative validation contract",
-    "remains authoritative",
   ],
 });
 
@@ -339,7 +267,7 @@ if (failures.length > 0) {
 
 console.log("Declarative validation contract documentation gate PASS");
 console.log(
-  "Checked files: docs/contracts/declarative-validation.md, docs/guides/declarative-validation-agent-interpretation.md, fixtures/declarative-validation/examples/operational-spec/profile.yaml, docs/README.md, docs/contracts/api.md, README.md, docs/evidence/wp-5-evd-7-declarative-validation-contract-review.md, docs/evidence/wp-5-evd-8-declarative-validation-boundary-audit.md, docs/evidence/bel-1332-okf-release-readiness.md, docs/evidence/conditional-v2-evd-6-contract-docs.md, docs/evidence/conditional-v2-evd-6-contract-cli-compatibility.md, package.json",
+  "Checked files: docs/contracts/declarative-validation.md, docs/contracts/api.md, README.md, docs/evidence/wp-5-evd-7-declarative-validation-contract-review.md, docs/evidence/wp-5-evd-8-declarative-validation-boundary-audit.md, docs/evidence/bel-1332-okf-release-readiness.md, docs/evidence/conditional-v2-evd-6-contract-docs.md, docs/evidence/conditional-v2-evd-6-contract-cli-compatibility.md, package.json",
 );
 
 function checkFile(file, check) {

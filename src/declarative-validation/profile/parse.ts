@@ -1,14 +1,13 @@
 import { parseDocument } from "yaml";
 
 import type { MarkdownDiagnostic, SourceRange } from "../../api/diagnostics.js";
-import { yamlIssueToDiagnosticFromIndex } from "../../frontmatter/yaml-diagnostics.js";
+import { yamlIssueToDiagnostic } from "../../frontmatter/yaml-diagnostics.js";
 import type { YamlIssueLike } from "../../frontmatter/yaml-diagnostics.js";
 import { toJsonSafeValue } from "../../frontmatter/yaml-json.js";
 import {
   YAML_MATERIALIZE_OPTIONS,
   YAML_PARSE_OPTIONS,
 } from "../../frontmatter/yaml-options.js";
-import { createYamlSourcePositionIndex } from "../../frontmatter/yaml-source-positions.js";
 import type {
   DeclarativeProfileParseOptions,
   DeclarativeProfileParseResult,
@@ -57,21 +56,14 @@ function materializeInput(input: string | JsonSafeValue): MaterializedProfileInp
 
 function parseYaml(raw: string): MaterializedProfileInput {
   const fallbackRange = fullInputRange(raw);
-  let diagnostics: MarkdownDiagnostic[] = [];
+  const document = parseDocument(raw, YAML_PARSE_OPTIONS);
+  const diagnostics = yamlDiagnostics(raw, fallbackRange, document.errors, document.warnings);
+
+  if (document.errors.length > 0) {
+    return { parsed: false, diagnostics };
+  }
 
   try {
-    const document = parseDocument(raw, YAML_PARSE_OPTIONS);
-    diagnostics = yamlDiagnostics(
-      raw,
-      fallbackRange,
-      document.errors,
-      document.warnings,
-    );
-
-    if (document.errors.length > 0) {
-      return { parsed: false, diagnostics };
-    }
-
     const jsonSafe = toJsonSafeValue(
       document.toJS(YAML_MATERIALIZE_OPTIONS),
       fallbackRange,
@@ -112,24 +104,25 @@ function yamlDiagnostics(
   warnings: readonly YamlIssueLike[],
 ): MarkdownDiagnostic[] {
   const contentStart = { line: 1, column: 1, offset: 0 };
-  const sourcePositions = createYamlSourcePositionIndex(raw, contentStart);
 
   return [
     ...errors.map((error) =>
-      yamlIssueToDiagnosticFromIndex(
+      yamlIssueToDiagnostic(
         error,
         "profile.config.invalidYaml",
         "error",
-        sourcePositions,
+        raw,
+        contentStart,
         fallbackRange,
       ),
     ),
     ...warnings.map((warning) =>
-      yamlIssueToDiagnosticFromIndex(
+      yamlIssueToDiagnostic(
         warning,
         "profile.config.yamlWarning",
         "warning",
-        sourcePositions,
+        raw,
+        contentStart,
         fallbackRange,
       ),
     ),

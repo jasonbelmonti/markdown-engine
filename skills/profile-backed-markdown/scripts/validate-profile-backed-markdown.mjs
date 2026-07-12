@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 import { spawn } from "node:child_process";
 import { constants } from "node:fs";
-import { access, readFile, realpath, stat } from "node:fs/promises";
+import { access, readFile, stat } from "node:fs/promises";
 import {
   dirname,
   isAbsolute,
   join,
+  relative,
   resolve,
+  sep,
 } from "node:path";
 import { fileURLToPath } from "node:url";
-
-import { isPathWithinDirectory } from "./profile-path-confinement.mjs";
 
 const scriptPath = fileURLToPath(import.meta.url);
 const scriptDir = dirname(scriptPath);
@@ -411,39 +411,20 @@ async function resolveProfilePath(validationProfile, profileRoot) {
         ...profileFileExtensions.map((extension) => `${normalizedRef}${extension}`),
         normalizedRef,
       ];
-  const canonicalProfileRoot = await canonicalDirectory(profileRoot);
-
-  if (canonicalProfileRoot === undefined) {
-    return {
-      kind: "error",
-      message: `Unable to resolve local profile root ${profileRoot}.`,
-    };
-  }
 
   for (const candidate of candidates) {
     const candidatePath = resolve(profileRoot, candidate);
 
-    if (!isPathWithinDirectory(profileRoot, candidatePath)) {
+    if (!isWithinDirectory(profileRoot, candidatePath)) {
       return {
         kind: "error",
         message: "validationProfile resolved outside the local profile root.",
       };
     }
 
-    const canonicalCandidate = await canonicalReadableFile(candidatePath);
-    if (canonicalCandidate === undefined) {
-      continue;
+    if (await isReadableFile(candidatePath)) {
+      return { kind: "ok", profilePath: candidatePath };
     }
-
-    if (!isPathWithinDirectory(canonicalProfileRoot, canonicalCandidate)) {
-      return {
-        kind: "error",
-        message:
-          "validationProfile resolved outside the local profile root through a symbolic link.",
-      };
-    }
-
-    return { kind: "ok", profilePath: canonicalCandidate };
   }
 
   return {
@@ -455,6 +436,15 @@ async function resolveProfilePath(validationProfile, profileRoot) {
 function hasProfileFileExtension(profileRef) {
   return profileFileExtensions.some((extension) =>
     profileRef.toLowerCase().endsWith(extension),
+  );
+}
+
+function isWithinDirectory(root, target) {
+  const relativePath = relative(root, target);
+
+  return (
+    relativePath === "" ||
+    (!relativePath.startsWith("..") && !relativePath.includes(`..${sep}`))
   );
 }
 
@@ -494,32 +484,6 @@ async function isReadableFile(path) {
     return true;
   } catch {
     return false;
-  }
-}
-
-async function canonicalDirectory(path) {
-  try {
-    const canonicalPath = await realpath(path);
-    const candidate = await stat(canonicalPath);
-
-    return candidate.isDirectory() ? canonicalPath : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-async function canonicalReadableFile(path) {
-  try {
-    const canonicalPath = await realpath(path);
-    const candidate = await stat(canonicalPath);
-    if (!candidate.isFile()) {
-      return undefined;
-    }
-
-    await access(canonicalPath, constants.R_OK);
-    return canonicalPath;
-  } catch {
-    return undefined;
   }
 }
 

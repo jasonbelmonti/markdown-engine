@@ -79,8 +79,6 @@ describe("bundled CLI artifact", () => {
 
     expect(manifest.files).toContain("dist-bundled");
     expect(manifest.files).toContain("scripts/install-markdown-engine-cli.sh");
-    expect(manifest.files).toContain("docs/README.md");
-    expect(manifest.files).toContain("docs/guides");
     expect(manifest.scripts?.["build:cli-bundle"]).toBe(
       "node scripts/build-cli-bundle.mjs",
     );
@@ -171,19 +169,6 @@ describe("bundled CLI artifact", () => {
 
     expect(packedPaths).toContain("dist-bundled/markdown-engine-cli.mjs");
     expect(packedPaths).toContain("scripts/install-markdown-engine-cli.sh");
-    expect(packedPaths).toContain("docs/README.md");
-    expect(packedPaths).toContain(
-      "docs/guides/declarative-validation-agent-interpretation.md",
-    );
-    expect(packedPaths).toContain(
-      "fixtures/declarative-validation/examples/operational-spec/profile.yaml",
-    );
-    expect(packedPaths).toContain(
-      "skills/profile-backed-markdown/assets/profiles/operational-spec.yaml",
-    );
-    expect(packedPaths).toContain(
-      "skills/profile-backed-markdown/scripts/profile-path-confinement.mjs",
-    );
   });
 
   it("keeps constrained-harness installer paths host-neutral", async () => {

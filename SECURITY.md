@@ -3,10 +3,10 @@
 ## Supported Versions
 
 Security fixes target the latest published major version of
-`@jasonbelmonti/markdown-engine`. As of the 3.0 release line, fixes are expected
-to land on the latest `3.x` package unless a release note states otherwise.
-Older `0.x`, `1.x`, and `2.x` lines are not maintained unless an explicit
-backport is announced.
+`@jasonbelmonti/markdown-engine`. As of the 2.0 release line, fixes are expected
+to land on the latest `2.x` package unless a release note states otherwise.
+Older `0.x` and `1.x` lines are not maintained unless an explicit backport is
+announced.
 
 ## Reporting A Vulnerability
 

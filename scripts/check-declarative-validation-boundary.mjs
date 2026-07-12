@@ -5,7 +5,6 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { runBoundaryDependencyAudit } from "./check-boundaries.mjs";
-import { repositoryRelativePath } from "./repository-relative-path.mjs";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const failures = [];
@@ -13,15 +12,6 @@ const sourceRoots = [
   "src/declarative-validation",
   "src/api",
   "src/cli",
-  "src/frontmatter",
-  "src/internal",
-];
-const requiredAdmissionDependencySources = [
-  "src/frontmatter/yaml-diagnostics.ts",
-  "src/frontmatter/yaml-json.ts",
-  "src/frontmatter/yaml-options.ts",
-  "src/frontmatter/yaml-source-positions.ts",
-  "src/internal/plain-record.ts",
 ];
 const forbiddenRuntimePatterns = [
   {
@@ -124,9 +114,7 @@ if (dependencyAudit.dependencyMatches.length > 0) {
   }
 }
 
-const runtimeSources = declarativeValidationSources();
-
-for (const source of runtimeSources) {
+for (const source of declarativeValidationSources()) {
   for (const { label, pattern } of forbiddenRuntimePatterns) {
     const match = source.content.match(pattern);
     if (match !== null) {
@@ -155,7 +143,6 @@ for (const source of runtimeSources) {
   }
 }
 
-checkAdmissionDependencySourceCoverage(runtimeSources);
 checkUnsupportedKeyContracts();
 checkRejectionCoverage();
 checkEvidenceCoverage();
@@ -176,7 +163,6 @@ console.log(`Direct dependency matches: ${dependencyAudit.dependencyMatches.leng
 console.log("Runtime boundary source matches: 0");
 console.log("Regex-like key rejection checks: present");
 console.log("Unsafe executable key rejection checks: present");
-console.log("Profile admission dependency source coverage: PASS");
 console.log("Profile-specific core semantic matches: 0");
 console.log("OKF-specific core semantic matches: 0");
 
@@ -193,7 +179,7 @@ function declarativeValidationSources() {
           },
         ]
       : sourceFiles(absolutePath).map((source) => ({
-          file: repositoryRelativePath(repoRoot, source.file),
+          file: relativePath(repoRoot, source.file),
           content: source.content,
         }));
 
@@ -219,18 +205,6 @@ function sourceFiles(directory) {
       ? [{ file: entryPath, content: readFileSync(entryPath, "utf8") }]
       : [];
   });
-}
-
-function checkAdmissionDependencySourceCoverage(sources) {
-  const scannedFiles = new Set(sources.map(({ file }) => file));
-
-  for (const file of requiredAdmissionDependencySources) {
-    if (!scannedFiles.has(file)) {
-      failures.push(
-        `declarative validation boundary: missing admission dependency ${file}`,
-      );
-    }
-  }
 }
 
 function checkUnsupportedKeyContracts() {
@@ -472,4 +446,13 @@ function checkOkfEvidenceCoverage() {
 
 function readRepoFile(file) {
   return readFileSync(resolve(repoRoot, file), "utf8");
+}
+
+function relativePath(base, file) {
+  const normalizedBase = resolve(base);
+  const normalizedFile = resolve(file);
+
+  return normalizedFile.startsWith(`${normalizedBase}/`)
+    ? normalizedFile.slice(normalizedBase.length + 1)
+    : normalizedFile;
 }

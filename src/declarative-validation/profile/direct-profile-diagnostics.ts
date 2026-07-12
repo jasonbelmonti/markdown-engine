@@ -33,8 +33,8 @@ export function pushDirectProfileUnsupportedKeyDiagnostics(
   const allowedRuleKeys =
     syntaxVersion === PROFILE_SYNTAX_VERSION_V2 ? RULE_KEYS_V2 : RULE_KEYS_V1;
 
-  for (const indexKey of ownArrayIndexKeys(rules)) {
-    const descriptor = safePropertyDescriptor(rules, indexKey);
+  for (let index = 0; index < rules.length; index += 1) {
+    const descriptor = safePropertyDescriptor(rules, String(index));
     if (descriptor === undefined || !("value" in descriptor)) {
       continue;
     }
@@ -48,29 +48,6 @@ export function pushDirectProfileUnsupportedKeyDiagnostics(
   }
 
   return hasUnsupportedKeys;
-}
-
-function ownArrayIndexKeys(value: readonly unknown[]): readonly string[] {
-  let keys: readonly string[];
-
-  try {
-    keys = Object.getOwnPropertyNames(value);
-  } catch {
-    return [];
-  }
-
-  const { length } = value;
-
-  return keys.filter((key) => {
-    const index = Number(key);
-
-    return (
-      Number.isInteger(index) &&
-      index >= 0 &&
-      index < length &&
-      String(index) === key
-    );
-  });
 }
 
 export function directProfileDataPropertyValue(
