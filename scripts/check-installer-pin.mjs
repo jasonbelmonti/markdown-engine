@@ -40,15 +40,20 @@ try {
     );
   }
 
-  if (!installDocs.includes(`@jasonbelmonti/markdown-engine@${packageVersion}`)) {
+  const documentedVersions = packageVersionReferences(installDocs);
+  if (
+    documentedVersions.length !== 1 ||
+    documentedVersions[0] !== packageVersion
+  ) {
     failures.push(
-      `README bundled CLI install section does not reference package version ${packageVersion}`,
+      `README bundled CLI install section must contain exactly one package version reference to ${packageVersion}; found ${formatValues(documentedVersions)}`,
     );
   }
 
-  if (!installDocs.includes(artifactHash)) {
+  const documentedHashes = sha256References(installDocs);
+  if (documentedHashes.length !== 1 || documentedHashes[0] !== artifactHash) {
     failures.push(
-      `README bundled CLI install section does not contain built artifact hash ${artifactHash}`,
+      `README bundled CLI install section must contain exactly one SHA-256 reference to ${artifactHash}; found ${formatValues(documentedHashes)}`,
     );
   }
 
@@ -95,13 +100,40 @@ function requiredString(value, label) {
 }
 
 function shellAssignment(source, name) {
-  const match = source.match(new RegExp(`^${name}="([^"]+)"$`, "m"));
+  const assignmentStart = new RegExp(`^\\s*(?:export\\s+)?${name}\\s*=`);
+  const assignmentLines = source
+    .split(/\r?\n/)
+    .filter((line) => assignmentStart.test(line));
+
+  if (assignmentLines.length !== 1) {
+    throw new Error(
+      `installer ${name} assignment must appear exactly once; found ${assignmentLines.length}`,
+    );
+  }
+
+  const match = assignmentLines[0].match(new RegExp(`^${name}="([^"]+)"$`));
 
   if (match === null) {
-    throw new Error(`installer ${name} assignment is missing or invalid`);
+    throw new Error(`installer ${name} assignment is invalid`);
   }
 
   return match[1];
+}
+
+function packageVersionReferences(source) {
+  return [
+    ...source.matchAll(
+      /@jasonbelmonti\/markdown-engine@([0-9A-Za-z][0-9A-Za-z.+-]*)/g,
+    ),
+  ].map((match) => match[1]);
+}
+
+function sha256References(source) {
+  return source.match(/\b[a-f0-9]{64}\b/g) ?? [];
+}
+
+function formatValues(values) {
+  return values.length === 0 ? "none" : values.join(", ");
 }
 
 function readmeSection(source, heading) {

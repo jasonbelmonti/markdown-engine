@@ -48,6 +48,51 @@ describe("installer pin release gate", () => {
       });
     });
   });
+
+  it.each([
+    ["VERSION", `VERSION="9.9.9"`],
+    ["EXPECTED_SHA256", `EXPECTED_SHA256="${"0".repeat(64)}"`],
+  ])("rejects duplicate %s installer assignments", async (name, duplicate) => {
+    await withReleaseFixture(async (fixtureRoot) => {
+      await writeInstaller(
+        fixtureRoot,
+        packageVersion,
+        artifactHash,
+        duplicate,
+      );
+
+      await expect(runGate(fixtureRoot)).rejects.toMatchObject({
+        stderr: expect.stringContaining(
+          `installer ${name} assignment must appear exactly once; found 2`,
+        ),
+      });
+    });
+  });
+
+  it("rejects a README package version that only begins with the release version", async () => {
+    await withReleaseFixture(async (fixtureRoot) => {
+      await writeReadme(fixtureRoot, `${packageVersion}-next.1`, [artifactHash]);
+
+      await expect(runGate(fixtureRoot)).rejects.toMatchObject({
+        stderr: expect.stringContaining(
+          `exactly one package version reference to ${packageVersion}; found ${packageVersion}-next.1`,
+        ),
+      });
+    });
+  });
+
+  it("rejects conflicting SHA-256 references in the README install section", async () => {
+    await withReleaseFixture(async (fixtureRoot) => {
+      const staleHash = "0".repeat(64);
+      await writeReadme(fixtureRoot, packageVersion, [artifactHash, staleHash]);
+
+      await expect(runGate(fixtureRoot)).rejects.toMatchObject({
+        stderr: expect.stringContaining(
+          `exactly one SHA-256 reference to ${artifactHash}; found ${artifactHash}, ${staleHash}`,
+        ),
+      });
+    });
+  });
 });
 
 async function withReleaseFixture(
@@ -63,22 +108,7 @@ async function withReleaseFixture(
       `${JSON.stringify({ version: packageVersion })}\n`,
       "utf8",
     );
-    await writeFile(
-      join(fixtureRoot, "README.md"),
-      [
-        "# Fixture",
-        "",
-        "### Bundled CLI install",
-        "",
-        `Download \`@jasonbelmonti/markdown-engine@${packageVersion}\`.`,
-        "",
-        artifactHash,
-        "",
-        "### Next section",
-        "",
-      ].join("\n"),
-      "utf8",
-    );
+    await writeReadme(fixtureRoot, packageVersion, [artifactHash]);
     await writeFile(
       join(fixtureRoot, "dist-bundled", "markdown-engine-cli.mjs"),
       artifact,
@@ -95,10 +125,42 @@ function writeInstaller(
   fixtureRoot: string,
   version: string,
   expectedHash: string,
+  additionalAssignment?: string,
 ): Promise<void> {
+  const lines = [
+    `VERSION="${version}"`,
+    `EXPECTED_SHA256="${expectedHash}"`,
+  ];
+  if (additionalAssignment !== undefined) {
+    lines.push(additionalAssignment);
+  }
+
   return writeFile(
     join(fixtureRoot, "scripts", "install-markdown-engine-cli.sh"),
-    `VERSION="${version}"\nEXPECTED_SHA256="${expectedHash}"\n`,
+    `${lines.join("\n")}\n`,
+    "utf8",
+  );
+}
+
+function writeReadme(
+  fixtureRoot: string,
+  documentedVersion: string,
+  documentedHashes: string[],
+): Promise<void> {
+  return writeFile(
+    join(fixtureRoot, "README.md"),
+    [
+      "# Fixture",
+      "",
+      "### Bundled CLI install",
+      "",
+      `Download \`@jasonbelmonti/markdown-engine@${documentedVersion}\`.`,
+      "",
+      ...documentedHashes,
+      "",
+      "### Next section",
+      "",
+    ].join("\n"),
     "utf8",
   );
 }
