@@ -6,15 +6,15 @@ profile and runtime work.
 Package release state:
 
 - package name: `@jasonbelmonti/markdown-engine`
-- package metadata version: `3.1.2`
+- package metadata version: `3.1.1`
 - published npm versions before this release: `0.1.0`, `1.0.0`, `2.0.0`,
-  `3.0.0`, `3.1.0`, `3.1.1`
-- npm release target: `3.1.2` on `latest`
+  `3.0.0`, `3.1.0`
+- npm release target: `3.1.1` on `latest`
 - website: <https://jasonbelmonti.github.io/markdown-engine/>
-- release focus: agent-facing declarative-profile interpretation, hostile-input
-  containment, release-integrity gates, and package/skill alignment while
-  retaining the existing `documentVersion: "1.0.0"` rich IR contract as the
-  default API and CLI document shape
+- release focus: document-set validation, V2 `frontmatterShape` and
+  `textFormat: isoDate` support, and OKF profile examples while retaining the
+  existing `documentVersion: "1.0.0"` rich IR contract as the default API and
+  CLI document shape
 - maintainer documentation map: [docs/README.md](docs/README.md)
 - design reference:
   [Markdown Engine 1.0 Rich IR design](docs/design/markdown-engine-1.0-rich-ir-operational-design-spec.md)
@@ -255,13 +255,13 @@ By default, the installer places the CLI under
 and writes the wrapper to
 `${MARKDOWN_ENGINE_BIN_DIR:-$HOME/.local/bin}/markdown-engine`. The installer
 uses a local bundled artifact only when it matches the pinned artifact hash.
-Otherwise it downloads `@jasonbelmonti/markdown-engine@3.1.2` with `npm pack
+Otherwise it downloads `@jasonbelmonti/markdown-engine@3.1.1` with `npm pack
 --ignore-scripts` and extracts only
 `package/dist-bundled/markdown-engine-cli.mjs` from the tarball. It verifies the
 pinned artifact hash before installing:
 
 ```text
-747c894f7dfb21a68543b749e91ecccc6012b24a521b3a29651a7f643ae694d2
+8c7ff572765cbdc6c38b94de52d69709f583ee7b4d2b7e25ba6be8c92125addf
 ```
 
 The installed wrapper is:

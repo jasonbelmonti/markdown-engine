@@ -30,21 +30,6 @@ describe("WP-5 boundary dependency audit", () => {
     expect(output).toContain("Annotation semantic leakage matches: 0");
   });
 
-  it("scans shared declarative profile admission dependencies", () => {
-    const output = execFileSync(
-      process.execPath,
-      ["scripts/check-declarative-validation-boundary.mjs"],
-      {
-        cwd: repoRoot,
-        encoding: "utf8",
-      },
-    );
-
-    expect(output).toContain(
-      "Profile admission dependency source coverage: PASS",
-    );
-  });
-
   it("returns dependency and annotation semantic boundary results together", () => {
     const result = runBoundaryAudit(repoRoot);
 

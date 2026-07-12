@@ -6,7 +6,7 @@ import type {
   SourceRange,
 } from "../api/diagnostics.js";
 import {
-  yamlIssueToDiagnosticFromIndex,
+  yamlIssueToDiagnostic,
   yamlMaterializationDiagnostic,
 } from "./yaml-diagnostics.js";
 import type { YamlIssueLike } from "./yaml-diagnostics.js";
@@ -16,7 +16,6 @@ import {
   YAML_PARSE_OPTIONS,
 } from "./yaml-options.js";
 import { unsupportedYamlKeyDiagnostics } from "./yaml-key-policy.js";
-import { createYamlSourcePositionIndex } from "./yaml-source-positions.js";
 
 interface ParsedYamlFrontmatter {
   value?: unknown;
@@ -37,38 +36,37 @@ export function parseYamlFrontmatter(
     };
   }
 
-  const sourcePositions = createYamlSourcePositionIndex(raw, contentStart);
-  let diagnostics: MarkdownDiagnostic[] = [];
+  const document = parseDocument(raw, YAML_PARSE_OPTIONS);
+  const diagnostics = yamlDocumentDiagnostics(
+    document.errors,
+    document.warnings,
+    raw,
+    contentStart,
+    fallbackRange,
+  );
+
+  if (document.errors.length > 0) {
+    return {
+      valueParsed: false,
+      diagnostics,
+    };
+  }
+
+  const unsupportedKeyDiagnostics = unsupportedYamlKeyDiagnostics(
+    document.contents,
+    raw,
+    contentStart,
+    fallbackRange,
+  );
+
+  if (unsupportedKeyDiagnostics.length > 0) {
+    return {
+      valueParsed: false,
+      diagnostics: [...diagnostics, ...unsupportedKeyDiagnostics],
+    };
+  }
 
   try {
-    const document = parseDocument(raw, YAML_PARSE_OPTIONS);
-    diagnostics = yamlDocumentDiagnostics(
-      document.errors,
-      document.warnings,
-      sourcePositions,
-      fallbackRange,
-    );
-
-    if (document.errors.length > 0) {
-      return {
-        valueParsed: false,
-        diagnostics,
-      };
-    }
-
-    const unsupportedKeyDiagnostics = unsupportedYamlKeyDiagnostics(
-      document.contents,
-      sourcePositions,
-      fallbackRange,
-    );
-
-    if (unsupportedKeyDiagnostics.length > 0) {
-      return {
-        valueParsed: false,
-        diagnostics: [...diagnostics, ...unsupportedKeyDiagnostics],
-      };
-    }
-
     const value = document.toJS(YAML_MATERIALIZE_OPTIONS);
     const jsonSafe = toJsonSafeValue(value, fallbackRange);
 
@@ -98,24 +96,27 @@ export function parseYamlFrontmatter(
 function yamlDocumentDiagnostics(
   errors: readonly YamlIssueLike[],
   warnings: readonly YamlIssueLike[],
-  sourcePositions: ReturnType<typeof createYamlSourcePositionIndex>,
+  raw: string,
+  contentStart: SourcePosition,
   fallbackRange: SourceRange,
 ): MarkdownDiagnostic[] {
   const errorDiagnostics = errors.map((error) =>
-    yamlIssueToDiagnosticFromIndex(
+    yamlIssueToDiagnostic(
       error,
       "frontmatter.yaml.invalid",
       "error",
-      sourcePositions,
+      raw,
+      contentStart,
       fallbackRange,
     ),
   );
   const warningDiagnostics = warnings.map((warning) =>
-    yamlIssueToDiagnosticFromIndex(
+    yamlIssueToDiagnostic(
       warning,
       "frontmatter.yaml.warning",
       "warning",
-      sourcePositions,
+      raw,
+      contentStart,
       fallbackRange,
     ),
   );

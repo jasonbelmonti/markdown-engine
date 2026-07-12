@@ -1,6 +1,5 @@
 import type { MarkdownDiagnostic } from "../../api/diagnostics.js";
 import { isPlainRecord } from "../../internal/plain-record.js";
-import { unsupportedSyntaxVersion } from "../diagnostics/profile-config-diagnostics.js";
 import type {
   DeclarativeValidationSeverity,
   ValidationProfile,
@@ -13,7 +12,6 @@ import { pushDirectProfileUnsupportedKeyDiagnostics } from "../profile/direct-pr
 import { selectorFromValue } from "../profile/selector-schema.js";
 import {
   PROFILE_SYNTAX_VERSION_V2,
-  isValidationProfileSyntaxVersion,
   type ValidationProfileSyntaxVersion,
 } from "../profile/syntax-version.js";
 import { compiledApplicabilityPlanFromValue } from "./applicability-plan.js";
@@ -87,13 +85,6 @@ export function compileValidationProfile(
     };
   }
 
-  const syntaxVersion = closedProfile.syntaxVersion;
-  if (!isValidationProfileSyntaxVersion(syntaxVersion)) {
-    return {
-      diagnostics: [...diagnostics, unsupportedSyntaxVersion()],
-    };
-  }
-
   const profileRules = profileRulesFromValue(closedProfile.rules, diagnostics);
   if (profileRules === undefined) {
     return { diagnostics };
@@ -135,7 +126,7 @@ export function compileValidationProfile(
       index,
       ruleId,
       severity ?? "error",
-      syntaxVersion,
+      profile.syntaxVersion,
       diagnostics,
     );
 
@@ -147,7 +138,7 @@ export function compileValidationProfile(
   return diagnostics.length > 0
     ? { diagnostics }
     : {
-        plan: compiledPlanFromRules(syntaxVersion, rules),
+        plan: compiledPlanFromRules(profile.syntaxVersion, rules),
         diagnostics,
       };
 }

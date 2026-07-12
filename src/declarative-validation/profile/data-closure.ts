@@ -5,20 +5,7 @@ import { isPlainRecord } from "../../internal/plain-record.js";
 
 export const DATA_CLOSURE_FAILED = Symbol("data-closure-failed");
 
-// Valid profile grammar is shallow. Keep hostile direct-object inputs well below
-// the JavaScript call-stack limit while leaving ample room for future additions.
-const MAX_PROFILE_DATA_DEPTH = 256;
-
 export type DataClosureResult = unknown | typeof DATA_CLOSURE_FAILED;
-
-interface ClosedProfileDataValue {
-  maxRelativeDepth: number;
-  value: unknown;
-}
-
-type ClosedProfileDataResult =
-  | ClosedProfileDataValue
-  | typeof DATA_CLOSURE_FAILED;
 
 export function closeProfileDataTree(
   value: unknown,
@@ -26,17 +13,13 @@ export function closeProfileDataTree(
   diagnostics: MarkdownDiagnostic[],
   ruleId?: string,
 ): DataClosureResult {
-  const result = closeProfileDataTreeValue(
+  return closeProfileDataTreeValue(
     value,
     fieldName,
     diagnostics,
     ruleId,
     new WeakSet<object>(),
-    new WeakMap<object, ClosedProfileDataValue>(),
-    0,
   );
-
-  return result === DATA_CLOSURE_FAILED ? result : result.value;
 }
 
 function closeProfileDataTreeValue(
@@ -45,17 +28,9 @@ function closeProfileDataTreeValue(
   diagnostics: MarkdownDiagnostic[],
   ruleId: string | undefined,
   ancestors: WeakSet<object>,
-  completedValues: WeakMap<object, ClosedProfileDataValue>,
-  depth: number,
-): ClosedProfileDataResult {
-  if (depth > MAX_PROFILE_DATA_DEPTH) {
-    pushDataClosureDiagnostic(fieldName, diagnostics, ruleId);
-
-    return DATA_CLOSURE_FAILED;
-  }
-
+): DataClosureResult {
   if (isJsonPrimitive(value)) {
-    return { maxRelativeDepth: 0, value };
+    return value;
   }
 
   if (nodeTypes.isProxy(value)) {
@@ -77,20 +52,8 @@ function closeProfileDataTreeValue(
       return DATA_CLOSURE_FAILED;
     }
 
-    const previouslyCompletedValue = completedValues.get(arrayValue);
-    if (previouslyCompletedValue !== undefined) {
-      return completedValueAtDepth(
-        previouslyCompletedValue,
-        fieldName,
-        diagnostics,
-        ruleId,
-        depth,
-      );
-    }
-
     ancestors.add(arrayValue);
     const values: unknown[] = [];
-    let maxRelativeDepth = 0;
     const length = safeArrayLength(arrayValue, fieldName, diagnostics, ruleId);
     if (length === DATA_CLOSURE_FAILED) {
       ancestors.delete(arrayValue);
@@ -126,8 +89,6 @@ function closeProfileDataTreeValue(
         diagnostics,
         ruleId,
         ancestors,
-        completedValues,
-        depth + 1,
       );
       if (closedValue === DATA_CLOSURE_FAILED) {
         ancestors.delete(arrayValue);
@@ -135,19 +96,12 @@ function closeProfileDataTreeValue(
         return DATA_CLOSURE_FAILED;
       }
 
-      values.push(closedValue.value);
-      maxRelativeDepth = Math.max(
-        maxRelativeDepth,
-        closedValue.maxRelativeDepth + 1,
-      );
+      values.push(closedValue);
     }
 
     ancestors.delete(arrayValue);
 
-    const completedValue = { maxRelativeDepth, value: values };
-    completedValues.set(arrayValue, completedValue);
-
-    return completedValue;
+    return values;
   }
 
   const plainRecordCheck = safePlainRecordCheck(
@@ -168,20 +122,8 @@ function closeProfileDataTreeValue(
       return DATA_CLOSURE_FAILED;
     }
 
-    const previouslyCompletedValue = completedValues.get(recordValue);
-    if (previouslyCompletedValue !== undefined) {
-      return completedValueAtDepth(
-        previouslyCompletedValue,
-        fieldName,
-        diagnostics,
-        ruleId,
-        depth,
-      );
-    }
-
     ancestors.add(recordValue);
     const closedRecord = Object.create(null) as Record<string, unknown>;
-    let maxRelativeDepth = 0;
     const keys = safeKeys(recordValue, fieldName, diagnostics, ruleId);
     if (keys === DATA_CLOSURE_FAILED) {
       ancestors.delete(recordValue);
@@ -224,8 +166,6 @@ function closeProfileDataTreeValue(
         diagnostics,
         ruleId,
         ancestors,
-        completedValues,
-        depth + 1,
       );
       if (closedValue === DATA_CLOSURE_FAILED) {
         ancestors.delete(recordValue);
@@ -236,42 +176,19 @@ function closeProfileDataTreeValue(
       Object.defineProperty(closedRecord, key, {
         configurable: true,
         enumerable: true,
-        value: closedValue.value,
+        value: closedValue,
         writable: true,
       });
-      maxRelativeDepth = Math.max(
-        maxRelativeDepth,
-        closedValue.maxRelativeDepth + 1,
-      );
     }
 
     ancestors.delete(recordValue);
 
-    const completedValue = { maxRelativeDepth, value: closedRecord };
-    completedValues.set(recordValue, completedValue);
-
-    return completedValue;
+    return closedRecord;
   }
 
   pushDataClosureDiagnostic(fieldName, diagnostics, ruleId);
 
   return DATA_CLOSURE_FAILED;
-}
-
-function completedValueAtDepth(
-  completedValue: ClosedProfileDataValue,
-  fieldName: string,
-  diagnostics: MarkdownDiagnostic[],
-  ruleId: string | undefined,
-  depth: number,
-): ClosedProfileDataResult {
-  if (depth + completedValue.maxRelativeDepth > MAX_PROFILE_DATA_DEPTH) {
-    pushDataClosureDiagnostic(fieldName, diagnostics, ruleId);
-
-    return DATA_CLOSURE_FAILED;
-  }
-
-  return completedValue;
 }
 
 export function pushDataClosureDiagnostic(

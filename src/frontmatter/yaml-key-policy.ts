@@ -2,23 +2,25 @@ import { isMap, isScalar, isSeq } from "yaml";
 
 import type {
   MarkdownDiagnostic,
+  SourcePosition,
   SourceRange,
 } from "../api/diagnostics.js";
 import {
   nonStringYamlKeyDiagnostic,
-  yamlNodeRangeFromIndex,
+  yamlNodeRange,
 } from "./yaml-diagnostics.js";
-import type { YamlSourcePositionIndex } from "./yaml-source-positions.js";
 
 export function unsupportedYamlKeyDiagnostics(
   node: unknown,
-  sourcePositions: YamlSourcePositionIndex,
+  raw: string,
+  contentStart: SourcePosition,
   fallbackRange: SourceRange,
 ): MarkdownDiagnostic[] {
   const diagnostics: MarkdownDiagnostic[] = [];
   collectUnsupportedYamlKeyDiagnostics(
     node,
-    sourcePositions,
+    raw,
+    contentStart,
     fallbackRange,
     diagnostics,
   );
@@ -27,7 +29,8 @@ export function unsupportedYamlKeyDiagnostics(
 
 function collectUnsupportedYamlKeyDiagnostics(
   node: unknown,
-  sourcePositions: YamlSourcePositionIndex,
+  raw: string,
+  contentStart: SourcePosition,
   fallbackRange: SourceRange,
   diagnostics: MarkdownDiagnostic[],
 ): void {
@@ -39,7 +42,8 @@ function collectUnsupportedYamlKeyDiagnostics(
     for (const item of node.items) {
       collectUnsupportedYamlKeyDiagnostics(
         item,
-        sourcePositions,
+        raw,
+        contentStart,
         fallbackRange,
         diagnostics,
       );
@@ -57,14 +61,15 @@ function collectUnsupportedYamlKeyDiagnostics(
     if (!isScalar(key) || typeof key.value !== "string") {
       diagnostics.push(
         nonStringYamlKeyDiagnostic(
-          yamlNodeRangeFromIndex(key, sourcePositions) ?? fallbackRange,
+          yamlNodeRange(key, raw, contentStart) ?? fallbackRange,
         ),
       );
     }
 
     collectUnsupportedYamlKeyDiagnostics(
       pair.value,
-      sourcePositions,
+      raw,
+      contentStart,
       fallbackRange,
       diagnostics,
     );

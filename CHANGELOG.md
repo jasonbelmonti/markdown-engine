@@ -4,25 +4,6 @@
 
 No unreleased changes.
 
-## 3.1.2 - 2026-07-11
-
-### Added
-
-- Added a non-normative agent interpretation guide for declarative validation
-  profiles and included it in the npm package documentation payload.
-- Added durable regression gates for guide annotations, release clean-tree
-  integrity, profile parity, and profile-root confinement.
-
-### Fixed
-
-- Bounded hostile direct-profile traversal and sparse-array processing while
-  preserving inert diagnostic behavior and original rule indexes.
-- Made YAML diagnostic source mapping scale without rescanning the full prefix
-  for every invalid key.
-- Aligned the packaged operational-spec skill profile with the shipped fixture,
-  closed symlink escapes, expanded boundary coverage, and refreshed release and
-  security metadata.
-
 ## 3.1.1 - 2026-07-03
 
 ### Fixed

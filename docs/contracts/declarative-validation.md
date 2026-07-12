@@ -1,7 +1,7 @@
 # Declarative Validation Contract
 
-Status: package 3.1.2, v1 profile syntax with v2 Conditional V2, document contract 1.0.0
-Last updated: 2026-07-11
+Status: package 3.0.0, v1 profile syntax with v2 Conditional V2, document contract 1.0.0
+Last updated: 2026-06-15
 Current v2 surface: flat-rule result/evidence shell, ID count-bound schema and
 runtime evaluator contract, plus `tableColumnCoverage` schema, compiled-plan,
 and runtime evaluator contract, `frontmatterShape` schema, compiled-plan, and
