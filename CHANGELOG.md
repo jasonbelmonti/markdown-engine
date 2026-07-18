@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+No unreleased changes.
+
+## 3.2.0 - 2026-07-12
+
 ### Added
 
 - Added the v2-only, document-scoped `sourceLength` assertion for bounding the

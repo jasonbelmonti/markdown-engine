@@ -6,15 +6,14 @@ profile and runtime work.
 Package release state:
 
 - package name: `@jasonbelmonti/markdown-engine`
-- package metadata version: `3.1.1`
+- package metadata version: `3.2.0`
 - published npm versions before this release: `0.1.0`, `1.0.0`, `2.0.0`,
-  `3.0.0`, `3.1.0`
-- npm release target: `3.1.1` on `latest`
+  `3.0.0`, `3.1.0`, `3.1.1`
+- npm release target: `3.2.0` on `latest`
 - website: <https://jasonbelmonti.github.io/markdown-engine/>
-- release focus: document-set validation, V2 `frontmatterShape` and
-  `textFormat: isoDate` support, and OKF profile examples while retaining the
-  existing `documentVersion: "1.0.0"` rich IR contract as the default API and
-  CLI document shape
+- release focus: V2 `sourceLength` assertions for document-scoped source
+  bounds, while retaining the existing `documentVersion: "1.0.0"` rich IR
+  contract as the default API and CLI document shape
 - maintainer documentation map: [docs/README.md](docs/README.md)
 - design reference:
   [Markdown Engine 1.0 Rich IR design](docs/design/markdown-engine-1.0-rich-ir-operational-design-spec.md)
@@ -86,7 +85,7 @@ console.log(validationResult.valid);
 console.log(serialize(validationResult, { pretty: true }));
 ```
 
-Package 3.1 retains the serialized document contract at
+Package 3.2 retains the serialized document contract at
 `documentVersion: "1.0.0"` and makes that rich IR path the default for
 `normalize(parsed)`. Callers may still pass
 `normalize(parsed, { documentVersion: "1.0.0" })` explicitly. That path adds
@@ -273,13 +272,13 @@ By default, the installer places the CLI under
 and writes the wrapper to
 `${MARKDOWN_ENGINE_BIN_DIR:-$HOME/.local/bin}/markdown-engine`. The installer
 uses a local bundled artifact only when it matches the pinned artifact hash.
-Otherwise it downloads `@jasonbelmonti/markdown-engine@3.1.1` with `npm pack
+Otherwise it downloads `@jasonbelmonti/markdown-engine@3.2.0` with `npm pack
 --ignore-scripts` and extracts only
 `package/dist-bundled/markdown-engine-cli.mjs` from the tarball. It verifies the
 pinned artifact hash before installing:
 
 ```text
-8c7ff572765cbdc6c38b94de52d69709f583ee7b4d2b7e25ba6be8c92125addf
+5033d08160fcd3f44b11498dc29d01db73d7aff2a55eb3257fd9a1c14e29c3f6
 ```
 
 The installed wrapper is:
@@ -288,7 +287,7 @@ The installed wrapper is:
 "${MARKDOWN_ENGINE_BIN_DIR:-$HOME/.local/bin}/markdown-engine" validate --file <file.md> --profile <profile.yaml> --format json
 ```
 
-Package 3.1 keeps the 2.0 API normalization default: callers that invoke
+Package 3.2 keeps the 2.0 API normalization default: callers that invoke
 `normalize(parsed)` receive the rich IR `1.0.0` document shape. Consumers that
 still need the legacy `0.0.0` shape should consume the rich IR fields
 (`target`, `sections`, `textSpans`, `tables`, `lists`, and `links`) or pin
