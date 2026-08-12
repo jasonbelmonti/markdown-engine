@@ -14,6 +14,7 @@ import {
 import { pushCompatibilityDiagnostic } from "./compatibility.js";
 import { compileDiagnostic } from "./diagnostics.js";
 import {
+  buildSelectionCountAssertion,
   buildSourceLengthAssertion,
   buildTextLengthAssertion,
 } from "./length-assertion-builders.js";
@@ -56,6 +57,7 @@ export const ASSERTION_BUILDERS: readonly AssertionBuilder[] = [
   buildFrontmatterShapeAssertion,
   buildTextAssertion,
   buildTextOccurrenceCountAssertion,
+  buildSelectionCountAssertion,
   buildTextLengthAssertion,
   buildSourceLengthAssertion,
   buildTextFormatAssertion,

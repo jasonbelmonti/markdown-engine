@@ -13,7 +13,7 @@ export interface DeclarativeLengthBounds {
 
 export function lengthBoundsFromValue(
   value: unknown,
-  assertionName: "sourceLength" | "textLength",
+  assertionName: "selectionCount" | "sourceLength" | "textLength",
   diagnostics: MarkdownDiagnostic[],
 ): DeclarativeLengthBounds | undefined {
   if (value === undefined) {
@@ -59,7 +59,7 @@ export function lengthBoundsFromValue(
 
 function optionalLengthBound(
   record: Record<string, unknown>,
-  assertionName: "sourceLength" | "textLength",
+  assertionName: "selectionCount" | "sourceLength" | "textLength",
   key: "min" | "max",
   diagnostics: MarkdownDiagnostic[],
 ): Partial<Record<"min" | "max", number>> {

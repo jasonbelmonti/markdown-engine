@@ -42,6 +42,7 @@ checkFile("docs/contracts/declarative-validation.md", {
     "profile.validation.assertionFailed",
     "profile.validation.duplicateId",
     "profile.validation.referenceMissing",
+    "`selectionCount`",
     "`textFormat` schema",
     "`sourceLength`",
     "profile.validation.sourceUnavailable",

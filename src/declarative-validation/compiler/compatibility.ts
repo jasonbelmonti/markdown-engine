@@ -10,6 +10,7 @@ export function selectorAssertionCompatibilityError(
 ): string | undefined {
   switch (assertionName) {
     case "exists":
+    case "selectionCount":
       return undefined;
 
     case "sectionsRequired":
