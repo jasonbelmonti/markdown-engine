@@ -4,6 +4,14 @@
 
 No unreleased changes.
 
+## 3.3.0 - 2026-08-12
+
+### Added
+
+- Added the v2-only, selector-generic `selectionCount` assertion for bounding
+  the number of matched targets with inclusive `min` and `max` values,
+  including zero-selection evaluation and deterministic CLI/API evidence.
+
 ## 3.2.0 - 2026-07-12
 
 ### Added
