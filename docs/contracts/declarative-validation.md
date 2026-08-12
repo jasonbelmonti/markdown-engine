@@ -1,9 +1,10 @@
 # Declarative Validation Contract
 
 Status: package 3.0.0, v1 profile syntax with v2 Conditional V2, document contract 1.0.0
-Last updated: 2026-06-15
-Current v2 surface: flat-rule result/evidence shell, document `sourceLength`
-schema and runtime measurement, ID count-bound schema and
+Last updated: 2026-08-12
+Current v2 surface: flat-rule result/evidence shell, generic selector
+`selectionCount` bounds, document `sourceLength` schema and runtime
+measurement, ID count-bound schema and
 runtime evaluator contract, plus `tableColumnCoverage` schema, compiled-plan,
 and runtime evaluator contract, `frontmatterShape` schema, compiled-plan, and
 runtime evaluator contract, `textFormat` schema, compiled-plan, and runtime
@@ -26,7 +27,8 @@ rich IR document contract, while the profile admission path recognizes
 `severity`, `select`, and `assert`; non-recursive `anyOf` and `allOf`; and
 optional rule-level `when`. The admitted v2 path exposes the result and evidence
 shell needed to distinguish assertion, grouped, and skipped evaluation output
-from v1 output, plus the ID count-bound schema, compiled-plan, and runtime
+from v1 output, plus generic selector `selectionCount` bounds, the ID
+count-bound schema, compiled-plan, and runtime
 evaluator contract; the `tableColumnCoverage` schema, compiled-plan, and
 runtime evaluator contract; the `frontmatterShape` schema, private
 compiled-plan, and runtime evaluator contract; the `textFormat` schema,
@@ -99,8 +101,9 @@ syntaxVersion: markdown-engine.validation@v2
 ```
 
 This release recognizes v2 as a distinct syntax version at profile admission,
-admits ID count bounds at the schema, compiled-plan, and runtime evaluator
-layers, admits `tableColumnCoverage` at the schema, internal compiled-plan, and
+admits `selectionCount` and ID count bounds at the schema, compiled-plan, and
+runtime evaluator layers, admits `tableColumnCoverage` at the schema, internal
+compiled-plan, and
 runtime evaluator layers, admits `frontmatterShape` at the schema, internal
 compiled-plan, and runtime evaluator layers, admits `textFormat` at the schema,
 internal compiled-plan, and runtime evaluator layers, admits non-recursive
@@ -293,6 +296,10 @@ Supported assertion members are:
 ```ts
 interface DeclarativeAssertion {
   exists?: true;
+  selectionCount?: {
+    min?: number;
+    max?: number;
+  };
   sectionsRequired?: {
     headings: readonly string[];
     order?: "none" | "strict";
@@ -371,6 +378,7 @@ Selector/assertion compatibility is part of the public contract:
 | Assertion | Compatible selector targets |
 | --- | --- |
 | `exists` | all supported selector targets |
+| `selectionCount` | all supported selector targets |
 | `sectionsRequired` | `document` |
 | `tableColumnsRequired` | `table` |
 | `ids` | all supported selector targets |
@@ -390,6 +398,16 @@ Incompatible supported selector/assertion pairs emit
 `exists` must be `true`. It passes when the selector resolves at least one
 target and fails with `profile.validation.emptySelection` when the selector
 resolves zero targets.
+
+For v2 profiles, `selectionCount` must include `min`, `max`, or both. Bounds
+are inclusive non-negative integers, and `min` must be less than or equal to
+`max` when both are present. It evaluates the number of targets resolved by the
+rule selector and is compatible with every supported selector target. An empty
+selection is count zero, so `max: 0` passes and `min: 1` fails with
+`profile.validation.assertionFailed`; `selectionCount` does not replace its
+result with `profile.validation.emptySelection`. Maximum-bound failures use the
+first excess selected target as source evidence when available. Minimum-bound
+failures at zero omit source location rather than fabricating one.
 
 `sectionsRequired.order` defaults to `none`. `strict` checks that configured
 headings appear as an ordered subsequence in the normalized section tree
@@ -483,9 +501,10 @@ profile-supplied regular expressions, call `Date.parse`, perform locale
 parsing, or implement date ordering.
 
 Empty selector results produce `profile.validation.emptySelection` for exists,
-table, ID, reference, text, occurrence, text-length, and text-format
-assertions. Document-scoped required-section, required-frontmatter, and
-frontmatter-shape assertions evaluate against the document.
+table, ID, reference, text, occurrence, text-length, and text-format assertions.
+`selectionCount` instead evaluates the empty selection as zero. Document-scoped
+required-section, required-frontmatter, and frontmatter-shape assertions
+evaluate against the document.
 
 ## Diagnostics
 
@@ -517,7 +536,7 @@ an unproven pass.
 | `profile.compile.unsupportedAssertion` | `error` | Parsed YAML or JSON-safe `assert` input contains an unsupported first-level assertion member that does not have unsupported-key precedence. |
 | `profile.compile.incompatibleSelectorAssertion` | `error` | A supported selector target is paired with an incompatible supported assertion. |
 | `profile.validation.emptySelection` | Rule severity | A rule cannot evaluate because its selector matches no applicable target. |
-| `profile.validation.assertionFailed` | Rule severity | A supported assertion evaluates and fails without a more specific diagnostic code, including missing table columns, exact occurrence-count mismatches, text-length bound failures, and text-format `isoDate` failures. |
+| `profile.validation.assertionFailed` | Rule severity | A supported assertion evaluates and fails without a more specific diagnostic code, including selector-count bound failures, missing table columns, exact occurrence-count mismatches, text-length bound failures, and text-format `isoDate` failures. |
 | `profile.validation.duplicateId` | Rule severity | An `ids.unique` assertion finds repeated IDs. |
 | `profile.validation.frontmatterForbidden` | Rule severity | A `frontmatterShape` assertion with `presence: "forbidden"` finds present frontmatter. |
 | `profile.validation.frontmatterFieldEmpty` | Rule severity | A frontmatter field configured with `nonEmpty: true` is not a non-empty string. |
@@ -917,6 +936,24 @@ rules:
           text: Contract
         assert:
           exists: true
+```
+
+V2 selector cardinality profile:
+
+```yaml
+syntaxVersion: markdown-engine.validation@v2
+rules:
+  - id: actions.table.exactly-one
+    select:
+      target: table
+      section: Execution Actions
+      header:
+        - Step ID
+        - Action
+    assert:
+      selectionCount:
+        min: 1
+        max: 1
 ```
 
 ### OKF v0.1 Hard-Validation Profile Composition

@@ -208,6 +208,12 @@ const idCountAssertion = {
   ids: { minCount: 1, maxCount: 3 },
 } satisfies DeclarativeAssertion;
 const existsAssertion = { exists: true } satisfies DeclarativeAssertion;
+const selectionCountAssertion = {
+  selectionCount: {
+    min: 1,
+    max: 1,
+  },
+} satisfies DeclarativeAssertion;
 const exactOneTextAssertion = {
   textOccurrenceCount: {
     text: "shall",
@@ -1269,6 +1275,7 @@ void unsupportedSelector;
 void publicAssertion;
 void idCountAssertion;
 void existsAssertion;
+void selectionCountAssertion;
 void exactOneTextAssertion;
 void textLengthAssertion;
 void sourceLengthAssertion;

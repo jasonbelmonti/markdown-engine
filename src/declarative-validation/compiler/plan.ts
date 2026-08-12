@@ -114,6 +114,11 @@ export type CompiledDeclarativeAssertion =
       kind: "exists";
     }
   | {
+      kind: "selectionCount";
+      min?: number;
+      max?: number;
+    }
+  | {
       kind: "sectionsRequired";
       headings: readonly string[];
       order: "none" | "strict";

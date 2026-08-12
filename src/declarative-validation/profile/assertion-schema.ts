@@ -53,6 +53,7 @@ const SUPPORTED_ASSERTION_KEYS_V1 = [
 
 const SUPPORTED_ASSERTION_KEYS_V2 = [
   ...SUPPORTED_ASSERTION_KEYS_V1,
+  "selectionCount",
   "sourceLength",
   "tableColumnCoverage",
   "frontmatterShape",
@@ -85,6 +86,9 @@ export function assertionFromValue(
     ...textAssertionFromValue(value.text, diagnostics),
     ...textOccurrenceCountFromValue(value.textOccurrenceCount, diagnostics),
     ...textLengthFromValue(value.textLength, diagnostics),
+    ...(supportsV2AssertionSurface(syntaxVersion)
+      ? selectionCountFromValue(value.selectionCount, diagnostics)
+      : {}),
     ...(supportsV2AssertionSurface(syntaxVersion)
       ? sourceLengthFromValue(value.sourceLength, diagnostics)
       : {}),
@@ -623,6 +627,15 @@ function textLengthFromValue(
   const bounds = lengthBoundsFromValue(value, "textLength", diagnostics);
 
   return bounds === undefined ? {} : { textLength: bounds };
+}
+
+function selectionCountFromValue(
+  value: unknown,
+  diagnostics: MarkdownDiagnostic[],
+): Pick<DeclarativeAssertion, "selectionCount"> {
+  const bounds = lengthBoundsFromValue(value, "selectionCount", diagnostics);
+
+  return bounds === undefined ? {} : { selectionCount: bounds };
 }
 
 function sourceLengthFromValue(

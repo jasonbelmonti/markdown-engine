@@ -17,8 +17,28 @@ import {
   pushUnsupportedKeyDiagnostics,
 } from "./assertion-shapes.js";
 
-type LengthAssertionName = "sourceLength" | "textLength";
+type LengthAssertionName = "selectionCount" | "sourceLength" | "textLength";
 type LengthBounds = { min?: number; max?: number };
+
+export function buildSelectionCountAssertion(
+  assertion: DeclarativeAssertion,
+  selector: DeclarativeSelector,
+  ruleId: string,
+  syntaxVersion: ValidationProfileSyntaxVersion,
+  diagnostics: MarkdownDiagnostic[],
+): CompiledDeclarativeAssertion | undefined {
+  const bounds = assertion.selectionCount;
+
+  return bounds === undefined || syntaxVersion !== PROFILE_SYNTAX_VERSION_V2
+    ? undefined
+    : buildLengthAssertion(
+        "selectionCount",
+        bounds,
+        selector,
+        ruleId,
+        diagnostics,
+      );
+}
 
 export function buildTextLengthAssertion(
   assertion: DeclarativeAssertion,

@@ -204,6 +204,23 @@ The CLI supplies the original file content automatically. API callers pass it
 as `sourceText` in `DeclarativeValidationOptions`; missing source context fails
 with `profile.validation.sourceUnavailable`.
 
+V2 profiles can also bound how many targets a selector resolves. Empty
+selections count as zero, which supports exact-one and forbidden-occurrence
+contracts without custom validation scripts:
+
+```yaml
+syntaxVersion: markdown-engine.validation@v2
+rules:
+  - id: actions.table.exactly-one
+    select:
+      target: table
+      section: Execution Actions
+    assert:
+      selectionCount:
+        min: 1
+        max: 1
+```
+
 CLI validation output uses `profile.syntaxVersion` as the v1/v2 discriminator.
 V1 rule results keep the existing flat `ruleId`, `passed`, and `diagnostics`
 fields. V2 rule results add `status` and `evaluation`; v2 profile metadata adds

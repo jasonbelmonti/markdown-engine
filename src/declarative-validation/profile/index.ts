@@ -104,6 +104,10 @@ export interface DeclarativeTableCellPredicate {
 
 export interface DeclarativeAssertion {
   exists?: true;
+  selectionCount?: {
+    min?: number;
+    max?: number;
+  };
   sectionsRequired?: {
     headings: readonly string[];
     order?: DeclarativeSectionOrder;

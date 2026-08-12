@@ -105,6 +105,27 @@ rules:
         prefix: OBJ
         minCount: 2
 `;
+const v2SelectionCountMarkdown = `# Inventory
+
+| ID |
+| --- |
+| A |
+
+| ID |
+| --- |
+| B |
+`;
+const v2SelectionCountProfile = `syntaxVersion: markdown-engine.validation@v2
+rules:
+  - id: v2.tables.exactly-one
+    select:
+      target: table
+      section: Inventory
+    assert:
+      selectionCount:
+        min: 1
+        max: 1
+`;
 const warningProfile = `syntaxVersion: !custom markdown-engine.validation@v1
 rules:
   - id: sections.present
@@ -611,6 +632,53 @@ rules:
     expect(result.evidence).toMatchObject({
       diagnostics: result.diagnostics,
       ruleResults: result.ruleResults,
+    });
+  });
+
+  it("emits deterministic CLI diagnostics for v2 selectionCount", async () => {
+    const cwd = await makeTempDir();
+    await writeFile(join(cwd, "mission.md"), v2SelectionCountMarkdown);
+    await writeFile(join(cwd, "profile.yaml"), v2SelectionCountProfile);
+
+    const { exitCode, stderr, stdout } = await runCliWithOutput({
+      args: [
+        "validate",
+        "--file",
+        "mission.md",
+        "--profile",
+        "profile.yaml",
+      ],
+      cwd,
+    });
+
+    expect(exitCode).toBe(1);
+    expect(stderr.text()).toBe("");
+
+    const result = parseStdout(stdout.text());
+    const expectedDiagnostic = expect.objectContaining({
+      code: "profile.validation.assertionFailed",
+      message: "Rule selector target count must be between 1 and 1; found 2.",
+      ruleId: "v2.tables.exactly-one",
+      severity: "error",
+    });
+
+    expect(result).toMatchObject({
+      diagnostics: [expectedDiagnostic],
+      profile: {
+        evaluatedRuleCount: 1,
+        ruleCount: 1,
+        skippedRuleCount: 0,
+        syntaxVersion: "markdown-engine.validation@v2",
+      },
+      ruleResults: [
+        {
+          diagnostics: [expectedDiagnostic],
+          passed: false,
+          ruleId: "v2.tables.exactly-one",
+          status: "failed",
+        },
+      ],
+      valid: false,
     });
   });
 

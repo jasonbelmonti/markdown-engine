@@ -16,6 +16,7 @@ import { evaluateIds } from "./ids.js";
 import { sortAssertionDiagnostics } from "./ordering.js";
 import { evaluateReferences } from "./references.js";
 import { evaluateSectionsRequired } from "./sections-required.js";
+import { evaluateSelectionCount } from "./selection-count.js";
 import { evaluateSourceLength } from "./source-length.js";
 import { evaluateTableColumnCoverage } from "./table-column-coverage.js";
 import { evaluateTableColumnsRequired } from "./table-columns-required.js";
@@ -59,6 +60,9 @@ function evaluateAssertion(
 
     case "sectionsRequired":
       return evaluateSectionsRequired(assertion, context);
+
+    case "selectionCount":
+      return evaluateSelectionCount(assertion, context);
 
     case "text":
       return evaluateText(assertion, context);
