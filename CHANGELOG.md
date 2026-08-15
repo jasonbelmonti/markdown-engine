@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+No unreleased changes.
+
+## 3.4.0 - 2026-08-15
+
 ### Added
 
 - Added the v2-only `tableColumnsExact` assertion for exact comparison of a
