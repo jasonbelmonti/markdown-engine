@@ -214,6 +214,11 @@ const selectionCountAssertion = {
     max: 1,
   },
 } satisfies DeclarativeAssertion;
+const tableColumnsExactAssertion = {
+  tableColumnsExact: {
+    columns: ["Contract state", "Execution route", "State rationale"],
+  },
+} satisfies DeclarativeAssertion;
 const exactOneTextAssertion = {
   textOccurrenceCount: {
     text: "shall",
@@ -1276,6 +1281,7 @@ void publicAssertion;
 void idCountAssertion;
 void existsAssertion;
 void selectionCountAssertion;
+void tableColumnsExactAssertion;
 void exactOneTextAssertion;
 void textLengthAssertion;
 void sourceLengthAssertion;

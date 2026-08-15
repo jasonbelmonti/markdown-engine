@@ -779,6 +779,129 @@ describe("declarative validation compiler assertion proof", () => {
     }
   });
 
+  it("compiles direct v2 tableColumnsExact assertions only for table selectors", () => {
+    const passing = compileValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v2",
+      rules: [
+        {
+          id: "task-control.columns",
+          select: { target: "table", header: ["Contract state"] },
+          assert: {
+            tableColumnsExact: {
+              columns: ["Contract state", "Execution route", "State rationale"],
+            },
+          },
+        },
+      ],
+    });
+
+    expect(passing.diagnostics).toEqual([]);
+    expect(passing.plan?.rules[0]).toMatchObject({
+      selector: { target: "table", header: ["Contract state"] },
+      assertions: [
+        {
+          kind: "tableColumnsExact",
+          columns: ["Contract state", "Execution route", "State rationale"],
+        },
+      ],
+    });
+
+    const incompatible = compileValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v2",
+      rules: [
+        {
+          id: "task-control.columns.incompatible",
+          select: { target: "document" },
+          assert: { tableColumnsExact: { columns: ["Contract state"] } },
+        },
+      ],
+    });
+
+    expect(incompatible.plan).toBeUndefined();
+    expect(incompatible.diagnostics).toEqual([
+      {
+        code: "profile.compile.incompatibleSelectorAssertion",
+        ruleId: "task-control.columns.incompatible",
+        message:
+          'Assertion "tableColumnsExact" is compatible only with table selectors.',
+        severity: "error",
+      },
+    ]);
+  });
+
+  it("rejects invalid direct v2 tableColumnsExact payloads before execution", () => {
+    const result = compileValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v2",
+      rules: [
+        {
+          id: "task-control.columns.invalid",
+          select: { target: "table" },
+          assert: {
+            tableColumnsExact: { columns: [] },
+          },
+        },
+      ],
+    });
+
+    expect(result.plan).toBeUndefined();
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.config.invalidShape",
+        ruleId: "task-control.columns.invalid",
+        message:
+          "tableColumnsExact.columns must be an array of non-empty strings.",
+        severity: "error",
+      },
+    ]);
+
+    const unsupported = compileValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v2",
+      rules: [
+        {
+          id: "task-control.columns.unsupported-key",
+          select: { target: "table" },
+          assert: {
+            tableColumnsExact: {
+              columns: ["Contract state"],
+              order: "strict",
+            },
+          },
+        },
+      ],
+    } as unknown as ValidationProfile);
+
+    expect(unsupported.plan).toBeUndefined();
+    expect(unsupported.diagnostics).toEqual([
+      {
+        code: "profile.config.unsupportedKey",
+        message: 'Unsupported validation profile key "order".',
+        severity: "error",
+      },
+    ]);
+  });
+
+  it("rejects direct typed v1 tableColumnsExact assertions before execution", () => {
+    const result = compileValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      rules: [
+        {
+          id: "task-control.columns.v1",
+          select: { target: "table" },
+          assert: { tableColumnsExact: { columns: ["Contract state"] } },
+        },
+      ],
+    });
+
+    expect(result.plan).toBeUndefined();
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.config.unsupportedKey",
+        message: 'Unsupported validation profile key "tableColumnsExact".',
+        severity: "error",
+      },
+    ]);
+  });
+
   it("rejects removed sectionOrder assertions before execution", () => {
     const result = compileValidationProfile({
       syntaxVersion: "markdown-engine.validation@v1",

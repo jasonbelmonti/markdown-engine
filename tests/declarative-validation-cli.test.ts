@@ -126,6 +126,24 @@ rules:
         min: 1
         max: 1
 `;
+const v2TableColumnsExactMarkdown = `# Task Control
+
+| Contract state | Owner | Execution route | State rationale |
+| --- | --- | --- | --- |
+| Active | Flight | Continue | Cleared |
+`;
+const v2TableColumnsExactProfile = `syntaxVersion: markdown-engine.validation@v2
+rules:
+  - id: task-control.columns
+    select:
+      target: table
+    assert:
+      tableColumnsExact:
+        columns:
+          - Contract state
+          - Execution route
+          - State rationale
+`;
 const warningProfile = `syntaxVersion: !custom markdown-engine.validation@v1
 rules:
   - id: sections.present
@@ -679,6 +697,74 @@ rules:
         },
       ],
       valid: false,
+    });
+  });
+
+  it("emits repeatable v2 tableColumnsExact evidence with expected and actual headers", async () => {
+    const cwd = await makeTempDir();
+    await writeFile(join(cwd, "mission.md"), v2TableColumnsExactMarkdown);
+    await writeFile(join(cwd, "profile.yaml"), v2TableColumnsExactProfile);
+
+    const first = await runCliWithOutput({
+      args: [
+        "validate",
+        "--file",
+        "mission.md",
+        "--profile",
+        "profile.yaml",
+      ],
+      cwd,
+    });
+    const second = await runCliWithOutput({
+      args: [
+        "validate",
+        "--file",
+        "mission.md",
+        "--profile",
+        "profile.yaml",
+      ],
+      cwd,
+    });
+
+    expect(first.exitCode).toBe(1);
+    expect(first.stderr.text()).toBe("");
+    expect(second.exitCode).toBe(first.exitCode);
+    expect(second.stderr.text()).toBe(first.stderr.text());
+    expect(second.stdout.text()).toBe(first.stdout.text());
+
+    const result = parseStdout(first.stdout.text());
+    const expectedDiagnostic = expect.objectContaining({
+      code: "profile.validation.assertionFailed",
+      ruleId: "task-control.columns",
+      severity: "error",
+      message:
+        'Selected table columns must exactly match ["Contract state","Execution route","State rationale"]; found ["Contract state","Owner","Execution route","State rationale"].',
+      sourceRange: expect.objectContaining({
+        start: expect.objectContaining({ line: 3 }),
+      }),
+    });
+
+    expect(result).toMatchObject({
+      diagnostics: [expectedDiagnostic],
+      profile: {
+        evaluatedRuleCount: 1,
+        ruleCount: 1,
+        skippedRuleCount: 0,
+        syntaxVersion: "markdown-engine.validation@v2",
+      },
+      ruleResults: [
+        {
+          diagnostics: [expectedDiagnostic],
+          passed: false,
+          ruleId: "task-control.columns",
+          status: "failed",
+        },
+      ],
+      valid: false,
+    });
+    expect(result.evidence).toMatchObject({
+      diagnostics: result.diagnostics,
+      ruleResults: result.ruleResults,
     });
   });
 

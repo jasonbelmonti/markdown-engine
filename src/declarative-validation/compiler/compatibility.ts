@@ -23,6 +23,7 @@ export function selectorAssertionCompatibilityError(
         : selectorCompatibilityMessage(assertionName, "document");
 
     case "tableColumnsRequired":
+    case "tableColumnsExact":
       return selector.target === "table"
         ? undefined
         : selectorCompatibilityMessage(assertionName, "table");

@@ -55,6 +55,7 @@ const SUPPORTED_ASSERTION_KEYS_V2 = [
   ...SUPPORTED_ASSERTION_KEYS_V1,
   "selectionCount",
   "sourceLength",
+  "tableColumnsExact",
   "tableColumnCoverage",
   "frontmatterShape",
   "textFormat",
@@ -91,6 +92,9 @@ export function assertionFromValue(
       : {}),
     ...(supportsV2AssertionSurface(syntaxVersion)
       ? sourceLengthFromValue(value.sourceLength, diagnostics)
+      : {}),
+    ...(supportsV2AssertionSurface(syntaxVersion)
+      ? tableColumnsExactFromValue(value.tableColumnsExact, diagnostics)
       : {}),
     ...frontmatterRequiredFromValue(value.frontmatterRequired, diagnostics),
     ...(supportsV2AssertionSurface(syntaxVersion)
@@ -260,6 +264,36 @@ function tableColumnsRequiredFromValue(
   }
 
   return { tableColumnsRequired: { columns } };
+}
+
+function tableColumnsExactFromValue(
+  value: unknown,
+  diagnostics: MarkdownDiagnostic[],
+): Pick<DeclarativeAssertion, "tableColumnsExact"> {
+  if (value === undefined) {
+    return {};
+  }
+
+  if (!isPlainRecord(value)) {
+    diagnostics.push(invalidShape("tableColumnsExact must be an object."));
+
+    return {};
+  }
+
+  unsupportedKeys(value, ["columns"], diagnostics);
+
+  const columns = stringArray(value.columns);
+  if (columns === undefined) {
+    diagnostics.push(
+      invalidShape(
+        "tableColumnsExact.columns must be an array of non-empty strings.",
+      ),
+    );
+
+    return {};
+  }
+
+  return { tableColumnsExact: { columns } };
 }
 
 function idsFromValue(

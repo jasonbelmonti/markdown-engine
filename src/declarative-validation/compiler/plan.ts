@@ -128,6 +128,10 @@ export type CompiledDeclarativeAssertion =
       columns: readonly string[];
     }
   | {
+      kind: "tableColumnsExact";
+      columns: readonly string[];
+    }
+  | {
       kind: "ids";
       unique?: true;
       caseSensitive: boolean;

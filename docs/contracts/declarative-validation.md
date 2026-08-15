@@ -1,10 +1,10 @@
 # Declarative Validation Contract
 
 Status: package 3.0.0, v1 profile syntax with v2 Conditional V2, document contract 1.0.0
-Last updated: 2026-08-12
+Last updated: 2026-08-15
 Current v2 surface: flat-rule result/evidence shell, generic selector
 `selectionCount` bounds, document `sourceLength` schema and runtime
-measurement, ID count-bound schema and
+measurement, exact normalized table-header `tableColumnsExact` assertions, ID count-bound schema and
 runtime evaluator contract, plus `tableColumnCoverage` schema, compiled-plan,
 and runtime evaluator contract, `frontmatterShape` schema, compiled-plan, and
 runtime evaluator contract, `textFormat` schema, compiled-plan, and runtime
@@ -106,7 +106,8 @@ runtime evaluator layers, admits `tableColumnCoverage` at the schema, internal
 compiled-plan, and
 runtime evaluator layers, admits `frontmatterShape` at the schema, internal
 compiled-plan, and runtime evaluator layers, admits `textFormat` at the schema,
-internal compiled-plan, and runtime evaluator layers, admits non-recursive
+internal compiled-plan, and runtime evaluator layers, admits `tableColumnsExact`
+at the schema, internal compiled-plan, and runtime evaluator layers, admits non-recursive
 grouped rules at the schema, compiled-plan, and runtime evaluator layers, and
 admits optional rule-level `when` at the schema, internal compiled-plan, and
 matcher layers.
@@ -236,7 +237,7 @@ emit `profile.config.invalidShape`.
 Rule-level `when` is allowed only on v2 rules. Branch-level `when` remains
 unsupported. V1 profiles preserve the original flat rule authoring contract;
 grouped `anyOf` / `allOf`, ID count bounds, `tableColumnCoverage`,
-`frontmatterShape`, `textFormat`, and rule-level `when` are v2 additions.
+`tableColumnsExact`, `frontmatterShape`, `textFormat`, and rule-level `when` are v2 additions.
 
 Profile values must be JSON-safe data properties after YAML materialization.
 Functions, accessors, proxies, cyclic structures, sparse arrays, `undefined`
@@ -305,6 +306,9 @@ interface DeclarativeAssertion {
     order?: "none" | "strict";
   };
   tableColumnsRequired?: {
+    columns: readonly string[];
+  };
+  tableColumnsExact?: {
     columns: readonly string[];
   };
   ids?: {
@@ -381,6 +385,7 @@ Selector/assertion compatibility is part of the public contract:
 | `selectionCount` | all supported selector targets |
 | `sectionsRequired` | `document` |
 | `tableColumnsRequired` | `table` |
+| `tableColumnsExact` | `table` |
 | `ids` | all supported selector targets |
 | `references` | `document` |
 | `tableColumnCoverage` | `document` |
@@ -408,6 +413,19 @@ selection is count zero, so `max: 0` passes and `min: 1` fails with
 result with `profile.validation.emptySelection`. Maximum-bound failures use the
 first excess selected target as source evidence when available. Minimum-bound
 failures at zero omit source location rather than fabricating one.
+
+For v2 profiles, `tableColumnsExact` requires a non-empty `columns` array of
+non-empty strings and is compatible only with a `table` selector. It compares
+the complete normalized header sequence from the selected `EngineTable` exactly:
+count, order, text, and duplicate occurrences must all match. Additional
+columns before, between, or after configured columns, and missing, reordered,
+renamed, or duplicated columns fail with
+`profile.validation.assertionFailed`. The deterministic diagnostic includes the
+expected and actual header sequences. When an actual header first mismatches or
+is excess, its header-cell source range is attached when available; otherwise
+the normal selected-table source evidence is retained. This assertion does not
+change the ordered-subsequence behavior of `tableColumnsRequired` or table
+selector `header` / `tableHeader` matching.
 
 `sectionsRequired.order` defaults to `none`. `strict` checks that configured
 headings appear as an ordered subsequence in the normalized section tree
@@ -501,7 +519,8 @@ profile-supplied regular expressions, call `Date.parse`, perform locale
 parsing, or implement date ordering.
 
 Empty selector results produce `profile.validation.emptySelection` for exists,
-table, ID, reference, text, occurrence, text-length, and text-format assertions.
+table, ID, reference, text, occurrence, text-length, text-format, and
+tableColumnsExact assertions.
 `selectionCount` instead evaluates the empty selection as zero. Document-scoped
 required-section, required-frontmatter, and frontmatter-shape assertions
 evaluate against the document.
@@ -536,7 +555,7 @@ an unproven pass.
 | `profile.compile.unsupportedAssertion` | `error` | Parsed YAML or JSON-safe `assert` input contains an unsupported first-level assertion member that does not have unsupported-key precedence. |
 | `profile.compile.incompatibleSelectorAssertion` | `error` | A supported selector target is paired with an incompatible supported assertion. |
 | `profile.validation.emptySelection` | Rule severity | A rule cannot evaluate because its selector matches no applicable target. |
-| `profile.validation.assertionFailed` | Rule severity | A supported assertion evaluates and fails without a more specific diagnostic code, including selector-count bound failures, missing table columns, exact occurrence-count mismatches, text-length bound failures, and text-format `isoDate` failures. |
+| `profile.validation.assertionFailed` | Rule severity | A supported assertion evaluates and fails without a more specific diagnostic code, including selector-count bound failures, missing table columns, exact table-header mismatches, exact occurrence-count mismatches, text-length bound failures, and text-format `isoDate` failures. |
 | `profile.validation.duplicateId` | Rule severity | An `ids.unique` assertion finds repeated IDs. |
 | `profile.validation.frontmatterForbidden` | Rule severity | A `frontmatterShape` assertion with `presence: "forbidden"` finds present frontmatter. |
 | `profile.validation.frontmatterFieldEmpty` | Rule severity | A frontmatter field configured with `nonEmpty: true` is not a non-empty string. |
@@ -955,6 +974,26 @@ rules:
         min: 1
         max: 1
 ```
+
+V2 exact table-column profile:
+
+```yaml
+syntaxVersion: markdown-engine.validation@v2
+rules:
+  - id: task-control.columns
+    select:
+      target: table
+    assert:
+      tableColumnsExact:
+        columns:
+          - Contract state
+          - Execution route
+          - State rationale
+```
+
+The assertion compares the complete normalized header sequence. It is stricter
+than `tableColumnsRequired`, which continues to accept ordered-subsequence
+matches with unrelated columns before, between, or after required names.
 
 ### OKF v0.1 Hard-Validation Profile Composition
 

@@ -216,6 +216,143 @@ rules:
     });
   });
 
+  it("parses v2 tableColumnsExact assertions from YAML and JSON-safe input", () => {
+    const yaml = parseValidationProfile(`
+syntaxVersion: markdown-engine.validation@v2
+rules:
+  - id: task-control.columns
+    select:
+      target: table
+    assert:
+      tableColumnsExact:
+        columns:
+          - Contract state
+          - Execution route
+          - State rationale
+`);
+    const json = parseValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v2",
+      rules: [
+        {
+          id: "task-control.columns",
+          select: { target: "table" },
+          assert: {
+            tableColumnsExact: {
+              columns: [
+                "Contract state",
+                "Execution route",
+                "State rationale",
+              ],
+            },
+          },
+        },
+      ],
+    });
+
+    for (const result of [yaml, json]) {
+      expect(result.diagnostics).toEqual([]);
+      expect(result.profile?.rules[0]?.assert).toEqual({
+        tableColumnsExact: {
+          columns: [
+            "Contract state",
+            "Execution route",
+            "State rationale",
+          ],
+        },
+      });
+    }
+  });
+
+  it.each([
+    [null, "tableColumnsExact must be an object."],
+    [{}, "tableColumnsExact.columns must be an array of non-empty strings."],
+    [
+      { columns: [] },
+      "tableColumnsExact.columns must be an array of non-empty strings.",
+    ],
+    [
+      { columns: ["Contract state", ""] },
+      "tableColumnsExact.columns must be an array of non-empty strings.",
+    ],
+  ])(
+    "rejects invalid v2 tableColumnsExact payloads: %j",
+    (tableColumnsExact, message) => {
+      const result = parseValidationProfile({
+        syntaxVersion: "markdown-engine.validation@v2",
+        rules: [
+          {
+            id: "task-control.invalid-columns",
+            select: { target: "table" },
+            assert: { tableColumnsExact },
+          },
+        ],
+      } as ProfileInput);
+
+      expect(result.profile).toBeUndefined();
+      expect(result.diagnostics).toEqual([
+        {
+          code: "profile.config.invalidShape",
+          message,
+          severity: "error",
+        },
+        {
+          code: "profile.config.invalidShape",
+          message: "Rule assert must include at least one supported assertion.",
+          severity: "error",
+        },
+      ]);
+    },
+  );
+
+  it("rejects unsupported nested v2 tableColumnsExact keys", () => {
+    const result = parseValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v2",
+      rules: [
+        {
+          id: "task-control.unsupported-columns-key",
+          select: { target: "table" },
+          assert: {
+            tableColumnsExact: {
+              columns: ["Contract state"],
+              order: "strict",
+            },
+          },
+        },
+      ],
+    } as ProfileInput);
+
+    expect(result.profile).toBeUndefined();
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.config.unsupportedKey",
+        message: 'Unsupported validation profile key "order".',
+        severity: "error",
+      },
+    ]);
+  });
+
+  it("keeps tableColumnsExact invalid for v1 profiles", () => {
+    const result = parseValidationProfile({
+      syntaxVersion: "markdown-engine.validation@v1",
+      rules: [
+        {
+          id: "v1.table-columns-exact",
+          select: { target: "table" },
+          assert: { tableColumnsExact: { columns: ["Contract state"] } },
+        },
+      ],
+    } as ProfileInput);
+
+    expect(result.profile).toBeUndefined();
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.compile.unsupportedAssertion",
+        message: 'Unsupported assertion "tableColumnsExact".',
+        severity: "error",
+      },
+    ]);
+  });
+
   it("parses v2 frontmatterShape assertions", () => {
     const result = parseValidationProfile(`
 syntaxVersion: markdown-engine.validation@v2

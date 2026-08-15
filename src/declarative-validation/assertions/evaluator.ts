@@ -19,6 +19,7 @@ import { evaluateSectionsRequired } from "./sections-required.js";
 import { evaluateSelectionCount } from "./selection-count.js";
 import { evaluateSourceLength } from "./source-length.js";
 import { evaluateTableColumnCoverage } from "./table-column-coverage.js";
+import { evaluateTableColumnsExact } from "./table-columns-exact.js";
 import { evaluateTableColumnsRequired } from "./table-columns-required.js";
 import { evaluateText } from "./text.js";
 import { evaluateTextFormat } from "./text-format.js";
@@ -84,6 +85,9 @@ function evaluateAssertion(
 
     case "tableColumnsRequired":
       return evaluateTableColumnsRequired(assertion, context);
+
+    case "tableColumnsExact":
+      return evaluateTableColumnsExact(assertion, context);
 
     case "ids":
       return evaluateIds(assertion, context);

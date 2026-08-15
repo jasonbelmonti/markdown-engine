@@ -51,6 +51,18 @@ const v2TableColumnCoverageProfile = {
   ],
 };
 
+const v2TableColumnsExactProfile = {
+  syntaxVersion: "markdown-engine.validation@v2",
+  documentVersion: "1.0.0",
+  rules: [
+    {
+      id: "v2.table-columns-exact.repeatability",
+      select: { target: "table", section: "Mission" },
+      assert: { tableColumnsExact: { columns: ["Owner", "Status"] } },
+    },
+  ],
+};
+
 export function buildConditionalV2RepeatabilityCases(repoRoot, engine) {
   const { normalize, parse, parseValidationProfile, validateWithProfile } =
     engine;
@@ -78,6 +90,11 @@ export function buildConditionalV2RepeatabilityCases(repoRoot, engine) {
     conditionalRepeatabilityDocument,
     v2TableColumnCoverageProfile,
   );
+  const v2TableColumnsExactResult = validateWithEvidence(
+    validateWithProfile,
+    conditionalRepeatabilityDocument,
+    v2TableColumnsExactProfile,
+  );
   const v2CompositeResult = validateWithEvidence(
     validateWithProfile,
     conditionalRepeatabilityDocument,
@@ -101,6 +118,14 @@ export function buildConditionalV2RepeatabilityCases(repoRoot, engine) {
       {
         name: "declarative-validation:v2-table-column-coverage-evidence",
         result: requiredEvidence(v2TableColumnCoverageResult),
+      },
+      {
+        name: "declarative-validation:v2-table-columns-exact-result",
+        result: v2TableColumnsExactResult,
+      },
+      {
+        name: "declarative-validation:v2-table-columns-exact-evidence",
+        result: requiredEvidence(v2TableColumnsExactResult),
       },
       {
         name: "declarative-validation:v2-composite-result",
