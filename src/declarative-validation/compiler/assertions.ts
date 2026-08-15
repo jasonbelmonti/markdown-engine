@@ -27,6 +27,7 @@ const ASSERTION_KEYS_V2 = [
   ...ASSERTION_KEYS_V1,
   "selectionCount",
   "sourceLength",
+  "tableColumnsExact",
   "tableColumnCoverage",
   "frontmatterShape",
   "textFormat",

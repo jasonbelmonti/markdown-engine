@@ -2,7 +2,12 @@
 
 ## Unreleased
 
-No unreleased changes.
+### Added
+
+- Added the v2-only `tableColumnsExact` assertion for exact comparison of a
+  selected table's complete normalized header sequence, including deterministic
+  source-grounded API and CLI diagnostics for additional, missing, reordered,
+  renamed, and duplicated columns.
 
 ## 3.3.0 - 2026-08-12
 

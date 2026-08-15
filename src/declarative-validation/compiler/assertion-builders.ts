@@ -51,6 +51,7 @@ export const ASSERTION_BUILDERS: readonly AssertionBuilder[] = [
   buildExistsAssertion,
   buildSectionsRequiredAssertion,
   buildTableColumnsRequiredAssertion,
+  buildTableColumnsExactAssertion,
   buildIdsAssertion,
   buildReferencesAssertion,
   buildTableColumnCoverageAssertion,
@@ -185,6 +186,55 @@ function buildTableColumnsRequiredAssertion(
   ) {
     return {
       kind: "tableColumnsRequired",
+      columns,
+    };
+  }
+
+  return undefined;
+}
+
+function buildTableColumnsExactAssertion(
+  assertion: DeclarativeAssertion,
+  selector: DeclarativeSelector,
+  ruleId: string,
+  syntaxVersion: ValidationProfileSyntaxVersion,
+  diagnostics: MarkdownDiagnostic[],
+): CompiledDeclarativeAssertion | undefined {
+  if (
+    assertion.tableColumnsExact === undefined ||
+    syntaxVersion !== PROFILE_SYNTAX_VERSION_V2
+  ) {
+    return undefined;
+  }
+
+  let columns: readonly string[] | undefined;
+  if (
+    pushObjectDiagnostic(
+      "tableColumnsExact",
+      assertion.tableColumnsExact,
+      ruleId,
+      diagnostics,
+    ) &&
+    pushUnsupportedKeyDiagnostics(
+      assertion.tableColumnsExact,
+      ["columns"],
+      diagnostics,
+    ) &&
+    pushCompatibilityDiagnostic(
+      "tableColumnsExact",
+      selector,
+      ruleId,
+      diagnostics,
+    ) &&
+    (columns = closedStringArray(
+      "tableColumnsExact.columns",
+      assertion.tableColumnsExact.columns,
+      ruleId,
+      diagnostics,
+    )) !== undefined
+  ) {
+    return {
+      kind: "tableColumnsExact",
       columns,
     };
   }
