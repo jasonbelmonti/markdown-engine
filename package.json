@@ -1,6 +1,6 @@
 {
   "name": "@jasonbelmonti/markdown-engine",
-  "version": "3.4.0",
+  "version": "3.5.0",
   "description": "Deterministic Markdown parsing and validation engine package.",
   "license": "MIT",
   "type": "module",
