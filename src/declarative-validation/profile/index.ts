@@ -193,12 +193,27 @@ export type DeclarativeFrontmatterFieldShape =
       required?: true;
       valueType?: "string";
       nonEmpty?: true;
+      equals?: string;
+      nonBlank?: true;
+      forbidden?: never;
     }
   | {
       field: string;
       required?: true;
       valueType?: Exclude<DeclarativeFrontmatterValueType, "string">;
       nonEmpty?: never;
+      equals?: never;
+      nonBlank?: never;
+      forbidden?: never;
+    }
+  | {
+      field: string;
+      forbidden: true;
+      required?: never;
+      valueType?: never;
+      nonEmpty?: never;
+      equals?: never;
+      nonBlank?: never;
     };
 
 export type DeclarativeFrontmatterValueType =

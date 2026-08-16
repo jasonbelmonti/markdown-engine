@@ -343,6 +343,9 @@ interface DeclarativeAssertion {
       required?: true;
       valueType?: "string" | "number" | "boolean" | "array" | "object" | "null";
       nonEmpty?: true;
+      equals?: string;
+      nonBlank?: true;
+      forbidden?: true;
     }[];
   };
   text?: {
@@ -464,12 +467,17 @@ selector because frontmatter is document metadata. `presence` is optional and
 must be exactly `"required"` or `"forbidden"` when provided. `fields` is an
 optional non-empty array of field constraints. Each field constraint has a
 required non-empty `field` name and must include at least one effective
-constraint: `required: true`, `valueType`, or `nonEmpty: true`. Field names
-within one `frontmatterShape.fields` array must be unique. `valueType` must be
+constraint: `required: true`, `valueType`, `nonEmpty: true`, `equals`,
+`nonBlank: true`, or `forbidden: true`. Field names within one
+`frontmatterShape.fields` array must be unique. `valueType` must be
 one of `"string"`, `"number"`, `"boolean"`, `"array"`, `"object"`, or `"null"`.
-`nonEmpty: true` is a string predicate; when it is combined with `valueType`,
-`valueType` must be `"string"`. `presence: "forbidden"` cannot be combined with
-`fields`.
+`nonEmpty: true`, `equals`, and `nonBlank: true` are string predicates; when
+any is combined with `valueType`, `valueType` must be `"string"`. `equals`
+accepts any string, including the empty string, and compares it exactly.
+`nonBlank: true` requires a string whose JavaScript `trim()` result is non-empty.
+`forbidden: true` requires the named field to be absent and cannot be combined
+with `required`, `valueType`, `nonEmpty`, `equals`, or `nonBlank`.
+`presence: "forbidden"` cannot be combined with `fields`.
 
 Runtime evaluation treats frontmatter as present when
 `document.frontmatter !== undefined`. `presence: "required"` fails absent
@@ -486,6 +494,16 @@ requires a present field value to be a non-empty string and emits
 `profile.validation.frontmatterFieldEmpty` when that predicate fails. When
 `valueType: "string"` and `nonEmpty: true` are combined, a non-string value
 emits the type-mismatch diagnostic without a duplicate empty-string diagnostic.
+`equals` compares present strings exactly without coercion and emits
+`profile.validation.frontmatterFieldValueMismatch` on mismatch. `nonBlank: true`
+uses JavaScript `trim()` without coercion and emits
+`profile.validation.frontmatterFieldBlank` when its field is not a non-blank
+string. `forbidden: true` emits `profile.validation.frontmatterFieldForbidden`
+when the named field is present, regardless of value. When `valueType: "string"`
+is combined with `equals` or `nonBlank`, a non-string value emits only
+`profile.validation.frontmatterFieldTypeMismatch` rather than an additional
+string-predicate diagnostic. Diagnostic messages do not include frontmatter
+values.
 
 `text` must include `contains` or a non-empty `excludes` array.
 `textOccurrenceCount.count` is a finite number and counts non-overlapping
@@ -558,9 +576,12 @@ an unproven pass.
 | `profile.validation.assertionFailed` | Rule severity | A supported assertion evaluates and fails without a more specific diagnostic code, including selector-count bound failures, missing table columns, exact table-header mismatches, exact occurrence-count mismatches, text-length bound failures, and text-format `isoDate` failures. |
 | `profile.validation.duplicateId` | Rule severity | An `ids.unique` assertion finds repeated IDs. |
 | `profile.validation.frontmatterForbidden` | Rule severity | A `frontmatterShape` assertion with `presence: "forbidden"` finds present frontmatter. |
+| `profile.validation.frontmatterFieldBlank` | Rule severity | A frontmatter field configured with `nonBlank: true` is not a non-blank string. |
 | `profile.validation.frontmatterFieldEmpty` | Rule severity | A frontmatter field configured with `nonEmpty: true` is not a non-empty string. |
+| `profile.validation.frontmatterFieldForbidden` | Rule severity | A frontmatter field configured with `forbidden: true` is present. |
 | `profile.validation.frontmatterFieldMissing` | Rule severity | A required frontmatter field is absent. |
 | `profile.validation.frontmatterFieldTypeMismatch` | Rule severity | A frontmatter field value does not match the configured `frontmatterShape.fields[].valueType` without coercion. |
+| `profile.validation.frontmatterFieldValueMismatch` | Rule severity | A frontmatter field configured with `equals` does not exactly match the configured string without coercion. |
 | `profile.validation.frontmatterMissing` | Rule severity | A `frontmatterShape` assertion with `presence: "required"` finds absent frontmatter. |
 | `profile.validation.idCountTooHigh` | Rule severity | Unique ID count after filtering is higher than `ids.maxCount`. |
 | `profile.validation.idCountTooLow` | Rule severity | Unique ID count after filtering is lower than `ids.minCount`. |

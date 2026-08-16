@@ -91,6 +91,10 @@ const fixturePath =
   "fixtures/declarative-validation/downstream/operational-design-spec.md";
 const profilePath =
   "fixtures/declarative-validation/downstream/operational-design-spec-profile.yaml";
+const taskDefinitionFrontmatterFixtureDirectory =
+  "fixtures/declarative-validation/downstream/task-definition-frontmatter";
+const taskDefinitionFrontmatterProfilePath =
+  `${taskDefinitionFrontmatterFixtureDirectory}/profile.yaml`;
 const conditionalsHarnessPath =
   "fixtures/declarative-validation/conditionals/harness.yaml";
 const fixture = readFileSync(
@@ -103,6 +107,13 @@ const fixture = readFileSync(
 const profileYaml = readFileSync(
   new URL(
     "../fixtures/declarative-validation/downstream/operational-design-spec-profile.yaml",
+    import.meta.url,
+  ),
+  "utf8",
+);
+const taskDefinitionFrontmatterProfileYaml = readFileSync(
+  new URL(
+    "../fixtures/declarative-validation/downstream/task-definition-frontmatter/profile.yaml",
     import.meta.url,
   ),
   "utf8",
@@ -202,6 +213,85 @@ describe("declarative validation downstream ODS structural exercise", () => {
   });
 });
 
+describe("declarative validation Task Definition frontmatter exercise", () => {
+  it("accepts canonical metadata and unknown producer extensions", () => {
+    const { result } = validateTaskDefinitionFrontmatterFixture("canonical");
+
+    expect(result.valid).toBe(true);
+    expect(result.diagnostics).toEqual([]);
+    expect(result.ruleResults).toMatchObject([
+      {
+        ruleId: "task-definition.frontmatter",
+        status: "passed",
+        passed: true,
+        diagnostics: [],
+      },
+    ]);
+  });
+
+  it("rejects every former metadata-validator failure with one field diagnostic", () => {
+    const cases = [
+      {
+        fixture: "wrong-type",
+        code: "profile.validation.frontmatterFieldValueMismatch",
+        message:
+          'Frontmatter field "type" must match its configured string value.',
+      },
+      {
+        fixture: "blank-title",
+        code: "profile.validation.frontmatterFieldBlank",
+        message: 'Frontmatter field "title" must be a non-blank string.',
+      },
+      {
+        fixture: "blank-id",
+        code: "profile.validation.frontmatterFieldBlank",
+        message: 'Frontmatter field "id" must be a non-blank string.',
+      },
+      {
+        fixture: "forbidden-mode",
+        code: "profile.validation.frontmatterFieldForbidden",
+        message: 'Frontmatter field "mode" is forbidden.',
+      },
+      {
+        fixture: "forbidden-contract-state",
+        code: "profile.validation.frontmatterFieldForbidden",
+        message: 'Frontmatter field "contract_state" is forbidden.',
+      },
+      {
+        fixture: "forbidden-execution-route",
+        code: "profile.validation.frontmatterFieldForbidden",
+        message: 'Frontmatter field "execution_route" is forbidden.',
+      },
+      {
+        fixture: "forbidden-execution-status",
+        code: "profile.validation.frontmatterFieldForbidden",
+        message: 'Frontmatter field "execution_status" is forbidden.',
+      },
+      {
+        fixture: "forbidden-okf-version",
+        code: "profile.validation.frontmatterFieldForbidden",
+        message: 'Frontmatter field "okf_version" is forbidden.',
+      },
+    ] as const;
+
+    for (const fixtureCase of cases) {
+      const { result } = validateTaskDefinitionFrontmatterFixture(
+        fixtureCase.fixture,
+      );
+
+      expect(result.valid, fixtureCase.fixture).toBe(false);
+      expect(result.diagnostics, fixtureCase.fixture).toEqual([
+        {
+          code: fixtureCase.code,
+          ruleId: "task-definition.frontmatter",
+          message: fixtureCase.message,
+          severity: "error",
+        },
+      ]);
+    }
+  });
+});
+
 describe("conditional v2 downstream fixture harness", () => {
   it("documents fixture naming and expected-output conventions", () => {
     expect(conditionalHarness.harness).toEqual({
@@ -266,6 +356,24 @@ describe("conditional v2 downstream fixture harness", () => {
 
 function validateFixture(markdown: string) {
   return validateMarkdownWithProfile(markdown, profileYaml, fixturePath, profilePath);
+}
+
+function validateTaskDefinitionFrontmatterFixture(name: string) {
+  const markdownPath = `${taskDefinitionFrontmatterFixtureDirectory}/${name}.md`;
+  const markdown = readFileSync(
+    new URL(
+      `../fixtures/declarative-validation/downstream/task-definition-frontmatter/${name}.md`,
+      import.meta.url,
+    ),
+    "utf8",
+  );
+
+  return validateMarkdownWithProfile(
+    markdown,
+    taskDefinitionFrontmatterProfileYaml,
+    markdownPath,
+    taskDefinitionFrontmatterProfilePath,
+  );
 }
 
 function validateConditionalHarnessCase(fixtureCase: ConditionalHarnessCase) {

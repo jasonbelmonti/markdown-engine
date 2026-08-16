@@ -65,6 +65,8 @@ function evaluateFrontmatterField(
 
   const value = frontmatter[field.field];
   const diagnostics: AssertionDiagnostic[] = [];
+  const stringTypeMismatch =
+    field.valueType === "string" && typeof value !== "string";
 
   if (
     field.valueType !== undefined &&
@@ -73,8 +75,32 @@ function evaluateFrontmatterField(
     diagnostics.push(typeMismatchDiagnostic(field, context, fieldOrder));
   }
 
-  if (field.nonEmpty === true && failsNonEmptyStringPredicate(value, field)) {
+  if (field.forbidden === true) {
+    diagnostics.push(forbiddenFieldDiagnostic(field, context, fieldOrder));
+  }
+
+  if (
+    !stringTypeMismatch &&
+    field.equals !== undefined &&
+    failsExactStringPredicate(value, field.equals)
+  ) {
+    diagnostics.push(valueMismatchDiagnostic(field, context, fieldOrder));
+  }
+
+  if (
+    !stringTypeMismatch &&
+    field.nonEmpty === true &&
+    failsNonEmptyStringPredicate(value)
+  ) {
     diagnostics.push(emptyFieldDiagnostic(field, context, fieldOrder));
+  }
+
+  if (
+    !stringTypeMismatch &&
+    field.nonBlank === true &&
+    failsNonBlankStringPredicate(value)
+  ) {
+    diagnostics.push(blankFieldDiagnostic(field, context, fieldOrder));
   }
 
   return diagnostics;
@@ -161,6 +187,57 @@ function emptyFieldDiagnostic(
   );
 }
 
+function valueMismatchDiagnostic(
+  field: FrontmatterFieldShape,
+  context: AssertionEvaluationContext,
+  fieldOrder: number,
+): AssertionDiagnostic {
+  return validationDiagnostic(
+    "profile.validation.frontmatterFieldValueMismatch",
+    `Frontmatter field "${field.field}" must match its configured string value.`,
+    context.rule,
+    {
+      assertionIndex: context.assertionIndex,
+      targetKey: frontmatterFieldTargetKey(field, "equals"),
+      diagnosticOrder: fieldOrder,
+    },
+  );
+}
+
+function blankFieldDiagnostic(
+  field: FrontmatterFieldShape,
+  context: AssertionEvaluationContext,
+  fieldOrder: number,
+): AssertionDiagnostic {
+  return validationDiagnostic(
+    "profile.validation.frontmatterFieldBlank",
+    `Frontmatter field "${field.field}" must be a non-blank string.`,
+    context.rule,
+    {
+      assertionIndex: context.assertionIndex,
+      targetKey: frontmatterFieldTargetKey(field, "nonBlank"),
+      diagnosticOrder: fieldOrder,
+    },
+  );
+}
+
+function forbiddenFieldDiagnostic(
+  field: FrontmatterFieldShape,
+  context: AssertionEvaluationContext,
+  fieldOrder: number,
+): AssertionDiagnostic {
+  return validationDiagnostic(
+    "profile.validation.frontmatterFieldForbidden",
+    `Frontmatter field "${field.field}" is forbidden.`,
+    context.rule,
+    {
+      assertionIndex: context.assertionIndex,
+      targetKey: frontmatterFieldTargetKey(field, "forbidden"),
+      diagnosticOrder: fieldOrder,
+    },
+  );
+}
+
 function frontmatterFieldTargetKey(
   field: FrontmatterFieldShape,
   predicate: string,
@@ -193,13 +270,14 @@ function matchesFrontmatterValueType(
   }
 }
 
-function failsNonEmptyStringPredicate(
-  value: unknown,
-  field: FrontmatterFieldShape,
-): boolean {
-  if (field.valueType === "string" && typeof value !== "string") {
-    return false;
-  }
+function failsExactStringPredicate(value: unknown, expected: string): boolean {
+  return typeof value !== "string" || value !== expected;
+}
 
+function failsNonEmptyStringPredicate(value: unknown): boolean {
   return typeof value !== "string" || value.length === 0;
+}
+
+function failsNonBlankStringPredicate(value: unknown): boolean {
+  return typeof value !== "string" || value.trim().length === 0;
 }

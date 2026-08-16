@@ -244,4 +244,152 @@ describe("declarative validation frontmatterShape assertions", () => {
       },
     ]);
   });
+
+  it("evaluates exact, non-blank, and forbidden fields without coercion", () => {
+    const passingDocument = normalize(
+      parse(
+        [
+          "---",
+          "type: TaskDefinition",
+          "title: Frontmatter predicate fixture",
+          "id: TD-FRONTMATTER-PREDICATES",
+          "producer_extension: enabled",
+          "producer_metadata:",
+          "  owner: flight",
+          "producer_labels:",
+          "  - validation",
+          "---",
+          "# Body",
+        ].join("\n"),
+      ).parsed,
+      { documentVersion: "1.0.0" },
+    ).document;
+    const profile = profileForFrontmatterShape({
+      presence: "required",
+      fields: [
+        {
+          field: "type",
+          required: true,
+          valueType: "string",
+          equals: "TaskDefinition",
+          nonBlank: true,
+        },
+        { field: "title", required: true, nonBlank: true },
+        { field: "id", required: true, nonBlank: true },
+        { field: "optional_exact", equals: "unused" },
+        { field: "optional_non_blank", nonBlank: true },
+        { field: "mode", forbidden: true },
+      ],
+    });
+
+    expect(validateWithProfile(passingDocument, profile).valid).toBe(true);
+
+    const failingDocument = normalize(
+      parse(
+        [
+          "---",
+          "type: taskdefinition",
+          'title: "   "',
+          "id: 7",
+          "mode: AUTHOR",
+          "producer_extension: enabled",
+          "---",
+          "# Body",
+        ].join("\n"),
+      ).parsed,
+      { documentVersion: "1.0.0" },
+    ).document;
+    const result = validateWithProfile(failingDocument, profile);
+
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.validation.frontmatterFieldValueMismatch",
+        ruleId: "frontmatter.shape",
+        message:
+          'Frontmatter field "type" must match its configured string value.',
+        severity: "error",
+      },
+      {
+        code: "profile.validation.frontmatterFieldBlank",
+        ruleId: "frontmatter.shape",
+        message: 'Frontmatter field "title" must be a non-blank string.',
+        severity: "error",
+      },
+      {
+        code: "profile.validation.frontmatterFieldBlank",
+        ruleId: "frontmatter.shape",
+        message: 'Frontmatter field "id" must be a non-blank string.',
+        severity: "error",
+      },
+      {
+        code: "profile.validation.frontmatterFieldForbidden",
+        ruleId: "frontmatter.shape",
+        message: 'Frontmatter field "mode" is forbidden.',
+        severity: "error",
+      },
+    ]);
+    expect(JSON.stringify(result)).not.toContain("taskdefinition");
+    expect(JSON.stringify(result)).not.toContain("AUTHOR");
+  });
+
+  it("suppresses equality and blank diagnostics after a string type mismatch", () => {
+    const document = normalize(parse("---\ntype: 2\n---\n# Body\n").parsed, {
+      documentVersion: "1.0.0",
+    }).document;
+    const result = validateWithProfile(
+      document,
+      profileForFrontmatterShape({
+        fields: [
+          {
+            field: "type",
+            valueType: "string",
+            equals: "TaskDefinition",
+            nonBlank: true,
+          },
+        ],
+      }),
+    );
+
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.validation.frontmatterFieldTypeMismatch",
+        ruleId: "frontmatter.shape",
+        message: 'Frontmatter field "type" must be string.',
+        severity: "error",
+      },
+    ]);
+  });
+
+  it("does not coerce equality and treats any present forbidden field as invalid", () => {
+    const document = normalize(
+      parse("---\ntype: 7\nmode: null\n---\n# Body\n").parsed,
+      { documentVersion: "1.0.0" },
+    ).document;
+    const result = validateWithProfile(
+      document,
+      profileForFrontmatterShape({
+        fields: [
+          { field: "type", equals: "7" },
+          { field: "optional_non_blank", nonBlank: true },
+          { field: "mode", forbidden: true },
+        ],
+      }),
+    );
+
+    expect(result.diagnostics).toEqual([
+      {
+        code: "profile.validation.frontmatterFieldValueMismatch",
+        ruleId: "frontmatter.shape",
+        message:
+          'Frontmatter field "type" must match its configured string value.',
+        severity: "error",
+      },
+      {
+        code: "profile.validation.frontmatterFieldForbidden",
+        ruleId: "frontmatter.shape",
+        message: 'Frontmatter field "mode" is forbidden.',
+        severity: "error",
+      },
+    ]);
+  });
 });
