@@ -1,0 +1,33 @@
+syntaxVersion: markdown-engine.validation@v2
+documentVersion: 1.0.0
+rules:
+  - id: task-definition.frontmatter
+    select:
+      target: document
+    assert:
+      frontmatterShape:
+        presence: required
+        fields:
+          - field: type
+            required: true
+            valueType: string
+            equals: TaskDefinition
+            nonBlank: true
+          - field: title
+            required: true
+            valueType: string
+            nonBlank: true
+          - field: id
+            required: true
+            valueType: string
+            nonBlank: true
+          - field: mode
+            forbidden: true
+          - field: contract_state
+            forbidden: true
+          - field: execution_route
+            forbidden: true
+          - field: execution_status
+            forbidden: true
+          - field: okf_version
+            forbidden: true

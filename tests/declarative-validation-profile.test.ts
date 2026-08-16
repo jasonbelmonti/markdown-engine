@@ -380,8 +380,12 @@ rules:
             required: true
             valueType: string
             nonEmpty: true
+            equals: TaskDefinition
+            nonBlank: true
           - field: tags
             valueType: array
+          - field: mode
+            forbidden: true
 `);
 
     expect(result).toEqual({
@@ -410,8 +414,11 @@ rules:
                     required: true,
                     valueType: "string",
                     nonEmpty: true,
+                    equals: "TaskDefinition",
+                    nonBlank: true,
                   },
                   { field: "tags", valueType: "array" },
+                  { field: "mode", forbidden: true },
                 ],
               },
             },
@@ -649,7 +656,7 @@ rules:
       ],
       [
         { fields: [{ field: "type" }] },
-        "frontmatterShape.fields[0] must include required, valueType, or nonEmpty.",
+        "frontmatterShape.fields[0] must include required, valueType, nonEmpty, equals, nonBlank, or forbidden.",
       ],
       [
         { fields: [{ field: "", required: true }] },
@@ -668,8 +675,32 @@ rules:
         "frontmatterShape.fields[0].nonEmpty must be true when provided.",
       ],
       [
+        { fields: [{ field: "type", equals: 1 }] },
+        "frontmatterShape.fields[0].equals must be a string when provided.",
+      ],
+      [
+        { fields: [{ field: "type", nonBlank: false }] },
+        "frontmatterShape.fields[0].nonBlank must be true when provided.",
+      ],
+      [
+        { fields: [{ field: "type", forbidden: false }] },
+        "frontmatterShape.fields[0].forbidden must be true when provided.",
+      ],
+      [
         { fields: [{ field: "tags", valueType: "array", nonEmpty: true }] },
         'frontmatterShape.fields[0].nonEmpty can be combined only with valueType "string".',
+      ],
+      [
+        { fields: [{ field: "type", valueType: "array", equals: "TaskDefinition" }] },
+        'frontmatterShape.fields[0].equals can be combined only with valueType "string".',
+      ],
+      [
+        { fields: [{ field: "type", valueType: "array", nonBlank: true }] },
+        'frontmatterShape.fields[0].nonBlank can be combined only with valueType "string".',
+      ],
+      [
+        { fields: [{ field: "mode", forbidden: true, equals: "AUTHOR" }] },
+        "frontmatterShape.fields[0].forbidden cannot be combined with required, valueType, nonEmpty, equals, or nonBlank.",
       ],
       [
         {

@@ -144,6 +144,35 @@ rules:
           - Execution route
           - State rationale
 `;
+const v2FrontmatterFieldPredicatesMarkdown = `---
+type: TaskDefinitionDraft
+title: "   "
+mode: AUTHOR
+producer_extension: enabled
+---
+
+# Task Definition Fixture
+`;
+const v2FrontmatterFieldPredicatesProfile = `syntaxVersion: markdown-engine.validation@v2
+rules:
+  - id: task-definition.frontmatter
+    select:
+      target: document
+    assert:
+      frontmatterShape:
+        presence: required
+        fields:
+          - field: type
+            required: true
+            valueType: string
+            equals: TaskDefinition
+            nonBlank: true
+          - field: title
+            required: true
+            nonBlank: true
+          - field: mode
+            forbidden: true
+`;
 const warningProfile = `syntaxVersion: !custom markdown-engine.validation@v1
 rules:
   - id: sections.present
@@ -766,6 +795,59 @@ rules:
       diagnostics: result.diagnostics,
       ruleResults: result.ruleResults,
     });
+  });
+
+  it("emits repeatable field-predicate diagnostics without frontmatter values", async () => {
+    const cwd = await makeTempDir();
+    await writeFile(
+      join(cwd, "task-definition.md"),
+      v2FrontmatterFieldPredicatesMarkdown,
+    );
+    await writeFile(
+      join(cwd, "profile.yaml"),
+      v2FrontmatterFieldPredicatesProfile,
+    );
+
+    const args = [
+      "validate",
+      "--file",
+      "task-definition.md",
+      "--profile",
+      "profile.yaml",
+    ];
+    const first = await runCliWithOutput({ args, cwd });
+    const second = await runCliWithOutput({ args, cwd });
+
+    expect(first.exitCode).toBe(1);
+    expect(first.stderr.text()).toBe("");
+    expect(second.exitCode).toBe(first.exitCode);
+    expect(second.stderr.text()).toBe(first.stderr.text());
+    expect(second.stdout.text()).toBe(first.stdout.text());
+
+    const result = parseStdout(first.stdout.text());
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: "profile.validation.frontmatterFieldValueMismatch",
+        ruleId: "task-definition.frontmatter",
+        message:
+          'Frontmatter field "type" must match its configured string value.',
+        severity: "error",
+      }),
+      expect.objectContaining({
+        code: "profile.validation.frontmatterFieldBlank",
+        ruleId: "task-definition.frontmatter",
+        message: 'Frontmatter field "title" must be a non-blank string.',
+        severity: "error",
+      }),
+      expect.objectContaining({
+        code: "profile.validation.frontmatterFieldForbidden",
+        ruleId: "task-definition.frontmatter",
+        message: 'Frontmatter field "mode" is forbidden.',
+        severity: "error",
+      }),
+    ]);
+    expect(first.stdout.text()).not.toContain("TaskDefinitionDraft");
+    expect(first.stdout.text()).not.toContain("AUTHOR");
   });
 
   it("carries executable profile warnings into validation JSON and evidence", async () => {

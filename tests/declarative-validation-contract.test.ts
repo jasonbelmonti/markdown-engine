@@ -246,10 +246,16 @@ const frontmatterShapeAssertion = {
         required: true,
         valueType: "string",
         nonEmpty: true,
+        equals: "TaskDefinition",
+        nonBlank: true,
       },
       {
         field: "tags",
         valueType: "array",
+      },
+      {
+        field: "mode",
+        forbidden: true,
       },
     ],
   },
@@ -260,6 +266,8 @@ const frontmatterFieldShape = {
   field: "type",
   valueType: "string",
   nonEmpty: true,
+  equals: "TaskDefinition",
+  nonBlank: true,
 } satisfies DeclarativeFrontmatterFieldShape;
 const frontmatterShape = {
   presence: frontmatterPresence,
@@ -270,6 +278,16 @@ const invalidFrontmatterNonEmptyArray = {
   valueType: "array",
   // @ts-expect-error nonEmpty is a string predicate and cannot combine with array valueType.
   nonEmpty: true,
+} satisfies DeclarativeFrontmatterFieldShape;
+const forbiddenFrontmatterField = {
+  field: "mode",
+  forbidden: true,
+} satisfies DeclarativeFrontmatterFieldShape;
+const invalidForbiddenFrontmatterField = {
+  field: "mode",
+  forbidden: true,
+  equals: "AUTHOR",
+  // @ts-expect-error forbidden fields cannot combine with another field predicate.
 } satisfies DeclarativeFrontmatterFieldShape;
 const invalidFrontmatterShapeAssertion = {
   frontmatterShape: {
@@ -1291,6 +1309,8 @@ void frontmatterValueType;
 void frontmatterFieldShape;
 void frontmatterShape;
 void invalidFrontmatterNonEmptyArray;
+void forbiddenFrontmatterField;
+void invalidForbiddenFrontmatterField;
 void invalidFrontmatterShapeAssertion;
 void removedTextAssertion;
 void removedIdsColumnAssertion;

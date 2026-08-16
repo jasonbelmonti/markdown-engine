@@ -602,7 +602,7 @@ describe("declarative validation compiler assertion proof", () => {
       {
         frontmatterShape: { fields: [{ field: "type" }] },
         message:
-          "frontmatterShape.fields[0] must include required, valueType, or nonEmpty.",
+          "frontmatterShape.fields[0] must include required, valueType, nonEmpty, equals, nonBlank, or forbidden.",
       },
       {
         frontmatterShape: { fields: [{ field: "type", required: false }] },
@@ -620,11 +620,49 @@ describe("declarative validation compiler assertion proof", () => {
           "frontmatterShape.fields[0].nonEmpty must be true when provided.",
       },
       {
+        frontmatterShape: { fields: [{ field: "type", equals: 1 }] },
+        message:
+          "frontmatterShape.fields[0].equals must be a string when provided.",
+      },
+      {
+        frontmatterShape: { fields: [{ field: "type", nonBlank: false }] },
+        message:
+          "frontmatterShape.fields[0].nonBlank must be true when provided.",
+      },
+      {
+        frontmatterShape: { fields: [{ field: "type", forbidden: false }] },
+        message:
+          "frontmatterShape.fields[0].forbidden must be true when provided.",
+      },
+      {
         frontmatterShape: {
           fields: [{ field: "tags", valueType: "array", nonEmpty: true }],
         },
         message:
           'frontmatterShape.fields[0].nonEmpty can be combined only with valueType "string".',
+      },
+      {
+        frontmatterShape: {
+          fields: [
+            { field: "type", valueType: "array", equals: "TaskDefinition" },
+          ],
+        },
+        message:
+          'frontmatterShape.fields[0].equals can be combined only with valueType "string".',
+      },
+      {
+        frontmatterShape: {
+          fields: [{ field: "type", valueType: "array", nonBlank: true }],
+        },
+        message:
+          'frontmatterShape.fields[0].nonBlank can be combined only with valueType "string".',
+      },
+      {
+        frontmatterShape: {
+          fields: [{ field: "mode", forbidden: true, equals: "AUTHOR" }],
+        },
+        message:
+          "frontmatterShape.fields[0].forbidden cannot be combined with required, valueType, nonEmpty, equals, or nonBlank.",
       },
       {
         frontmatterShape: {

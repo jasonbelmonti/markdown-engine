@@ -170,7 +170,7 @@ function frontmatterField(
 
   collectUnsupportedKeys(
     value,
-    ["field", "required", "valueType", "nonEmpty"],
+    ["field", "required", "valueType", "nonEmpty", "equals", "nonBlank", "forbidden"],
     unsupportedKeys,
   );
 
@@ -214,13 +214,61 @@ function frontmatterField(
     valid = false;
   }
 
-  const hasPredicateInput =
+  const equals = stringConstraint(
+    value.equals,
+    `${fieldName}.equals`,
+    invalidShapes,
+  );
+  if (value.equals !== undefined && equals === undefined) {
+    valid = false;
+  }
+
+  const nonBlank = trueConstraint(
+    value.nonBlank,
+    `${fieldName}.nonBlank`,
+    invalidShapes,
+  );
+  if (value.nonBlank !== undefined && nonBlank === undefined) {
+    valid = false;
+  }
+
+  for (const [enabled, predicate] of [
+    [equals !== undefined, "equals"],
+    [nonBlank === true, "nonBlank"],
+  ] as const) {
+    if (enabled && valueType !== undefined && valueType !== "string") {
+      invalidShapes.push(
+        `${fieldName}.${predicate} can be combined only with valueType "string".`,
+      );
+      valid = false;
+    }
+  }
+
+  const forbidden = trueConstraint(
+    value.forbidden,
+    `${fieldName}.forbidden`,
+    invalidShapes,
+  );
+  if (value.forbidden !== undefined && forbidden === undefined) {
+    valid = false;
+  }
+
+  const hasOtherPredicateInput =
     value.required !== undefined ||
     value.valueType !== undefined ||
-    value.nonEmpty !== undefined;
-  if (!hasPredicateInput) {
+    value.nonEmpty !== undefined ||
+    value.equals !== undefined ||
+    value.nonBlank !== undefined;
+  if (forbidden === true && hasOtherPredicateInput) {
     invalidShapes.push(
-      `${fieldName} must include required, valueType, or nonEmpty.`,
+      `${fieldName}.forbidden cannot be combined with required, valueType, nonEmpty, equals, or nonBlank.`,
+    );
+    valid = false;
+  }
+
+  if (!hasOtherPredicateInput && value.forbidden === undefined) {
+    invalidShapes.push(
+      `${fieldName} must include required, valueType, nonEmpty, equals, nonBlank, or forbidden.`,
     );
     valid = false;
   }
@@ -234,11 +282,20 @@ function frontmatterField(
     ...(required === true ? { required: true as const } : {}),
   };
 
-  if (nonEmpty === true) {
+  if (forbidden === true) {
+    return {
+      field,
+      forbidden: true as const,
+    };
+  }
+
+  if (nonEmpty === true || equals !== undefined || nonBlank === true) {
     return {
       ...baseField,
       ...(valueType === "string" ? { valueType } : {}),
-      nonEmpty: true as const,
+      ...(nonEmpty === true ? { nonEmpty: true as const } : {}),
+      ...(equals !== undefined ? { equals } : {}),
+      ...(nonBlank === true ? { nonBlank: true as const } : {}),
     };
   }
 
@@ -262,6 +319,24 @@ function trueConstraint(
   }
 
   invalidShapes.push(`${fieldName} must be true when provided.`);
+
+  return undefined;
+}
+
+function stringConstraint(
+  value: unknown,
+  fieldName: string,
+  invalidShapes: string[],
+): string | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (typeof value === "string") {
+    return value;
+  }
+
+  invalidShapes.push(`${fieldName} must be a string when provided.`);
 
   return undefined;
 }
