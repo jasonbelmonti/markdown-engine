@@ -4,6 +4,15 @@
 
 No unreleased changes.
 
+## 3.5.0 - 2026-08-16
+
+### Added
+
+- Added v2-only `frontmatterShape.fields[]` predicates for exact string
+  equality, non-blank string values, and forbidden direct frontmatter fields,
+  with deterministic API and CLI diagnostics, non-coercing runtime semantics,
+  and Task Definition-shaped fixture coverage.
+
 ## 3.4.0 - 2026-08-15
 
 ### Added
