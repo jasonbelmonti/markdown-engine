@@ -132,6 +132,7 @@ export interface DeclarativeAssertion {
   tableColumnCoverage?: DeclarativeTableColumnCoverage;
   frontmatterShape?: DeclarativeFrontmatterShape;
   text?: {
+    nonBlank?: true;
     contains?: string;
     excludes?: readonly string[];
   };
@@ -165,9 +166,11 @@ export interface DeclarativeTableColumnCoverage {
   source: DeclarativeTableColumnCoverageSource;
   target: DeclarativeTableColumnCoverageTarget;
   require: "everySourceId";
+  allowEmptySource?: boolean;
 }
 
 export interface DeclarativeTableColumnCoverageSource {
+  rowWhere?: DeclarativeTableCellPredicate;
   section: string;
   column: string;
   prefix?: string;

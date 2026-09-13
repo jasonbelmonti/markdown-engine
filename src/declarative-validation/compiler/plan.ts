@@ -3,6 +3,7 @@ import type {
   DeclarativeFrontmatterFieldShape,
   DeclarativeFrontmatterPresence,
   DeclarativeSelector,
+  DeclarativeTableCellPredicate,
   DeclarativeValidationSeverity,
 } from "../profile/index.js";
 import type { PROFILE_SYNTAX_VERSION_V2 } from "../profile/syntax-version.js";
@@ -150,7 +151,9 @@ export type CompiledDeclarativeAssertion =
     }
   | {
       kind: "tableColumnCoverage";
+      allowEmptySource?: boolean;
       source: {
+        rowWhere?: DeclarativeTableCellPredicate;
         section: string;
         column: string;
         prefix?: string;
@@ -170,6 +173,7 @@ export type CompiledDeclarativeAssertion =
     }
   | {
       kind: "text";
+      nonBlank?: true;
       contains?: string;
       excludes?: readonly string[];
     }

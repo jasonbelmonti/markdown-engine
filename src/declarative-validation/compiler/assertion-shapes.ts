@@ -1,3 +1,4 @@
+import { cellPredicateFromValue } from "../profile/cell-predicate-schema.js";
 import type { MarkdownDiagnostic } from "../../api/diagnostics.js";
 import { isPlainRecord } from "../../internal/plain-record.js";
 import { unsupportedProfileKey } from "../diagnostics/profile-config-diagnostics.js";
@@ -60,9 +61,25 @@ export function pushTextShapeDiagnostics(
 ): boolean {
   let valid = true;
 
+  if (assertion?.nonBlank !== undefined && assertion.nonBlank !== true) {
+    diagnostics.push(
+      compileDiagnostic(
+        "profile.config.invalidShape",
+        "text.nonBlank must be true when provided.",
+        ruleId,
+      ),
+    );
+    valid = false;
+  }
+
   if (
     assertion?.contains !== undefined &&
-    !pushNonEmptyStringDiagnostic("contains", assertion.contains, ruleId, diagnostics)
+    !pushNonEmptyStringDiagnostic(
+      "contains",
+      assertion.contains,
+      ruleId,
+      diagnostics,
+    )
   ) {
     valid = false;
   }
@@ -171,14 +188,22 @@ export function closedTableColumnCoverage(
 ): DeclarativeTableColumnCoverage | undefined {
   const diagnosticCountBefore = diagnostics.length;
 
-  if (!pushObjectDiagnostic("tableColumnCoverage", value, ruleId, diagnostics)) {
+  if (
+    !pushObjectDiagnostic("tableColumnCoverage", value, ruleId, diagnostics)
+  ) {
     return undefined;
   }
 
   const record = value as Record<string, unknown>;
   const hasSupportedKeys = pushUnsupportedKeyDiagnostics(
     record,
-    ["source", "target", "require"],
+    ["source", "target", "require", "allowEmptySource"],
+    diagnostics,
+  );
+  pushOptionalBooleanDiagnostic(
+    "tableColumnCoverage.allowEmptySource",
+    record.allowEmptySource,
+    ruleId,
     diagnostics,
   );
   const source = closedTableColumnCoverageSource(
@@ -213,6 +238,9 @@ export function closedTableColumnCoverage(
         source,
         target,
         require,
+        ...(record.allowEmptySource === undefined
+          ? {}
+          : { allowEmptySource: record.allowEmptySource as boolean }),
       }
     : undefined;
 }
@@ -236,7 +264,7 @@ function closedTableColumnCoverageSource(
   const source = value as Record<string, unknown>;
   const hasSupportedKeys = pushUnsupportedKeyDiagnostics(
     source,
-    ["section", "column", "prefix", "caseSensitive"],
+    ["section", "column", "prefix", "caseSensitive", "rowWhere"],
     diagnostics,
   );
   const hasValidFields =
@@ -265,8 +293,15 @@ function closedTableColumnCoverageSource(
       diagnostics,
     );
 
-  return hasSupportedKeys && hasValidFields
+  const rowWhere =
+    source.rowWhere === undefined
+      ? undefined
+      : cellPredicateFromValue(source.rowWhere, "rowWhere", diagnostics);
+  return hasSupportedKeys &&
+    hasValidFields &&
+    (source.rowWhere === undefined || rowWhere !== undefined)
     ? {
+        ...(rowWhere === undefined ? {} : { rowWhere }),
         section: source.section as string,
         column: source.column as string,
         ...optionalString("prefix", source.prefix as string | undefined),
@@ -547,8 +582,11 @@ export function optionalNumber<TKey extends string>(
   return value === undefined ? {} : ({ [key]: value } as Record<TKey, number>);
 }
 
-export function hasTextPredicate(assertion: DeclarativeAssertion["text"]): boolean {
+export function hasTextPredicate(
+  assertion: DeclarativeAssertion["text"],
+): boolean {
   return (
+    assertion?.nonBlank === true ||
     assertion?.contains !== undefined ||
     (assertion?.excludes !== undefined && assertion.excludes.length > 0)
   );
