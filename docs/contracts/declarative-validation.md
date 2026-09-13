@@ -323,7 +323,9 @@ interface DeclarativeAssertion {
     mustAppearIn: readonly string[];
   };
   tableColumnCoverage?: {
+    allowEmptySource?: boolean;
     source: {
+      rowWhere?: { column: string; equals?: string; includes?: string };
       section: string;
       column: string;
       prefix?: string;
@@ -349,6 +351,7 @@ interface DeclarativeAssertion {
     }[];
   };
   text?: {
+    nonBlank?: true; // v2 only
     contains?: string;
     excludes?: readonly string[];
   };
@@ -461,6 +464,22 @@ target section do not satisfy coverage. Missing target sections, missing target
 columns, and missing target-column IDs emit deterministic validation diagnostics
 source-grounded to the source ID when source evidence is available.
 
+The opt-in `source.rowWhere` filter uses the same closed sibling-cell predicate
+as the `tableCell` selector: a non-empty `column` plus `equals`, `includes`, or
+both. Both predicates must match when both are present. Matching uses normalized,
+case-sensitive cell text before ID extraction; `source.caseSensitive` affects ID
+comparison only. Rows marked optional can therefore be excluded without encoding
+consumer vocabulary in the engine. A missing predicate column is unresolved,
+not a resolved empty source.
+
+`allowEmptySource` is an optional boolean. Absent or `false` preserves the existing
+`profile.validation.emptySelection` failure when no source IDs are extracted.
+`true` permits zero extracted IDs only when the source section and column resolve
+(including the predicate column when configured). With no source IDs there are no
+target obligations; target resolution is not evaluated. A missing source structure
+still fails. Pair this policy with consumer shape rules when tables or rows are
+mandatory. This option also permits prose sentinels in reverse declared-ID checks.
+
 For v2 profiles, `frontmatterShape` is admitted as a flat-rule schema and
 internal compiled-plan assertion. It is compatible only with a `document`
 selector because frontmatter is document metadata. `presence` is optional and
@@ -505,7 +524,18 @@ is combined with `equals` or `nonBlank`, a non-string value emits only
 string-predicate diagnostic. Diagnostic messages do not include frontmatter
 values.
 
-`text` must include `contains` or a non-empty `excludes` array.
+`text` must include `contains`, a non-empty `excludes` array, or (v2 only)
+`nonBlank: true`. `nonBlank` cannot be `false`. It requires at least one character
+after JavaScript `trim()` on normalized node text excluding raw `html`, `definition`,
+and `yaml` nodes. Comments, empty HTML tags, and decoded whitespace entities cannot
+satisfy it. Markdown emphasis, link labels, literal code, and escaped angle brackets
+retain their text. Each selected target is checked independently; an empty selector
+still fails. Section selection includes its heading and direct body, as with ordinary
+section text. Original source ranges are optional; the normalized nodes provide the
+content. This is a structural textual-content check, not CSS visibility evaluation
+or browser rendering. It does not evaluate external evidence, freshness, truth,
+or implementation acceptance. Existing `contains`, `excludes`, and `textLength`
+semantics are unchanged, even when combined with `nonBlank`.
 `textOccurrenceCount.count` is a finite number and counts non-overlapping
 literal occurrences per selected target.
 `textLength` must include `min`, `max`, or both. Bounds are non-negative
@@ -592,6 +622,7 @@ an unproven pass.
 | `profile.validation.tableColumnCoverageIdMissing` | Rule severity | A source ID is absent from the configured target table column. |
 | `profile.validation.tableColumnCoverageTargetColumnMissing` | Rule severity | The configured target table column cannot be resolved. |
 | `profile.validation.tableColumnCoverageTargetSectionMissing` | Rule severity | The configured target section cannot be resolved. |
+| `profile.validation.textBlank` | Rule severity | A target configured with `text.nonBlank` lacks non-whitespace text outside raw HTML. |
 | `profile.validation.textExcluded` | Rule severity | A selected target contains forbidden literal text. |
 | `profile.validation.textMissing` | Rule severity | A selected target lacks required literal text from a `text.contains` assertion. |
 | `profile.validation.assertionUnsupported` | `error` | A compiled assertion or compiled assertion feature has no evaluator implementation; this is an internal safety diagnostic. |

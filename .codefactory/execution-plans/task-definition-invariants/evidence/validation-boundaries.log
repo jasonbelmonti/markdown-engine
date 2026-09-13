@@ -1,0 +1,11 @@
+
+> @jasonbelmonti/markdown-engine@3.5.0 audit:declarative-validation-boundary
+> node scripts/check-declarative-validation-boundary.mjs
+
+Declarative validation boundary audit PASS
+Direct dependency matches: 0
+Runtime boundary source matches: 0
+Regex-like key rejection checks: present
+Unsafe executable key rejection checks: present
+Profile-specific core semantic matches: 0
+OKF-specific core semantic matches: 0

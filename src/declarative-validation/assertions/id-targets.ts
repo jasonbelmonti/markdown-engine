@@ -8,6 +8,7 @@ import type {
   EngineTableCell,
 } from "../../api/document.js";
 import type { SourceRange } from "../../api/diagnostics.js";
+import type { DeclarativeTableCellPredicate } from "../profile/index.js";
 import type { DeclarativeSelectionTarget } from "../selectors/index.js";
 import { tableColumnTargets } from "../selectors/table-targets.js";
 import { documentTextOffsetForTarget } from "./document-text-offsets.js";
@@ -32,6 +33,7 @@ export interface TargetIdToken {
 }
 
 export interface TableColumnIdSource {
+  rowWhere?: DeclarativeTableCellPredicate;
   section?: string;
   tableHeader?: readonly string[];
   column: string;

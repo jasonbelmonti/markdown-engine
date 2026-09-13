@@ -1,0 +1,6 @@
+
+> @jasonbelmonti/markdown-engine@3.5.0 docs:rich-ir-contract
+> node scripts/check-rich-ir-contract-docs.mjs
+
+Rich IR contract documentation gate PASS
+Checked files: docs/contracts/api.md, README.md, docs/design/markdown-engine-1.0-rich-ir-operational-design-spec.md, docs/evidence/wp-5-evd-6-rich-ir-contract.md, docs/evidence/wp-5-evd-8-compatibility-cli-impact.md, SECURITY.md, package.json

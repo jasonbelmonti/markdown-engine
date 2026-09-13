@@ -1,0 +1,1241 @@
+# Baseline deterministic profile for markdown-engine.validation@v2.
+# This profile checks the current canonical task-definition artifact metadata,
+# lifecycle controls, structure, optional execution-checkpoint shape, and
+# bidirectional success-criteria/evidence coverage.
+# The documentVersion field selects the Markdown Engine normalized document model.
+# Requires the filtered-coverage and text.nonBlank engine capabilities.
+# Cardinality, status, visible checkpoint cells and required ID coverage are structural.
+# Evidence truth, freshness, material verifiability and acceptance remain semantic review.
+syntaxVersion: markdown-engine.validation@v2
+documentVersion: 1.0.0
+rules:
+  - id: document.frontmatter.shape
+    select:
+      target: document
+    assert:
+      frontmatterShape:
+        presence: required
+        fields:
+          - field: type
+            required: true
+            valueType: string
+            equals: TaskDefinition
+          - field: title
+            required: true
+            valueType: string
+            nonBlank: true
+          - field: task_id
+            required: true
+            valueType: string
+            nonBlank: true
+          - field: artifact_version
+            required: true
+            valueType: string
+            nonBlank: true
+          - field: revision
+            required: true
+            valueType: string
+            nonBlank: true
+          - field: created_at
+            required: true
+            valueType: string
+            nonBlank: true
+          - field: updated_at
+            required: true
+            valueType: string
+            nonBlank: true
+          - field: validation_profile
+            required: true
+            valueType: string
+            nonBlank: true
+          - field: mode
+            forbidden: true
+          - field: contract_state
+            forbidden: true
+          - field: execution_route
+            forbidden: true
+          - field: execution_status
+            forbidden: true
+          - field: okf_version
+            forbidden: true
+
+  - id: sections.required
+    select:
+      target: document
+    assert:
+      sectionsRequired:
+        order: strict
+        headings:
+          - Task Control
+          - Objective
+          - Context / Constraints
+          - Source Authority
+          - Task Scope
+          - Materially Verifiable Success Criteria
+          - Incremental Value Delivery
+          - Review Boundary
+          - Validation / Evidence
+          - Execution Notes
+          - Follow-up / Non-blocking Work
+
+  - id: task-control.table.columns
+    select:
+      target: table
+      section: Task Control
+      header:
+        - Contract state
+        - Execution route
+        - State rationale
+    assert:
+      tableColumnsExact:
+        columns:
+          - Contract state
+          - Execution route
+          - State rationale
+
+  - id: task-control.contract-state.allowed
+    anyOf:
+      - label: draft
+        select:
+          target: tableCell
+          section: Task Control
+          tableHeader:
+            - Contract state
+            - Execution route
+            - State rationale
+          column: Contract state
+        assert:
+          text:
+            contains: DRAFT
+          textLength:
+            min: 5
+            max: 5
+      - label: blocked
+        select:
+          target: tableCell
+          section: Task Control
+          tableHeader:
+            - Contract state
+            - Execution route
+            - State rationale
+          column: Contract state
+        assert:
+          text:
+            contains: BLOCKED
+          textLength:
+            min: 7
+            max: 7
+      - label: ready
+        select:
+          target: tableCell
+          section: Task Control
+          tableHeader:
+            - Contract state
+            - Execution route
+            - State rationale
+          column: Contract state
+        assert:
+          text:
+            contains: READY
+          textLength:
+            min: 5
+            max: 5
+      - label: superseded
+        select:
+          target: tableCell
+          section: Task Control
+          tableHeader:
+            - Contract state
+            - Execution route
+            - State rationale
+          column: Contract state
+        assert:
+          text:
+            contains: SUPERSEDED
+          textLength:
+            min: 10
+            max: 10
+
+  - id: task-control.execution-route.allowed
+    anyOf:
+      - label: direct
+        select:
+          target: tableCell
+          section: Task Control
+          tableHeader:
+            - Contract state
+            - Execution route
+            - State rationale
+          column: Execution route
+        assert:
+          text:
+            contains: DIRECT
+          textLength:
+            min: 6
+            max: 6
+      - label: plan-required
+        select:
+          target: tableCell
+          section: Task Control
+          tableHeader:
+            - Contract state
+            - Execution route
+            - State rationale
+          column: Execution route
+        assert:
+          text:
+            contains: PLAN_REQUIRED
+          textLength:
+            min: 13
+            max: 13
+      - label: spec-required
+        select:
+          target: tableCell
+          section: Task Control
+          tableHeader:
+            - Contract state
+            - Execution route
+            - State rationale
+          column: Execution route
+        assert:
+          text:
+            contains: SPEC_REQUIRED
+          textLength:
+            min: 13
+            max: 13
+      - label: blocked
+        select:
+          target: tableCell
+          section: Task Control
+          tableHeader:
+            - Contract state
+            - Execution route
+            - State rationale
+          column: Execution route
+        assert:
+          text:
+            contains: BLOCKED
+          textLength:
+            min: 7
+            max: 7
+
+  - id: task-control.state-rationale.nonempty
+    select:
+      target: tableCell
+      section: Task Control
+      tableHeader:
+        - Contract state
+        - Execution route
+        - State rationale
+      column: State rationale
+    assert:
+      text:
+        excludes:
+          - "<"
+      textLength:
+        min: 1
+
+  - id: task-control.route.when-draft
+    when:
+      select:
+        target: tableCell
+        section: Task Control
+        tableHeader:
+          - Contract state
+          - Execution route
+          - State rationale
+        column: Contract state
+      assert:
+        text:
+          contains: DRAFT
+        textLength:
+          min: 5
+          max: 5
+    select:
+      target: tableCell
+      section: Task Control
+      tableHeader:
+        - Contract state
+        - Execution route
+        - State rationale
+      column: Execution route
+    assert:
+      text:
+        contains: BLOCKED
+      textLength:
+        min: 7
+        max: 7
+
+  - id: task-control.route.when-blocked
+    when:
+      select:
+        target: tableCell
+        section: Task Control
+        tableHeader:
+          - Contract state
+          - Execution route
+          - State rationale
+        column: Contract state
+      assert:
+        text:
+          contains: BLOCKED
+        textLength:
+          min: 7
+          max: 7
+    select:
+      target: tableCell
+      section: Task Control
+      tableHeader:
+        - Contract state
+        - Execution route
+        - State rationale
+      column: Execution route
+    assert:
+      text:
+        contains: BLOCKED
+      textLength:
+        min: 7
+        max: 7
+
+  - id: task-control.route.when-ready
+    when:
+      select:
+        target: tableCell
+        section: Task Control
+        tableHeader:
+          - Contract state
+          - Execution route
+          - State rationale
+        column: Contract state
+      assert:
+        text:
+          contains: READY
+        textLength:
+          min: 5
+          max: 5
+    anyOf:
+      - label: direct
+        select:
+          target: tableCell
+          section: Task Control
+          tableHeader:
+            - Contract state
+            - Execution route
+            - State rationale
+          column: Execution route
+        assert:
+          text:
+            contains: DIRECT
+          textLength:
+            min: 6
+            max: 6
+      - label: plan-required
+        select:
+          target: tableCell
+          section: Task Control
+          tableHeader:
+            - Contract state
+            - Execution route
+            - State rationale
+          column: Execution route
+        assert:
+          text:
+            contains: PLAN_REQUIRED
+          textLength:
+            min: 13
+            max: 13
+      - label: spec-required
+        select:
+          target: tableCell
+          section: Task Control
+          tableHeader:
+            - Contract state
+            - Execution route
+            - State rationale
+          column: Execution route
+        assert:
+          text:
+            contains: SPEC_REQUIRED
+          textLength:
+            min: 13
+            max: 13
+
+  - id: task-control.route.when-superseded
+    when:
+      select:
+        target: tableCell
+        section: Task Control
+        tableHeader:
+          - Contract state
+          - Execution route
+          - State rationale
+        column: Contract state
+      assert:
+        text:
+          contains: SUPERSEDED
+        textLength:
+          min: 10
+          max: 10
+    select:
+      target: tableCell
+      section: Task Control
+      tableHeader:
+        - Contract state
+        - Execution route
+        - State rationale
+      column: Execution route
+    assert:
+      text:
+        contains: BLOCKED
+      textLength:
+        min: 7
+        max: 7
+
+  - id: task-control.blockers.table.when-blocked
+    when:
+      select:
+        target: tableCell
+        section: Task Control
+        tableHeader:
+          - Contract state
+          - Execution route
+          - State rationale
+        column: Contract state
+      assert:
+        text:
+          contains: BLOCKED
+        textLength:
+          min: 7
+          max: 7
+    select:
+      target: table
+      section: Task Control
+      header:
+        - Missing authority / input
+        - Affected scope / decision
+        - Why blocking
+        - Permitted independent work
+        - Decision owner
+        - Exact resume condition
+    assert:
+      tableColumnsRequired:
+        columns:
+          - Missing authority / input
+          - Affected scope / decision
+          - Why blocking
+          - Permitted independent work
+          - Decision owner
+          - Exact resume condition
+
+  - id: task-control.blockers.fields.when-blocked
+    when:
+      select:
+        target: tableCell
+        section: Task Control
+        tableHeader:
+          - Contract state
+          - Execution route
+          - State rationale
+        column: Contract state
+      assert:
+        text:
+          contains: BLOCKED
+        textLength:
+          min: 7
+          max: 7
+    allOf:
+      - label: missing-authority
+        select:
+          target: tableCell
+          section: Task Control
+          tableHeader:
+            - Missing authority / input
+            - Affected scope / decision
+            - Why blocking
+            - Permitted independent work
+            - Decision owner
+            - Exact resume condition
+          column: Missing authority / input
+        assert:
+          text:
+            excludes:
+              - "<"
+          textLength:
+            min: 1
+      - label: affected-scope
+        select:
+          target: tableCell
+          section: Task Control
+          tableHeader:
+            - Missing authority / input
+            - Affected scope / decision
+            - Why blocking
+            - Permitted independent work
+            - Decision owner
+            - Exact resume condition
+          column: Affected scope / decision
+        assert:
+          text:
+            excludes:
+              - "<"
+          textLength:
+            min: 1
+      - label: blocking-impact
+        select:
+          target: tableCell
+          section: Task Control
+          tableHeader:
+            - Missing authority / input
+            - Affected scope / decision
+            - Why blocking
+            - Permitted independent work
+            - Decision owner
+            - Exact resume condition
+          column: Why blocking
+        assert:
+          text:
+            excludes:
+              - "<"
+          textLength:
+            min: 1
+      - label: permitted-work
+        select:
+          target: tableCell
+          section: Task Control
+          tableHeader:
+            - Missing authority / input
+            - Affected scope / decision
+            - Why blocking
+            - Permitted independent work
+            - Decision owner
+            - Exact resume condition
+          column: Permitted independent work
+        assert:
+          text:
+            excludes:
+              - "<"
+          textLength:
+            min: 1
+      - label: decision-owner
+        select:
+          target: tableCell
+          section: Task Control
+          tableHeader:
+            - Missing authority / input
+            - Affected scope / decision
+            - Why blocking
+            - Permitted independent work
+            - Decision owner
+            - Exact resume condition
+          column: Decision owner
+        assert:
+          text:
+            excludes:
+              - "<"
+          textLength:
+            min: 1
+      - label: resume-condition
+        select:
+          target: tableCell
+          section: Task Control
+          tableHeader:
+            - Missing authority / input
+            - Affected scope / decision
+            - Why blocking
+            - Permitted independent work
+            - Decision owner
+            - Exact resume condition
+          column: Exact resume condition
+        assert:
+          text:
+            excludes:
+              - "<"
+          textLength:
+            min: 1
+
+  - id: source-authority.table.columns
+    select:
+      target: table
+      section: Source Authority
+      header:
+        - Source
+        - Authority
+        - Status
+        - Task implication
+    assert:
+      tableColumnsRequired:
+        columns:
+          - Source
+          - Authority
+          - Status
+          - Task implication
+
+  - id: task-scope.table.columns
+    select:
+      target: table
+      section: Task Scope
+      header:
+        - Scope item
+        - Classification
+        - Approval impact
+        - Notes
+    assert:
+      tableColumnsRequired:
+        columns:
+          - Scope item
+          - Classification
+          - Approval impact
+          - Notes
+
+  - id: success-criteria.table.columns
+    select:
+      target: table
+      section: Materially Verifiable Success Criteria
+      header:
+        - ID
+        - Criterion
+        - Proof
+        - Required before done
+    assert:
+      tableColumnsRequired:
+        columns:
+          - ID
+          - Criterion
+          - Proof
+          - Required before done
+
+  - id: success-criteria.ids.unique
+    select:
+      target: tableCell
+      section: Materially Verifiable Success Criteria
+      tableHeader:
+        - ID
+        - Criterion
+        - Proof
+        - Required before done
+      column: ID
+    assert:
+      ids:
+        prefix: TD-SC
+        unique: true
+        minCount: 2
+        maxCount: 10
+
+  - id: success-criteria.ids.shape
+    select:
+      target: tableCell
+      section: Materially Verifiable Success Criteria
+      tableHeader:
+        - ID
+        - Criterion
+        - Proof
+        - Required before done
+      column: ID
+    assert:
+      text:
+        contains: TD-SC-
+      textOccurrenceCount:
+        text: TD-SC-
+        count: 1
+      textLength:
+        min: 7
+        max: 8
+
+  - id: incremental-value.table.columns
+    select:
+      target: table
+      section: Incremental Value Delivery
+      header:
+        - Slice
+        - Value proven
+        - Risk retired
+        - Evidence
+        - Stop / continue decision
+    assert:
+      tableColumnsRequired:
+        columns:
+          - Slice
+          - Value proven
+          - Risk retired
+          - Evidence
+          - Stop / continue decision
+
+  - id: execution-checkpoint.heading-depth.when-present
+    when:
+      select:
+        target: section
+        title: Execution Checkpoint
+      assert:
+        exists: true
+    select:
+      target: heading
+      text: Execution Checkpoint
+      depth: 3
+    assert:
+      exists: true
+
+  - id: execution-checkpoint.table.when-present
+    when:
+      select:
+        target: section
+        title: Execution Checkpoint
+      assert:
+        exists: true
+    select:
+      target: table
+      section: Execution Notes
+      header:
+        - Execution status
+        - Current proving slice
+        - Evidence admitted
+        - Next action
+        - Blockers / stop condition
+    assert:
+      tableColumnsRequired:
+        columns:
+          - Execution status
+          - Current proving slice
+          - Evidence admitted
+          - Next action
+          - Blockers / stop condition
+
+  - id: execution-checkpoint.row.when-present
+    when:
+      select:
+        target: section
+        title: Execution Checkpoint
+      assert:
+        exists: true
+    select:
+      target: tableRow
+      section: Execution Notes
+      tableHeader:
+        - Execution status
+        - Current proving slice
+        - Evidence admitted
+        - Next action
+        - Blockers / stop condition
+    assert:
+      selectionCount:
+        min: 1
+        max: 1
+
+  - id: review-boundary.table.columns
+    select:
+      target: table
+      section: Review Boundary
+      header:
+        - Boundary
+        - In scope for review
+        - Out of scope / follow-up
+        - Approval impact
+    assert:
+      tableColumnsRequired:
+        columns:
+          - Boundary
+          - In scope for review
+          - Out of scope / follow-up
+          - Approval impact
+
+  - id: validation-evidence.table.columns
+    select:
+      target: table
+      section: Validation / Evidence
+      header:
+        - Criterion ID
+        - Check
+        - Evidence
+        - Runner / owner
+        - Required before done
+    assert:
+      tableColumnsRequired:
+        columns:
+          - Criterion ID
+          - Check
+          - Evidence
+          - Runner / owner
+          - Required before done
+
+  - id: validation-evidence.ids.present
+    select:
+      target: tableCell
+      section: Validation / Evidence
+      tableHeader:
+        - Criterion ID
+        - Check
+        - Evidence
+        - Runner / owner
+        - Required before done
+      column: Criterion ID
+    assert:
+      ids:
+        prefix: TD-SC
+        minCount: 2
+        maxCount: 10
+
+  - id: validation-evidence.ids.shape
+    select:
+      target: tableCell
+      section: Validation / Evidence
+      tableHeader:
+        - Criterion ID
+        - Check
+        - Evidence
+        - Runner / owner
+        - Required before done
+      column: Criterion ID
+    assert:
+      text:
+        contains: TD-SC-
+      textOccurrenceCount:
+        text: TD-SC-
+        count: 1
+      textLength:
+        min: 7
+        max: 8
+
+  - id: success-criteria.evidence.coverage
+    select:
+      target: document
+    assert:
+      tableColumnCoverage:
+        source:
+          section: Materially Verifiable Success Criteria
+          column: ID
+          prefix: TD-SC
+        target:
+          section: Validation / Evidence
+          tableHeader:
+            - Criterion ID
+            - Check
+            - Evidence
+            - Runner / owner
+            - Required before done
+          column: Criterion ID
+        require: everySourceId
+
+  - id: validation-evidence.criteria.coverage
+    select:
+      target: document
+    assert:
+      tableColumnCoverage:
+        source:
+          section: Validation / Evidence
+          column: Criterion ID
+          prefix: TD-SC
+        target:
+          section: Materially Verifiable Success Criteria
+          tableHeader:
+            - ID
+            - Criterion
+            - Proof
+            - Required before done
+          column: ID
+        require: everySourceId
+
+  - id: document.no-placeholders
+    select:
+      target: document
+    assert:
+      text:
+        excludes:
+          - TBD
+          - TODO
+          - "???"
+
+  - id: task-control.heading.count
+    select:
+      target: section
+      title: Task Control
+    assert:
+      selectionCount:
+        min: 1
+        max: 1
+
+  - id: task-control.table.count
+    select:
+      target: table
+      header:
+        - Contract state
+        - Execution route
+        - State rationale
+    assert:
+      selectionCount:
+        min: 1
+        max: 1
+
+  - id: task-control.row.count
+    select:
+      target: tableRow
+      section: Task Control
+      tableHeader:
+        - Contract state
+        - Execution route
+        - State rationale
+    assert:
+      selectionCount:
+        min: 1
+        max: 1
+
+  - id: execution-checkpoint.heading.count
+    select:
+      target: section
+      title: Execution Checkpoint
+    assert:
+      selectionCount:
+        max: 1
+
+  - id: execution-checkpoint.notes.depth
+    when:
+      select:
+        target: section
+        title: Execution Checkpoint
+      assert:
+        exists: true
+    select:
+      target: section
+      title: Execution Notes
+      depth: 2
+    assert:
+      selectionCount:
+        min: 1
+        max: 1
+
+  - id: execution-checkpoint.table.global-count
+    when:
+      select:
+        target: section
+        title: Execution Checkpoint
+      assert:
+        exists: true
+    select:
+      target: table
+      header:
+        - Execution status
+        - Current proving slice
+        - Evidence admitted
+        - Next action
+        - Blockers / stop condition
+    assert:
+      selectionCount:
+        min: 1
+        max: 1
+
+  - id: execution-checkpoint.table.inside-checkpoint
+    when:
+      select:
+        target: section
+        title: Execution Checkpoint
+      assert:
+        exists: true
+    select:
+      target: table
+      section: Execution Checkpoint
+    assert:
+      selectionCount:
+        min: 1
+        max: 1
+      tableColumnsExact:
+        columns:
+          - Execution status
+          - Current proving slice
+          - Evidence admitted
+          - Next action
+          - Blockers / stop condition
+
+  - id: execution-checkpoint.heading.when-table-present
+    when:
+      select:
+        target: table
+        header:
+          - Execution status
+          - Current proving slice
+          - Evidence admitted
+          - Next action
+          - Blockers / stop condition
+      assert:
+        exists: true
+    select:
+      target: section
+      title: Execution Checkpoint
+    assert:
+      selectionCount:
+        min: 1
+        max: 1
+
+  - id: execution-checkpoint.status.allowed
+    when:
+      select:
+        target: section
+        title: Execution Checkpoint
+      assert:
+        exists: true
+    anyOf:
+      - label: not-started
+        select:
+          target: tableCell
+          section: Execution Checkpoint
+          column: Execution status
+        assert:
+          text:
+            contains: not-started
+          textLength:
+            min: 11
+            max: 11
+      - label: active
+        select:
+          target: tableCell
+          section: Execution Checkpoint
+          column: Execution status
+        assert:
+          text:
+            contains: active
+          textLength:
+            min: 6
+            max: 6
+      - label: blocked
+        select:
+          target: tableCell
+          section: Execution Checkpoint
+          column: Execution status
+        assert:
+          text:
+            contains: blocked
+          textLength:
+            min: 7
+            max: 7
+      - label: review-ready
+        select:
+          target: tableCell
+          section: Execution Checkpoint
+          column: Execution status
+        assert:
+          text:
+            contains: review-ready
+          textLength:
+            min: 12
+            max: 12
+
+  - id: execution-checkpoint.notes.count
+    when:
+      select:
+        target: section
+        title: Execution Checkpoint
+      assert:
+        exists: true
+    select:
+      target: section
+      title: Execution Notes
+    assert:
+      selectionCount:
+        min: 1
+        max: 1
+
+  - id: execution-checkpoint.cells.nonblank
+    when:
+      select:
+        target: section
+        title: Execution Checkpoint
+      assert:
+        exists: true
+    allOf:
+      - label: status
+        select:
+          target: tableCell
+          section: Execution Checkpoint
+          column: Execution status
+        assert:
+          text:
+            nonBlank: true
+      - label: slice
+        select:
+          target: tableCell
+          section: Execution Checkpoint
+          column: Current proving slice
+        assert:
+          text:
+            nonBlank: true
+      - label: evidence
+        select:
+          target: tableCell
+          section: Execution Checkpoint
+          column: Evidence admitted
+        assert:
+          text:
+            nonBlank: true
+      - label: next-action
+        select:
+          target: tableCell
+          section: Execution Checkpoint
+          column: Next action
+        assert:
+          text:
+            nonBlank: true
+      - label: blockers
+        select:
+          target: tableCell
+          section: Execution Checkpoint
+          column: Blockers / stop condition
+        assert:
+          text:
+            nonBlank: true
+
+  - id: execution-checkpoint.evidence.declared
+    when:
+      select:
+        target: section
+        title: Execution Checkpoint
+      assert:
+        exists: true
+    select:
+      target: document
+    assert:
+      tableColumnCoverage:
+        source:
+          section: Execution Checkpoint
+          column: Evidence admitted
+          prefix: TD-SC
+        target:
+          section: Materially Verifiable Success Criteria
+          column: ID
+          tableHeader:
+            - ID
+            - Criterion
+            - Proof
+            - Required before done
+        require: everySourceId
+        allowEmptySource: true
+
+  - id: execution-checkpoint.required-evidence.coverage
+    when:
+      select:
+        target: tableRow
+        section: Execution Checkpoint
+        tableHeader:
+          - Execution status
+          - Current proving slice
+          - Evidence admitted
+          - Next action
+          - Blockers / stop condition
+        where:
+          column: Execution status
+          equals: review-ready
+      assert:
+        exists: true
+    select:
+      target: document
+    assert:
+      tableColumnCoverage:
+        source:
+          section: Materially Verifiable Success Criteria
+          column: ID
+          prefix: TD-SC
+          rowWhere:
+            column: Required before done
+            equals: Yes
+        target:
+          section: Execution Checkpoint
+          column: Evidence admitted
+          tableHeader:
+            - Execution status
+            - Current proving slice
+            - Evidence admitted
+            - Next action
+            - Blockers / stop condition
+        require: everySourceId
+        allowEmptySource: true
+
+  - id: task-control.heading.depth
+    select:
+      target: section
+      title: Task Control
+      depth: 2
+    assert:
+      selectionCount:
+        min: 1
+        max: 1
+
+  - id: execution-checkpoint.evidence.references-or-none
+    when:
+      select:
+        target: section
+        title: Execution Checkpoint
+      assert:
+        exists: true
+    anyOf:
+      - label: none-admitted
+        select:
+          target: tableCell
+          section: Execution Checkpoint
+          column: Evidence admitted
+        assert:
+          text:
+            contains: None admitted.
+          textLength:
+            min: 14
+            max: 14
+      - label: criterion-references
+        select:
+          target: tableCell
+          section: Execution Checkpoint
+          column: Evidence admitted
+        assert:
+          ids:
+            prefix: TD-SC
+            minCount: 1
+
+  # Header selectors are ordered subsequences. Reject every noncanonical order
+  # of all three authority fields so reordered duplicates cannot evade the count.
+  # Requiring all three fields preserves BLOCKED detail and unrelated tables.
+  - id: task-control.table.authority-order
+    allOf:
+      - label: order-021
+        select:
+          target: table
+          header:
+            - Contract state
+            - State rationale
+            - Execution route
+        assert:
+          selectionCount:
+            max: 0
+      - label: order-102
+        select:
+          target: table
+          header:
+            - Execution route
+            - Contract state
+            - State rationale
+        assert:
+          selectionCount:
+            max: 0
+      - label: order-120
+        select:
+          target: table
+          header:
+            - Execution route
+            - State rationale
+            - Contract state
+        assert:
+          selectionCount:
+            max: 0
+      - label: order-201
+        select:
+          target: table
+          header:
+            - State rationale
+            - Contract state
+            - Execution route
+        assert:
+          selectionCount:
+            max: 0
+      - label: order-210
+        select:
+          target: table
+          header:
+            - State rationale
+            - Execution route
+            - Contract state
+        assert:
+          selectionCount:
+            max: 0

@@ -6,6 +6,7 @@ import {
   emptySelectionDiagnostic,
   validationDiagnostic,
 } from "./diagnostics.js";
+import { visibleText } from "./visible-text.js";
 import { countNonOverlappingLiteralOccurrences } from "./literal-text.js";
 
 type TextAssertion = Extract<CompiledDeclarativeAssertion, { kind: "text" }>;
@@ -30,6 +31,20 @@ function evaluateTextTarget(
   targetOrder: number,
 ): AssertionDiagnostic[] {
   const diagnostics: AssertionDiagnostic[] = [];
+
+  if (
+    assertion.nonBlank === true &&
+    visibleText(context.selection.document, target).trim().length === 0
+  ) {
+    diagnostics.push(
+      validationDiagnostic(
+        "profile.validation.textBlank",
+        `Selected ${target.kind} must contain non-whitespace text outside raw HTML.`,
+        context.rule,
+        { assertionIndex: context.assertionIndex, target, targetOrder },
+      ),
+    );
+  }
 
   if (
     assertion.contains !== undefined &&

@@ -19,6 +19,7 @@ import {
   idsAssertionSupportsCountBounds,
   type IdsCountBoundKey,
 } from "./ids-assertion-contract.js";
+import { cellPredicateFromValue } from "./cell-predicate-schema.js";
 import { lengthBoundsFromValue } from "./length-bound-schema.js";
 import {
   invalidShape,
@@ -84,7 +85,7 @@ export function assertionFromValue(
     ...tableColumnsRequiredFromValue(value.tableColumnsRequired, diagnostics),
     ...idsFromValue(value.ids, syntaxVersion, diagnostics),
     ...referencesFromValue(value.references, diagnostics),
-    ...textAssertionFromValue(value.text, diagnostics),
+    ...textAssertionFromValue(value.text, syntaxVersion, diagnostics),
     ...textOccurrenceCountFromValue(value.textOccurrenceCount, diagnostics),
     ...textLengthFromValue(value.textLength, diagnostics),
     ...(supportsV2AssertionSurface(syntaxVersion)
@@ -114,7 +115,9 @@ export function assertionFromValue(
     }
 
     diagnostics.push(
-      invalidShape("Rule assert must include at least one supported assertion."),
+      invalidShape(
+        "Rule assert must include at least one supported assertion.",
+      ),
     );
 
     return undefined;
@@ -401,8 +404,13 @@ function tableColumnCoverageFromValue(
     return {};
   }
 
-  unsupportedKeys(value, ["source", "target", "require"], diagnostics);
+  unsupportedKeys(
+    value,
+    ["source", "target", "require", "allowEmptySource"],
+    diagnostics,
+  );
 
+  const emptyPolicy = optionalBoolean(value, "allowEmptySource", diagnostics);
   const source = tableColumnCoverageSourceFromValue(value.source, diagnostics);
   const target = tableColumnCoverageTargetFromValue(value.target, diagnostics);
   const require =
@@ -418,6 +426,7 @@ function tableColumnCoverageFromValue(
     ? {}
     : {
         tableColumnCoverage: {
+          ...emptyPolicy,
           source,
           target,
           require,
@@ -441,7 +450,7 @@ function tableColumnCoverageSourceFromValue(
 
   unsupportedKeys(
     value,
-    ["section", "column", "prefix", "caseSensitive"],
+    ["section", "column", "prefix", "caseSensitive", "rowWhere"],
     diagnostics,
   );
 
@@ -455,7 +464,12 @@ function tableColumnCoverageSourceFromValue(
     "tableColumnCoverage.source.column",
     diagnostics,
   );
+  const rowWhere =
+    value.rowWhere === undefined
+      ? undefined
+      : cellPredicateFromValue(value.rowWhere, "rowWhere", diagnostics);
   const source = {
+    ...(rowWhere === undefined ? {} : { rowWhere }),
     ...optionalTableColumnCoverageSourceString(value, "prefix", diagnostics),
     ...optionalTableColumnCoverageSourceBoolean(
       value,
@@ -585,6 +599,7 @@ function frontmatterShapeFromValue(
 
 function textAssertionFromValue(
   value: unknown,
+  syntaxVersion: ValidationProfileSyntaxVersion,
   diagnostics: MarkdownDiagnostic[],
 ): Pick<DeclarativeAssertion, "text"> {
   if (value === undefined) {
@@ -597,18 +612,27 @@ function textAssertionFromValue(
     return {};
   }
 
-  unsupportedKeys(value, ["contains", "excludes"], diagnostics);
+  unsupportedKeys(
+    value,
+    syntaxVersion === PROFILE_SYNTAX_VERSION_V2
+      ? ["contains", "excludes", "nonBlank"]
+      : ["contains", "excludes"],
+    diagnostics,
+  );
+
+  if (value.nonBlank !== undefined && value.nonBlank !== true) {
+    diagnostics.push(invalidShape("text.nonBlank must be true when provided."));
+  }
 
   const text = {
+    ...(value.nonBlank === true ? { nonBlank: true as const } : {}),
     ...optionalAssertionString(value, "contains", diagnostics),
     ...optionalStringArray(value, "excludes", diagnostics),
   };
 
   if (!hasTextPredicate(text)) {
     diagnostics.push(
-      invalidShape(
-        "text must include contains or a non-empty excludes array.",
-      ),
+      invalidShape("text must include contains or a non-empty excludes array."),
     );
 
     return {};
@@ -842,7 +866,11 @@ function requiredAssertionString(
 }
 
 function hasTextPredicate(text: DeclarativeAssertion["text"]): boolean {
-  return text?.contains !== undefined || text?.excludes !== undefined;
+  return (
+    text?.nonBlank === true ||
+    text?.contains !== undefined ||
+    text?.excludes !== undefined
+  );
 }
 
 function isNonNegativeInteger(value: number): boolean {

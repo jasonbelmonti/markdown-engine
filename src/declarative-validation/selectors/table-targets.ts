@@ -16,6 +16,7 @@ export interface TableColumnTargetSource {
   section?: string;
   tableHeader?: readonly string[];
   column: string;
+  rowWhere?: DeclarativeTableCellPredicate;
 }
 
 export type TableColumnTargetResolution =
@@ -121,7 +122,12 @@ export function tableColumnTargets(
   const resolvedColumns = tableResolution.tables.flatMap((table) => {
     const columnIndex = columnIndexForHeader(table, source.column);
 
-    return columnIndex === undefined ? [] : [{ table, columnIndex }];
+    const predicateColumnMissing =
+      source.rowWhere !== undefined &&
+      columnIndexForHeader(table, source.rowWhere.column) === undefined;
+    return columnIndex === undefined || predicateColumnMissing
+      ? []
+      : [{ table, columnIndex }];
   });
 
   if (resolvedColumns.length === 0) {
@@ -136,7 +142,7 @@ export function tableColumnTargets(
     status: "resolved",
     source,
     targets: resolvedColumns.flatMap(({ table, columnIndex }) =>
-      tableCellTargetsForColumn(document, table, columnIndex),
+      tableCellTargetsForColumn(document, table, columnIndex, source.rowWhere),
     ),
   };
 }
@@ -234,12 +240,19 @@ function tableCellTargetsForColumn(
   document: EngineDocument,
   table: EngineTable,
   columnIndex: number,
+  rowWhere?: DeclarativeTableCellPredicate,
 ): TableCellSelectionTarget[] {
-  return dataRows(table).flatMap((row) => {
-    const cell = row.cells.find((candidate) => candidate.columnIndex === columnIndex);
+  return dataRows(table)
+    .filter((row) => rowMatchesPredicate(table, row.cells, rowWhere))
+    .flatMap((row) => {
+      const cell = row.cells.find(
+        (candidate) => candidate.columnIndex === columnIndex,
+      );
 
-    return cell === undefined ? [] : [tableCellSelectionTarget(document, table, cell)];
-  });
+      return cell === undefined
+        ? []
+        : [tableCellSelectionTarget(document, table, cell)];
+    });
 }
 
 function tableCellSelectionTarget(

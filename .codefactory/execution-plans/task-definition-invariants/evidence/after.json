@@ -1,0 +1,131 @@
+{
+  "expectationMode": "fixed",
+  "profile": "/Users/jasonbelmonti/Documents/Development/task-definition/.worktrees/task-definition-invariants/skills/task-definition/profiles/task-definition.yaml",
+  "cases": [
+    {
+      "case": "baseline",
+      "expectedValid": true,
+      "valid": true,
+      "exitStatus": 0,
+      "engineVersion": "3.5.0",
+      "inputHash": "4d45d6f820acc3188230c0f771a04176eeec955a3123fd1fba22924f8ca722f2",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [],
+      "matchesExpectation": true
+    },
+    {
+      "case": "checkpoint-baseline",
+      "expectedValid": true,
+      "valid": true,
+      "exitStatus": 0,
+      "engineVersion": "3.5.0",
+      "inputHash": "3a65040bbf4a8fb6595e8bd2aa48c9d4da629fad624dd288aab4f2f6e616babf",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [],
+      "matchesExpectation": true
+    },
+    {
+      "case": "duplicate-control-row",
+      "expectedValid": false,
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "00cecfa0440c18faa8c95393ea21a23cdd250cfa231f46ab7b3c1241c512c71b",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 2.",
+          "ruleId": "task-control.row.count",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "case": "duplicate-checkpoint-row",
+      "expectedValid": false,
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "07aa56368df9e3886d5ad0302dcc0a8d789a4bf5001465c4879d9c5f9616b757",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 2.",
+          "ruleId": "execution-checkpoint.row.when-present",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "case": "invalid-checkpoint-status",
+      "expectedValid": false,
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "85e067b55ad4681ef76591a8d832f8e692c3c416487e5357030bfa0efbea363b",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.noAlternativeMatched",
+          "message": "No anyOf branch matched the grouped rule.",
+          "ruleId": "execution-checkpoint.status.allowed",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "case": "review-ready-without-evidence",
+      "expectedValid": false,
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "99a389abbaa69ccf00fa87dca19b2a5ccffb4f4366adc18f620a07380ef07b70",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.tableColumnCoverageIdMissing",
+          "message": "ID \"TD-SC-1\" must appear in target table column \"Evidence admitted\" of section \"Execution Checkpoint\".",
+          "ruleId": "execution-checkpoint.required-evidence.coverage",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 11,
+              "line": 52,
+              "offset": 1971
+            },
+            "start": {
+              "column": 1,
+              "line": 52,
+              "offset": 1961
+            }
+          }
+        },
+        {
+          "code": "profile.validation.tableColumnCoverageIdMissing",
+          "message": "ID \"TD-SC-2\" must appear in target table column \"Evidence admitted\" of section \"Execution Checkpoint\".",
+          "ruleId": "execution-checkpoint.required-evidence.coverage",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 11,
+              "line": 53,
+              "offset": 2286
+            },
+            "start": {
+              "column": 1,
+              "line": 53,
+              "offset": 2276
+            }
+          }
+        }
+      ],
+      "matchesExpectation": true
+    }
+  ],
+  "allMatched": true
+}

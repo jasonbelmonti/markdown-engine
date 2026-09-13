@@ -1,0 +1,6 @@
+
+> @jasonbelmonti/markdown-engine@3.5.0 docs:declarative-validation-contract
+> node scripts/check-declarative-validation-contract-docs.mjs
+
+Declarative validation contract documentation gate PASS
+Checked files: docs/contracts/declarative-validation.md, docs/contracts/api.md, README.md, docs/evidence/wp-5-evd-7-declarative-validation-contract-review.md, docs/evidence/wp-5-evd-8-declarative-validation-boundary-audit.md, docs/evidence/bel-1332-okf-release-readiness.md, docs/evidence/conditional-v2-evd-6-contract-docs.md, docs/evidence/conditional-v2-evd-6-contract-cli-compatibility.md, package.json

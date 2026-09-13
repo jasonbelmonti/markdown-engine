@@ -33,9 +33,23 @@ export function evaluateTableColumnCoverage(
   context: AssertionEvaluationContext,
 ): AssertionDiagnostic[] {
   const options = idTokenOptions(assertion);
-  const sourceIds = sourceIdsForCoverage(assertion, context, options);
+  const sourceResolution = resolveTableColumnIdTokens(
+    context.selection.document,
+    assertion.source,
+    options,
+  );
+  const sourceIds =
+    sourceResolution.status === "resolved"
+      ? uniqueSourceIds(sourceResolution.tokens)
+      : [];
 
   if (sourceIds.length === 0) {
+    if (
+      assertion.allowEmptySource === true &&
+      sourceResolution.status === "resolved"
+    ) {
+      return [];
+    }
     return [emptySelectionDiagnostic(context.rule, context.assertionIndex)];
   }
 
@@ -47,13 +61,23 @@ export function evaluateTableColumnCoverage(
 
   if (targetResolution.status === "missingSection") {
     return sourceIds.map((sourceId, sourceIdOrder) =>
-      missingTargetSectionDiagnostic(assertion, context, sourceId, sourceIdOrder),
+      missingTargetSectionDiagnostic(
+        assertion,
+        context,
+        sourceId,
+        sourceIdOrder,
+      ),
     );
   }
 
   if (targetResolution.status === "missingColumn") {
     return sourceIds.map((sourceId, sourceIdOrder) =>
-      missingTargetColumnDiagnostic(assertion, context, sourceId, sourceIdOrder),
+      missingTargetColumnDiagnostic(
+        assertion,
+        context,
+        sourceId,
+        sourceIdOrder,
+      ),
     );
   }
 
@@ -78,25 +102,6 @@ export function evaluateTableColumnCoverage(
   }
 
   return diagnostics;
-}
-
-function sourceIdsForCoverage(
-  assertion: TableColumnCoverageAssertion,
-  context: AssertionEvaluationContext,
-  options: IdTokenOptions,
-): CoverageSourceId[] {
-  const sourceResolution = resolveTableColumnIdTokens(
-    context.selection.document,
-    {
-      section: assertion.source.section,
-      column: assertion.source.column,
-    },
-    options,
-  );
-
-  return sourceResolution.status === "resolved"
-    ? uniqueSourceIds(sourceResolution.tokens)
-    : [];
 }
 
 function uniqueSourceIds(tokens: readonly TargetIdToken[]): CoverageSourceId[] {

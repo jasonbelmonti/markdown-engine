@@ -1,0 +1,11 @@
+
+ RUN  v3.2.7 /Users/jasonbelmonti/Documents/Development/markdown-engine/.worktrees/task-definition-invariants
+
+ ✓ tests/declarative-validation-visible-text.test.ts (31 tests) 48ms
+ ✓ tests/declarative-validation-filtered-coverage.test.ts (14 tests) 51ms
+
+ Test Files  2 passed (2)
+      Tests  45 passed (45)
+   Start at  07:53:11
+   Duration  840ms (transform 326ms, setup 0ms, collect 1.11s, tests 98ms, environment 0ms, prepare 100ms)
+

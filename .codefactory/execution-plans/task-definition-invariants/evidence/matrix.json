@@ -1,0 +1,2490 @@
+{
+  "allMatched": true,
+  "cases": [
+    {
+      "name": "baseline",
+      "expectedValid": true,
+      "rule": null,
+      "phase": "shape",
+      "valid": true,
+      "exitStatus": 0,
+      "engineVersion": "3.5.0",
+      "inputHash": "4d45d6f820acc3188230c0f771a04176eeec955a3123fd1fba22924f8ca722f2",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [],
+      "matchesExpectation": true
+    },
+    {
+      "name": "checkpoint-baseline",
+      "expectedValid": true,
+      "rule": null,
+      "phase": "shape",
+      "valid": true,
+      "exitStatus": 0,
+      "engineVersion": "3.5.0",
+      "inputHash": "3a65040bbf4a8fb6595e8bd2aa48c9d4da629fad624dd288aab4f2f6e616babf",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [],
+      "matchesExpectation": true
+    },
+    {
+      "name": "duplicate-control-row",
+      "expectedValid": false,
+      "rule": "task-control.row.count",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "00cecfa0440c18faa8c95393ea21a23cdd250cfa231f46ab7b3c1241c512c71b",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 2.",
+          "ruleId": "task-control.row.count",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "duplicate-checkpoint-row",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.row.when-present",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "07aa56368df9e3886d5ad0302dcc0a8d789a4bf5001465c4879d9c5f9616b757",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 2.",
+          "ruleId": "execution-checkpoint.row.when-present",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "invalid-checkpoint-status",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.status.allowed",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "85e067b55ad4681ef76591a8d832f8e692c3c416487e5357030bfa0efbea363b",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.noAlternativeMatched",
+          "message": "No anyOf branch matched the grouped rule.",
+          "ruleId": "execution-checkpoint.status.allowed",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "review-ready-without-evidence",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.required-evidence.coverage",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "99a389abbaa69ccf00fa87dca19b2a5ccffb4f4366adc18f620a07380ef07b70",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.tableColumnCoverageIdMissing",
+          "message": "ID \"TD-SC-1\" must appear in target table column \"Evidence admitted\" of section \"Execution Checkpoint\".",
+          "ruleId": "execution-checkpoint.required-evidence.coverage",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 11,
+              "line": 52,
+              "offset": 1971
+            },
+            "start": {
+              "column": 1,
+              "line": 52,
+              "offset": 1961
+            }
+          }
+        },
+        {
+          "code": "profile.validation.tableColumnCoverageIdMissing",
+          "message": "ID \"TD-SC-2\" must appear in target table column \"Evidence admitted\" of section \"Execution Checkpoint\".",
+          "ruleId": "execution-checkpoint.required-evidence.coverage",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 11,
+              "line": 53,
+              "offset": 2286
+            },
+            "start": {
+              "column": 1,
+              "line": 53,
+              "offset": 2276
+            }
+          }
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "control-zero-rows",
+      "expectedValid": false,
+      "rule": "task-control.row.count",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "e105461f9544e254d3e5938ad1cebb062e28804bfb5c46f419c7e50661bb6d58",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.noAlternativeMatched",
+          "message": "No anyOf branch matched the grouped rule.",
+          "ruleId": "task-control.contract-state.allowed",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.noAlternativeMatched",
+          "message": "No anyOf branch matched the grouped rule.",
+          "ruleId": "task-control.execution-route.allowed",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 0.",
+          "ruleId": "task-control.row.count",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.emptySelection",
+          "message": "Rule selector did not match any document targets.",
+          "ruleId": "task-control.state-rationale.nonempty",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.emptySelection",
+          "message": "Rule selector did not match any document targets.",
+          "ruleId": "task-control.state-rationale.nonempty",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "control-duplicate-tables",
+      "expectedValid": false,
+      "rule": "task-control.table.count",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "e98c9870051a2aa1492710cd9091c7c9c2c14be53c6f2b8f077de0e895bf3670",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 2.",
+          "ruleId": "task-control.row.count",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 2.",
+          "ruleId": "task-control.table.count",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 142,
+              "line": 25,
+              "offset": 806
+            },
+            "start": {
+              "column": 1,
+              "line": 23,
+              "offset": 590
+            }
+          }
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "control-duplicate-section",
+      "expectedValid": false,
+      "rule": "task-control.table.count",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "e02a1f538a95190017f6115a27063093ebf5f201b3ffe3ed6545f41f11972f06",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 2.",
+          "ruleId": "task-control.heading.count",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 16,
+              "line": 23,
+              "offset": 605
+            },
+            "start": {
+              "column": 1,
+              "line": 23,
+              "offset": 590
+            }
+          }
+        },
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 2.",
+          "ruleId": "task-control.heading.depth",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 16,
+              "line": 23,
+              "offset": 605
+            },
+            "start": {
+              "column": 1,
+              "line": 23,
+              "offset": 590
+            }
+          }
+        },
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 2.",
+          "ruleId": "task-control.row.count",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 2.",
+          "ruleId": "task-control.table.count",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 142,
+              "line": 27,
+              "offset": 823
+            },
+            "start": {
+              "column": 1,
+              "line": 25,
+              "offset": 607
+            }
+          }
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "control-table-elsewhere",
+      "expectedValid": false,
+      "rule": "task-control.table.count",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "da34d4106c04c47a009aa417b1b89b5fcf6b3c5f595acff55eb9cc017f883d2e",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 2.",
+          "ruleId": "task-control.table.count",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 142,
+              "line": 85,
+              "offset": 4151
+            },
+            "start": {
+              "column": 1,
+              "line": 83,
+              "offset": 3935
+            }
+          }
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "control-reordered-021-row-control",
+      "expectedValid": false,
+      "rule": "task-control.table.authority-order",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "bfacfede12e743925029f1338e2a16ce93dfb3998a74033595b74e739c3465df",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "task-control.table.authority-order",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "control-reordered-021-row-elsewhere",
+      "expectedValid": false,
+      "rule": "task-control.table.authority-order",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "907c920803bdbefc5bb6030a3143c3360c314800bfa25d7c4b87bb897919fa69",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "task-control.table.authority-order",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "control-reordered-021-empty-control",
+      "expectedValid": false,
+      "rule": "task-control.table.authority-order",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "5aecd03eebdd8e31c3538f80eea46e379fa8aa6618aaf0dad680a31b2f68c5c2",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "task-control.table.authority-order",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "control-reordered-021-empty-elsewhere",
+      "expectedValid": false,
+      "rule": "task-control.table.authority-order",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "76da915cad36de25f378fdf0ebdc31040e5c89aee0f325ccc869398c67b548c1",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "task-control.table.authority-order",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "control-reordered-102-row-control",
+      "expectedValid": false,
+      "rule": "task-control.table.authority-order",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "30e6cdebba131cea8c8cf82464bc365d61bad3d1c0063b89e4f4c3eb9d76dd07",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "task-control.table.authority-order",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "control-reordered-102-row-elsewhere",
+      "expectedValid": false,
+      "rule": "task-control.table.authority-order",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "91a266dd69fc45e8b0edea04c1639ffbc87d2a5cd29c2f363b1dcb04dbb05412",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "task-control.table.authority-order",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "control-reordered-102-empty-control",
+      "expectedValid": false,
+      "rule": "task-control.table.authority-order",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "cacd5ea466e38245142d9cd3029b3c1b6c180a0c8fe30068284ffab30ce680ed",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "task-control.table.authority-order",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "control-reordered-102-empty-elsewhere",
+      "expectedValid": false,
+      "rule": "task-control.table.authority-order",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "1f7ad6e4e3caaa9a9b756b34cab6d172c683babba0da8fa27b86e52186c0dcf0",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "task-control.table.authority-order",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "control-reordered-120-row-control",
+      "expectedValid": false,
+      "rule": "task-control.table.authority-order",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "d35a6a5dc970b14306ab58bc229ea4e1d7c6f85f85406aca3ac39a02d07c7d49",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "task-control.table.authority-order",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "control-reordered-120-row-elsewhere",
+      "expectedValid": false,
+      "rule": "task-control.table.authority-order",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "c74d9d1f85a69bb3d83a44d0ea6a9b130f2eba1c1aabeb61eb1f03c286a758f9",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "task-control.table.authority-order",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "control-reordered-120-empty-control",
+      "expectedValid": false,
+      "rule": "task-control.table.authority-order",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "b0fecc06ac719b8dd716c35122a6fe3c83b4bc27467cf76ef40e8b376da7e87a",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "task-control.table.authority-order",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "control-reordered-120-empty-elsewhere",
+      "expectedValid": false,
+      "rule": "task-control.table.authority-order",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "00918f36ae682513ee206bf84665bf61746541faa9c899f287957e57fe1ebfed",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "task-control.table.authority-order",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "control-reordered-201-row-control",
+      "expectedValid": false,
+      "rule": "task-control.table.authority-order",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "654eb3b5ad813e83f4e9fae4d20de895f125cac351443fdb26d4730e84bb6b5d",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "task-control.table.authority-order",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "control-reordered-201-row-elsewhere",
+      "expectedValid": false,
+      "rule": "task-control.table.authority-order",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "331a54db80e05a541d21f6dbaa6c73a8ba5b2c044b681b23b474813332d8e6d3",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "task-control.table.authority-order",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "control-reordered-201-empty-control",
+      "expectedValid": false,
+      "rule": "task-control.table.authority-order",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "bf3a77d436ac3d6cb30c43464c9c3b5579535ccaecdfa62271fb9f5907558372",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "task-control.table.authority-order",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "control-reordered-201-empty-elsewhere",
+      "expectedValid": false,
+      "rule": "task-control.table.authority-order",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "2833003baf5a47db6a709b035dba09ed204185513584f75da8674f2fe9be76d4",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "task-control.table.authority-order",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "control-reordered-210-row-control",
+      "expectedValid": false,
+      "rule": "task-control.table.authority-order",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "3394de8d34dce554b665b6196d42aaff73ac0bc7aa62e718e4c56c65161db801",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "task-control.table.authority-order",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "control-reordered-210-row-elsewhere",
+      "expectedValid": false,
+      "rule": "task-control.table.authority-order",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "cfff6cb406a22593e39c85a9586c856c1dec5dbfbacf66fde0514a302d953cbc",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "task-control.table.authority-order",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "control-reordered-210-empty-control",
+      "expectedValid": false,
+      "rule": "task-control.table.authority-order",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "7ba5fab21d54f545377ca16ed8ed64f2cecf9cd92460a9b8d5f885d1a24ad645",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "task-control.table.authority-order",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "control-reordered-210-empty-elsewhere",
+      "expectedValid": false,
+      "rule": "task-control.table.authority-order",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "22a3b5763917f0f7bd09573131538db959892fdec5cc4e277df630a7ab2083ef",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "task-control.table.authority-order",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "unrelated-partial-control-header",
+      "expectedValid": true,
+      "rule": null,
+      "phase": "shape",
+      "valid": true,
+      "exitStatus": 0,
+      "engineVersion": "3.5.0",
+      "inputHash": "4bf1af0abe3bdd9ce6a36cbdce6892eb953a124429117e41f6d63a765a9ef9d3",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [],
+      "matchesExpectation": true
+    },
+    {
+      "name": "checkpoint-zero-rows",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.row.when-present",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "cadef851dd49972432933b5da37a7e1634ea440813b3a84d98af4824946dff85",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "execution-checkpoint.cells.nonblank",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.noAlternativeMatched",
+          "message": "No anyOf branch matched the grouped rule.",
+          "ruleId": "execution-checkpoint.evidence.references-or-none",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 0.",
+          "ruleId": "execution-checkpoint.row.when-present",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.noAlternativeMatched",
+          "message": "No anyOf branch matched the grouped rule.",
+          "ruleId": "execution-checkpoint.status.allowed",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "checkpoint-no-table",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.table.inside-checkpoint",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "d9062d4cbd0dd561e456b375e244022336d690d7f6017bda162540d92152cdab",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "execution-checkpoint.cells.nonblank",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.emptySelection",
+          "message": "Rule selector did not match any document targets.",
+          "ruleId": "execution-checkpoint.evidence.declared",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.noAlternativeMatched",
+          "message": "No anyOf branch matched the grouped rule.",
+          "ruleId": "execution-checkpoint.evidence.references-or-none",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 0.",
+          "ruleId": "execution-checkpoint.row.when-present",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.noAlternativeMatched",
+          "message": "No anyOf branch matched the grouped rule.",
+          "ruleId": "execution-checkpoint.status.allowed",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 0.",
+          "ruleId": "execution-checkpoint.table.global-count",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.emptySelection",
+          "message": "Rule selector did not match any document targets.",
+          "ruleId": "execution-checkpoint.table.inside-checkpoint",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 0.",
+          "ruleId": "execution-checkpoint.table.inside-checkpoint",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.emptySelection",
+          "message": "Rule selector did not match any document targets.",
+          "ruleId": "execution-checkpoint.table.when-present",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "checkpoint-duplicate-tables",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.table.global-count",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "0d87371fc369d55f04f62514e54bcf7a5070e119dd94696ab2a9489ec1ee022f",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 2.",
+          "ruleId": "execution-checkpoint.row.when-present",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 2.",
+          "ruleId": "execution-checkpoint.table.global-count",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 101,
+              "line": 87,
+              "offset": 4400
+            },
+            "start": {
+              "column": 1,
+              "line": 85,
+              "offset": 4161
+            }
+          }
+        },
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 2.",
+          "ruleId": "execution-checkpoint.table.inside-checkpoint",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 101,
+              "line": 87,
+              "offset": 4400
+            },
+            "start": {
+              "column": 1,
+              "line": 85,
+              "offset": 4161
+            }
+          }
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "checkpoint-duplicate-headings",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.heading.count",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "0d3fc7b7a3dcd7d60b4f1c2ab53f6c801732cd206aedd51a5d708ac3eb10c169",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be at most 1; found 2.",
+          "ruleId": "execution-checkpoint.heading.count",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 25,
+              "line": 83,
+              "offset": 3952
+            },
+            "start": {
+              "column": 1,
+              "line": 83,
+              "offset": 3928
+            }
+          }
+        },
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 2.",
+          "ruleId": "execution-checkpoint.heading.when-table-present",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 25,
+              "line": 83,
+              "offset": 3952
+            },
+            "start": {
+              "column": 1,
+              "line": 83,
+              "offset": 3928
+            }
+          }
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "checkpoint-heading-depth-two",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.heading-depth.when-present",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "605e423e86239ae58a8d37675539ae9959426ab8b498d4f3b17a3435cb7d093c",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.emptySelection",
+          "message": "Rule selector did not match any document targets.",
+          "ruleId": "execution-checkpoint.heading-depth.when-present",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 0.",
+          "ruleId": "execution-checkpoint.row.when-present",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.emptySelection",
+          "message": "Rule selector did not match any document targets.",
+          "ruleId": "execution-checkpoint.table.when-present",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "checkpoint-heading-depth-four",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.heading-depth.when-present",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "20bf7bddfa694253f6628eb2b29b9409a4f21d402742ca66c1a1d94e79d953e7",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.emptySelection",
+          "message": "Rule selector did not match any document targets.",
+          "ruleId": "execution-checkpoint.heading-depth.when-present",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "checkpoint-misplaced",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.table.when-present",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "c61bd31e07237d5d436ae795111f56854eb7b3e6c05fac40370fcd51d858d577",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 0.",
+          "ruleId": "execution-checkpoint.row.when-present",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.emptySelection",
+          "message": "Rule selector did not match any document targets.",
+          "ruleId": "execution-checkpoint.table.when-present",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "checkpoint-table-before-heading",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.table.inside-checkpoint",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "68558e72429e9b027548a5ba4e646bd649c34f3c92012dee5471ff90e7165c41",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "execution-checkpoint.cells.nonblank",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.emptySelection",
+          "message": "Rule selector did not match any document targets.",
+          "ruleId": "execution-checkpoint.evidence.declared",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.noAlternativeMatched",
+          "message": "No anyOf branch matched the grouped rule.",
+          "ruleId": "execution-checkpoint.evidence.references-or-none",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.noAlternativeMatched",
+          "message": "No anyOf branch matched the grouped rule.",
+          "ruleId": "execution-checkpoint.status.allowed",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.emptySelection",
+          "message": "Rule selector did not match any document targets.",
+          "ruleId": "execution-checkpoint.table.inside-checkpoint",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 0.",
+          "ruleId": "execution-checkpoint.table.inside-checkpoint",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "checkpoint-table-without-heading",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.heading.when-table-present",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "10c378fce57201a769cf1ef0ac3b9c0180989b304857fdb1f7ea276e46488c5a",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 0.",
+          "ruleId": "execution-checkpoint.heading.when-table-present",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "checkpoint-table-in-sibling",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.table.inside-checkpoint",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "cdbce5ead6793d5b30ef21cff8e358ca942dabc10e11f9fa78298a2d9a6681f0",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "execution-checkpoint.cells.nonblank",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.emptySelection",
+          "message": "Rule selector did not match any document targets.",
+          "ruleId": "execution-checkpoint.evidence.declared",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.noAlternativeMatched",
+          "message": "No anyOf branch matched the grouped rule.",
+          "ruleId": "execution-checkpoint.evidence.references-or-none",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.noAlternativeMatched",
+          "message": "No anyOf branch matched the grouped rule.",
+          "ruleId": "execution-checkpoint.status.allowed",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.emptySelection",
+          "message": "Rule selector did not match any document targets.",
+          "ruleId": "execution-checkpoint.table.inside-checkpoint",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 0.",
+          "ruleId": "execution-checkpoint.table.inside-checkpoint",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "checkpoint-decoy-notes-table",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.table.global-count",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "26a20add68cc618c58f79d3bbe6254ffc8cb907898e531f53187c74b14526ba9",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 2.",
+          "ruleId": "execution-checkpoint.table.global-count",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 101,
+              "line": 89,
+              "offset": 4416
+            },
+            "start": {
+              "column": 1,
+              "line": 87,
+              "offset": 4177
+            }
+          }
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "checkpoint-extra-table",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.table.inside-checkpoint",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "3554209e6f90dcc77a704d6befbb304c67da7813dc7812a2da0c071d3d51470a",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Selected table columns must exactly match [\"Execution status\",\"Current proving slice\",\"Evidence admitted\",\"Next action\",\"Blockers / stop condition\"]; found [\"Other\"].",
+          "ruleId": "execution-checkpoint.table.inside-checkpoint",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 10,
+              "line": 85,
+              "offset": 4170
+            },
+            "start": {
+              "column": 1,
+              "line": 85,
+              "offset": 4161
+            }
+          }
+        },
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 2.",
+          "ruleId": "execution-checkpoint.table.inside-checkpoint",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 10,
+              "line": 87,
+              "offset": 4188
+            },
+            "start": {
+              "column": 1,
+              "line": 85,
+              "offset": 4161
+            }
+          }
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "status-not-started",
+      "expectedValid": true,
+      "rule": null,
+      "phase": "shape",
+      "valid": true,
+      "exitStatus": 0,
+      "engineVersion": "3.5.0",
+      "inputHash": "f3128d2f61d2236e73ea93aebf747438f9c5c05dac0f4bba71b164d352eb4ec5",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [],
+      "matchesExpectation": true
+    },
+    {
+      "name": "status-active",
+      "expectedValid": true,
+      "rule": null,
+      "phase": "shape",
+      "valid": true,
+      "exitStatus": 0,
+      "engineVersion": "3.5.0",
+      "inputHash": "4354e4f00da944e8cf13d0cfb9ec1396542434b53c199214824304f907c5d220",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [],
+      "matchesExpectation": true
+    },
+    {
+      "name": "status-blocked",
+      "expectedValid": true,
+      "rule": null,
+      "phase": "shape",
+      "valid": true,
+      "exitStatus": 0,
+      "engineVersion": "3.5.0",
+      "inputHash": "6414c88b4f5c2f0fb5a4861828e884801dedb95d1107a927c9273cd56f36da48",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [],
+      "matchesExpectation": true
+    },
+    {
+      "name": "cell-0-empty",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.cells.nonblank",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "0bc957e3284bf8a4e05880a1420640ca62d21bbe931a1968184332f21555d751",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "execution-checkpoint.cells.nonblank",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.noAlternativeMatched",
+          "message": "No anyOf branch matched the grouped rule.",
+          "ruleId": "execution-checkpoint.status.allowed",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "cell-0-whitespace",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.cells.nonblank",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "c8363d1908a80719a68945292632eeca528bb18fe382c0194de0605de718ee64",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "execution-checkpoint.cells.nonblank",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.noAlternativeMatched",
+          "message": "No anyOf branch matched the grouped rule.",
+          "ruleId": "execution-checkpoint.status.allowed",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "cell-0-comment",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.cells.nonblank",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "5c14df47735a65b73fee3f2a850afb78066350457773d2897ba9b3c166d9b9cb",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "execution-checkpoint.cells.nonblank",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.noAlternativeMatched",
+          "message": "No anyOf branch matched the grouped rule.",
+          "ruleId": "execution-checkpoint.status.allowed",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "cell-0-empty-html",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.cells.nonblank",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "a557b37b30982ab99e5311a7972f89d509d9100102bd591f5418cb23a5e7492e",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "execution-checkpoint.cells.nonblank",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.noAlternativeMatched",
+          "message": "No anyOf branch matched the grouped rule.",
+          "ruleId": "execution-checkpoint.status.allowed",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "cell-0-html-whitespace",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.cells.nonblank",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "04c73420a194088ea455eee8f9813c0d4c049f3b1b95ac8a430d907a9e7c85c9",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "execution-checkpoint.cells.nonblank",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.noAlternativeMatched",
+          "message": "No anyOf branch matched the grouped rule.",
+          "ruleId": "execution-checkpoint.status.allowed",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "cell-0-nbsp",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.cells.nonblank",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "9c6aa4e2e3968c10f799d5408c44582ae77884a31d176d94a829ff71cd9b9f5b",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "execution-checkpoint.cells.nonblank",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.noAlternativeMatched",
+          "message": "No anyOf branch matched the grouped rule.",
+          "ruleId": "execution-checkpoint.status.allowed",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "cell-1-empty",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.cells.nonblank",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "360d84f7e15a195175108a24a9ceaf04e480d6ebc0791f1a2bd90b45c61b4e6d",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "execution-checkpoint.cells.nonblank",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "cell-1-whitespace",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.cells.nonblank",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "0d148eeeacfdb395921c6a0ae3253c9df7ea0d5ed8748195c0d1515a7165d4cd",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "execution-checkpoint.cells.nonblank",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "cell-1-comment",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.cells.nonblank",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "0375242eb0a87bd64e2dde4b0eb443839f3ca2f23bc07680cb447aeb9275ff07",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "execution-checkpoint.cells.nonblank",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "cell-1-empty-html",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.cells.nonblank",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "33bb3e67064c60fee8098917aa86b4176e1e8f861c6c66852cedf604ead45323",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "execution-checkpoint.cells.nonblank",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "cell-1-html-whitespace",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.cells.nonblank",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "4b6773a5e9b7d8cef62642924f64d9446a2661b954481246a64a36befba929c5",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "execution-checkpoint.cells.nonblank",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "cell-1-nbsp",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.cells.nonblank",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "1247d123c8104b997b7eee33f2fcdc944d4030418c3ff0b22176091873d054c5",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "execution-checkpoint.cells.nonblank",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "cell-2-empty",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.cells.nonblank",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "a4154e31952c6699baf932ba2407b2c632bb02acbc1502968aca2050b4306696",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "execution-checkpoint.cells.nonblank",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.noAlternativeMatched",
+          "message": "No anyOf branch matched the grouped rule.",
+          "ruleId": "execution-checkpoint.evidence.references-or-none",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "cell-2-whitespace",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.cells.nonblank",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "88620cc4bd8f1e25e59d94bcc0c81b82756da06f54549bdc019757ba55f0973c",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "execution-checkpoint.cells.nonblank",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.noAlternativeMatched",
+          "message": "No anyOf branch matched the grouped rule.",
+          "ruleId": "execution-checkpoint.evidence.references-or-none",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "cell-2-comment",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.cells.nonblank",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "621584e1c5e0f9ab820eb8ea33284fbb412963d65d62600d8864f4f9de643d03",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "execution-checkpoint.cells.nonblank",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.noAlternativeMatched",
+          "message": "No anyOf branch matched the grouped rule.",
+          "ruleId": "execution-checkpoint.evidence.references-or-none",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "cell-2-empty-html",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.cells.nonblank",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "9ea6a0d1616c2bb89550f734857d35d6b1fa2ecfd4b0672d4a396bf3d4f7ead5",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "execution-checkpoint.cells.nonblank",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.noAlternativeMatched",
+          "message": "No anyOf branch matched the grouped rule.",
+          "ruleId": "execution-checkpoint.evidence.references-or-none",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "cell-2-html-whitespace",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.cells.nonblank",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "4ca0f023cb627700a82cbfa60366f331687d24be034be007b8d8c0e81e551194",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "execution-checkpoint.cells.nonblank",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.noAlternativeMatched",
+          "message": "No anyOf branch matched the grouped rule.",
+          "ruleId": "execution-checkpoint.evidence.references-or-none",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "cell-2-nbsp",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.cells.nonblank",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "1fdde4034c9d20df4f329adddb9594a1aea3436ec870adf13238250981127649",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "execution-checkpoint.cells.nonblank",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.noAlternativeMatched",
+          "message": "No anyOf branch matched the grouped rule.",
+          "ruleId": "execution-checkpoint.evidence.references-or-none",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "cell-3-empty",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.cells.nonblank",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "0ddca77b94e9df16b1c777d05884b507e25ad430286ab1eaa587cec5b1282471",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "execution-checkpoint.cells.nonblank",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "cell-3-whitespace",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.cells.nonblank",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "d5c6f9079783c8ff69a9b2275a0911e27b91e19d8d4f74f15979566447b8a5fe",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "execution-checkpoint.cells.nonblank",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "cell-3-comment",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.cells.nonblank",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "ad9834fccc59c7c1ec394a45a52000f4d2d1687361d61c52f4b3f3d2c86b0990",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "execution-checkpoint.cells.nonblank",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "cell-3-empty-html",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.cells.nonblank",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "c5029e66d32c4c74a9ea738c33bef2ba493de5ba0ca7fc2e089f793806f26588",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "execution-checkpoint.cells.nonblank",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "cell-3-html-whitespace",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.cells.nonblank",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "8819793f017603fa90e2ce6bcd5dc70d1aa189edb220f0d692eefbbc6b878853",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "execution-checkpoint.cells.nonblank",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "cell-3-nbsp",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.cells.nonblank",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "dc8abe33f601a7f5020b228ab8c557a878766d90438b5fefd362f93d0abfca28",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "execution-checkpoint.cells.nonblank",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "cell-4-empty",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.cells.nonblank",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "b5710127768768ccba656e0063e7854082aa826542d9b93ffbd0d6059eb6d3d6",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "execution-checkpoint.cells.nonblank",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "cell-4-whitespace",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.cells.nonblank",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "fb5fe4bf3a79017dd43211a43273947458e3ebd94a779ad8b0189d5b69c03038",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "execution-checkpoint.cells.nonblank",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "cell-4-comment",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.cells.nonblank",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "5137c765ad9fece521eabe9192918ed929714d11a5b649bd64cb5bfb50e9b69c",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "execution-checkpoint.cells.nonblank",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "cell-4-empty-html",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.cells.nonblank",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "69a8e5af2e2948ea332680af35f94dc9e70bc3514f177a99ae326c9feac34c9c",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "execution-checkpoint.cells.nonblank",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "cell-4-html-whitespace",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.cells.nonblank",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "7cec14f125a99b2a6bf2a212af36a7e0b7e3c92c64ea2cd5cfaeef6f3b4c5187",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "execution-checkpoint.cells.nonblank",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "cell-4-nbsp",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.cells.nonblank",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "27d1f4c3d3d416f1cf3f722dffb637fe2ee57782faf07cc1d05bc8f92077079a",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.groupRequirementFailed",
+          "message": "One or more allOf branches failed the grouped rule.",
+          "ruleId": "execution-checkpoint.cells.nonblank",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "visible-emphasis",
+      "expectedValid": true,
+      "rule": null,
+      "phase": "full",
+      "valid": true,
+      "exitStatus": 0,
+      "engineVersion": "3.5.0",
+      "inputHash": "3b7ec308d551d9daadc44f1d58e57b1636661ac3658161bd424a8fc2517ff0e4",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [],
+      "matchesExpectation": true
+    },
+    {
+      "name": "visible-code",
+      "expectedValid": true,
+      "rule": null,
+      "phase": "full",
+      "valid": true,
+      "exitStatus": 0,
+      "engineVersion": "3.5.0",
+      "inputHash": "ba51a8b9a313768dda72dc62b173877993e1531c20387754a75b3d3d8453040b",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [],
+      "matchesExpectation": true
+    },
+    {
+      "name": "visible-html",
+      "expectedValid": true,
+      "rule": null,
+      "phase": "full",
+      "valid": true,
+      "exitStatus": 0,
+      "engineVersion": "3.5.0",
+      "inputHash": "067c8835e5823453ad556565dd1d03f5f27b69a34aa6a768177ca379ee0775c8",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [],
+      "matchesExpectation": true
+    },
+    {
+      "name": "visible-escaped-html",
+      "expectedValid": true,
+      "rule": null,
+      "phase": "full",
+      "valid": true,
+      "exitStatus": 0,
+      "engineVersion": "3.5.0",
+      "inputHash": "a18000c781f88e6ee19e739380749b40ff8692f2cbfa392b02e66589e140e385",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [],
+      "matchesExpectation": true
+    },
+    {
+      "name": "visible-comment-plus-text",
+      "expectedValid": true,
+      "rule": null,
+      "phase": "full",
+      "valid": true,
+      "exitStatus": 0,
+      "engineVersion": "3.5.0",
+      "inputHash": "cb55b03923b716b2af810c09853e8d610a66086ba764337dfb83b7c622af6721",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [],
+      "matchesExpectation": true
+    },
+    {
+      "name": "review-ready-complete",
+      "expectedValid": true,
+      "rule": null,
+      "phase": "full",
+      "valid": true,
+      "exitStatus": 0,
+      "engineVersion": "3.5.0",
+      "inputHash": "99f709b70650a89404dfae288ef5e5df18d5f6f1f992bde0d1a29b7824940dcf",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [],
+      "matchesExpectation": true
+    },
+    {
+      "name": "review-ready-formatted",
+      "expectedValid": true,
+      "rule": null,
+      "phase": "full",
+      "valid": true,
+      "exitStatus": 0,
+      "engineVersion": "3.5.0",
+      "inputHash": "610dcf9f4562b2da3c3c652c2cc037b4993438964d6e502f73b78f644e2f84a5",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [],
+      "matchesExpectation": true
+    },
+    {
+      "name": "review-ready-no-references",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.required-evidence.coverage",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "4549b5bfec558680460608ea89d721bae308b43a6fe35a50a1f935916a489faa",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.noAlternativeMatched",
+          "message": "No anyOf branch matched the grouped rule.",
+          "ruleId": "execution-checkpoint.evidence.references-or-none",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.tableColumnCoverageIdMissing",
+          "message": "ID \"TD-SC-1\" must appear in target table column \"Evidence admitted\" of section \"Execution Checkpoint\".",
+          "ruleId": "execution-checkpoint.required-evidence.coverage",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 11,
+              "line": 52,
+              "offset": 1971
+            },
+            "start": {
+              "column": 1,
+              "line": 52,
+              "offset": 1961
+            }
+          }
+        },
+        {
+          "code": "profile.validation.tableColumnCoverageIdMissing",
+          "message": "ID \"TD-SC-2\" must appear in target table column \"Evidence admitted\" of section \"Execution Checkpoint\".",
+          "ruleId": "execution-checkpoint.required-evidence.coverage",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 11,
+              "line": 53,
+              "offset": 2286
+            },
+            "start": {
+              "column": 1,
+              "line": 53,
+              "offset": 2276
+            }
+          }
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "review-ready-partial",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.required-evidence.coverage",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "7b5d68d10e8de8714bfe7d5ebdaa99fc2895c07e3f6eba6af54075d591b45211",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.tableColumnCoverageIdMissing",
+          "message": "ID \"TD-SC-2\" must appear in target table column \"Evidence admitted\" of section \"Execution Checkpoint\".",
+          "ruleId": "execution-checkpoint.required-evidence.coverage",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 11,
+              "line": 53,
+              "offset": 2286
+            },
+            "start": {
+              "column": 1,
+              "line": 53,
+              "offset": 2276
+            }
+          }
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "active-partial",
+      "expectedValid": true,
+      "rule": null,
+      "phase": "full",
+      "valid": true,
+      "exitStatus": 0,
+      "engineVersion": "3.5.0",
+      "inputHash": "b9f465aba5d0fbb94b42b86cf86f9e5cee756c4c8562da98e2dc17cf06128fe0",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [],
+      "matchesExpectation": true
+    },
+    {
+      "name": "undeclared-active",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.evidence.declared",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "fd896c350695d3f118231bcbbb78bd5345ffcfe84525468dac576103ef373450",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.tableColumnCoverageIdMissing",
+          "message": "ID \"TD-SC-99\" must appear in target table column \"ID\" of section \"Materially Verifiable Success Criteria\".",
+          "ruleId": "execution-checkpoint.evidence.declared",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 60,
+              "line": 83,
+              "offset": 4118
+            },
+            "start": {
+              "column": 27,
+              "line": 83,
+              "offset": 4085
+            }
+          }
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "undeclared-review-ready",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.evidence.declared",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "9d4c1bfa26b3bff1ee3a4583a9e7de93ccc3e2683cc2aa1d442120a39e7a4ce8",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.tableColumnCoverageIdMissing",
+          "message": "ID \"TD-SC-99\" must appear in target table column \"ID\" of section \"Materially Verifiable Success Criteria\".",
+          "ruleId": "execution-checkpoint.evidence.declared",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 107,
+              "line": 83,
+              "offset": 4165
+            },
+            "start": {
+              "column": 33,
+              "line": 83,
+              "offset": 4091
+            }
+          }
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "review-ready-id-only-next-action",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.required-evidence.coverage",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "072f1ef5f5244553cb81d3efe0005c435b06c27b865efe015d3463a751d6848a",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.tableColumnCoverageIdMissing",
+          "message": "ID \"TD-SC-2\" must appear in target table column \"Evidence admitted\" of section \"Execution Checkpoint\".",
+          "ruleId": "execution-checkpoint.required-evidence.coverage",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 11,
+              "line": 53,
+              "offset": 2286
+            },
+            "start": {
+              "column": 1,
+              "line": 53,
+              "offset": 2276
+            }
+          }
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "review-ready-id-only-validation",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.required-evidence.coverage",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "7b5d68d10e8de8714bfe7d5ebdaa99fc2895c07e3f6eba6af54075d591b45211",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.tableColumnCoverageIdMissing",
+          "message": "ID \"TD-SC-2\" must appear in target table column \"Evidence admitted\" of section \"Execution Checkpoint\".",
+          "ruleId": "execution-checkpoint.required-evidence.coverage",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 11,
+              "line": 53,
+              "offset": 2286
+            },
+            "start": {
+              "column": 1,
+              "line": 53,
+              "offset": 2276
+            }
+          }
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "review-ready-optional-criterion",
+      "expectedValid": true,
+      "rule": null,
+      "phase": "full",
+      "valid": true,
+      "exitStatus": 0,
+      "engineVersion": "3.5.0",
+      "inputHash": "1dfcd393ae9086f8590169aaa3131ccb9298f5f9e408ef17d57d904c1356a85b",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [],
+      "matchesExpectation": true
+    },
+    {
+      "name": "review-ready-all-optional",
+      "expectedValid": true,
+      "rule": null,
+      "phase": "full",
+      "valid": true,
+      "exitStatus": 0,
+      "engineVersion": "3.5.0",
+      "inputHash": "69b8955210683f151501a0603058da68cde2c7f8c8937d7bf2a8808eef0d89b0",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [],
+      "matchesExpectation": true
+    },
+    {
+      "name": "review-ready-required-second",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.required-evidence.coverage",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "72f4fdb2751daa4b369e76a3765a7d35ea3b4a3437517e05df015e9774a593f5",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.tableColumnCoverageIdMissing",
+          "message": "ID \"TD-SC-2\" must appear in target table column \"Evidence admitted\" of section \"Execution Checkpoint\".",
+          "ruleId": "execution-checkpoint.required-evidence.coverage",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 11,
+              "line": 53,
+              "offset": 2285
+            },
+            "start": {
+              "column": 1,
+              "line": 53,
+              "offset": 2275
+            }
+          }
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "review-ready-formatted-required",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.required-evidence.coverage",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "8c983097858a70a0d11c790a631d3c62ad2a369e5fc7f5b6c9bdbd99092878fc",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.tableColumnCoverageIdMissing",
+          "message": "ID \"TD-SC-2\" must appear in target table column \"Evidence admitted\" of section \"Execution Checkpoint\".",
+          "ruleId": "execution-checkpoint.required-evidence.coverage",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 11,
+              "line": 53,
+              "offset": 2290
+            },
+            "start": {
+              "column": 1,
+              "line": 53,
+              "offset": 2280
+            }
+          }
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "review-ready-renamed-id",
+      "expectedValid": true,
+      "rule": null,
+      "phase": "full",
+      "valid": true,
+      "exitStatus": 0,
+      "engineVersion": "3.5.0",
+      "inputHash": "363ab17a42489045f2bf642e3332f4c31fbc819a317349f8df83f5cddaef2f91",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [],
+      "matchesExpectation": true
+    },
+    {
+      "name": "control-duplicate-empty-section",
+      "expectedValid": false,
+      "rule": "task-control.heading.count",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "ddddcac3a5168c09373ff5056ac3a32e1534127e370ca26fc61471bb1a9c40ce",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 2.",
+          "ruleId": "task-control.heading.count",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 17,
+              "line": 23,
+              "offset": 606
+            },
+            "start": {
+              "column": 1,
+              "line": 23,
+              "offset": 590
+            }
+          }
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "checkpoint-duplicate-notes-decoy",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.notes.count",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "491d234f854ba6ead6890427dff8ef4556e022ecdb9129085d24d54e8c9440b8",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 2.",
+          "ruleId": "execution-checkpoint.notes.count",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 19,
+              "line": 79,
+              "offset": 3912
+            },
+            "start": {
+              "column": 1,
+              "line": 79,
+              "offset": 3894
+            }
+          }
+        },
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 2.",
+          "ruleId": "execution-checkpoint.notes.depth",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 19,
+              "line": 79,
+              "offset": 3912
+            },
+            "start": {
+              "column": 1,
+              "line": 79,
+              "offset": 3894
+            }
+          }
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "active-evidence-without-reference",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.evidence.references-or-none",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "7f75ffa89d426b596a85ec0b5f54dc5994c158f8a1bf3168bfd4c5fc7e5c4ade",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.noAlternativeMatched",
+          "message": "No anyOf branch matched the grouped rule.",
+          "ruleId": "execution-checkpoint.evidence.references-or-none",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "active-wrong-evidence-sentinel",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.evidence.references-or-none",
+      "phase": "full",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "fbf82d30f306d62f1f95bdebc7800ca8b3131270db502a5a87b20946cebcc838",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
+      "diagnostics": [
+        {
+          "code": "profile.validation.noAlternativeMatched",
+          "message": "No anyOf branch matched the grouped rule.",
+          "ruleId": "execution-checkpoint.evidence.references-or-none",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+Boundary dependency audit PASS
+Direct dependencies scanned: 10
+Forbidden dependency matches: 0
+Annotation semantic boundary PASS
+Annotation semantic leakage matches: 0

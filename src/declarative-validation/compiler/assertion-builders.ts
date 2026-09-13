@@ -418,7 +418,13 @@ function buildTableColumnCoverageAssertion(
   ) {
     return {
       kind: "tableColumnCoverage",
+      ...(tableColumnCoverage.allowEmptySource === undefined
+        ? {}
+        : { allowEmptySource: tableColumnCoverage.allowEmptySource }),
       source: {
+        ...(tableColumnCoverage.source.rowWhere === undefined
+          ? {}
+          : { rowWhere: tableColumnCoverage.source.rowWhere }),
         section: tableColumnCoverage.source.section,
         column: tableColumnCoverage.source.column,
         caseSensitive: tableColumnCoverage.source.caseSensitive ?? true,
@@ -485,7 +491,7 @@ function buildTextAssertion(
   assertion: DeclarativeAssertion,
   selector: DeclarativeSelector,
   ruleId: string,
-  _syntaxVersion: ValidationProfileSyntaxVersion,
+  syntaxVersion: ValidationProfileSyntaxVersion,
   diagnostics: MarkdownDiagnostic[],
 ): CompiledDeclarativeAssertion | undefined {
   if (assertion.text === undefined) {
@@ -496,7 +502,9 @@ function buildTextAssertion(
     !pushObjectDiagnostic("text", assertion.text, ruleId, diagnostics) ||
     !pushUnsupportedKeyDiagnostics(
       assertion.text,
-      ["contains", "excludes"],
+      syntaxVersion === PROFILE_SYNTAX_VERSION_V2
+        ? ["contains", "excludes", "nonBlank"]
+        : ["contains", "excludes"],
       diagnostics,
     ) ||
     !pushTextShapeDiagnostics(assertion.text, ruleId, diagnostics)
@@ -519,6 +527,7 @@ function buildTextAssertion(
   if (pushCompatibilityDiagnostic("text", selector, ruleId, diagnostics)) {
     return {
       kind: "text",
+      ...(assertion.text.nonBlank === true ? { nonBlank: true as const } : {}),
       ...optionalString("contains", assertion.text.contains),
       ...optionalStringArray("excludes", assertion.text.excludes),
     };
