@@ -1,0 +1,8 @@
+
+> @jasonbelmonti/markdown-engine@3.5.0 build
+> npm run clean && tsc -p tsconfig.json
+
+
+> @jasonbelmonti/markdown-engine@3.5.0 clean
+> node scripts/clean-dist.mjs
+

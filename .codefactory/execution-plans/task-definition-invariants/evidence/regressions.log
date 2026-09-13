@@ -1,0 +1,81 @@
+
+> @jasonbelmonti/markdown-engine@3.5.0 test
+> npm run build && vitest run "--exclude=.worktrees/**"
+
+
+> @jasonbelmonti/markdown-engine@3.5.0 build
+> npm run clean && tsc -p tsconfig.json
+
+
+> @jasonbelmonti/markdown-engine@3.5.0 clean
+> node scripts/clean-dist.mjs
+
+
+ RUN  v3.2.7 /Users/jasonbelmonti/Documents/Development/markdown-engine/.worktrees/task-definition-invariants
+
+ ✓ tests/boundary-inspection.test.ts (11 tests) 227ms
+ ✓ tests/installer-pin-release-gate.test.ts (11 tests) 661ms
+ ✓ tests/release-clean.test.ts (1 test) 693ms
+   ✓ release clean-tree gate > rejects tracked and untracked inputs while allowing ignored outputs  692ms
+ ✓ tests/profile-backed-markdown-skill.test.ts (8 tests) 1174ms
+ ✓ tests/rich-ir-targets.test.ts (6 tests) 87ms
+ ✓ tests/rich-ir-annotations.test.ts (15 tests) 96ms
+ ✓ tests/declarative-validation-downstream.test.ts (26 tests) 208ms
+ ✓ tests/rich-ir-repeatability.test.ts (2 tests) 342ms
+ ✓ tests/serialization-repeatability.test.ts (2 tests) 375ms
+   ✓ WP-5 deterministic serialization repeatability > VAL-5/EVD-5 serializes identical inputs and config byte-for-byte across ten runs  331ms
+ ✓ tests/declarative-validation-cli.test.ts (40 tests) 496ms
+ ✓ tests/declarative-validation-source-length.test.ts (12 tests) 145ms
+ ✓ tests/declarative-validation-assertions.test.ts (116 tests) 253ms
+ ✓ tests/parser-adapter.test.ts (1 test) 142ms
+ ✓ tests/parser-fixtures.test.ts (5 tests) 107ms
+ ✓ tests/declarative-validation-examples.test.ts (6 tests) 384ms
+ ✓ tests/rich-ir-downstream.test.ts (2 tests) 226ms
+ ✓ tests/rich-ir-queries.test.ts (4 tests) 313ms
+ ✓ tests/cli.test.ts (22 tests) 200ms
+ ✓ tests/parser-frontmatter.test.ts (24 tests) 90ms
+ ✓ tests/api-helper-coverage.test.ts (5 tests) 62ms
+ ✓ tests/rich-ir-proving.test.ts (3 tests) 285ms
+ ✓ tests/declarative-validation-id-count-fixtures.test.ts (9 tests) 185ms
+ ✓ tests/rich-ir-link-references.test.ts (1 test) 132ms
+ ✓ tests/declarative-validation-proving.test.ts (1 test) 43ms
+ ✓ tests/declarative-validation-source-assertion-coverage.test.ts (4 tests) 42ms
+ ✓ tests/cli-bundle.test.ts (10 tests) 3998ms
+   ✓ bundled CLI artifact > installs a wrapper that points at the current versioned bundled CLI  803ms
+   ✓ bundled CLI artifact > packs the bundled CLI and constrained-harness installer  1991ms
+   ✓ bundled CLI artifact > keeps the compatibility build command writing the legacy artifact path  505ms
+ ✓ tests/rich-ir-compat.test.ts (6 tests) 22ms
+ ✓ tests/declarative-validation-profile.test.ts (70 tests) 41ms
+ ✓ tests/declarative-validation-diagnostics.test.ts (4 tests) 62ms
+ ✓ tests/declarative-validation-table-column-coverage-fixtures.test.ts (9 tests) 96ms
+ ✓ tests/declarative-validation-contract.test.ts (27 tests) 59ms
+ ✓ tests/declarative-validation-selection-count.test.ts (13 tests) 66ms
+ ✓ tests/document-set-validation.test.ts (4 tests) 42ms
+ ✓ tests/declarative-validation-when-skipped-rules-fixtures.test.ts (7 tests) 73ms
+ ✓ tests/declarative-validation-filtered-coverage.test.ts (14 tests) 59ms
+ ✓ tests/declarative-validation-selectors.test.ts (7 tests) 42ms
+ ✓ tests/declarative-validation-table-columns-exact.test.ts (11 tests) 36ms
+ ✓ tests/declarative-validation-grouped-rules-fixtures.test.ts (5 tests) 38ms
+ ✓ tests/declarative-validation-okf-examples.test.ts (4 tests) 43ms
+ ✓ tests/declarative-validation-visible-text.test.ts (31 tests) 52ms
+ ✓ tests/api.contract.test.ts (9 tests) 54ms
+ ✓ tests/rules-direct.test.ts (17 tests) 4ms
+ ✓ tests/rules.test.ts (9 tests) 71ms
+ ✓ tests/declarative-validation-compiler.test.ts (47 tests) 28ms
+ ✓ tests/security-policy-check.test.ts (2 tests) 2ms
+ ✓ tests/config-loader.test.ts (12 tests) 3ms
+ ✓ tests/declarative-validation-repeatability.test.ts (2 tests) 4543ms
+   ✓ BEL-983 declarative validation evidence repeatability > serializes results and evidence byte-for-byte across ten runs  4171ms
+   ✓ BEL-983 declarative validation evidence repeatability > uses the documented canonical inputs for inputHash and profileHash  371ms
+ ✓ tests/ms1-pipeline.test.ts (4 tests) 35ms
+ ✓ tests/declarative-validation-normalized-source-ranges.test.ts (4 tests) 3ms
+ ✓ tests/engine-node-attributes.test.ts (5 tests) 4ms
+ ✓ tests/declarative-validation-frontmatter-shape-assertions.test.ts (9 tests) 29ms
+ ✓ tests/stable-json.test.ts (2 tests) 2ms
+ ✓ tests/document-contract.test.ts (3 tests) 4ms
+
+ Test Files  53 passed (53)
+      Tests  684 passed (684)
+   Start at  07:54:51
+   Duration  6.67s (transform 2.52s, setup 0ms, collect 26.50s, tests 16.48s, environment 8ms, prepare 4.48s)
+

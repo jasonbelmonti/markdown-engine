@@ -1,0 +1,782 @@
+{
+  "diagnostics": [],
+  "evidence": {
+    "diagnostics": [],
+    "engineVersion": "3.5.0",
+    "inputHash": "7feb6443f3fa16f817b09140cdb080b366b3acb27eb8c5c9194a80b7eb17c688",
+    "profileHash": "eb3829c7c550d5d3b5bcf70c706eb2f7c0a682a0f9b60bc59027bcaf293646b0",
+    "ruleResults": [
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "coverage.outcomes.execution-actions",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "coverage.outcomes.validation-gates",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "coverage.phases.execution-route",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "coverage.preconditions.execution-actions",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "frontmatter.shape",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "rows.baseline-findings.count",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "rows.change-footprint.count",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "rows.execution-actions.count",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "rows.execution-phases.count",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "rows.execution-route.count",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "rows.failure-responses.count",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "rows.implementation-decisions.count",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "rows.outcome-anchors.count",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "rows.plan-control.count",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "rows.plan-readiness.count",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "rows.preconditions.count",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "rows.replan-triggers.count",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "rows.revision-log.count",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "rows.source-contract.count",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "rows.validation-gates.count",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "sections.required",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "tables.baseline-findings.columns",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "tables.change-footprint.columns",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "tables.execution-actions.columns",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "tables.execution-phases.columns",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "tables.execution-route.columns",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "tables.failure-responses.columns",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "tables.implementation-decisions.columns",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "tables.outcome-anchors.columns",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "tables.plan-control.columns",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "tables.plan-readiness.columns",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "tables.preconditions.columns",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "tables.replan-triggers.columns",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "tables.revision-log.columns",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "tables.source-contract.columns",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "tables.total.exact",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "tables.validation-gates.columns",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "unresolved-placeholders.excluded",
+        "status": "passed"
+      }
+    ],
+    "runtimeVersion": "v22.20.0"
+  },
+  "profile": {
+    "documentVersion": "1.0.0",
+    "evaluatedRuleCount": 38,
+    "ruleCount": 38,
+    "skippedRuleCount": 0,
+    "syntaxVersion": "markdown-engine.validation@v2"
+  },
+  "ruleResults": [
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "coverage.outcomes.execution-actions",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "coverage.outcomes.validation-gates",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "coverage.phases.execution-route",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "coverage.preconditions.execution-actions",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "frontmatter.shape",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "rows.baseline-findings.count",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "rows.change-footprint.count",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "rows.execution-actions.count",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "rows.execution-phases.count",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "rows.execution-route.count",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "rows.failure-responses.count",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "rows.implementation-decisions.count",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "rows.outcome-anchors.count",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "rows.plan-control.count",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "rows.plan-readiness.count",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "rows.preconditions.count",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "rows.replan-triggers.count",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "rows.revision-log.count",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "rows.source-contract.count",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "rows.validation-gates.count",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "sections.required",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "tables.baseline-findings.columns",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "tables.change-footprint.columns",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "tables.execution-actions.columns",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "tables.execution-phases.columns",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "tables.execution-route.columns",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "tables.failure-responses.columns",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "tables.implementation-decisions.columns",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "tables.outcome-anchors.columns",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "tables.plan-control.columns",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "tables.plan-readiness.columns",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "tables.preconditions.columns",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "tables.replan-triggers.columns",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "tables.revision-log.columns",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "tables.source-contract.columns",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "tables.total.exact",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "tables.validation-gates.columns",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "unresolved-placeholders.excluded",
+      "status": "passed"
+    }
+  ],
+  "valid": true
+}

@@ -1,0 +1,42 @@
+[
+  {
+    "source": "profiles/task-definition.yaml",
+    "baselineCommit": "040fb2b740f52459a8e55cbb0fe2e08ee691109b",
+    "currentSourceHash": "57d8498e8fc14641ffef404bd48d4f5604d49ac45a07419b08dbd2c8010f6cdc",
+    "packetHash": "57d8498e8fc14641ffef404bd48d4f5604d49ac45a07419b08dbd2c8010f6cdc",
+    "byteIdentical": true,
+    "bodyIdentical": true
+  },
+  {
+    "source": "references/task-definition-authoring-guide.md",
+    "baselineCommit": "040fb2b740f52459a8e55cbb0fe2e08ee691109b",
+    "currentSourceHash": "8f223b980e7b63022a39c1620502c9a7ef3dfaaf3a98bbcbfcfffc8fbe117627",
+    "packetHash": "8f223b980e7b63022a39c1620502c9a7ef3dfaaf3a98bbcbfcfffc8fbe117627",
+    "byteIdentical": true,
+    "bodyIdentical": true
+  },
+  {
+    "source": "references/task-definition-review-guide.md",
+    "baselineCommit": "040fb2b740f52459a8e55cbb0fe2e08ee691109b",
+    "currentSourceHash": "1d93d428a9d3958d97e793337691f1db2f63e05c304692dfc77115a21cb97b03",
+    "packetHash": "1d93d428a9d3958d97e793337691f1db2f63e05c304692dfc77115a21cb97b03",
+    "byteIdentical": true,
+    "bodyIdentical": true
+  },
+  {
+    "source": "tests/run-profile-validation.sh",
+    "baselineCommit": "040fb2b740f52459a8e55cbb0fe2e08ee691109b",
+    "currentSourceHash": "89390950b35e3374ddf361c3eb5320235aa9cf94ccaf26c888dd2ee827197ea2",
+    "packetHash": "89390950b35e3374ddf361c3eb5320235aa9cf94ccaf26c888dd2ee827197ea2",
+    "byteIdentical": true,
+    "bodyIdentical": true
+  },
+  {
+    "source": "SKILL.md",
+    "baselineCommit": "040fb2b740f52459a8e55cbb0fe2e08ee691109b",
+    "currentSourceHash": "37340930b9b5642e7e9d081282104bf2d60ff20bff831a21f6db3ef44f29afb3",
+    "packetHash": "7df492c2db1c686499ddd7907bc42fe5e1b72f984f05999028d7b8cc7aee8373",
+    "byteIdentical": false,
+    "bodyIdentical": true
+  }
+]

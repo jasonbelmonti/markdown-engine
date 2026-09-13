@@ -1,0 +1,726 @@
+{
+  "allMatched": true,
+  "cases": [
+    {
+      "name": "baseline",
+      "expectedValid": true,
+      "rule": null,
+      "phase": "shape",
+      "valid": true,
+      "exitStatus": 0,
+      "engineVersion": "3.5.0",
+      "inputHash": "4d45d6f820acc3188230c0f771a04176eeec955a3123fd1fba22924f8ca722f2",
+      "profileHash": "b355d93907e0f5c82953da054cfaecf6f74432d14da951344987eb680f06f16f",
+      "diagnostics": [],
+      "matchesExpectation": true
+    },
+    {
+      "name": "checkpoint-baseline",
+      "expectedValid": true,
+      "rule": null,
+      "phase": "shape",
+      "valid": true,
+      "exitStatus": 0,
+      "engineVersion": "3.5.0",
+      "inputHash": "3a65040bbf4a8fb6595e8bd2aa48c9d4da629fad624dd288aab4f2f6e616babf",
+      "profileHash": "b355d93907e0f5c82953da054cfaecf6f74432d14da951344987eb680f06f16f",
+      "diagnostics": [],
+      "matchesExpectation": true
+    },
+    {
+      "name": "duplicate-control-row",
+      "expectedValid": false,
+      "rule": "task-control.row.count",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "00cecfa0440c18faa8c95393ea21a23cdd250cfa231f46ab7b3c1241c512c71b",
+      "profileHash": "b355d93907e0f5c82953da054cfaecf6f74432d14da951344987eb680f06f16f",
+      "diagnostics": [
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 2.",
+          "ruleId": "task-control.row.count",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "duplicate-checkpoint-row",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.row.when-present",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "07aa56368df9e3886d5ad0302dcc0a8d789a4bf5001465c4879d9c5f9616b757",
+      "profileHash": "b355d93907e0f5c82953da054cfaecf6f74432d14da951344987eb680f06f16f",
+      "diagnostics": [
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 2.",
+          "ruleId": "execution-checkpoint.row.when-present",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "invalid-checkpoint-status",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.status.allowed",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "85e067b55ad4681ef76591a8d832f8e692c3c416487e5357030bfa0efbea363b",
+      "profileHash": "b355d93907e0f5c82953da054cfaecf6f74432d14da951344987eb680f06f16f",
+      "diagnostics": [
+        {
+          "code": "profile.validation.noAlternativeMatched",
+          "message": "No anyOf branch matched the grouped rule.",
+          "ruleId": "execution-checkpoint.status.allowed",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "control-zero-rows",
+      "expectedValid": false,
+      "rule": "task-control.row.count",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "e105461f9544e254d3e5938ad1cebb062e28804bfb5c46f419c7e50661bb6d58",
+      "profileHash": "b355d93907e0f5c82953da054cfaecf6f74432d14da951344987eb680f06f16f",
+      "diagnostics": [
+        {
+          "code": "profile.validation.noAlternativeMatched",
+          "message": "No anyOf branch matched the grouped rule.",
+          "ruleId": "task-control.contract-state.allowed",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.noAlternativeMatched",
+          "message": "No anyOf branch matched the grouped rule.",
+          "ruleId": "task-control.execution-route.allowed",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 0.",
+          "ruleId": "task-control.row.count",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.emptySelection",
+          "message": "Rule selector did not match any document targets.",
+          "ruleId": "task-control.state-rationale.nonempty",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.emptySelection",
+          "message": "Rule selector did not match any document targets.",
+          "ruleId": "task-control.state-rationale.nonempty",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "control-duplicate-tables",
+      "expectedValid": false,
+      "rule": "task-control.table.count",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "e98c9870051a2aa1492710cd9091c7c9c2c14be53c6f2b8f077de0e895bf3670",
+      "profileHash": "b355d93907e0f5c82953da054cfaecf6f74432d14da951344987eb680f06f16f",
+      "diagnostics": [
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 2.",
+          "ruleId": "task-control.row.count",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 2.",
+          "ruleId": "task-control.table.count",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 142,
+              "line": 25,
+              "offset": 806
+            },
+            "start": {
+              "column": 1,
+              "line": 23,
+              "offset": 590
+            }
+          }
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "control-duplicate-section",
+      "expectedValid": false,
+      "rule": "task-control.table.count",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "e02a1f538a95190017f6115a27063093ebf5f201b3ffe3ed6545f41f11972f06",
+      "profileHash": "b355d93907e0f5c82953da054cfaecf6f74432d14da951344987eb680f06f16f",
+      "diagnostics": [
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 2.",
+          "ruleId": "task-control.heading.count",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 16,
+              "line": 23,
+              "offset": 605
+            },
+            "start": {
+              "column": 1,
+              "line": 23,
+              "offset": 590
+            }
+          }
+        },
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 2.",
+          "ruleId": "task-control.row.count",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 2.",
+          "ruleId": "task-control.table.count",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 142,
+              "line": 27,
+              "offset": 823
+            },
+            "start": {
+              "column": 1,
+              "line": 25,
+              "offset": 607
+            }
+          }
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "control-table-elsewhere",
+      "expectedValid": false,
+      "rule": "task-control.table.count",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "da34d4106c04c47a009aa417b1b89b5fcf6b3c5f595acff55eb9cc017f883d2e",
+      "profileHash": "b355d93907e0f5c82953da054cfaecf6f74432d14da951344987eb680f06f16f",
+      "diagnostics": [
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 2.",
+          "ruleId": "task-control.table.count",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 142,
+              "line": 85,
+              "offset": 4151
+            },
+            "start": {
+              "column": 1,
+              "line": 83,
+              "offset": 3935
+            }
+          }
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "checkpoint-zero-rows",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.row.when-present",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "cadef851dd49972432933b5da37a7e1634ea440813b3a84d98af4824946dff85",
+      "profileHash": "b355d93907e0f5c82953da054cfaecf6f74432d14da951344987eb680f06f16f",
+      "diagnostics": [
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 0.",
+          "ruleId": "execution-checkpoint.row.when-present",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.noAlternativeMatched",
+          "message": "No anyOf branch matched the grouped rule.",
+          "ruleId": "execution-checkpoint.status.allowed",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "checkpoint-no-table",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.table.inside-checkpoint",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "d9062d4cbd0dd561e456b375e244022336d690d7f6017bda162540d92152cdab",
+      "profileHash": "b355d93907e0f5c82953da054cfaecf6f74432d14da951344987eb680f06f16f",
+      "diagnostics": [
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 0.",
+          "ruleId": "execution-checkpoint.row.when-present",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.noAlternativeMatched",
+          "message": "No anyOf branch matched the grouped rule.",
+          "ruleId": "execution-checkpoint.status.allowed",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 0.",
+          "ruleId": "execution-checkpoint.table.global-count",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.emptySelection",
+          "message": "Rule selector did not match any document targets.",
+          "ruleId": "execution-checkpoint.table.inside-checkpoint",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 0.",
+          "ruleId": "execution-checkpoint.table.inside-checkpoint",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.emptySelection",
+          "message": "Rule selector did not match any document targets.",
+          "ruleId": "execution-checkpoint.table.when-present",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "checkpoint-duplicate-tables",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.table.global-count",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "0d87371fc369d55f04f62514e54bcf7a5070e119dd94696ab2a9489ec1ee022f",
+      "profileHash": "b355d93907e0f5c82953da054cfaecf6f74432d14da951344987eb680f06f16f",
+      "diagnostics": [
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 2.",
+          "ruleId": "execution-checkpoint.row.when-present",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 2.",
+          "ruleId": "execution-checkpoint.table.global-count",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 101,
+              "line": 87,
+              "offset": 4400
+            },
+            "start": {
+              "column": 1,
+              "line": 85,
+              "offset": 4161
+            }
+          }
+        },
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 2.",
+          "ruleId": "execution-checkpoint.table.inside-checkpoint",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 101,
+              "line": 87,
+              "offset": 4400
+            },
+            "start": {
+              "column": 1,
+              "line": 85,
+              "offset": 4161
+            }
+          }
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "checkpoint-duplicate-headings",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.heading.count",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "0d3fc7b7a3dcd7d60b4f1c2ab53f6c801732cd206aedd51a5d708ac3eb10c169",
+      "profileHash": "b355d93907e0f5c82953da054cfaecf6f74432d14da951344987eb680f06f16f",
+      "diagnostics": [
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be at most 1; found 2.",
+          "ruleId": "execution-checkpoint.heading.count",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 25,
+              "line": 83,
+              "offset": 3952
+            },
+            "start": {
+              "column": 1,
+              "line": 83,
+              "offset": 3928
+            }
+          }
+        },
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 2.",
+          "ruleId": "execution-checkpoint.heading.when-table-present",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 25,
+              "line": 83,
+              "offset": 3952
+            },
+            "start": {
+              "column": 1,
+              "line": 83,
+              "offset": 3928
+            }
+          }
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "checkpoint-heading-depth-two",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.heading-depth.when-present",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "605e423e86239ae58a8d37675539ae9959426ab8b498d4f3b17a3435cb7d093c",
+      "profileHash": "b355d93907e0f5c82953da054cfaecf6f74432d14da951344987eb680f06f16f",
+      "diagnostics": [
+        {
+          "code": "profile.validation.emptySelection",
+          "message": "Rule selector did not match any document targets.",
+          "ruleId": "execution-checkpoint.heading-depth.when-present",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 0.",
+          "ruleId": "execution-checkpoint.row.when-present",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.emptySelection",
+          "message": "Rule selector did not match any document targets.",
+          "ruleId": "execution-checkpoint.table.when-present",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "checkpoint-heading-depth-four",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.heading-depth.when-present",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "20bf7bddfa694253f6628eb2b29b9409a4f21d402742ca66c1a1d94e79d953e7",
+      "profileHash": "b355d93907e0f5c82953da054cfaecf6f74432d14da951344987eb680f06f16f",
+      "diagnostics": [
+        {
+          "code": "profile.validation.emptySelection",
+          "message": "Rule selector did not match any document targets.",
+          "ruleId": "execution-checkpoint.heading-depth.when-present",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "checkpoint-misplaced",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.table.when-present",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "c61bd31e07237d5d436ae795111f56854eb7b3e6c05fac40370fcd51d858d577",
+      "profileHash": "b355d93907e0f5c82953da054cfaecf6f74432d14da951344987eb680f06f16f",
+      "diagnostics": [
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 0.",
+          "ruleId": "execution-checkpoint.row.when-present",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.emptySelection",
+          "message": "Rule selector did not match any document targets.",
+          "ruleId": "execution-checkpoint.table.when-present",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "checkpoint-table-before-heading",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.table.inside-checkpoint",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "68558e72429e9b027548a5ba4e646bd649c34f3c92012dee5471ff90e7165c41",
+      "profileHash": "b355d93907e0f5c82953da054cfaecf6f74432d14da951344987eb680f06f16f",
+      "diagnostics": [
+        {
+          "code": "profile.validation.noAlternativeMatched",
+          "message": "No anyOf branch matched the grouped rule.",
+          "ruleId": "execution-checkpoint.status.allowed",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.emptySelection",
+          "message": "Rule selector did not match any document targets.",
+          "ruleId": "execution-checkpoint.table.inside-checkpoint",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 0.",
+          "ruleId": "execution-checkpoint.table.inside-checkpoint",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "checkpoint-table-without-heading",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.heading.when-table-present",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "10c378fce57201a769cf1ef0ac3b9c0180989b304857fdb1f7ea276e46488c5a",
+      "profileHash": "b355d93907e0f5c82953da054cfaecf6f74432d14da951344987eb680f06f16f",
+      "diagnostics": [
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 0.",
+          "ruleId": "execution-checkpoint.heading.when-table-present",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "checkpoint-table-in-sibling",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.table.inside-checkpoint",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "cdbce5ead6793d5b30ef21cff8e358ca942dabc10e11f9fa78298a2d9a6681f0",
+      "profileHash": "b355d93907e0f5c82953da054cfaecf6f74432d14da951344987eb680f06f16f",
+      "diagnostics": [
+        {
+          "code": "profile.validation.noAlternativeMatched",
+          "message": "No anyOf branch matched the grouped rule.",
+          "ruleId": "execution-checkpoint.status.allowed",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.emptySelection",
+          "message": "Rule selector did not match any document targets.",
+          "ruleId": "execution-checkpoint.table.inside-checkpoint",
+          "severity": "error"
+        },
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 0.",
+          "ruleId": "execution-checkpoint.table.inside-checkpoint",
+          "severity": "error"
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "checkpoint-decoy-notes-table",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.table.global-count",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "26a20add68cc618c58f79d3bbe6254ffc8cb907898e531f53187c74b14526ba9",
+      "profileHash": "b355d93907e0f5c82953da054cfaecf6f74432d14da951344987eb680f06f16f",
+      "diagnostics": [
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 2.",
+          "ruleId": "execution-checkpoint.table.global-count",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 101,
+              "line": 89,
+              "offset": 4416
+            },
+            "start": {
+              "column": 1,
+              "line": 87,
+              "offset": 4177
+            }
+          }
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "checkpoint-extra-table",
+      "expectedValid": false,
+      "rule": "execution-checkpoint.table.inside-checkpoint",
+      "phase": "shape",
+      "valid": false,
+      "exitStatus": 1,
+      "engineVersion": "3.5.0",
+      "inputHash": "3554209e6f90dcc77a704d6befbb304c67da7813dc7812a2da0c071d3d51470a",
+      "profileHash": "b355d93907e0f5c82953da054cfaecf6f74432d14da951344987eb680f06f16f",
+      "diagnostics": [
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Selected table columns must exactly match [\"Execution status\",\"Current proving slice\",\"Evidence admitted\",\"Next action\",\"Blockers / stop condition\"]; found [\"Other\"].",
+          "ruleId": "execution-checkpoint.table.inside-checkpoint",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 10,
+              "line": 85,
+              "offset": 4170
+            },
+            "start": {
+              "column": 1,
+              "line": 85,
+              "offset": 4161
+            }
+          }
+        },
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Rule selector target count must be between 1 and 1; found 2.",
+          "ruleId": "execution-checkpoint.table.inside-checkpoint",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 10,
+              "line": 87,
+              "offset": 4188
+            },
+            "start": {
+              "column": 1,
+              "line": 85,
+              "offset": 4161
+            }
+          }
+        }
+      ],
+      "matchesExpectation": true
+    },
+    {
+      "name": "status-not-started",
+      "expectedValid": true,
+      "rule": null,
+      "phase": "shape",
+      "valid": true,
+      "exitStatus": 0,
+      "engineVersion": "3.5.0",
+      "inputHash": "f3128d2f61d2236e73ea93aebf747438f9c5c05dac0f4bba71b164d352eb4ec5",
+      "profileHash": "b355d93907e0f5c82953da054cfaecf6f74432d14da951344987eb680f06f16f",
+      "diagnostics": [],
+      "matchesExpectation": true
+    },
+    {
+      "name": "status-active",
+      "expectedValid": true,
+      "rule": null,
+      "phase": "shape",
+      "valid": true,
+      "exitStatus": 0,
+      "engineVersion": "3.5.0",
+      "inputHash": "4354e4f00da944e8cf13d0cfb9ec1396542434b53c199214824304f907c5d220",
+      "profileHash": "b355d93907e0f5c82953da054cfaecf6f74432d14da951344987eb680f06f16f",
+      "diagnostics": [],
+      "matchesExpectation": true
+    },
+    {
+      "name": "status-blocked",
+      "expectedValid": true,
+      "rule": null,
+      "phase": "shape",
+      "valid": true,
+      "exitStatus": 0,
+      "engineVersion": "3.5.0",
+      "inputHash": "6414c88b4f5c2f0fb5a4861828e884801dedb95d1107a927c9273cd56f36da48",
+      "profileHash": "b355d93907e0f5c82953da054cfaecf6f74432d14da951344987eb680f06f16f",
+      "diagnostics": [],
+      "matchesExpectation": true
+    }
+  ]
+}

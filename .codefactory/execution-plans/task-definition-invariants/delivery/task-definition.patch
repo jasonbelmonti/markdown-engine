@@ -1,0 +1,1204 @@
+From a3024d77d2350e81039427ccb519963567982fb0 Mon Sep 17 00:00:00 2001
+From: Jason Belmonti <jasonbelmonti@gmail.com>
+Date: Sun, 13 Sep 2026 07:59:27 -0500
+Subject: [PATCH] Enforce Task Definition control and checkpoint invariants
+
+---
+ .../profiles/task-definition.yaml             | 350 +++++++++++++++++-
+ skills/task-definition/tests/README.md        |  62 ++++
+ .../tests/fixtures/invariants/baseline.md     |  81 ++++
+ .../invariants/checkpoint-baseline.md         |  87 +++++
+ .../invariants/duplicate-checkpoint-row.md    |  88 +++++
+ .../invariants/duplicate-control-row.md       |  82 ++++
+ .../invariants/invalid-checkpoint-status.md   |  87 +++++
+ .../review-ready-without-evidence.md          |  87 +++++
+ .../task-definition/tests/invariant_cases.py  |  82 ++++
+ .../task-definition/tests/run-invariants.py   |  46 +++
+ .../tests/run-profile-validation.sh           |  15 +-
+ 11 files changed, 1063 insertions(+), 4 deletions(-)
+ create mode 100644 skills/task-definition/tests/README.md
+ create mode 100644 skills/task-definition/tests/fixtures/invariants/baseline.md
+ create mode 100644 skills/task-definition/tests/fixtures/invariants/checkpoint-baseline.md
+ create mode 100644 skills/task-definition/tests/fixtures/invariants/duplicate-checkpoint-row.md
+ create mode 100644 skills/task-definition/tests/fixtures/invariants/duplicate-control-row.md
+ create mode 100644 skills/task-definition/tests/fixtures/invariants/invalid-checkpoint-status.md
+ create mode 100644 skills/task-definition/tests/fixtures/invariants/review-ready-without-evidence.md
+ create mode 100644 skills/task-definition/tests/invariant_cases.py
+ create mode 100644 skills/task-definition/tests/run-invariants.py
+
+diff --git a/skills/task-definition/profiles/task-definition.yaml b/skills/task-definition/profiles/task-definition.yaml
+index e65e1a1..a23ebfe 100644
+--- a/skills/task-definition/profiles/task-definition.yaml
++++ b/skills/task-definition/profiles/task-definition.yaml
+@@ -3,8 +3,9 @@
+ # lifecycle controls, structure, optional execution-checkpoint shape, and
+ # bidirectional success-criteria/evidence coverage.
+ # The documentVersion field selects the Markdown Engine normalized document model.
+-# Exactly-one control-row semantics, material verifiability, value slicing, and
+-# review-boundary adequacy remain required review responsibilities.
++# Requires the filtered-coverage and text.nonBlank engine capabilities.
++# Cardinality, status, visible checkpoint cells and required ID coverage are structural.
++# Evidence truth, freshness, material verifiability and acceptance remain semantic review.
+ syntaxVersion: markdown-engine.validation@v2
+ documentVersion: 1.0.0
+ rules:
+@@ -715,7 +716,9 @@ rules:
+         - Next action
+         - Blockers / stop condition
+     assert:
+-      exists: true
++      selectionCount:
++        min: 1
++        max: 1
+ 
+   - id: review-boundary.table.columns
+     select:
+@@ -839,3 +842,344 @@ rules:
+           - TBD
+           - TODO
+           - "???"
++
++  - id: task-control.heading.count
++    select:
++      target: section
++      title: Task Control
++    assert:
++      selectionCount:
++        min: 1
++        max: 1
++
++  - id: task-control.table.count
++    select:
++      target: table
++      header:
++        - Contract state
++        - Execution route
++        - State rationale
++    assert:
++      selectionCount:
++        min: 1
++        max: 1
++
++  - id: task-control.row.count
++    select:
++      target: tableRow
++      section: Task Control
++      tableHeader:
++        - Contract state
++        - Execution route
++        - State rationale
++    assert:
++      selectionCount:
++        min: 1
++        max: 1
++
++  - id: execution-checkpoint.heading.count
++    select:
++      target: section
++      title: Execution Checkpoint
++    assert:
++      selectionCount:
++        max: 1
++
++  - id: execution-checkpoint.notes.depth
++    when:
++      select:
++        target: section
++        title: Execution Checkpoint
++      assert:
++        exists: true
++    select:
++      target: section
++      title: Execution Notes
++      depth: 2
++    assert:
++      selectionCount:
++        min: 1
++        max: 1
++
++  - id: execution-checkpoint.table.global-count
++    when:
++      select:
++        target: section
++        title: Execution Checkpoint
++      assert:
++        exists: true
++    select:
++      target: table
++      header:
++        - Execution status
++        - Current proving slice
++        - Evidence admitted
++        - Next action
++        - Blockers / stop condition
++    assert:
++      selectionCount:
++        min: 1
++        max: 1
++
++  - id: execution-checkpoint.table.inside-checkpoint
++    when:
++      select:
++        target: section
++        title: Execution Checkpoint
++      assert:
++        exists: true
++    select:
++      target: table
++      section: Execution Checkpoint
++    assert:
++      selectionCount:
++        min: 1
++        max: 1
++      tableColumnsExact:
++        columns:
++          - Execution status
++          - Current proving slice
++          - Evidence admitted
++          - Next action
++          - Blockers / stop condition
++
++  - id: execution-checkpoint.heading.when-table-present
++    when:
++      select:
++        target: table
++        header:
++          - Execution status
++          - Current proving slice
++          - Evidence admitted
++          - Next action
++          - Blockers / stop condition
++      assert:
++        exists: true
++    select:
++      target: section
++      title: Execution Checkpoint
++    assert:
++      selectionCount:
++        min: 1
++        max: 1
++
++  - id: execution-checkpoint.status.allowed
++    when:
++      select:
++        target: section
++        title: Execution Checkpoint
++      assert:
++        exists: true
++    anyOf:
++      - label: not-started
++        select:
++          target: tableCell
++          section: Execution Checkpoint
++          column: Execution status
++        assert:
++          text:
++            contains: not-started
++          textLength:
++            min: 11
++            max: 11
++      - label: active
++        select:
++          target: tableCell
++          section: Execution Checkpoint
++          column: Execution status
++        assert:
++          text:
++            contains: active
++          textLength:
++            min: 6
++            max: 6
++      - label: blocked
++        select:
++          target: tableCell
++          section: Execution Checkpoint
++          column: Execution status
++        assert:
++          text:
++            contains: blocked
++          textLength:
++            min: 7
++            max: 7
++      - label: review-ready
++        select:
++          target: tableCell
++          section: Execution Checkpoint
++          column: Execution status
++        assert:
++          text:
++            contains: review-ready
++          textLength:
++            min: 12
++            max: 12
++
++  - id: execution-checkpoint.notes.count
++    when:
++      select:
++        target: section
++        title: Execution Checkpoint
++      assert:
++        exists: true
++    select:
++      target: section
++      title: Execution Notes
++    assert:
++      selectionCount:
++        min: 1
++        max: 1
++
++  - id: execution-checkpoint.cells.nonblank
++    when:
++      select:
++        target: section
++        title: Execution Checkpoint
++      assert:
++        exists: true
++    allOf:
++      - label: status
++        select:
++          target: tableCell
++          section: Execution Checkpoint
++          column: Execution status
++        assert:
++          text:
++            nonBlank: true
++      - label: slice
++        select:
++          target: tableCell
++          section: Execution Checkpoint
++          column: Current proving slice
++        assert:
++          text:
++            nonBlank: true
++      - label: evidence
++        select:
++          target: tableCell
++          section: Execution Checkpoint
++          column: Evidence admitted
++        assert:
++          text:
++            nonBlank: true
++      - label: next-action
++        select:
++          target: tableCell
++          section: Execution Checkpoint
++          column: Next action
++        assert:
++          text:
++            nonBlank: true
++      - label: blockers
++        select:
++          target: tableCell
++          section: Execution Checkpoint
++          column: Blockers / stop condition
++        assert:
++          text:
++            nonBlank: true
++
++  - id: execution-checkpoint.evidence.declared
++    when:
++      select:
++        target: section
++        title: Execution Checkpoint
++      assert:
++        exists: true
++    select:
++      target: document
++    assert:
++      tableColumnCoverage:
++        source:
++          section: Execution Checkpoint
++          column: Evidence admitted
++          prefix: TD-SC
++        target:
++          section: Materially Verifiable Success Criteria
++          column: ID
++          tableHeader:
++            - ID
++            - Criterion
++            - Proof
++            - Required before done
++        require: everySourceId
++        allowEmptySource: true
++
++  - id: execution-checkpoint.required-evidence.coverage
++    when:
++      select:
++        target: tableRow
++        section: Execution Checkpoint
++        tableHeader:
++          - Execution status
++          - Current proving slice
++          - Evidence admitted
++          - Next action
++          - Blockers / stop condition
++        where:
++          column: Execution status
++          equals: review-ready
++      assert:
++        exists: true
++    select:
++      target: document
++    assert:
++      tableColumnCoverage:
++        source:
++          section: Materially Verifiable Success Criteria
++          column: ID
++          prefix: TD-SC
++          rowWhere:
++            column: Required before done
++            equals: Yes
++        target:
++          section: Execution Checkpoint
++          column: Evidence admitted
++          tableHeader:
++            - Execution status
++            - Current proving slice
++            - Evidence admitted
++            - Next action
++            - Blockers / stop condition
++        require: everySourceId
++        allowEmptySource: true
++
++  - id: task-control.heading.depth
++    select:
++      target: section
++      title: Task Control
++      depth: 2
++    assert:
++      selectionCount:
++        min: 1
++        max: 1
++
++  - id: execution-checkpoint.evidence.references-or-none
++    when:
++      select:
++        target: section
++        title: Execution Checkpoint
++      assert:
++        exists: true
++    anyOf:
++      - label: none-admitted
++        select:
++          target: tableCell
++          section: Execution Checkpoint
++          column: Evidence admitted
++        assert:
++          text:
++            contains: None admitted.
++          textLength:
++            min: 14
++            max: 14
++      - label: criterion-references
++        select:
++          target: tableCell
++          section: Execution Checkpoint
++          column: Evidence admitted
++        assert:
++          ids:
++            prefix: TD-SC
++            minCount: 1
+diff --git a/skills/task-definition/tests/README.md b/skills/task-definition/tests/README.md
+new file mode 100644
+index 0000000..b454ed5
+--- /dev/null
++++ b/skills/task-definition/tests/README.md
+@@ -0,0 +1,62 @@
++# Deterministic invariant regressions
++
++The corrected profile is maintained in `../profiles/task-definition.yaml`.
++This change starts from consumer commit `040fb2b740f52459a8e55cbb0fe2e08ee691109b`.
++That profile is byte-identical to the supplied handoff baseline, SHA256
++`57d8498e8fc14641ffef404bd48d4f5604d49ac45a07419b08dbd2c8010f6cdc`.
++The written skill and authoring/review guidance retain their existing authority.
++
++Use Markdown Engine implementation commit
++`fb9aa69bac5d12bdb860b985a3dc6bc48027e267` (development build reporting `3.5.0`),
++based on released source `ec9c5bfe5ecb9c5c8cc4a075f5d4e46e599fcd30`.
++The release version alone does not identify these new capabilities. Unmodified
++3.5.0 rejects the new profile at configuration validation; it must not be used
++as the fixed runtime. No wrapper installation, release, or fleet activation is
++part of this delivery.
++
++From the consumer repository, run:
++
++```sh
++MARKDOWN_ENGINE_BIN=/absolute/engine/dist/cli/index.js \
++  bash skills/task-definition/tests/run-profile-validation.sh
++```
++
++The existing lifecycle, metadata, criterion/evidence and checkpoint regressions
++run first; the invariant matrix then runs through the same ordinary `validate`
++CLI. Set `TASK_DEFINITION_INVARIANT_REPORT` to retain the matrix JSON.
++Set `TASK_DEFINITION_PROFILE_REPORT_DIR` to retain existing-suite CLI JSON and
++actual exit-status files. These reporting options do not validate documents or
++supply rejections. Python 3.9+ and Node are required by the test harness.
++
++For an isolated matrix run:
++
++```sh
++python3 skills/task-definition/tests/run-invariants.py \
++  --engine /absolute/engine/dist/cli/index.js --output /tmp/invariants.json
++```
++
++The six files in `fixtures/invariants` are the unchanged supplied reproduction.
++`invariant_cases.py` constructs isolated structural mutations and additional
++positive controls; `run-invariants.py` records file SHA256 hashes, engine version,
++exit status, validity, and diagnostics, and checks the intended rule for each
++negative. The proof text and commit names inside fixtures are fictional test data.
++
++| Invariant | Capability ownership |
++| --- | --- |
++| One control authority table and row, allowing a separate BLOCKED detail table | Existing `selectionCount` and table-header selectors; consumer rules |
++| Optional checkpoint with one correctly placed heading/table/row | Existing scoped selectors, `when`, `selectionCount`, `tableColumnsExact`; global uniqueness makes the table selected in both Notes and Checkpoint the same table |
++| Allowed checkpoint statuses and a reference or the legal no-evidence sentinel | Existing `anyOf`, literal text/length, row predicates and ID count assertions; consumer vocabulary |
++| Visible non-whitespace checkpoint cells | New opt-in v2 `text.nonBlank`; generic node-text predicate, excludes raw HTML and preserves literal code/Markdown text |
++| Declared checkpoint evidence IDs | Existing `tableColumnCoverage` direction reversed, with new explicit `allowEmptySource` policy for the sentinel |
++| Required criterion coverage only when review-ready | Existing conditional row predicate and coverage target scoping, with new `source.rowWhere` sibling filter and empty-source policy for all-optional criteria |
++
++`Yes` identifies required criteria; `No` identifies optional criteria, matching
++the controlling examples. Filtering uses normalized cell text, so emphasis and
++inline-code formatting are preserved. No evidence serialization format is added.
++The rule checks only references in `Evidence admitted`; IDs in Next action or
++Validation / Evidence cannot supply missing checkpoint coverage.
++
++Structural reference coverage does not establish evidence truth, freshness,
++per-claim sufficiency, implementation completion, or acceptance. Those judgments
++remain semantic review responsibilities. `text.nonBlank` checks normalized text
++outside raw HTML; it does not evaluate CSS or external rendering.
+diff --git a/skills/task-definition/tests/fixtures/invariants/baseline.md b/skills/task-definition/tests/fixtures/invariants/baseline.md
+new file mode 100644
+index 0000000..dd5e6aa
+--- /dev/null
++++ b/skills/task-definition/tests/fixtures/invariants/baseline.md
+@@ -0,0 +1,81 @@
++---
++type: TaskDefinition
++title: Add JSON export to the report command
++task_id: report-json-export
++artifact_version: "3.0"
++revision: "1"
++created_at: "2026-08-15T12:00:00-05:00"
++updated_at: "2026-08-15T12:00:00-05:00"
++validation_profile: skills/task-definition/profiles/task-definition.yaml
++tags:
++  - example
++  - cli
++producer:
++  skill: task-definition
++---
++
++## Task Control
++
++| Contract state | Execution route | State rationale |
++| --- | --- | --- |
++| READY | DIRECT | Source, structural, semantic, and post-draft review gates pass; the bounded task can proceed directly to implementation. |
++
++## Objective
++
++Add an explicit JSON output option to the report command so automation can consume the same report records currently shown to terminal users.
++
++## Context / Constraints
++
++- Preserve the current human-readable output when the new option is absent.
++- Use the report command's existing record selection and ordering.
++- Do not add a new transport or persistent storage format.
++
++## Source Authority
++
++| Source | Authority | Status | Task implication |
++| --- | --- | --- | --- |
++| Approved report automation request | Product outcome authority | Confirmed | Automation requires structured output without changing the existing interactive command. |
++| Current report command and focused tests | Behavior and regression baseline | Inspected | Reuse current record selection and preserve default output. |
++
++## Task Scope
++
++| Scope item | Classification | Approval impact | Notes |
++| --- | --- | --- | --- |
++| JSON output option and serializer | In scope | blocking | Emit the selected report records as valid JSON. |
++| Default terminal output regression | In scope | blocking | Existing behavior must remain unchanged without the option. |
++| Additional export formats | Out of scope | non-blocking | CSV and XML require separate outcome authority. |
++
++## Materially Verifiable Success Criteria
++
++| ID | Criterion | Proof | Required before done |
++| --- | --- | --- | --- |
++| TD-SC-1 | Invoking the report command with the JSON option exits zero and emits a parseable JSON array containing the same ordered records as the existing report selection. | Run the focused CLI fixture, parse stdout as JSON, and compare record identities and order with the fixture's expected selection. | Yes |
++| TD-SC-2 | Invoking the report command without the JSON option preserves its current stdout and exit behavior. | Run the existing report command regression test unchanged and compare its captured output with the baseline fixture. | Yes |
++
++## Incremental Value Delivery
++
++| Slice | Value proven | Risk retired | Evidence | Stop / continue decision |
++| --- | --- | --- | --- | --- |
++| Structured report output | Automation can consume the current report selection while interactive output remains stable. | Retires divergent selection logic and default-output regression risk. | Focused JSON fixture plus the existing report regression test. | Stop when both criteria pass over the same record fixture. |
++
++## Review Boundary
++
++| Boundary | In scope for review | Out of scope / follow-up | Approval impact |
++| --- | --- | --- | --- |
++| Output behavior | JSON validity, record parity, ordering, and unchanged default output | Additional formats | blocking for in-scope regressions; otherwise non-blocking |
++
++## Validation / Evidence
++
++| Criterion ID | Check | Evidence | Runner / owner | Required before done |
++| --- | --- | --- | --- | --- |
++| TD-SC-1 | Run the focused JSON CLI fixture and parse stdout. | Zero exit, parseable JSON, and exact ordered record parity. | Implementer | Yes |
++| TD-SC-2 | Run the existing default-output regression test. | Zero exit with unchanged stdout and exit behavior. | Implementer | Yes |
++
++## Execution Notes
++
++- Use the existing report selection boundary and add serialization after selection.
++- Stop if structured output requires changing record selection or default output semantics.
++
++## Follow-up / Non-blocking Work
++
++None.
+diff --git a/skills/task-definition/tests/fixtures/invariants/checkpoint-baseline.md b/skills/task-definition/tests/fixtures/invariants/checkpoint-baseline.md
+new file mode 100644
+index 0000000..cbe37c1
+--- /dev/null
++++ b/skills/task-definition/tests/fixtures/invariants/checkpoint-baseline.md
+@@ -0,0 +1,87 @@
++---
++type: TaskDefinition
++title: Add JSON export to the report command
++task_id: report-json-export
++artifact_version: "3.0"
++revision: "1"
++created_at: "2026-08-15T12:00:00-05:00"
++updated_at: "2026-08-15T12:00:00-05:00"
++validation_profile: skills/task-definition/profiles/task-definition.yaml
++tags:
++  - example
++  - cli
++producer:
++  skill: task-definition
++---
++
++## Task Control
++
++| Contract state | Execution route | State rationale |
++| --- | --- | --- |
++| READY | DIRECT | Source, structural, semantic, and post-draft review gates pass; the bounded task can proceed directly to implementation. |
++
++## Objective
++
++Add an explicit JSON output option to the report command so automation can consume the same report records currently shown to terminal users.
++
++## Context / Constraints
++
++- Preserve the current human-readable output when the new option is absent.
++- Use the report command's existing record selection and ordering.
++- Do not add a new transport or persistent storage format.
++
++## Source Authority
++
++| Source | Authority | Status | Task implication |
++| --- | --- | --- | --- |
++| Approved report automation request | Product outcome authority | Confirmed | Automation requires structured output without changing the existing interactive command. |
++| Current report command and focused tests | Behavior and regression baseline | Inspected | Reuse current record selection and preserve default output. |
++
++## Task Scope
++
++| Scope item | Classification | Approval impact | Notes |
++| --- | --- | --- | --- |
++| JSON output option and serializer | In scope | blocking | Emit the selected report records as valid JSON. |
++| Default terminal output regression | In scope | blocking | Existing behavior must remain unchanged without the option. |
++| Additional export formats | Out of scope | non-blocking | CSV and XML require separate outcome authority. |
++
++## Materially Verifiable Success Criteria
++
++| ID | Criterion | Proof | Required before done |
++| --- | --- | --- | --- |
++| TD-SC-1 | Invoking the report command with the JSON option exits zero and emits a parseable JSON array containing the same ordered records as the existing report selection. | Run the focused CLI fixture, parse stdout as JSON, and compare record identities and order with the fixture's expected selection. | Yes |
++| TD-SC-2 | Invoking the report command without the JSON option preserves its current stdout and exit behavior. | Run the existing report command regression test unchanged and compare its captured output with the baseline fixture. | Yes |
++
++## Incremental Value Delivery
++
++| Slice | Value proven | Risk retired | Evidence | Stop / continue decision |
++| --- | --- | --- | --- | --- |
++| Structured report output | Automation can consume the current report selection while interactive output remains stable. | Retires divergent selection logic and default-output regression risk. | Focused JSON fixture plus the existing report regression test. | Stop when both criteria pass over the same record fixture. |
++
++## Review Boundary
++
++| Boundary | In scope for review | Out of scope / follow-up | Approval impact |
++| --- | --- | --- | --- |
++| Output behavior | JSON validity, record parity, ordering, and unchanged default output | Additional formats | blocking for in-scope regressions; otherwise non-blocking |
++
++## Validation / Evidence
++
++| Criterion ID | Check | Evidence | Runner / owner | Required before done |
++| --- | --- | --- | --- | --- |
++| TD-SC-1 | Run the focused JSON CLI fixture and parse stdout. | Zero exit, parseable JSON, and exact ordered record parity. | Implementer | Yes |
++| TD-SC-2 | Run the existing default-output regression test. | Zero exit with unchanged stdout and exit behavior. | Implementer | Yes |
++
++## Execution Notes
++
++- Use the existing report selection boundary and add serialization after selection.
++- Stop if structured output requires changing record selection or default output semantics.
++
++### Execution Checkpoint
++
++| Execution status | Current proving slice | Evidence admitted | Next action | Blockers / stop condition |
++| --- | --- | --- | --- | --- |
++| active | Prove TD-SC-2. | TD-SC-1: fixture passed at commit abc123. | Run TD-SC-2 check. | None. |
++
++## Follow-up / Non-blocking Work
++
++None.
+diff --git a/skills/task-definition/tests/fixtures/invariants/duplicate-checkpoint-row.md b/skills/task-definition/tests/fixtures/invariants/duplicate-checkpoint-row.md
+new file mode 100644
+index 0000000..76bb628
+--- /dev/null
++++ b/skills/task-definition/tests/fixtures/invariants/duplicate-checkpoint-row.md
+@@ -0,0 +1,88 @@
++---
++type: TaskDefinition
++title: Add JSON export to the report command
++task_id: report-json-export
++artifact_version: "3.0"
++revision: "1"
++created_at: "2026-08-15T12:00:00-05:00"
++updated_at: "2026-08-15T12:00:00-05:00"
++validation_profile: skills/task-definition/profiles/task-definition.yaml
++tags:
++  - example
++  - cli
++producer:
++  skill: task-definition
++---
++
++## Task Control
++
++| Contract state | Execution route | State rationale |
++| --- | --- | --- |
++| READY | DIRECT | Source, structural, semantic, and post-draft review gates pass; the bounded task can proceed directly to implementation. |
++
++## Objective
++
++Add an explicit JSON output option to the report command so automation can consume the same report records currently shown to terminal users.
++
++## Context / Constraints
++
++- Preserve the current human-readable output when the new option is absent.
++- Use the report command's existing record selection and ordering.
++- Do not add a new transport or persistent storage format.
++
++## Source Authority
++
++| Source | Authority | Status | Task implication |
++| --- | --- | --- | --- |
++| Approved report automation request | Product outcome authority | Confirmed | Automation requires structured output without changing the existing interactive command. |
++| Current report command and focused tests | Behavior and regression baseline | Inspected | Reuse current record selection and preserve default output. |
++
++## Task Scope
++
++| Scope item | Classification | Approval impact | Notes |
++| --- | --- | --- | --- |
++| JSON output option and serializer | In scope | blocking | Emit the selected report records as valid JSON. |
++| Default terminal output regression | In scope | blocking | Existing behavior must remain unchanged without the option. |
++| Additional export formats | Out of scope | non-blocking | CSV and XML require separate outcome authority. |
++
++## Materially Verifiable Success Criteria
++
++| ID | Criterion | Proof | Required before done |
++| --- | --- | --- | --- |
++| TD-SC-1 | Invoking the report command with the JSON option exits zero and emits a parseable JSON array containing the same ordered records as the existing report selection. | Run the focused CLI fixture, parse stdout as JSON, and compare record identities and order with the fixture's expected selection. | Yes |
++| TD-SC-2 | Invoking the report command without the JSON option preserves its current stdout and exit behavior. | Run the existing report command regression test unchanged and compare its captured output with the baseline fixture. | Yes |
++
++## Incremental Value Delivery
++
++| Slice | Value proven | Risk retired | Evidence | Stop / continue decision |
++| --- | --- | --- | --- | --- |
++| Structured report output | Automation can consume the current report selection while interactive output remains stable. | Retires divergent selection logic and default-output regression risk. | Focused JSON fixture plus the existing report regression test. | Stop when both criteria pass over the same record fixture. |
++
++## Review Boundary
++
++| Boundary | In scope for review | Out of scope / follow-up | Approval impact |
++| --- | --- | --- | --- |
++| Output behavior | JSON validity, record parity, ordering, and unchanged default output | Additional formats | blocking for in-scope regressions; otherwise non-blocking |
++
++## Validation / Evidence
++
++| Criterion ID | Check | Evidence | Runner / owner | Required before done |
++| --- | --- | --- | --- | --- |
++| TD-SC-1 | Run the focused JSON CLI fixture and parse stdout. | Zero exit, parseable JSON, and exact ordered record parity. | Implementer | Yes |
++| TD-SC-2 | Run the existing default-output regression test. | Zero exit with unchanged stdout and exit behavior. | Implementer | Yes |
++
++## Execution Notes
++
++- Use the existing report selection boundary and add serialization after selection.
++- Stop if structured output requires changing record selection or default output semantics.
++
++### Execution Checkpoint
++
++| Execution status | Current proving slice | Evidence admitted | Next action | Blockers / stop condition |
++| --- | --- | --- | --- | --- |
++| active | Prove TD-SC-2. | TD-SC-1: fixture passed at commit abc123. | Run TD-SC-2 check. | None. |
++| active | Prove TD-SC-2. | None admitted. | Run TD-SC-2 check. | None. |
++
++## Follow-up / Non-blocking Work
++
++None.
+diff --git a/skills/task-definition/tests/fixtures/invariants/duplicate-control-row.md b/skills/task-definition/tests/fixtures/invariants/duplicate-control-row.md
+new file mode 100644
+index 0000000..d1f2e84
+--- /dev/null
++++ b/skills/task-definition/tests/fixtures/invariants/duplicate-control-row.md
+@@ -0,0 +1,82 @@
++---
++type: TaskDefinition
++title: Add JSON export to the report command
++task_id: report-json-export
++artifact_version: "3.0"
++revision: "1"
++created_at: "2026-08-15T12:00:00-05:00"
++updated_at: "2026-08-15T12:00:00-05:00"
++validation_profile: skills/task-definition/profiles/task-definition.yaml
++tags:
++  - example
++  - cli
++producer:
++  skill: task-definition
++---
++
++## Task Control
++
++| Contract state | Execution route | State rationale |
++| --- | --- | --- |
++| READY | DIRECT | Source, structural, semantic, and post-draft review gates pass; the bounded task can proceed directly to implementation. |
++| READY | DIRECT | Source, structural, semantic, and post-draft review gates pass; the bounded task can proceed directly to implementation. |
++
++## Objective
++
++Add an explicit JSON output option to the report command so automation can consume the same report records currently shown to terminal users.
++
++## Context / Constraints
++
++- Preserve the current human-readable output when the new option is absent.
++- Use the report command's existing record selection and ordering.
++- Do not add a new transport or persistent storage format.
++
++## Source Authority
++
++| Source | Authority | Status | Task implication |
++| --- | --- | --- | --- |
++| Approved report automation request | Product outcome authority | Confirmed | Automation requires structured output without changing the existing interactive command. |
++| Current report command and focused tests | Behavior and regression baseline | Inspected | Reuse current record selection and preserve default output. |
++
++## Task Scope
++
++| Scope item | Classification | Approval impact | Notes |
++| --- | --- | --- | --- |
++| JSON output option and serializer | In scope | blocking | Emit the selected report records as valid JSON. |
++| Default terminal output regression | In scope | blocking | Existing behavior must remain unchanged without the option. |
++| Additional export formats | Out of scope | non-blocking | CSV and XML require separate outcome authority. |
++
++## Materially Verifiable Success Criteria
++
++| ID | Criterion | Proof | Required before done |
++| --- | --- | --- | --- |
++| TD-SC-1 | Invoking the report command with the JSON option exits zero and emits a parseable JSON array containing the same ordered records as the existing report selection. | Run the focused CLI fixture, parse stdout as JSON, and compare record identities and order with the fixture's expected selection. | Yes |
++| TD-SC-2 | Invoking the report command without the JSON option preserves its current stdout and exit behavior. | Run the existing report command regression test unchanged and compare its captured output with the baseline fixture. | Yes |
++
++## Incremental Value Delivery
++
++| Slice | Value proven | Risk retired | Evidence | Stop / continue decision |
++| --- | --- | --- | --- | --- |
++| Structured report output | Automation can consume the current report selection while interactive output remains stable. | Retires divergent selection logic and default-output regression risk. | Focused JSON fixture plus the existing report regression test. | Stop when both criteria pass over the same record fixture. |
++
++## Review Boundary
++
++| Boundary | In scope for review | Out of scope / follow-up | Approval impact |
++| --- | --- | --- | --- |
++| Output behavior | JSON validity, record parity, ordering, and unchanged default output | Additional formats | blocking for in-scope regressions; otherwise non-blocking |
++
++## Validation / Evidence
++
++| Criterion ID | Check | Evidence | Runner / owner | Required before done |
++| --- | --- | --- | --- | --- |
++| TD-SC-1 | Run the focused JSON CLI fixture and parse stdout. | Zero exit, parseable JSON, and exact ordered record parity. | Implementer | Yes |
++| TD-SC-2 | Run the existing default-output regression test. | Zero exit with unchanged stdout and exit behavior. | Implementer | Yes |
++
++## Execution Notes
++
++- Use the existing report selection boundary and add serialization after selection.
++- Stop if structured output requires changing record selection or default output semantics.
++
++## Follow-up / Non-blocking Work
++
++None.
+diff --git a/skills/task-definition/tests/fixtures/invariants/invalid-checkpoint-status.md b/skills/task-definition/tests/fixtures/invariants/invalid-checkpoint-status.md
+new file mode 100644
+index 0000000..95d6f19
+--- /dev/null
++++ b/skills/task-definition/tests/fixtures/invariants/invalid-checkpoint-status.md
+@@ -0,0 +1,87 @@
++---
++type: TaskDefinition
++title: Add JSON export to the report command
++task_id: report-json-export
++artifact_version: "3.0"
++revision: "1"
++created_at: "2026-08-15T12:00:00-05:00"
++updated_at: "2026-08-15T12:00:00-05:00"
++validation_profile: skills/task-definition/profiles/task-definition.yaml
++tags:
++  - example
++  - cli
++producer:
++  skill: task-definition
++---
++
++## Task Control
++
++| Contract state | Execution route | State rationale |
++| --- | --- | --- |
++| READY | DIRECT | Source, structural, semantic, and post-draft review gates pass; the bounded task can proceed directly to implementation. |
++
++## Objective
++
++Add an explicit JSON output option to the report command so automation can consume the same report records currently shown to terminal users.
++
++## Context / Constraints
++
++- Preserve the current human-readable output when the new option is absent.
++- Use the report command's existing record selection and ordering.
++- Do not add a new transport or persistent storage format.
++
++## Source Authority
++
++| Source | Authority | Status | Task implication |
++| --- | --- | --- | --- |
++| Approved report automation request | Product outcome authority | Confirmed | Automation requires structured output without changing the existing interactive command. |
++| Current report command and focused tests | Behavior and regression baseline | Inspected | Reuse current record selection and preserve default output. |
++
++## Task Scope
++
++| Scope item | Classification | Approval impact | Notes |
++| --- | --- | --- | --- |
++| JSON output option and serializer | In scope | blocking | Emit the selected report records as valid JSON. |
++| Default terminal output regression | In scope | blocking | Existing behavior must remain unchanged without the option. |
++| Additional export formats | Out of scope | non-blocking | CSV and XML require separate outcome authority. |
++
++## Materially Verifiable Success Criteria
++
++| ID | Criterion | Proof | Required before done |
++| --- | --- | --- | --- |
++| TD-SC-1 | Invoking the report command with the JSON option exits zero and emits a parseable JSON array containing the same ordered records as the existing report selection. | Run the focused CLI fixture, parse stdout as JSON, and compare record identities and order with the fixture's expected selection. | Yes |
++| TD-SC-2 | Invoking the report command without the JSON option preserves its current stdout and exit behavior. | Run the existing report command regression test unchanged and compare its captured output with the baseline fixture. | Yes |
++
++## Incremental Value Delivery
++
++| Slice | Value proven | Risk retired | Evidence | Stop / continue decision |
++| --- | --- | --- | --- | --- |
++| Structured report output | Automation can consume the current report selection while interactive output remains stable. | Retires divergent selection logic and default-output regression risk. | Focused JSON fixture plus the existing report regression test. | Stop when both criteria pass over the same record fixture. |
++
++## Review Boundary
++
++| Boundary | In scope for review | Out of scope / follow-up | Approval impact |
++| --- | --- | --- | --- |
++| Output behavior | JSON validity, record parity, ordering, and unchanged default output | Additional formats | blocking for in-scope regressions; otherwise non-blocking |
++
++## Validation / Evidence
++
++| Criterion ID | Check | Evidence | Runner / owner | Required before done |
++| --- | --- | --- | --- | --- |
++| TD-SC-1 | Run the focused JSON CLI fixture and parse stdout. | Zero exit, parseable JSON, and exact ordered record parity. | Implementer | Yes |
++| TD-SC-2 | Run the existing default-output regression test. | Zero exit with unchanged stdout and exit behavior. | Implementer | Yes |
++
++## Execution Notes
++
++- Use the existing report selection boundary and add serialization after selection.
++- Stop if structured output requires changing record selection or default output semantics.
++
++### Execution Checkpoint
++
++| Execution status | Current proving slice | Evidence admitted | Next action | Blockers / stop condition |
++| --- | --- | --- | --- | --- |
++| banana | Prove TD-SC-2. | TD-SC-1: fixture passed at commit abc123. | Run TD-SC-2 check. | None. |
++
++## Follow-up / Non-blocking Work
++
++None.
+diff --git a/skills/task-definition/tests/fixtures/invariants/review-ready-without-evidence.md b/skills/task-definition/tests/fixtures/invariants/review-ready-without-evidence.md
+new file mode 100644
+index 0000000..3aa9385
+--- /dev/null
++++ b/skills/task-definition/tests/fixtures/invariants/review-ready-without-evidence.md
+@@ -0,0 +1,87 @@
++---
++type: TaskDefinition
++title: Add JSON export to the report command
++task_id: report-json-export
++artifact_version: "3.0"
++revision: "1"
++created_at: "2026-08-15T12:00:00-05:00"
++updated_at: "2026-08-15T12:00:00-05:00"
++validation_profile: skills/task-definition/profiles/task-definition.yaml
++tags:
++  - example
++  - cli
++producer:
++  skill: task-definition
++---
++
++## Task Control
++
++| Contract state | Execution route | State rationale |
++| --- | --- | --- |
++| READY | DIRECT | Source, structural, semantic, and post-draft review gates pass; the bounded task can proceed directly to implementation. |
++
++## Objective
++
++Add an explicit JSON output option to the report command so automation can consume the same report records currently shown to terminal users.
++
++## Context / Constraints
++
++- Preserve the current human-readable output when the new option is absent.
++- Use the report command's existing record selection and ordering.
++- Do not add a new transport or persistent storage format.
++
++## Source Authority
++
++| Source | Authority | Status | Task implication |
++| --- | --- | --- | --- |
++| Approved report automation request | Product outcome authority | Confirmed | Automation requires structured output without changing the existing interactive command. |
++| Current report command and focused tests | Behavior and regression baseline | Inspected | Reuse current record selection and preserve default output. |
++
++## Task Scope
++
++| Scope item | Classification | Approval impact | Notes |
++| --- | --- | --- | --- |
++| JSON output option and serializer | In scope | blocking | Emit the selected report records as valid JSON. |
++| Default terminal output regression | In scope | blocking | Existing behavior must remain unchanged without the option. |
++| Additional export formats | Out of scope | non-blocking | CSV and XML require separate outcome authority. |
++
++## Materially Verifiable Success Criteria
++
++| ID | Criterion | Proof | Required before done |
++| --- | --- | --- | --- |
++| TD-SC-1 | Invoking the report command with the JSON option exits zero and emits a parseable JSON array containing the same ordered records as the existing report selection. | Run the focused CLI fixture, parse stdout as JSON, and compare record identities and order with the fixture's expected selection. | Yes |
++| TD-SC-2 | Invoking the report command without the JSON option preserves its current stdout and exit behavior. | Run the existing report command regression test unchanged and compare its captured output with the baseline fixture. | Yes |
++
++## Incremental Value Delivery
++
++| Slice | Value proven | Risk retired | Evidence | Stop / continue decision |
++| --- | --- | --- | --- | --- |
++| Structured report output | Automation can consume the current report selection while interactive output remains stable. | Retires divergent selection logic and default-output regression risk. | Focused JSON fixture plus the existing report regression test. | Stop when both criteria pass over the same record fixture. |
++
++## Review Boundary
++
++| Boundary | In scope for review | Out of scope / follow-up | Approval impact |
++| --- | --- | --- | --- |
++| Output behavior | JSON validity, record parity, ordering, and unchanged default output | Additional formats | blocking for in-scope regressions; otherwise non-blocking |
++
++## Validation / Evidence
++
++| Criterion ID | Check | Evidence | Runner / owner | Required before done |
++| --- | --- | --- | --- | --- |
++| TD-SC-1 | Run the focused JSON CLI fixture and parse stdout. | Zero exit, parseable JSON, and exact ordered record parity. | Implementer | Yes |
++| TD-SC-2 | Run the existing default-output regression test. | Zero exit with unchanged stdout and exit behavior. | Implementer | Yes |
++
++## Execution Notes
++
++- Use the existing report selection boundary and add serialization after selection.
++- Stop if structured output requires changing record selection or default output semantics.
++
++### Execution Checkpoint
++
++| Execution status | Current proving slice | Evidence admitted | Next action | Blockers / stop condition |
++| --- | --- | --- | --- | --- |
++| review-ready | Prove TD-SC-2. | None admitted. | Independent review. | None. |
++
++## Follow-up / Non-blocking Work
++
++None.
+diff --git a/skills/task-definition/tests/invariant_cases.py b/skills/task-definition/tests/invariant_cases.py
+new file mode 100644
+index 0000000..b08f6fd
+--- /dev/null
++++ b/skills/task-definition/tests/invariant_cases.py
+@@ -0,0 +1,82 @@
++"""Contract mutations, kept separate from CLI execution and reporting."""
++from pathlib import Path
++
++FIXTURES = Path(__file__).parent / 'fixtures' / 'invariants'
++HEADERS = ['Execution status', 'Current proving slice', 'Evidence admitted', 'Next action', 'Blockers / stop condition']
++
++
++def cases():
++    base = (FIXTURES / 'baseline.md').read_text()
++    checkpoint = (FIXTURES / 'checkpoint-baseline.md').read_text()
++    table = checkpoint.split('### Execution Checkpoint\n', 1)[1].split('\n## ', 1)[0].strip()
++    control = base.split('## Task Control\n', 1)[1].split('\n## ', 1)[0].strip()
++    row = next(line for line in table.splitlines() if line.startswith('| active |'))
++    values = [part.strip() for part in row.strip('|').split('|')]
++
++    def cell(index, value, document=checkpoint):
++        parts = values.copy()
++        parts[index] = value
++        return document.replace(row, '| ' + ' | '.join(parts) + ' |')
++
++    def ready(evidence):
++        return cell(2, evidence).replace('| active |', '| review-ready |').replace(values[3], 'Request independent review.')
++
++    result = []
++    def add(name, document, valid=True, rule=None, phase='shape'):
++        result.append(dict(name=name, markdown=document, expectedValid=valid, rule=rule, phase=phase))
++
++    add('baseline', base)
++    add('checkpoint-baseline', checkpoint)
++    for name, rule in [('duplicate-control-row', 'task-control.row.count'), ('duplicate-checkpoint-row', 'execution-checkpoint.row.when-present'), ('invalid-checkpoint-status', 'execution-checkpoint.status.allowed'), ('review-ready-without-evidence', 'execution-checkpoint.required-evidence.coverage')]:
++        add(name, (FIXTURES / (name + '.md')).read_text(), False, rule, 'full' if name.startswith('review-ready') else 'shape')
++    add('control-zero-rows', base.replace(control.splitlines()[-1], ''), False, 'task-control.row.count')
++    add('control-duplicate-tables', base.replace(control, control + '\n\n' + control), False, 'task-control.table.count')
++    add('control-duplicate-section', base.replace('## Objective', '## Task Control\n\n' + control + '\n\n## Objective'), False, 'task-control.table.count')
++    add('control-table-elsewhere', base + '\n' + control + '\n', False, 'task-control.table.count')
++    add('checkpoint-zero-rows', checkpoint.replace(row, ''), False, 'execution-checkpoint.row.when-present')
++    add('checkpoint-no-table', checkpoint.replace(table, 'Resume work.'), False, 'execution-checkpoint.table.inside-checkpoint')
++    add('checkpoint-duplicate-tables', checkpoint.replace(table, table + '\n\n' + table), False, 'execution-checkpoint.table.global-count')
++    add('checkpoint-duplicate-headings', checkpoint.replace('### Execution Checkpoint', '### Execution Checkpoint\n\nEmpty.\n\n### Execution Checkpoint'), False, 'execution-checkpoint.heading.count')
++    add('checkpoint-heading-depth-two', checkpoint.replace('### Execution Checkpoint', '## Execution Checkpoint'), False, 'execution-checkpoint.heading-depth.when-present')
++    add('checkpoint-heading-depth-four', checkpoint.replace('### Execution Checkpoint', '#### Execution Checkpoint'), False, 'execution-checkpoint.heading-depth.when-present')
++    add('checkpoint-misplaced', checkpoint.replace('### Execution Checkpoint', '## Other Notes\n\n### Execution Checkpoint'), False, 'execution-checkpoint.table.when-present')
++    add('checkpoint-table-before-heading', checkpoint.replace('### Execution Checkpoint\n\n' + table, table + '\n\n### Execution Checkpoint\n\nResume.'), False, 'execution-checkpoint.table.inside-checkpoint')
++    add('checkpoint-table-without-heading', checkpoint.replace('### Execution Checkpoint\n', ''), False, 'execution-checkpoint.heading.when-table-present')
++    add('checkpoint-table-in-sibling', checkpoint.replace('### Execution Checkpoint', '### Execution Checkpoint\n\nResume.\n\n### Other'), False, 'execution-checkpoint.table.inside-checkpoint')
++    add('checkpoint-decoy-notes-table', checkpoint.replace('### Execution Checkpoint', table + '\n\n## Other Notes\n\n### Execution Checkpoint'), False, 'execution-checkpoint.table.global-count')
++    add('checkpoint-extra-table', checkpoint.replace(table, table + '\n\n| Other |\n| --- |\n| Value |'), False, 'execution-checkpoint.table.inside-checkpoint')
++    for status in ['not-started', 'active', 'blocked']:
++        doc = cell(0, status).replace(values[2], 'None admitted.')
++        if status == 'blocked':
++            doc = doc.replace(values[4], 'Build dependency unavailable; resume when restored.').replace(values[3], 'Restore build dependency.')
++        if status == 'not-started':
++            doc = doc.replace(values[3], 'Begin the current proving slice.')
++        add('status-' + status, doc)
++    for index in range(5):
++        for label, value in [('empty', ''), ('whitespace', '   \t '), ('comment', '<!-- hidden -->'), ('empty-html', '<span></span>'), ('html-whitespace', '<span> </span>'), ('nbsp', '&nbsp;')]:
++            add(f'cell-{index}-{label}', cell(index, value), False, 'execution-checkpoint.cells.nonblank', 'full')
++    for label, value in [('emphasis', '**Concrete next action.**'), ('code', '`<span></span>`'), ('html', '<span>Concrete next action.</span>'), ('escaped-html', '&lt;span&gt;'), ('comment-plus-text', '<!-- note --> Concrete next action.')]:
++        add('visible-' + label, cell(3, value), phase='full')
++    add('review-ready-complete', ready('TD-SC-1: focused test passed at commit abc123. TD-SC-2: artifact inspection passed at commit abc123.'), phase='full')
++    add('review-ready-formatted', ready('**TD-SC-1**: focused test passed. `TD-SC-2`: artifact inspection passed.'), phase='full')
++    add('review-ready-no-references', ready('Focused tests passed.'), False, 'execution-checkpoint.required-evidence.coverage', 'full')
++    add('review-ready-partial', ready('TD-SC-1: focused test passed.'), False, 'execution-checkpoint.required-evidence.coverage', 'full')
++    add('active-partial', cell(2, 'TD-SC-1: focused test passed.'), phase='full')
++    add('undeclared-active', cell(2, 'TD-SC-99: focused test passed.'), False, 'execution-checkpoint.evidence.declared', 'full')
++    add('undeclared-review-ready', ready('TD-SC-1 and TD-SC-2: focused tests passed. TD-SC-99: inspection passed.'), False, 'execution-checkpoint.evidence.declared', 'full')
++    add('review-ready-id-only-next-action', ready('TD-SC-1: focused test passed.').replace('Request independent review.', 'TD-SC-2: request independent review.'), False, 'execution-checkpoint.required-evidence.coverage', 'full')
++    add('review-ready-id-only-validation', ready('TD-SC-1: focused test passed.'), False, 'execution-checkpoint.required-evidence.coverage', 'full')
++    criteria = base.split('## Materially Verifiable Success Criteria\n', 1)[1].split('\n## ', 1)[0]
++    lines = criteria.splitlines()
++    optional = '\n'.join(line.removesuffix('Yes |') + 'No |' if line.startswith('| TD-SC-2 ') else line for line in lines)
++    add('review-ready-optional-criterion', ready('TD-SC-1: focused test passed.').replace(criteria, optional), phase='full')
++    add('review-ready-all-optional', ready('None admitted.').replace(criteria, criteria.replace('| Yes |', '| No |')), phase='full')
++    add('review-ready-required-second', ready('TD-SC-1: focused test passed.').replace(criteria, '\n'.join(line.removesuffix('Yes |') + 'No |' if line.startswith('| TD-SC-1 ') else line for line in lines)), False, 'execution-checkpoint.required-evidence.coverage', 'full')
++    add('review-ready-formatted-required', ready('TD-SC-1: focused test passed.').replace(criteria, criteria.replace('| Yes |', '| **Yes** |')), False, 'execution-checkpoint.required-evidence.coverage', 'full')
++    # Renamed declared IDs prevent hardcoded enumeration from satisfying the contract.
++    add('review-ready-renamed-id', ready('TD-SC-1: focused test passed. TD-SC-2: inspection passed.').replace('TD-SC-2', 'TD-SC-A'), phase='full')
++    add('control-duplicate-empty-section', base.replace('## Objective', '### Task Control\n\n## Objective'), False, 'task-control.heading.count')
++    add('checkpoint-duplicate-notes-decoy', checkpoint.replace('### Execution Checkpoint', '## Execution Notes\n\n### Execution Checkpoint'), False, 'execution-checkpoint.notes.count')
++    add('active-evidence-without-reference', cell(2, 'Focused tests passed.'), False, 'execution-checkpoint.evidence.references-or-none', 'full')
++    add('active-wrong-evidence-sentinel', cell(2, 'None.'), False, 'execution-checkpoint.evidence.references-or-none', 'full')
++    return result
+diff --git a/skills/task-definition/tests/run-invariants.py b/skills/task-definition/tests/run-invariants.py
+new file mode 100644
+index 0000000..4b35c4e
+--- /dev/null
++++ b/skills/task-definition/tests/run-invariants.py
+@@ -0,0 +1,46 @@
++#!/usr/bin/env python3
++"""Run every assertion through the ordinary Markdown Engine validate command."""
++import argparse
++import hashlib
++import json
++from pathlib import Path
++import subprocess
++import tempfile
++from invariant_cases import cases
++
++
++def main():
++    parser = argparse.ArgumentParser()
++    parser.add_argument('--engine', required=True)
++    parser.add_argument('--profile', type=Path, default=Path(__file__).parent.parent / 'profiles/task-definition.yaml')
++    parser.add_argument('--phase', choices=['shape', 'full'], default='full')
++    parser.add_argument('--output', required=True, type=Path)
++    args = parser.parse_args()
++    results = []
++    with tempfile.TemporaryDirectory(prefix='task-invariants-') as directory:
++        for case in cases():
++            if args.phase == 'shape' and case['phase'] != 'shape':
++                continue
++            source = case.pop('markdown')
++            path = Path(directory) / (case['name'] + '.md')
++            path.write_text(source)
++            process = subprocess.run([args.engine, 'validate', '--file', str(path), '--profile', str(args.profile), '--format', 'json'], capture_output=True, text=True)
++            report = json.loads(process.stdout)
++            diagnostics = report.get('diagnostics', [])
++            valid = report.get('valid')
++            matched = (valid == case['expectedValid'] and process.returncode == (0 if case['expectedValid'] else 1) and report.get('evidence', {}).get('engineVersion') is not None)
++            if case['expectedValid']:
++                matched = matched and not diagnostics
++            else:
++                matched = matched and any(d.get('ruleId') == case['rule'] and d.get('message') and d.get('code') for d in diagnostics)
++            results.append({**case, 'valid': valid, 'exitStatus': process.returncode, 'engineVersion': report.get('evidence', {}).get('engineVersion'), 'inputHash': hashlib.sha256(source.encode()).hexdigest(), 'profileHash': hashlib.sha256(args.profile.read_bytes()).hexdigest(), 'diagnostics': diagnostics, 'matchesExpectation': bool(matched)})
++    output = {'allMatched': all(case['matchesExpectation'] for case in results), 'cases': results}
++    args.output.parent.mkdir(parents=True, exist_ok=True)
++    args.output.write_text(json.dumps(output, indent=2) + '\n')
++    failed = [case['name'] for case in results if not case['matchesExpectation']]
++    print(json.dumps({'count': len(results), 'failed': failed, 'output': str(args.output)}))
++    return int(bool(failed))
++
++
++if __name__ == '__main__':
++    raise SystemExit(main())
+diff --git a/skills/task-definition/tests/run-profile-validation.sh b/skills/task-definition/tests/run-profile-validation.sh
+index 3777d7c..af83f5d 100755
+--- a/skills/task-definition/tests/run-profile-validation.sh
++++ b/skills/task-definition/tests/run-profile-validation.sh
+@@ -9,7 +9,14 @@ tmpdir="$(mktemp -d)"
+ 
+ canonical_frontmatter=$'---\ntype: TaskDefinition\ntitle: Validate task definition fixture\ntask_id: profile-validation-fixture\nartifact_version: "3.0"\nrevision: "1"\ncreated_at: "2026-08-15T12:00:00-05:00"\nupdated_at: "2026-08-15T12:00:00-05:00"\nvalidation_profile: /skills/task-definition/profiles/task-definition.yaml\n---\n'
+ 
+-trap 'rm -rf "$tmpdir"' EXIT
++cleanup() {
++  if [[ -n "${TASK_DEFINITION_PROFILE_REPORT_DIR:-}" ]]; then
++    mkdir -p "$TASK_DEFINITION_PROFILE_REPORT_DIR"
++    cp "$tmpdir"/*.json "$tmpdir"/*.exit-status "$TASK_DEFINITION_PROFILE_REPORT_DIR/"
++  fi
++  rm -rf "$tmpdir"
++}
++trap cleanup EXIT
+ 
+ fail() {
+   printf 'FAIL: %s\n' "$1" >&2
+@@ -221,6 +228,8 @@ expect_valid() {
+     fail "$name should validate"
+   fi
+ 
++  printf '0\n' > "$tmpdir/$name.exit-status"
++
+   node -e '
+     const fs = require("fs");
+     const output = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+@@ -249,6 +258,7 @@ expect_invalid() {
+   "$engine_bin" validate --file "$file" --profile "$profile" --format json > "$output"
+   rc=$?
+   set -e
++  printf '%s\n' "$rc" > "$tmpdir/$name.exit-status"
+ 
+   if [[ "$rc" -eq 0 ]]; then
+     cat "$output" >&2
+@@ -574,4 +584,7 @@ write_task "$tmpdir/multi-id-cell.md" "" \
+ | TD-SC-3 | Inspect | Evidence exists for third ID. | Test | Yes |'
+ expect_invalid "multi-id-cell" "$tmpdir/multi-id-cell.md" "success-criteria.ids.shape"
+ 
++python3 "$repo_root/tests/run-invariants.py" --engine "$engine_bin" \
++  --output "${TASK_DEFINITION_INVARIANT_REPORT:-$tmpdir/invariants.json}"
++
+ printf 'PASS: task-definition validation profile fixtures\n'
+-- 
+2.50.1 (Apple Git-155)
+

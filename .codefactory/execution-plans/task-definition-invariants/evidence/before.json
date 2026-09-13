@@ -1,0 +1,73 @@
+{
+  "expectationMode": "baseline",
+  "profile": "/Users/jasonbelmonti/Documents/Codex/2026-09-13/can/outputs/markdown-engine-handoff/sources/task-definition.baseline.yaml",
+  "cases": [
+    {
+      "case": "baseline",
+      "expectedValid": true,
+      "valid": true,
+      "exitStatus": 0,
+      "engineVersion": "3.5.0",
+      "inputHash": "4d45d6f820acc3188230c0f771a04176eeec955a3123fd1fba22924f8ca722f2",
+      "profileHash": "57d8498e8fc14641ffef404bd48d4f5604d49ac45a07419b08dbd2c8010f6cdc",
+      "diagnostics": [],
+      "matchesExpectation": true
+    },
+    {
+      "case": "checkpoint-baseline",
+      "expectedValid": true,
+      "valid": true,
+      "exitStatus": 0,
+      "engineVersion": "3.5.0",
+      "inputHash": "3a65040bbf4a8fb6595e8bd2aa48c9d4da629fad624dd288aab4f2f6e616babf",
+      "profileHash": "57d8498e8fc14641ffef404bd48d4f5604d49ac45a07419b08dbd2c8010f6cdc",
+      "diagnostics": [],
+      "matchesExpectation": true
+    },
+    {
+      "case": "duplicate-control-row",
+      "expectedValid": true,
+      "valid": true,
+      "exitStatus": 0,
+      "engineVersion": "3.5.0",
+      "inputHash": "00cecfa0440c18faa8c95393ea21a23cdd250cfa231f46ab7b3c1241c512c71b",
+      "profileHash": "57d8498e8fc14641ffef404bd48d4f5604d49ac45a07419b08dbd2c8010f6cdc",
+      "diagnostics": [],
+      "matchesExpectation": true
+    },
+    {
+      "case": "duplicate-checkpoint-row",
+      "expectedValid": true,
+      "valid": true,
+      "exitStatus": 0,
+      "engineVersion": "3.5.0",
+      "inputHash": "07aa56368df9e3886d5ad0302dcc0a8d789a4bf5001465c4879d9c5f9616b757",
+      "profileHash": "57d8498e8fc14641ffef404bd48d4f5604d49ac45a07419b08dbd2c8010f6cdc",
+      "diagnostics": [],
+      "matchesExpectation": true
+    },
+    {
+      "case": "invalid-checkpoint-status",
+      "expectedValid": true,
+      "valid": true,
+      "exitStatus": 0,
+      "engineVersion": "3.5.0",
+      "inputHash": "85e067b55ad4681ef76591a8d832f8e692c3c416487e5357030bfa0efbea363b",
+      "profileHash": "57d8498e8fc14641ffef404bd48d4f5604d49ac45a07419b08dbd2c8010f6cdc",
+      "diagnostics": [],
+      "matchesExpectation": true
+    },
+    {
+      "case": "review-ready-without-evidence",
+      "expectedValid": true,
+      "valid": true,
+      "exitStatus": 0,
+      "engineVersion": "3.5.0",
+      "inputHash": "99a389abbaa69ccf00fa87dca19b2a5ccffb4f4366adc18f620a07380ef07b70",
+      "profileHash": "57d8498e8fc14641ffef404bd48d4f5604d49ac45a07419b08dbd2c8010f6cdc",
+      "diagnostics": [],
+      "matchesExpectation": true
+    }
+  ],
+  "allMatched": true
+}
