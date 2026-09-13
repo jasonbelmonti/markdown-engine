@@ -4,6 +4,19 @@
 
 No unreleased changes.
 
+## 3.6.0 - 2026-09-13
+
+### Added
+
+- Added opt-in v2 `text.nonBlank` to require normalized non-whitespace text
+  outside raw HTML, preserving literal code and Markdown text.
+- Added `tableColumnCoverage.source.rowWhere` sibling-cell filtering and
+  explicit `allowEmptySource` handling for resolved, empty ID sources.
+  Existing empty-source failure behavior remains the default.
+- Documented and tested the generic capabilities used by the corrected Task
+  Definition consumer. Structural reference coverage does not establish
+  evidence truth, freshness, or implementation acceptance.
+
 ## 3.5.0 - 2026-08-16
 
 ### Added
