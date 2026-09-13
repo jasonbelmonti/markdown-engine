@@ -1183,3 +1183,59 @@ rules:
           ids:
             prefix: TD-SC
             minCount: 1
+
+  # Header selectors are ordered subsequences. Reject every noncanonical order
+  # of all three authority fields so reordered duplicates cannot evade the count.
+  # Requiring all three fields preserves BLOCKED detail and unrelated tables.
+  - id: task-control.table.authority-order
+    allOf:
+      - label: order-021
+        select:
+          target: table
+          header:
+            - Contract state
+            - State rationale
+            - Execution route
+        assert:
+          selectionCount:
+            max: 0
+      - label: order-102
+        select:
+          target: table
+          header:
+            - Execution route
+            - Contract state
+            - State rationale
+        assert:
+          selectionCount:
+            max: 0
+      - label: order-120
+        select:
+          target: table
+          header:
+            - Execution route
+            - State rationale
+            - Contract state
+        assert:
+          selectionCount:
+            max: 0
+      - label: order-201
+        select:
+          target: table
+          header:
+            - State rationale
+            - Contract state
+            - Execution route
+        assert:
+          selectionCount:
+            max: 0
+      - label: order-210
+        select:
+          target: table
+          header:
+            - State rationale
+            - Execution route
+            - Contract state
+        assert:
+          selectionCount:
+            max: 0

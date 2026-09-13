@@ -1,33 +1,5 @@
-From a3024d77d2350e81039427ccb519963567982fb0 Mon Sep 17 00:00:00 2001
-From: Jason Belmonti <jasonbelmonti@gmail.com>
-Date: Sun, 13 Sep 2026 07:59:27 -0500
-Subject: [PATCH] Enforce Task Definition control and checkpoint invariants
-
----
- .../profiles/task-definition.yaml             | 350 +++++++++++++++++-
- skills/task-definition/tests/README.md        |  62 ++++
- .../tests/fixtures/invariants/baseline.md     |  81 ++++
- .../invariants/checkpoint-baseline.md         |  87 +++++
- .../invariants/duplicate-checkpoint-row.md    |  88 +++++
- .../invariants/duplicate-control-row.md       |  82 ++++
- .../invariants/invalid-checkpoint-status.md   |  87 +++++
- .../review-ready-without-evidence.md          |  87 +++++
- .../task-definition/tests/invariant_cases.py  |  82 ++++
- .../task-definition/tests/run-invariants.py   |  46 +++
- .../tests/run-profile-validation.sh           |  15 +-
- 11 files changed, 1063 insertions(+), 4 deletions(-)
- create mode 100644 skills/task-definition/tests/README.md
- create mode 100644 skills/task-definition/tests/fixtures/invariants/baseline.md
- create mode 100644 skills/task-definition/tests/fixtures/invariants/checkpoint-baseline.md
- create mode 100644 skills/task-definition/tests/fixtures/invariants/duplicate-checkpoint-row.md
- create mode 100644 skills/task-definition/tests/fixtures/invariants/duplicate-control-row.md
- create mode 100644 skills/task-definition/tests/fixtures/invariants/invalid-checkpoint-status.md
- create mode 100644 skills/task-definition/tests/fixtures/invariants/review-ready-without-evidence.md
- create mode 100644 skills/task-definition/tests/invariant_cases.py
- create mode 100644 skills/task-definition/tests/run-invariants.py
-
 diff --git a/skills/task-definition/profiles/task-definition.yaml b/skills/task-definition/profiles/task-definition.yaml
-index e65e1a1..a23ebfe 100644
+index e65e1a1..0713c72 100644
 --- a/skills/task-definition/profiles/task-definition.yaml
 +++ b/skills/task-definition/profiles/task-definition.yaml
 @@ -3,8 +3,9 @@
@@ -53,7 +25,7 @@ index e65e1a1..a23ebfe 100644
  
    - id: review-boundary.table.columns
      select:
-@@ -839,3 +842,344 @@ rules:
+@@ -839,3 +842,400 @@ rules:
            - TBD
            - TODO
            - "???"
@@ -398,12 +370,68 @@ index e65e1a1..a23ebfe 100644
 +          ids:
 +            prefix: TD-SC
 +            minCount: 1
++
++  # Header selectors are ordered subsequences. Reject every noncanonical order
++  # of all three authority fields so reordered duplicates cannot evade the count.
++  # Requiring all three fields preserves BLOCKED detail and unrelated tables.
++  - id: task-control.table.authority-order
++    allOf:
++      - label: order-021
++        select:
++          target: table
++          header:
++            - Contract state
++            - State rationale
++            - Execution route
++        assert:
++          selectionCount:
++            max: 0
++      - label: order-102
++        select:
++          target: table
++          header:
++            - Execution route
++            - Contract state
++            - State rationale
++        assert:
++          selectionCount:
++            max: 0
++      - label: order-120
++        select:
++          target: table
++          header:
++            - Execution route
++            - State rationale
++            - Contract state
++        assert:
++          selectionCount:
++            max: 0
++      - label: order-201
++        select:
++          target: table
++          header:
++            - State rationale
++            - Contract state
++            - Execution route
++        assert:
++          selectionCount:
++            max: 0
++      - label: order-210
++        select:
++          target: table
++          header:
++            - State rationale
++            - Execution route
++            - Contract state
++        assert:
++          selectionCount:
++            max: 0
 diff --git a/skills/task-definition/tests/README.md b/skills/task-definition/tests/README.md
 new file mode 100644
-index 0000000..b454ed5
+index 0000000..062e58b
 --- /dev/null
 +++ b/skills/task-definition/tests/README.md
-@@ -0,0 +1,62 @@
+@@ -0,0 +1,70 @@
 +# Deterministic invariant regressions
 +
 +The corrected profile is maintained in `../profiles/task-definition.yaml`.
@@ -449,7 +477,7 @@ index 0000000..b454ed5
 +
 +| Invariant | Capability ownership |
 +| --- | --- |
-+| One control authority table and row, allowing a separate BLOCKED detail table | Existing `selectionCount` and table-header selectors; consumer rules |
++| One control authority table and row, allowing a separate BLOCKED detail table | Existing `selectionCount` and table-header selectors; consumer rules include every noncanonical ordering of all three authority fields |
 +| Optional checkpoint with one correctly placed heading/table/row | Existing scoped selectors, `when`, `selectionCount`, `tableColumnsExact`; global uniqueness makes the table selected in both Notes and Checkpoint the same table |
 +| Allowed checkpoint statuses and a reference or the legal no-evidence sentinel | Existing `anyOf`, literal text/length, row predicates and ID count assertions; consumer vocabulary |
 +| Visible non-whitespace checkpoint cells | New opt-in v2 `text.nonBlank`; generic node-text predicate, excludes raw HTML and preserves literal code/Markdown text |
@@ -466,6 +494,14 @@ index 0000000..b454ed5
 +per-claim sufficiency, implementation completion, or acceptance. Those judgments
 +remain semantic review responsibilities. `text.nonBlank` checks normalized text
 +outside raw HTML; it does not evaluate CSS or external rendering.
++
++Convergent review found a reordered duplicate authority table that the original
++ordered-header count ignored. The profile now rejects all five noncanonical
++orders of the three authority fields with `task-control.table.authority-order`.
++The regression matrix includes each order with a data row or zero rows, inside
++Task Control or elsewhere, plus a positive unrelated table sharing only one
++header. These rules use existing engine capabilities; BLOCKED detail tables
++remain allowed. The expanded matrix contains 99 cases.
 diff --git a/skills/task-definition/tests/fixtures/invariants/baseline.md b/skills/task-definition/tests/fixtures/invariants/baseline.md
 new file mode 100644
 index 0000000..dd5e6aa
@@ -1016,11 +1052,12 @@ index 0000000..3aa9385
 +None.
 diff --git a/skills/task-definition/tests/invariant_cases.py b/skills/task-definition/tests/invariant_cases.py
 new file mode 100644
-index 0000000..b08f6fd
+index 0000000..3c02e1b
 --- /dev/null
 +++ b/skills/task-definition/tests/invariant_cases.py
-@@ -0,0 +1,82 @@
+@@ -0,0 +1,99 @@
 +"""Contract mutations, kept separate from CLI execution and reporting."""
++from itertools import permutations
 +from pathlib import Path
 +
 +FIXTURES = Path(__file__).parent / 'fixtures' / 'invariants'
@@ -1055,6 +1092,22 @@ index 0000000..b08f6fd
 +    add('control-duplicate-tables', base.replace(control, control + '\n\n' + control), False, 'task-control.table.count')
 +    add('control-duplicate-section', base.replace('## Objective', '## Task Control\n\n' + control + '\n\n## Objective'), False, 'task-control.table.count')
 +    add('control-table-elsewhere', base + '\n' + control + '\n', False, 'task-control.table.count')
++    # Count all three authority fields regardless of their ordering. Keep unrelated
++    # tables that share only a column name outside this authority-table rule.
++    control_headers = ['Contract state', 'Execution route', 'State rationale']
++    control_values = ['DRAFT', 'BLOCKED', 'Resolve source authority before execution.']
++    for order in permutations(range(3)):
++        if order == (0, 1, 2):
++            continue  # Canonical-order duplicate tables are covered above.
++        header = '| ' + ' | '.join(control_headers[i] for i in order) + ' |'
++        data = '| ' + ' | '.join(control_values[i] for i in order) + ' |'
++        for empty in [False, True]:
++            duplicate = header + '\n| --- | --- | --- |' + ('' if empty else '\n' + data)
++            for placement in ['control', 'elsewhere']:
++                doc = base.replace(control, control + '\n\n' + duplicate) if placement == 'control' else base + '\n' + duplicate + '\n'
++                name = 'control-reordered-' + ''.join(map(str, order)) + '-' + ('empty' if empty else 'row') + '-' + placement
++                add(name, doc, False, 'task-control.table.authority-order')
++    add('unrelated-partial-control-header', base + '\n| Contract state | Notes |\n| --- | --- |\n| Historical | Informational comparison. |\n')
 +    add('checkpoint-zero-rows', checkpoint.replace(row, ''), False, 'execution-checkpoint.row.when-present')
 +    add('checkpoint-no-table', checkpoint.replace(table, 'Resume work.'), False, 'execution-checkpoint.table.inside-checkpoint')
 +    add('checkpoint-duplicate-tables', checkpoint.replace(table, table + '\n\n' + table), False, 'execution-checkpoint.table.global-count')
@@ -1199,6 +1252,3 @@ index 3777d7c..af83f5d 100755
 +  --output "${TASK_DEFINITION_INVARIANT_REPORT:-$tmpdir/invariants.json}"
 +
  printf 'PASS: task-definition validation profile fixtures\n'
--- 
-2.50.1 (Apple Git-155)
-

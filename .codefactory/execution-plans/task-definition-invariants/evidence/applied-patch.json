@@ -1,6 +1,6 @@
 {
   "expectationMode": "fixed",
-  "profile": "/Users/jasonbelmonti/Documents/Development/task-definition/.worktrees/task-definition-patch-check/skills/task-definition/profiles/task-definition.yaml",
+  "profile": "/Users/jasonbelmonti/Documents/Development/task-definition/.worktrees/task-definition-pr-patch-check/skills/task-definition/profiles/task-definition.yaml",
   "cases": [
     {
       "case": "baseline",
@@ -9,7 +9,7 @@
       "exitStatus": 0,
       "engineVersion": "3.5.0",
       "inputHash": "4d45d6f820acc3188230c0f771a04176eeec955a3123fd1fba22924f8ca722f2",
-      "profileHash": "229fdbab5f329484a07c67a038276ade99f456843c377d25c8a9fdddce530133",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
       "diagnostics": [],
       "matchesExpectation": true
     },
@@ -20,7 +20,7 @@
       "exitStatus": 0,
       "engineVersion": "3.5.0",
       "inputHash": "3a65040bbf4a8fb6595e8bd2aa48c9d4da629fad624dd288aab4f2f6e616babf",
-      "profileHash": "229fdbab5f329484a07c67a038276ade99f456843c377d25c8a9fdddce530133",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
       "diagnostics": [],
       "matchesExpectation": true
     },
@@ -31,7 +31,7 @@
       "exitStatus": 1,
       "engineVersion": "3.5.0",
       "inputHash": "00cecfa0440c18faa8c95393ea21a23cdd250cfa231f46ab7b3c1241c512c71b",
-      "profileHash": "229fdbab5f329484a07c67a038276ade99f456843c377d25c8a9fdddce530133",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
       "diagnostics": [
         {
           "code": "profile.validation.assertionFailed",
@@ -49,7 +49,7 @@
       "exitStatus": 1,
       "engineVersion": "3.5.0",
       "inputHash": "07aa56368df9e3886d5ad0302dcc0a8d789a4bf5001465c4879d9c5f9616b757",
-      "profileHash": "229fdbab5f329484a07c67a038276ade99f456843c377d25c8a9fdddce530133",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
       "diagnostics": [
         {
           "code": "profile.validation.assertionFailed",
@@ -67,7 +67,7 @@
       "exitStatus": 1,
       "engineVersion": "3.5.0",
       "inputHash": "85e067b55ad4681ef76591a8d832f8e692c3c416487e5357030bfa0efbea363b",
-      "profileHash": "229fdbab5f329484a07c67a038276ade99f456843c377d25c8a9fdddce530133",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
       "diagnostics": [
         {
           "code": "profile.validation.noAlternativeMatched",
@@ -85,7 +85,7 @@
       "exitStatus": 1,
       "engineVersion": "3.5.0",
       "inputHash": "99a389abbaa69ccf00fa87dca19b2a5ccffb4f4366adc18f620a07380ef07b70",
-      "profileHash": "229fdbab5f329484a07c67a038276ade99f456843c377d25c8a9fdddce530133",
+      "profileHash": "068798f6e0e95256e4fa1d7d469380b7781bdeb4a039186d0da45ff6bdb959b2",
       "diagnostics": [
         {
           "code": "profile.validation.tableColumnCoverageIdMissing",
