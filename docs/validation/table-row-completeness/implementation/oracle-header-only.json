@@ -1,0 +1,42 @@
+{
+  "diagnostics": [],
+  "evidence": {
+    "diagnostics": [],
+    "engineVersion": "3.6.0",
+    "inputHash": "5cc8ef5c6776d0f05a738fa7feffa7cdbf5887e1ea788d3d6264ebfcf18461e7",
+    "profileHash": "ed6d26f0642117ad82a82ee1506806214396d0e71363a365bde38f3690995f71",
+    "ruleResults": [
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "rows.complete",
+        "status": "passed"
+      }
+    ],
+    "runtimeVersion": "v22.20.0"
+  },
+  "profile": {
+    "documentVersion": "1.0.0",
+    "evaluatedRuleCount": 1,
+    "ruleCount": 1,
+    "skippedRuleCount": 0,
+    "syntaxVersion": "markdown-engine.validation@v2"
+  },
+  "ruleResults": [
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "rows.complete",
+      "status": "passed"
+    }
+  ],
+  "valid": true
+}

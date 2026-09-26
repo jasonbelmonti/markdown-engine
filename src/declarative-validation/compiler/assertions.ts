@@ -28,6 +28,7 @@ const ASSERTION_KEYS_V2 = [
   "selectionCount",
   "sourceLength",
   "tableColumnsExact",
+  "tableRowsComplete",
   "tableColumnCoverage",
   "frontmatterShape",
   "textFormat",

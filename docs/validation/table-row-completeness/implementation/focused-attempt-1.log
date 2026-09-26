@@ -1,0 +1,73 @@
+$ npm run build
+
+> @jasonbelmonti/markdown-engine@3.6.0 build
+> npm run clean && tsc -p tsconfig.json
+
+
+> @jasonbelmonti/markdown-engine@3.6.0 clean
+> node scripts/clean-dist.mjs
+
+
+exit: 0
+$ npx vitest run tests/declarative-validation-table-rows-complete.test.ts tests/declarative-validation-table-rows-complete-config.test.ts tests/declarative-validation-table-rows-complete-cli.test.ts --exclude=.worktrees/**
+
+ RUN  v3.2.7 /Users/jasonbelmonti/Documents/Development/markdown-engine/.worktrees/table-row-validation-task
+
+ ❯ tests/declarative-validation-table-rows-complete-config.test.ts (13 tests | 1 failed) 12ms
+   ✓ tableRowsComplete public profile contract > rejects malformed payload false before execution 3ms
+   ✓ tableRowsComplete public profile contract > rejects malformed payload null before execution 0ms
+   ✓ tableRowsComplete public profile contract > rejects malformed payload 1 before execution 0ms
+   ✓ tableRowsComplete public profile contract > rejects malformed payload "true" before execution 0ms
+   ✓ tableRowsComplete public profile contract > rejects malformed payload {} before execution 0ms
+   ✓ tableRowsComplete public profile contract > rejects malformed payload %j before execution 0ms
+   ✓ tableRowsComplete public profile contract > rejects malformed payload {"enabled":true} before execution 0ms
+   ✓ tableRowsComplete public profile contract > rejects incompatible document selectors 1ms
+   ✓ tableRowsComplete public profile contract > rejects incompatible tableRow selectors 1ms
+   ✓ tableRowsComplete public profile contract > rejects incompatible tableCell selectors 0ms
+   ✓ tableRowsComplete public profile contract > rejects incompatible section selectors 0ms
+   ✓ tableRowsComplete public profile contract > preserves v1 admission boundaries 0ms
+   × tableRowsComplete public profile contract > works in grouped branches and applicability without new execution paths 5ms
+     → expected [ { …(4) } ] to deep equally contain ObjectContaining{…}
+ ✓ tests/declarative-validation-table-rows-complete.test.ts (14 tests) 57ms
+ ✓ tests/declarative-validation-table-rows-complete-cli.test.ts (11 tests) 2538ms
+   ✓ tableRowsComplete real CLI > runs the consumer example with legacy pass, opt-in failure and repaired pass  393ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/declarative-validation-table-rows-complete-config.test.ts > tableRowsComplete public profile contract > works in grouped branches and applicability without new execution paths
+AssertionError: expected [ { …(4) } ] to deep equally contain ObjectContaining{…}
+
+- Expected: 
+ObjectContaining {
+  "code": "profile.validation.assertionFailed",
+  "ruleId": "group",
+}
+
++ Received: 
+[
+  {
+    "code": "profile.validation.groupRequirementFailed",
+    "message": "One or more allOf branches failed the grouped rule.",
+    "ruleId": "group",
+    "severity": "error",
+  },
+]
+
+ ❯ tests/declarative-validation-table-rows-complete-config.test.ts:60:32
+     58|     expect(result.valid).toBe(false);
+     59|     expect(result.ruleResults).toContainEqual(expect.objectContaining(…
+     60|     expect(result.diagnostics).toContainEqual(expect.objectContaining(…
+       |                                ^
+     61|   });
+     62| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  1 failed | 37 passed (38)
+   Start at  15:40:25
+   Duration  2.76s (transform 310ms, setup 0ms, collect 1.02s, tests 2.61s, environment 0ms, prepare 149ms)
+
+
+exit: 1

@@ -1,0 +1,9 @@
+{
+  "docs/tasks/table-row-completeness.md": "10b252a47e8ec4cf049610f4aee8537a160a6d7fb283562b90532c1e2defb4f3",
+  "docs/tasks/table-row-completeness.sha256": "decbce557382d593202f5e54273676e1e10da2240d84df50fde3db967f0d010c",
+  "docs/handoffs/table-row-completeness.md": "13a920626cd4e9216e8b6cc7762918d5c0a17b43b6cdb4f1badb1ac7533894fe",
+  "docs/validation/table-row-completeness/draft-1.json": "609c636c2d90299b163eb8921ca14a80feb507d055af512e7c54ab29ff7ca3cb",
+  "docs/validation/table-row-completeness/identity.json": "b6bce3b10941da9b8d6b52d3afc89cee82af8b91a02c027c063d4079d04869d6",
+  "docs/validation/table-row-completeness/draft-2.json": "24e77fb1e50b0fb4ffdf22ebddda95f1a8c6928477b032e889b8e024e1ae9c82",
+  "docs/validation/table-row-completeness/final.json": "5982e36d10c9bbd005bd002e9352c44c70e743df4b0fac995411ea5a30c7731c"
+}

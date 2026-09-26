@@ -44,6 +44,8 @@ checkFile("docs/contracts/declarative-validation.md", {
     "profile.validation.referenceMissing",
     "`selectionCount`",
     "`tableColumnsExact`",
+    "`tableRowsComplete: true`",
+    "first available body-cell",
     "complete normalized header sequence",
     "`textFormat` schema",
     "`sourceLength`",

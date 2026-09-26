@@ -1,0 +1,190 @@
+{
+  "context_sizing": {
+    "tier": "standard",
+    "rationale": "One additive assertion across existing profile/compile/evaluation boundaries; five fixed outcome criteria and compatibility proof."
+  },
+  "planning_artifact_status": "found",
+  "planned_follow_up_work": [
+    "Raw-source/reserved-marker validation; delegation vocabulary and semantic readiness.",
+    "Consumer helper migration, Fleet activation, capsule changes, runtime publication or installation.",
+    "Unrelated refactoring, architecture expansion, full release clean-tree acceptance or additional frameworks."
+  ],
+  "review_boundary": "Judge only correctness and compatibility of selected-row decisions, public reachability, diagnostic evidence, preserved existing behavior, cohesive Engine ownership and independent proof. Incorrect decisions, silent compatibility changes, unusable public entry points or concrete coupling/regressions/proof gaps caused by this change block. Style preferences, broader cleanup and explicitly deferred consumer/raw-marker/runtime work do not block.",
+  "review_scope": "Review the retained changes against the baseline, including new untracked production modules, tests, fixtures, contract documentation and recorded evidence. Use the reviewed-head manifest to identify exact bytes. Inspect directly relevant unchanged callers and normalized-model contracts as necessary. Task/plan scope stays frozen; no source edits, merge, publication, active installation or consumer migration in this review round.",
+  "test_or_risk_context": [
+    "Earlier full gate reports 56 files / 722 tests passing and focused gate reports 38 passing; verify applicability and inspect oracle adequacy independently.",
+    "Primary risks are incorrect row decisions, selection leakage, fabricated ranges, inconsistent public admission and silently stronger legacy semantics."
+  ],
+  "planning_artifacts": [
+    {
+      "label": "Task and plan authority",
+      "content": "Read complete task /Users/jasonbelmonti/Documents/Development/markdown-engine/.worktrees/table-row-validation-task/docs/tasks/table-row-completeness.md revision 1, SHA-256 10b252a47e8ec4cf049610f4aee8537a160a6d7fb283562b90532c1e2defb4f3. Verify its adjacent checksum from docs/tasks. Read its full listed controlling sources. Engine baseline files are retrievable via git show of the Cycle Control baseline; compare current contract changes. Consumer checkout is /Users/jasonbelmonti/Documents/Development/delegation-planner/.worktrees/bounded-context-task at bc11ace3e50315313d428f3b681424fee910aef3. Read skills/delegation-planner/scripts/artifact_structure.py, tests/test_structure.py, skills/delegation-planner/references/bundle-format.md; reference only, never edit.\nRead complete plan /Users/jasonbelmonti/Documents/Development/markdown-engine/.worktrees/table-row-validation-task/.codefactory/execution-plans/table-row-completeness/execution-plan.md revision 1, SHA-256 a7bb61c3261cc917ccafa0827d7c865efa9309a5a00a2ea7ec6b06bd4f4ccf88 and verify adjacent checksum. Task/plan readiness and earlier self-review do not determine your recommendation."
+    }
+  ],
+  "repo_instructions": [
+    {
+      "label": "Applicable operating instructions",
+      "content": "Read the full task, plan and controlling sources before reliance; verify existing checksums. Source authority controls scope; summaries do not override it. Use installed /Users/jasonbelmonti/.codex/skills/task-definition/SKILL.md in REVIEW mode for the task-backed review and its review guide/profile as required. Review-only work must not mutate source artifacts. All five task criteria and the stated review boundary are fixed. A blocking maintainability finding must identify a concrete problem caused by the current change, affected code/contract and practical consequence; style and out-of-scope cleanup are non-blocking. Preserve existing changes. Work in the prepared worktree named below. No merge, publication, active runtime installation, consumer edits, Fleet or capsule changes. The supervisor already dispatched exactly three reviewers; perform your own independent review without spawning further reviewers or communicating with peers. Do not rebuild, npm install, or run scripts that overwrite implementation evidence in the shared checkout. Inspect verified dist or run focused read-only tests; use a temporary directory for additional reproduction. Return your evidence in the final answer; the supervisor persists reviewer outputs."
+    }
+  ],
+  "artifacts": [
+    {
+      "label": "Current checkout and frozen identity verification",
+      "language": "text",
+      "content": "Worktree: /Users/jasonbelmonti/Documents/Development/markdown-engine/.worktrees/table-row-validation-task\nImmutable reviewed artifact record is the manifest at /Users/jasonbelmonti/Documents/Development/markdown-engine/.worktrees/table-row-validation-task/.codefactory/convergent-reviews/table-row-completeness/round-1/reviewed-head.json. Read it, verify its SHA-256 against Cycle Control and compare listed file/directory hashes before relying on current contents. It includes tracked and untracked inputs plus generated dist hashes; a Git HEAD alone does not identify the reviewed changes. git diff shows tracked edits; changed-paths.json also names new files. Do not treat previous implementation conclusions as independent proof.\nChanged path inventory: /Users/jasonbelmonti/Documents/Development/markdown-engine/.worktrees/table-row-validation-task/docs/validation/table-row-completeness/implementation/changed-paths.json\nTracked diff: /Users/jasonbelmonti/Documents/Development/markdown-engine/.worktrees/table-row-validation-task/docs/validation/table-row-completeness/implementation/tracked.patch (compare with current git diff)\nImplementation report, logs, fixture outcomes and provenance: /Users/jasonbelmonti/Documents/Development/markdown-engine/.worktrees/table-row-validation-task/docs/validation/table-row-completeness/implementation/review.md, focused.log, focused-state.json, regression.log, regression-state.json, examples-state.json, final-state.json.\nAdditional context can be read from the repository as required by the frozen boundary."
+    },
+    {
+      "label": "Source requirements and next-review instructions",
+      "language": "text",
+      "content": "Read complete task /Users/jasonbelmonti/Documents/Development/markdown-engine/.worktrees/table-row-validation-task/docs/tasks/table-row-completeness.md revision 1, SHA-256 10b252a47e8ec4cf049610f4aee8537a160a6d7fb283562b90532c1e2defb4f3. Verify its adjacent checksum from docs/tasks. Read its full listed controlling sources. Engine baseline files are retrievable via git show of the Cycle Control baseline; compare current contract changes. Consumer checkout is /Users/jasonbelmonti/Documents/Development/delegation-planner/.worktrees/bounded-context-task at bc11ace3e50315313d428f3b681424fee910aef3. Read skills/delegation-planner/scripts/artifact_structure.py, tests/test_structure.py, skills/delegation-planner/references/bundle-format.md; reference only, never edit.\nRead complete plan /Users/jasonbelmonti/Documents/Development/markdown-engine/.worktrees/table-row-validation-task/.codefactory/execution-plans/table-row-completeness/execution-plan.md revision 1, SHA-256 a7bb61c3261cc917ccafa0827d7c865efa9309a5a00a2ea7ec6b06bd4f4ccf88 and verify adjacent checksum. Task/plan readiness and earlier self-review do not determine your recommendation."
+    }
+  ],
+  "cycle": {
+    "id": "table-row-completeness-20260925",
+    "round": 1,
+    "max_rounds": 3,
+    "artifact": {
+      "baseline": {
+        "kind": "git",
+        "locator": "https://github.com/jasonbelmonti/markdown-engine.git",
+        "revision": "f490a2fdc9925977e918f29c8a921e5453c49146"
+      },
+      "reviewed_head": {
+        "kind": "worktree-manifest",
+        "locator": "/Users/jasonbelmonti/Documents/Development/markdown-engine/.worktrees/table-row-validation-task/.codefactory/convergent-reviews/table-row-completeness/round-1/reviewed-head.json",
+        "sha256": "5277434428f2b47dd3833b99371dd76794278ae7ac39c876c4387c15a67e8481"
+      }
+    },
+    "contract_fitness": {
+      "existing_apis": {
+        "checked": true,
+        "evidence": [
+          "src/ir/document-table-views.ts preserves actual cell coordinates, including short/excess rows.",
+          "Existing tableColumnsExact checks only normalized headers; table selectors already scope sections/header subsequences, and text.nonBlank/selectionCount supply independent composition.",
+          "The unchanged delegation missing-dynamic-row-cell fixture passes the legacy profile; the new assertion rejects it directly through public Engine entry points."
+        ]
+      },
+      "criteria": [
+        {
+          "criterion_id": "TD-SC-1",
+          "observable_failure_mode": "Accepting an incomplete or excess row or rejecting a complete row defeats the structural-validation objective.",
+          "focus": "outcome",
+          "rationale": "The criterion names a public validation outcome with fixture, diagnostic or compatibility observations rather than prescribing architecture."
+        },
+        {
+          "criterion_id": "TD-SC-2",
+          "observable_failure_mode": "Conflating empty content, row existence or selection with row shape breaks supported composition and scopes.",
+          "focus": "outcome",
+          "rationale": "The criterion names a public validation outcome with fixture, diagnostic or compatibility observations rather than prescribing architecture."
+        },
+        {
+          "criterion_id": "TD-SC-3",
+          "observable_failure_mode": "Unstable or false row identity/shape/source evidence makes structural failures unactionable or misleading.",
+          "focus": "outcome",
+          "rationale": "The criterion names a public validation outcome with fixture, diagnostic or compatibility observations rather than prescribing architecture."
+        },
+        {
+          "criterion_id": "TD-SC-4",
+          "observable_failure_mode": "Unreachable or inconsistently admitted public behavior prevents consumers using the capability reliably.",
+          "focus": "outcome",
+          "rationale": "The criterion names a public validation outcome with fixture, diagnostic or compatibility observations rather than prescribing architecture."
+        },
+        {
+          "criterion_id": "TD-SC-5",
+          "observable_failure_mode": "Legacy regressions or inability to cover the documented reproducer prevent compatible consumer adoption.",
+          "focus": "outcome",
+          "rationale": "The criterion names a public validation outcome with fixture, diagnostic or compatibility observations rather than prescribing architecture."
+        }
+      ],
+      "architecture": {
+        "expansion_required": false,
+        "expansion_authorized": false,
+        "rationale": "The opt-in assertion uses existing schema, compiler, selector and diagnostic boundaries."
+      },
+      "hardening": {
+        "burden": "none",
+        "rationale": "Ordinary functional validation with no new hardening architecture."
+      },
+      "threat_model": {
+        "status": "none",
+        "rationale": "No adversarial threat model; supported functional workflows still govern correctness."
+      }
+    },
+    "contract": {
+      "objective": "Let profile authors reject incomplete or oversized table body rows through public Markdown Engine validation API and CLI, preserving existing header-validation and blank-cell semantics.",
+      "intended_behavior_change": "An opt-in v2 tableRowsComplete: true assertion checks selected table body rows against their own header column positions and returns located deterministic failures for missing/excess cells.",
+      "in_scope": [
+        "Public profile parser, compiler, exported types, evaluator and CLI reachability.",
+        "Located diagnostics, contract documentation, independently specified fixtures and consumer example.",
+        "Existing profile compatibility and focused downstream proof."
+      ],
+      "accepted_tradeoffs": [
+        "Physically present empty cells satisfy shape; nonblank values and row existence require separate existing assertions.",
+        "Use the existing normalized model and available body-cell ranges; do not parse raw Markdown a second time or fabricate missing ranges.",
+        "Older installed runtimes reject the new opt-in assertion; deployment and consumer-helper removal are separate work.",
+        "Prepared task revision 1 is preserved unchanged; its preparation checkpoint is historical, with execution evidence recorded externally."
+      ],
+      "existing_capability_evidence": [
+        "src/ir/document-table-views.ts preserves actual cell coordinates, including short/excess rows.",
+        "Existing tableColumnsExact checks only normalized headers; table selectors already scope sections/header subsequences, and text.nonBlank/selectionCount supply independent composition.",
+        "The unchanged delegation missing-dynamic-row-cell fixture passes the legacy profile; the new assertion rejects it directly through public Engine entry points."
+      ],
+      "criteria": [
+        {
+          "id": "TD-SC-1",
+          "text": "An explicitly enabled profile rejects body rows missing any header column or containing extra columns, and accepts complete rows. Required proof: Public API and real CLI checks on independently authored complete, truncated and excess-cell Markdown; compare validity and failing row against the fixture oracle.",
+          "blocking_justification": "Accepting an incomplete or excess row or rejecting a complete row defeats the structural-validation objective."
+        },
+        {
+          "id": "TD-SC-2",
+          "text": "Row shape remains distinct from content, row existence and table selection. Required proof: An explicit empty cell passes shape but fails a composed nonblank rule; a header-only table passes shape unless a separate row-count rule forbids it; no matched tables follows existing empty-selection failure; unselected malformed tables do not fail the rule.",
+          "blocking_justification": "Conflating empty content, row existence or selection with row shape breaks supported composition and scopes."
+        },
+        {
+          "id": "TD-SC-3",
+          "text": "Each shape failure identifies its rule and offending table/row with deterministic expected/actual shape and truthful available source evidence. Required proof: Multiple malformed rows yield stable located findings across repeated API/CLI runs; compare locations to marked source lines; unavailable ranges are not invented.",
+          "blocking_justification": "Unstable or false row identity/shape/source evidence makes structural failures unactionable or misleading."
+        },
+        {
+          "id": "TD-SC-4",
+          "text": "The capability is admitted consistently by the profile parser, exported contract and evaluator, with invalid configurations rejected through existing profile error behavior. Required proof: YAML and typed API positive cases plus wrong selector and malformed assertion cases exercise public entry points, rather than only a private helper.",
+          "blocking_justification": "Unreachable or inconsistently admitted public behavior prevents consumers using the capability reliably."
+        },
+        {
+          "id": "TD-SC-5",
+          "text": "Existing profiles retain their behavior, and the documented new profile covers the delegation reproducer without consumer-side shape checking. Required proof: Preserve exact/required-header checks and ordinary normalization; run the documented example and an adapted missing-dynamic-row-cell fixture directly through Engine, showing old-profile pass and opt-in failure followed by repaired pass.",
+          "blocking_justification": "Legacy regressions or inability to cover the documented reproducer prevent compatible consumer adoption."
+        }
+      ],
+      "supported_workflows": [
+        "Normalize real GFM Markdown through public parse/normalize then validateWithProfile, using typed or YAML/JSON-safe profiles.",
+        "Run the built CLI validate command with JSON output on complete, missing, excess, empty, header-only and scoped fixtures.",
+        "Compose assertions with existing nonblank, row-count, grouped and applicability behavior; preserve v1/v2 existing profiles.",
+        "Run the documented delegation example with legacy pass, opt-in fail, repaired pass, without consumer-side shape checking."
+      ],
+      "supported_environment": [
+        "Repository package engines: Node ^20.19.0 or >=22.12.0; reviewed validation environment is macOS arm64, Node v22.20.0 and npm 11.13.0 with package-lock dependencies.",
+        "Public document 1.0.0 and v2 profile syntax; v1 remains unsupported for the new assertion. No new platform-support obligation."
+      ],
+      "threat_model": [],
+      "non_goals": [
+        "Raw-source/reserved-marker validation; delegation vocabulary and semantic readiness.",
+        "Consumer helper migration, Fleet activation, capsule changes, runtime publication or installation.",
+        "Unrelated refactoring, architecture expansion, full release clean-tree acceptance or additional frameworks."
+      ],
+      "validation_gates": [
+        {
+          "id": "VG-1",
+          "text": "Establish EP-GATE-1 against the reviewed artifact: build, 38 focused table-rows-complete tests through public API/real CLI, and tsc -p tsconfig.declarative-validation-contract.json pass. Retained results may be used only after checking their consumed source/test/fixture/dependency/generated-input fingerprints remain applicable."
+        },
+        {
+          "id": "VG-2",
+          "text": "Establish EP-GATE-2 against the reviewed artifact: package typecheck, full tests, both contract-document checks, both boundary audits, documented consumer CLI exits 0/1/0, and bounded diff inspection pass. Confirm retained before/after manifests and current inputs; stale evidence requires affected rechecks, not broad new obligations."
+        }
+      ],
+      "review_boundary": "Judge only correctness and compatibility of selected-row decisions, public reachability, diagnostic evidence, preserved existing behavior, cohesive Engine ownership and independent proof. Incorrect decisions, silent compatibility changes, unusable public entry points or concrete coupling/regressions/proof gaps caused by this change block. Style preferences, broader cleanup and explicitly deferred consumer/raw-marker/runtime work do not block.",
+      "review_scope": "Review the retained changes against the baseline, including new untracked production modules, tests, fixtures, contract documentation and recorded evidence. Use the reviewed-head manifest to identify exact bytes. Inspect directly relevant unchanged callers and normalized-model contracts as necessary. Task/plan scope stays frozen; no source edits, merge, publication, active installation or consumer migration in this review round."
+    },
+    "ledger": []
+  }
+}

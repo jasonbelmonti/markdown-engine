@@ -129,6 +129,9 @@ export type CompiledDeclarativeAssertion =
       columns: readonly string[];
     }
   | {
+      kind: "tableRowsComplete";
+    }
+  | {
       kind: "tableColumnsExact";
       columns: readonly string[];
     }

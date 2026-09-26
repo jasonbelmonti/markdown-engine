@@ -1,0 +1,15 @@
+{
+  "verifiedAt": "2026-09-26T04:04:00.149458+00:00",
+  "reviewedHead": {
+    "kind": "worktree-manifest",
+    "locator": "/Users/jasonbelmonti/Documents/Development/markdown-engine/.worktrees/table-row-validation-task/.codefactory/convergent-reviews/table-row-completeness/round-1/reviewed-head.json",
+    "sha256": "5277434428f2b47dd3833b99371dd76794278ae7ac39c876c4387c15a67e8481"
+  },
+  "packetSha256": "b7524fa3d002fc7891661e7f3ac2b4b1c05440301ec2619ca471f0bb5fba67c3",
+  "filesUnchanged": 502,
+  "distUnchanged": 585,
+  "fileInventoryUnchanged": true,
+  "trackedDiffUnchanged": true,
+  "allThreeReviewersReceived": true,
+  "ledger": []
+}

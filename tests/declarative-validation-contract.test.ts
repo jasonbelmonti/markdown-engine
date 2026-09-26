@@ -214,6 +214,9 @@ const selectionCountAssertion = {
     max: 1,
   },
 } satisfies DeclarativeAssertion;
+const tableRowsCompleteAssertion = { tableRowsComplete: true } satisfies DeclarativeAssertion;
+// @ts-expect-error tableRowsComplete is an opt-in true-only assertion.
+const invalidTableRowsCompleteAssertion = { tableRowsComplete: false } satisfies DeclarativeAssertion;
 const tableColumnsExactAssertion = {
   tableColumnsExact: {
     columns: ["Contract state", "Execution route", "State rationale"],
@@ -1299,6 +1302,8 @@ void publicAssertion;
 void idCountAssertion;
 void existsAssertion;
 void selectionCountAssertion;
+void tableRowsCompleteAssertion;
+void invalidTableRowsCompleteAssertion;
 void tableColumnsExactAssertion;
 void exactOneTextAssertion;
 void textLengthAssertion;

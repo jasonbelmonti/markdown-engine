@@ -24,6 +24,7 @@ export function selectorAssertionCompatibilityError(
 
     case "tableColumnsRequired":
     case "tableColumnsExact":
+    case "tableRowsComplete":
       return selector.target === "table"
         ? undefined
         : selectorCompatibilityMessage(assertionName, "table");

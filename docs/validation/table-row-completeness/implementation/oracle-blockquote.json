@@ -1,0 +1,156 @@
+{
+  "diagnostics": [
+    {
+      "code": "profile.validation.assertionFailed",
+      "message": "Selected table \"node:0.0:table\" body row 1 must have column positions [0,1]; found [0].",
+      "ruleId": "rows.complete",
+      "severity": "error",
+      "sourceRange": {
+        "end": {
+          "column": 8,
+          "line": 3,
+          "offset": 35
+        },
+        "start": {
+          "column": 3,
+          "line": 3,
+          "offset": 30
+        }
+      }
+    }
+  ],
+  "evidence": {
+    "diagnostics": [
+      {
+        "code": "profile.validation.assertionFailed",
+        "message": "Selected table \"node:0.0:table\" body row 1 must have column positions [0,1]; found [0].",
+        "ruleId": "rows.complete",
+        "severity": "error",
+        "sourceRange": {
+          "end": {
+            "column": 8,
+            "line": 3,
+            "offset": 35
+          },
+          "start": {
+            "column": 3,
+            "line": 3,
+            "offset": 30
+          }
+        }
+      }
+    ],
+    "engineVersion": "3.6.0",
+    "inputHash": "239ee08d5529e8d9c01b040368da0ebff94c92f3155aabe7ed5bb325471f0aef",
+    "profileHash": "ed6d26f0642117ad82a82ee1506806214396d0e71363a365bde38f3690995f71",
+    "ruleResults": [
+      {
+        "diagnostics": [
+          {
+            "code": "profile.validation.assertionFailed",
+            "message": "Selected table \"node:0.0:table\" body row 1 must have column positions [0,1]; found [0].",
+            "ruleId": "rows.complete",
+            "severity": "error",
+            "sourceRange": {
+              "end": {
+                "column": 8,
+                "line": 3,
+                "offset": 35
+              },
+              "start": {
+                "column": 3,
+                "line": 3,
+                "offset": 30
+              }
+            }
+          }
+        ],
+        "evaluation": {
+          "diagnostics": [
+            {
+              "code": "profile.validation.assertionFailed",
+              "message": "Selected table \"node:0.0:table\" body row 1 must have column positions [0,1]; found [0].",
+              "ruleId": "rows.complete",
+              "severity": "error",
+              "sourceRange": {
+                "end": {
+                  "column": 8,
+                  "line": 3,
+                  "offset": 35
+                },
+                "start": {
+                  "column": 3,
+                  "line": 3,
+                  "offset": 30
+                }
+              }
+            }
+          ],
+          "kind": "assertions"
+        },
+        "passed": false,
+        "ruleId": "rows.complete",
+        "status": "failed"
+      }
+    ],
+    "runtimeVersion": "v22.20.0"
+  },
+  "profile": {
+    "documentVersion": "1.0.0",
+    "evaluatedRuleCount": 1,
+    "ruleCount": 1,
+    "skippedRuleCount": 0,
+    "syntaxVersion": "markdown-engine.validation@v2"
+  },
+  "ruleResults": [
+    {
+      "diagnostics": [
+        {
+          "code": "profile.validation.assertionFailed",
+          "message": "Selected table \"node:0.0:table\" body row 1 must have column positions [0,1]; found [0].",
+          "ruleId": "rows.complete",
+          "severity": "error",
+          "sourceRange": {
+            "end": {
+              "column": 8,
+              "line": 3,
+              "offset": 35
+            },
+            "start": {
+              "column": 3,
+              "line": 3,
+              "offset": 30
+            }
+          }
+        }
+      ],
+      "evaluation": {
+        "diagnostics": [
+          {
+            "code": "profile.validation.assertionFailed",
+            "message": "Selected table \"node:0.0:table\" body row 1 must have column positions [0,1]; found [0].",
+            "ruleId": "rows.complete",
+            "severity": "error",
+            "sourceRange": {
+              "end": {
+                "column": 8,
+                "line": 3,
+                "offset": 35
+              },
+              "start": {
+                "column": 3,
+                "line": 3,
+                "offset": 30
+              }
+            }
+          }
+        ],
+        "kind": "assertions"
+      },
+      "passed": false,
+      "ruleId": "rows.complete",
+      "status": "failed"
+    }
+  ],
+  "valid": false
+}

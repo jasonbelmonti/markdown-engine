@@ -1,0 +1,2298 @@
+{
+  "diagnostics": [],
+  "evidence": {
+    "diagnostics": [],
+    "engineVersion": "3.6.0",
+    "inputHash": "5f5dc19e564fc64d91991c13af09561ba38596b5a356c6ecbee81c5a6529dabb",
+    "profileHash": "ecfb852e7ccb29a54d5283d34a79c5b796c01132853866a3314ba32dac51284d",
+    "ruleResults": [
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "document.frontmatter.shape",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "document.no-placeholders",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "branches": [
+            {
+              "branchIndex": 0,
+              "diagnostics": [],
+              "label": "status",
+              "status": "passed"
+            },
+            {
+              "branchIndex": 1,
+              "diagnostics": [],
+              "label": "slice",
+              "status": "passed"
+            },
+            {
+              "branchIndex": 2,
+              "diagnostics": [],
+              "label": "evidence",
+              "status": "passed"
+            },
+            {
+              "branchIndex": 3,
+              "diagnostics": [],
+              "label": "next-action",
+              "status": "passed"
+            },
+            {
+              "branchIndex": 4,
+              "diagnostics": [],
+              "label": "blockers",
+              "status": "passed"
+            }
+          ],
+          "kind": "allOf"
+        },
+        "passed": true,
+        "ruleId": "execution-checkpoint.cells.nonblank",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "execution-checkpoint.evidence.declared",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "branches": [
+            {
+              "branchIndex": 0,
+              "diagnostics": [],
+              "label": "none-admitted",
+              "status": "passed"
+            },
+            {
+              "branchIndex": 1,
+              "diagnostics": [
+                {
+                  "code": "profile.validation.idCountTooLow",
+                  "message": "Expected at least 1 unique IDs matching prefix \"TD-SC\" but found 0.",
+                  "ruleId": "execution-checkpoint.evidence.references-or-none",
+                  "severity": "error",
+                  "sourceRange": {
+                    "end": {
+                      "column": 92,
+                      "line": 95,
+                      "offset": 10198
+                    },
+                    "start": {
+                      "column": 75,
+                      "line": 95,
+                      "offset": 10181
+                    }
+                  }
+                }
+              ],
+              "label": "criterion-references",
+              "status": "failed"
+            }
+          ],
+          "kind": "anyOf",
+          "selectedBranch": {
+            "branchIndex": 0,
+            "label": "none-admitted"
+          }
+        },
+        "passed": true,
+        "ruleId": "execution-checkpoint.evidence.references-or-none",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "execution-checkpoint.heading-depth.when-present",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "execution-checkpoint.heading.count",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "execution-checkpoint.heading.when-table-present",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "execution-checkpoint.notes.count",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "execution-checkpoint.notes.depth",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "kind": "skipped",
+          "reason": "whenNotMatched"
+        },
+        "passed": true,
+        "ruleId": "execution-checkpoint.required-evidence.coverage",
+        "status": "skipped",
+        "when": {
+          "diagnostics": [
+            {
+              "code": "profile.validation.emptySelection",
+              "message": "Rule selector did not match any document targets.",
+              "ruleId": "execution-checkpoint.required-evidence.coverage",
+              "severity": "error"
+            }
+          ],
+          "status": "notMatched"
+        }
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "execution-checkpoint.row.when-present",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "branches": [
+            {
+              "branchIndex": 0,
+              "diagnostics": [],
+              "label": "not-started",
+              "status": "passed"
+            },
+            {
+              "branchIndex": 1,
+              "diagnostics": [
+                {
+                  "code": "profile.validation.textMissing",
+                  "message": "Selected tableCell text must contain \"active\".",
+                  "ruleId": "execution-checkpoint.status.allowed",
+                  "severity": "error",
+                  "sourceRange": {
+                    "end": {
+                      "column": 15,
+                      "line": 95,
+                      "offset": 10121
+                    },
+                    "start": {
+                      "column": 1,
+                      "line": 95,
+                      "offset": 10107
+                    }
+                  }
+                },
+                {
+                  "code": "profile.validation.assertionFailed",
+                  "message": "Selected tableCell text length must be between 6 and 6; found 11.",
+                  "ruleId": "execution-checkpoint.status.allowed",
+                  "severity": "error",
+                  "sourceRange": {
+                    "end": {
+                      "column": 15,
+                      "line": 95,
+                      "offset": 10121
+                    },
+                    "start": {
+                      "column": 1,
+                      "line": 95,
+                      "offset": 10107
+                    }
+                  }
+                }
+              ],
+              "label": "active",
+              "status": "failed"
+            },
+            {
+              "branchIndex": 2,
+              "diagnostics": [
+                {
+                  "code": "profile.validation.textMissing",
+                  "message": "Selected tableCell text must contain \"blocked\".",
+                  "ruleId": "execution-checkpoint.status.allowed",
+                  "severity": "error",
+                  "sourceRange": {
+                    "end": {
+                      "column": 15,
+                      "line": 95,
+                      "offset": 10121
+                    },
+                    "start": {
+                      "column": 1,
+                      "line": 95,
+                      "offset": 10107
+                    }
+                  }
+                },
+                {
+                  "code": "profile.validation.assertionFailed",
+                  "message": "Selected tableCell text length must be between 7 and 7; found 11.",
+                  "ruleId": "execution-checkpoint.status.allowed",
+                  "severity": "error",
+                  "sourceRange": {
+                    "end": {
+                      "column": 15,
+                      "line": 95,
+                      "offset": 10121
+                    },
+                    "start": {
+                      "column": 1,
+                      "line": 95,
+                      "offset": 10107
+                    }
+                  }
+                }
+              ],
+              "label": "blocked",
+              "status": "failed"
+            },
+            {
+              "branchIndex": 3,
+              "diagnostics": [
+                {
+                  "code": "profile.validation.textMissing",
+                  "message": "Selected tableCell text must contain \"review-ready\".",
+                  "ruleId": "execution-checkpoint.status.allowed",
+                  "severity": "error",
+                  "sourceRange": {
+                    "end": {
+                      "column": 15,
+                      "line": 95,
+                      "offset": 10121
+                    },
+                    "start": {
+                      "column": 1,
+                      "line": 95,
+                      "offset": 10107
+                    }
+                  }
+                },
+                {
+                  "code": "profile.validation.assertionFailed",
+                  "message": "Selected tableCell text length must be between 12 and 12; found 11.",
+                  "ruleId": "execution-checkpoint.status.allowed",
+                  "severity": "error",
+                  "sourceRange": {
+                    "end": {
+                      "column": 15,
+                      "line": 95,
+                      "offset": 10121
+                    },
+                    "start": {
+                      "column": 1,
+                      "line": 95,
+                      "offset": 10107
+                    }
+                  }
+                }
+              ],
+              "label": "review-ready",
+              "status": "failed"
+            }
+          ],
+          "kind": "anyOf",
+          "selectedBranch": {
+            "branchIndex": 0,
+            "label": "not-started"
+          }
+        },
+        "passed": true,
+        "ruleId": "execution-checkpoint.status.allowed",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "execution-checkpoint.table.global-count",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "execution-checkpoint.table.inside-checkpoint",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "execution-checkpoint.table.when-present",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "incremental-value.table.columns",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "review-boundary.table.columns",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "sections.required",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "source-authority.table.columns",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "success-criteria.evidence.coverage",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "success-criteria.ids.shape",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "success-criteria.ids.unique",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "success-criteria.table.columns",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "kind": "skipped",
+          "reason": "whenNotMatched"
+        },
+        "passed": true,
+        "ruleId": "task-control.blockers.fields.when-blocked",
+        "status": "skipped",
+        "when": {
+          "diagnostics": [
+            {
+              "code": "profile.validation.textMissing",
+              "message": "Selected tableCell text must contain \"BLOCKED\".",
+              "ruleId": "task-control.blockers.fields.when-blocked",
+              "severity": "error",
+              "sourceRange": {
+                "end": {
+                  "column": 9,
+                  "line": 16,
+                  "offset": 434
+                },
+                "start": {
+                  "column": 1,
+                  "line": 16,
+                  "offset": 426
+                }
+              }
+            },
+            {
+              "code": "profile.validation.assertionFailed",
+              "message": "Selected tableCell text length must be between 7 and 7; found 5.",
+              "ruleId": "task-control.blockers.fields.when-blocked",
+              "severity": "error",
+              "sourceRange": {
+                "end": {
+                  "column": 9,
+                  "line": 16,
+                  "offset": 434
+                },
+                "start": {
+                  "column": 1,
+                  "line": 16,
+                  "offset": 426
+                }
+              }
+            }
+          ],
+          "status": "notMatched"
+        }
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "kind": "skipped",
+          "reason": "whenNotMatched"
+        },
+        "passed": true,
+        "ruleId": "task-control.blockers.table.when-blocked",
+        "status": "skipped",
+        "when": {
+          "diagnostics": [
+            {
+              "code": "profile.validation.textMissing",
+              "message": "Selected tableCell text must contain \"BLOCKED\".",
+              "ruleId": "task-control.blockers.table.when-blocked",
+              "severity": "error",
+              "sourceRange": {
+                "end": {
+                  "column": 9,
+                  "line": 16,
+                  "offset": 434
+                },
+                "start": {
+                  "column": 1,
+                  "line": 16,
+                  "offset": 426
+                }
+              }
+            },
+            {
+              "code": "profile.validation.assertionFailed",
+              "message": "Selected tableCell text length must be between 7 and 7; found 5.",
+              "ruleId": "task-control.blockers.table.when-blocked",
+              "severity": "error",
+              "sourceRange": {
+                "end": {
+                  "column": 9,
+                  "line": 16,
+                  "offset": 434
+                },
+                "start": {
+                  "column": 1,
+                  "line": 16,
+                  "offset": 426
+                }
+              }
+            }
+          ],
+          "status": "notMatched"
+        }
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "branches": [
+            {
+              "branchIndex": 0,
+              "diagnostics": [],
+              "label": "draft",
+              "status": "passed"
+            },
+            {
+              "branchIndex": 1,
+              "diagnostics": [
+                {
+                  "code": "profile.validation.textMissing",
+                  "message": "Selected tableCell text must contain \"BLOCKED\".",
+                  "ruleId": "task-control.contract-state.allowed",
+                  "severity": "error",
+                  "sourceRange": {
+                    "end": {
+                      "column": 9,
+                      "line": 16,
+                      "offset": 434
+                    },
+                    "start": {
+                      "column": 1,
+                      "line": 16,
+                      "offset": 426
+                    }
+                  }
+                },
+                {
+                  "code": "profile.validation.assertionFailed",
+                  "message": "Selected tableCell text length must be between 7 and 7; found 5.",
+                  "ruleId": "task-control.contract-state.allowed",
+                  "severity": "error",
+                  "sourceRange": {
+                    "end": {
+                      "column": 9,
+                      "line": 16,
+                      "offset": 434
+                    },
+                    "start": {
+                      "column": 1,
+                      "line": 16,
+                      "offset": 426
+                    }
+                  }
+                }
+              ],
+              "label": "blocked",
+              "status": "failed"
+            },
+            {
+              "branchIndex": 2,
+              "diagnostics": [
+                {
+                  "code": "profile.validation.textMissing",
+                  "message": "Selected tableCell text must contain \"READY\".",
+                  "ruleId": "task-control.contract-state.allowed",
+                  "severity": "error",
+                  "sourceRange": {
+                    "end": {
+                      "column": 9,
+                      "line": 16,
+                      "offset": 434
+                    },
+                    "start": {
+                      "column": 1,
+                      "line": 16,
+                      "offset": 426
+                    }
+                  }
+                }
+              ],
+              "label": "ready",
+              "status": "failed"
+            },
+            {
+              "branchIndex": 3,
+              "diagnostics": [
+                {
+                  "code": "profile.validation.textMissing",
+                  "message": "Selected tableCell text must contain \"SUPERSEDED\".",
+                  "ruleId": "task-control.contract-state.allowed",
+                  "severity": "error",
+                  "sourceRange": {
+                    "end": {
+                      "column": 9,
+                      "line": 16,
+                      "offset": 434
+                    },
+                    "start": {
+                      "column": 1,
+                      "line": 16,
+                      "offset": 426
+                    }
+                  }
+                },
+                {
+                  "code": "profile.validation.assertionFailed",
+                  "message": "Selected tableCell text length must be between 10 and 10; found 5.",
+                  "ruleId": "task-control.contract-state.allowed",
+                  "severity": "error",
+                  "sourceRange": {
+                    "end": {
+                      "column": 9,
+                      "line": 16,
+                      "offset": 434
+                    },
+                    "start": {
+                      "column": 1,
+                      "line": 16,
+                      "offset": 426
+                    }
+                  }
+                }
+              ],
+              "label": "superseded",
+              "status": "failed"
+            }
+          ],
+          "kind": "anyOf",
+          "selectedBranch": {
+            "branchIndex": 0,
+            "label": "draft"
+          }
+        },
+        "passed": true,
+        "ruleId": "task-control.contract-state.allowed",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "branches": [
+            {
+              "branchIndex": 0,
+              "diagnostics": [
+                {
+                  "code": "profile.validation.textMissing",
+                  "message": "Selected tableCell text must contain \"DIRECT\".",
+                  "ruleId": "task-control.execution-route.allowed",
+                  "severity": "error",
+                  "sourceRange": {
+                    "end": {
+                      "column": 19,
+                      "line": 16,
+                      "offset": 444
+                    },
+                    "start": {
+                      "column": 9,
+                      "line": 16,
+                      "offset": 434
+                    }
+                  }
+                },
+                {
+                  "code": "profile.validation.assertionFailed",
+                  "message": "Selected tableCell text length must be between 6 and 6; found 7.",
+                  "ruleId": "task-control.execution-route.allowed",
+                  "severity": "error",
+                  "sourceRange": {
+                    "end": {
+                      "column": 19,
+                      "line": 16,
+                      "offset": 444
+                    },
+                    "start": {
+                      "column": 9,
+                      "line": 16,
+                      "offset": 434
+                    }
+                  }
+                }
+              ],
+              "label": "direct",
+              "status": "failed"
+            },
+            {
+              "branchIndex": 1,
+              "diagnostics": [
+                {
+                  "code": "profile.validation.textMissing",
+                  "message": "Selected tableCell text must contain \"PLAN_REQUIRED\".",
+                  "ruleId": "task-control.execution-route.allowed",
+                  "severity": "error",
+                  "sourceRange": {
+                    "end": {
+                      "column": 19,
+                      "line": 16,
+                      "offset": 444
+                    },
+                    "start": {
+                      "column": 9,
+                      "line": 16,
+                      "offset": 434
+                    }
+                  }
+                },
+                {
+                  "code": "profile.validation.assertionFailed",
+                  "message": "Selected tableCell text length must be between 13 and 13; found 7.",
+                  "ruleId": "task-control.execution-route.allowed",
+                  "severity": "error",
+                  "sourceRange": {
+                    "end": {
+                      "column": 19,
+                      "line": 16,
+                      "offset": 444
+                    },
+                    "start": {
+                      "column": 9,
+                      "line": 16,
+                      "offset": 434
+                    }
+                  }
+                }
+              ],
+              "label": "plan-required",
+              "status": "failed"
+            },
+            {
+              "branchIndex": 2,
+              "diagnostics": [
+                {
+                  "code": "profile.validation.textMissing",
+                  "message": "Selected tableCell text must contain \"SPEC_REQUIRED\".",
+                  "ruleId": "task-control.execution-route.allowed",
+                  "severity": "error",
+                  "sourceRange": {
+                    "end": {
+                      "column": 19,
+                      "line": 16,
+                      "offset": 444
+                    },
+                    "start": {
+                      "column": 9,
+                      "line": 16,
+                      "offset": 434
+                    }
+                  }
+                },
+                {
+                  "code": "profile.validation.assertionFailed",
+                  "message": "Selected tableCell text length must be between 13 and 13; found 7.",
+                  "ruleId": "task-control.execution-route.allowed",
+                  "severity": "error",
+                  "sourceRange": {
+                    "end": {
+                      "column": 19,
+                      "line": 16,
+                      "offset": 444
+                    },
+                    "start": {
+                      "column": 9,
+                      "line": 16,
+                      "offset": 434
+                    }
+                  }
+                }
+              ],
+              "label": "spec-required",
+              "status": "failed"
+            },
+            {
+              "branchIndex": 3,
+              "diagnostics": [],
+              "label": "blocked",
+              "status": "passed"
+            }
+          ],
+          "kind": "anyOf",
+          "selectedBranch": {
+            "branchIndex": 3,
+            "label": "blocked"
+          }
+        },
+        "passed": true,
+        "ruleId": "task-control.execution-route.allowed",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "task-control.heading.count",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "task-control.heading.depth",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "kind": "skipped",
+          "reason": "whenNotMatched"
+        },
+        "passed": true,
+        "ruleId": "task-control.route.when-blocked",
+        "status": "skipped",
+        "when": {
+          "diagnostics": [
+            {
+              "code": "profile.validation.textMissing",
+              "message": "Selected tableCell text must contain \"BLOCKED\".",
+              "ruleId": "task-control.route.when-blocked",
+              "severity": "error",
+              "sourceRange": {
+                "end": {
+                  "column": 9,
+                  "line": 16,
+                  "offset": 434
+                },
+                "start": {
+                  "column": 1,
+                  "line": 16,
+                  "offset": 426
+                }
+              }
+            },
+            {
+              "code": "profile.validation.assertionFailed",
+              "message": "Selected tableCell text length must be between 7 and 7; found 5.",
+              "ruleId": "task-control.route.when-blocked",
+              "severity": "error",
+              "sourceRange": {
+                "end": {
+                  "column": 9,
+                  "line": 16,
+                  "offset": 434
+                },
+                "start": {
+                  "column": 1,
+                  "line": 16,
+                  "offset": 426
+                }
+              }
+            }
+          ],
+          "status": "notMatched"
+        }
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "task-control.route.when-draft",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "kind": "skipped",
+          "reason": "whenNotMatched"
+        },
+        "passed": true,
+        "ruleId": "task-control.route.when-ready",
+        "status": "skipped",
+        "when": {
+          "diagnostics": [
+            {
+              "code": "profile.validation.textMissing",
+              "message": "Selected tableCell text must contain \"READY\".",
+              "ruleId": "task-control.route.when-ready",
+              "severity": "error",
+              "sourceRange": {
+                "end": {
+                  "column": 9,
+                  "line": 16,
+                  "offset": 434
+                },
+                "start": {
+                  "column": 1,
+                  "line": 16,
+                  "offset": 426
+                }
+              }
+            }
+          ],
+          "status": "notMatched"
+        }
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "kind": "skipped",
+          "reason": "whenNotMatched"
+        },
+        "passed": true,
+        "ruleId": "task-control.route.when-superseded",
+        "status": "skipped",
+        "when": {
+          "diagnostics": [
+            {
+              "code": "profile.validation.textMissing",
+              "message": "Selected tableCell text must contain \"SUPERSEDED\".",
+              "ruleId": "task-control.route.when-superseded",
+              "severity": "error",
+              "sourceRange": {
+                "end": {
+                  "column": 9,
+                  "line": 16,
+                  "offset": 434
+                },
+                "start": {
+                  "column": 1,
+                  "line": 16,
+                  "offset": 426
+                }
+              }
+            },
+            {
+              "code": "profile.validation.assertionFailed",
+              "message": "Selected tableCell text length must be between 10 and 10; found 5.",
+              "ruleId": "task-control.route.when-superseded",
+              "severity": "error",
+              "sourceRange": {
+                "end": {
+                  "column": 9,
+                  "line": 16,
+                  "offset": 434
+                },
+                "start": {
+                  "column": 1,
+                  "line": 16,
+                  "offset": 426
+                }
+              }
+            }
+          ],
+          "status": "notMatched"
+        }
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "task-control.row.count",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "task-control.state-rationale.nonempty",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "branches": [
+            {
+              "branchIndex": 0,
+              "diagnostics": [],
+              "label": "order-021",
+              "status": "passed"
+            },
+            {
+              "branchIndex": 1,
+              "diagnostics": [],
+              "label": "order-102",
+              "status": "passed"
+            },
+            {
+              "branchIndex": 2,
+              "diagnostics": [],
+              "label": "order-120",
+              "status": "passed"
+            },
+            {
+              "branchIndex": 3,
+              "diagnostics": [],
+              "label": "order-201",
+              "status": "passed"
+            },
+            {
+              "branchIndex": 4,
+              "diagnostics": [],
+              "label": "order-210",
+              "status": "passed"
+            }
+          ],
+          "kind": "allOf"
+        },
+        "passed": true,
+        "ruleId": "task-control.table.authority-order",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "task-control.table.columns",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "task-control.table.count",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "task-scope.table.columns",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "validation-evidence.criteria.coverage",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "validation-evidence.ids.present",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "validation-evidence.ids.shape",
+        "status": "passed"
+      },
+      {
+        "diagnostics": [],
+        "evaluation": {
+          "diagnostics": [],
+          "kind": "assertions"
+        },
+        "passed": true,
+        "ruleId": "validation-evidence.table.columns",
+        "status": "passed"
+      }
+    ],
+    "runtimeVersion": "v22.20.0"
+  },
+  "profile": {
+    "documentVersion": "1.0.0",
+    "evaluatedRuleCount": 38,
+    "ruleCount": 44,
+    "skippedRuleCount": 6,
+    "syntaxVersion": "markdown-engine.validation@v2"
+  },
+  "ruleResults": [
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "document.frontmatter.shape",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "document.no-placeholders",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "branches": [
+          {
+            "branchIndex": 0,
+            "diagnostics": [],
+            "label": "status",
+            "status": "passed"
+          },
+          {
+            "branchIndex": 1,
+            "diagnostics": [],
+            "label": "slice",
+            "status": "passed"
+          },
+          {
+            "branchIndex": 2,
+            "diagnostics": [],
+            "label": "evidence",
+            "status": "passed"
+          },
+          {
+            "branchIndex": 3,
+            "diagnostics": [],
+            "label": "next-action",
+            "status": "passed"
+          },
+          {
+            "branchIndex": 4,
+            "diagnostics": [],
+            "label": "blockers",
+            "status": "passed"
+          }
+        ],
+        "kind": "allOf"
+      },
+      "passed": true,
+      "ruleId": "execution-checkpoint.cells.nonblank",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "execution-checkpoint.evidence.declared",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "branches": [
+          {
+            "branchIndex": 0,
+            "diagnostics": [],
+            "label": "none-admitted",
+            "status": "passed"
+          },
+          {
+            "branchIndex": 1,
+            "diagnostics": [
+              {
+                "code": "profile.validation.idCountTooLow",
+                "message": "Expected at least 1 unique IDs matching prefix \"TD-SC\" but found 0.",
+                "ruleId": "execution-checkpoint.evidence.references-or-none",
+                "severity": "error",
+                "sourceRange": {
+                  "end": {
+                    "column": 92,
+                    "line": 95,
+                    "offset": 10198
+                  },
+                  "start": {
+                    "column": 75,
+                    "line": 95,
+                    "offset": 10181
+                  }
+                }
+              }
+            ],
+            "label": "criterion-references",
+            "status": "failed"
+          }
+        ],
+        "kind": "anyOf",
+        "selectedBranch": {
+          "branchIndex": 0,
+          "label": "none-admitted"
+        }
+      },
+      "passed": true,
+      "ruleId": "execution-checkpoint.evidence.references-or-none",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "execution-checkpoint.heading-depth.when-present",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "execution-checkpoint.heading.count",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "execution-checkpoint.heading.when-table-present",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "execution-checkpoint.notes.count",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "execution-checkpoint.notes.depth",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "kind": "skipped",
+        "reason": "whenNotMatched"
+      },
+      "passed": true,
+      "ruleId": "execution-checkpoint.required-evidence.coverage",
+      "status": "skipped",
+      "when": {
+        "diagnostics": [
+          {
+            "code": "profile.validation.emptySelection",
+            "message": "Rule selector did not match any document targets.",
+            "ruleId": "execution-checkpoint.required-evidence.coverage",
+            "severity": "error"
+          }
+        ],
+        "status": "notMatched"
+      }
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "execution-checkpoint.row.when-present",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "branches": [
+          {
+            "branchIndex": 0,
+            "diagnostics": [],
+            "label": "not-started",
+            "status": "passed"
+          },
+          {
+            "branchIndex": 1,
+            "diagnostics": [
+              {
+                "code": "profile.validation.textMissing",
+                "message": "Selected tableCell text must contain \"active\".",
+                "ruleId": "execution-checkpoint.status.allowed",
+                "severity": "error",
+                "sourceRange": {
+                  "end": {
+                    "column": 15,
+                    "line": 95,
+                    "offset": 10121
+                  },
+                  "start": {
+                    "column": 1,
+                    "line": 95,
+                    "offset": 10107
+                  }
+                }
+              },
+              {
+                "code": "profile.validation.assertionFailed",
+                "message": "Selected tableCell text length must be between 6 and 6; found 11.",
+                "ruleId": "execution-checkpoint.status.allowed",
+                "severity": "error",
+                "sourceRange": {
+                  "end": {
+                    "column": 15,
+                    "line": 95,
+                    "offset": 10121
+                  },
+                  "start": {
+                    "column": 1,
+                    "line": 95,
+                    "offset": 10107
+                  }
+                }
+              }
+            ],
+            "label": "active",
+            "status": "failed"
+          },
+          {
+            "branchIndex": 2,
+            "diagnostics": [
+              {
+                "code": "profile.validation.textMissing",
+                "message": "Selected tableCell text must contain \"blocked\".",
+                "ruleId": "execution-checkpoint.status.allowed",
+                "severity": "error",
+                "sourceRange": {
+                  "end": {
+                    "column": 15,
+                    "line": 95,
+                    "offset": 10121
+                  },
+                  "start": {
+                    "column": 1,
+                    "line": 95,
+                    "offset": 10107
+                  }
+                }
+              },
+              {
+                "code": "profile.validation.assertionFailed",
+                "message": "Selected tableCell text length must be between 7 and 7; found 11.",
+                "ruleId": "execution-checkpoint.status.allowed",
+                "severity": "error",
+                "sourceRange": {
+                  "end": {
+                    "column": 15,
+                    "line": 95,
+                    "offset": 10121
+                  },
+                  "start": {
+                    "column": 1,
+                    "line": 95,
+                    "offset": 10107
+                  }
+                }
+              }
+            ],
+            "label": "blocked",
+            "status": "failed"
+          },
+          {
+            "branchIndex": 3,
+            "diagnostics": [
+              {
+                "code": "profile.validation.textMissing",
+                "message": "Selected tableCell text must contain \"review-ready\".",
+                "ruleId": "execution-checkpoint.status.allowed",
+                "severity": "error",
+                "sourceRange": {
+                  "end": {
+                    "column": 15,
+                    "line": 95,
+                    "offset": 10121
+                  },
+                  "start": {
+                    "column": 1,
+                    "line": 95,
+                    "offset": 10107
+                  }
+                }
+              },
+              {
+                "code": "profile.validation.assertionFailed",
+                "message": "Selected tableCell text length must be between 12 and 12; found 11.",
+                "ruleId": "execution-checkpoint.status.allowed",
+                "severity": "error",
+                "sourceRange": {
+                  "end": {
+                    "column": 15,
+                    "line": 95,
+                    "offset": 10121
+                  },
+                  "start": {
+                    "column": 1,
+                    "line": 95,
+                    "offset": 10107
+                  }
+                }
+              }
+            ],
+            "label": "review-ready",
+            "status": "failed"
+          }
+        ],
+        "kind": "anyOf",
+        "selectedBranch": {
+          "branchIndex": 0,
+          "label": "not-started"
+        }
+      },
+      "passed": true,
+      "ruleId": "execution-checkpoint.status.allowed",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "execution-checkpoint.table.global-count",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "execution-checkpoint.table.inside-checkpoint",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "execution-checkpoint.table.when-present",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "incremental-value.table.columns",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "review-boundary.table.columns",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "sections.required",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "source-authority.table.columns",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "success-criteria.evidence.coverage",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "success-criteria.ids.shape",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "success-criteria.ids.unique",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "success-criteria.table.columns",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "kind": "skipped",
+        "reason": "whenNotMatched"
+      },
+      "passed": true,
+      "ruleId": "task-control.blockers.fields.when-blocked",
+      "status": "skipped",
+      "when": {
+        "diagnostics": [
+          {
+            "code": "profile.validation.textMissing",
+            "message": "Selected tableCell text must contain \"BLOCKED\".",
+            "ruleId": "task-control.blockers.fields.when-blocked",
+            "severity": "error",
+            "sourceRange": {
+              "end": {
+                "column": 9,
+                "line": 16,
+                "offset": 434
+              },
+              "start": {
+                "column": 1,
+                "line": 16,
+                "offset": 426
+              }
+            }
+          },
+          {
+            "code": "profile.validation.assertionFailed",
+            "message": "Selected tableCell text length must be between 7 and 7; found 5.",
+            "ruleId": "task-control.blockers.fields.when-blocked",
+            "severity": "error",
+            "sourceRange": {
+              "end": {
+                "column": 9,
+                "line": 16,
+                "offset": 434
+              },
+              "start": {
+                "column": 1,
+                "line": 16,
+                "offset": 426
+              }
+            }
+          }
+        ],
+        "status": "notMatched"
+      }
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "kind": "skipped",
+        "reason": "whenNotMatched"
+      },
+      "passed": true,
+      "ruleId": "task-control.blockers.table.when-blocked",
+      "status": "skipped",
+      "when": {
+        "diagnostics": [
+          {
+            "code": "profile.validation.textMissing",
+            "message": "Selected tableCell text must contain \"BLOCKED\".",
+            "ruleId": "task-control.blockers.table.when-blocked",
+            "severity": "error",
+            "sourceRange": {
+              "end": {
+                "column": 9,
+                "line": 16,
+                "offset": 434
+              },
+              "start": {
+                "column": 1,
+                "line": 16,
+                "offset": 426
+              }
+            }
+          },
+          {
+            "code": "profile.validation.assertionFailed",
+            "message": "Selected tableCell text length must be between 7 and 7; found 5.",
+            "ruleId": "task-control.blockers.table.when-blocked",
+            "severity": "error",
+            "sourceRange": {
+              "end": {
+                "column": 9,
+                "line": 16,
+                "offset": 434
+              },
+              "start": {
+                "column": 1,
+                "line": 16,
+                "offset": 426
+              }
+            }
+          }
+        ],
+        "status": "notMatched"
+      }
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "branches": [
+          {
+            "branchIndex": 0,
+            "diagnostics": [],
+            "label": "draft",
+            "status": "passed"
+          },
+          {
+            "branchIndex": 1,
+            "diagnostics": [
+              {
+                "code": "profile.validation.textMissing",
+                "message": "Selected tableCell text must contain \"BLOCKED\".",
+                "ruleId": "task-control.contract-state.allowed",
+                "severity": "error",
+                "sourceRange": {
+                  "end": {
+                    "column": 9,
+                    "line": 16,
+                    "offset": 434
+                  },
+                  "start": {
+                    "column": 1,
+                    "line": 16,
+                    "offset": 426
+                  }
+                }
+              },
+              {
+                "code": "profile.validation.assertionFailed",
+                "message": "Selected tableCell text length must be between 7 and 7; found 5.",
+                "ruleId": "task-control.contract-state.allowed",
+                "severity": "error",
+                "sourceRange": {
+                  "end": {
+                    "column": 9,
+                    "line": 16,
+                    "offset": 434
+                  },
+                  "start": {
+                    "column": 1,
+                    "line": 16,
+                    "offset": 426
+                  }
+                }
+              }
+            ],
+            "label": "blocked",
+            "status": "failed"
+          },
+          {
+            "branchIndex": 2,
+            "diagnostics": [
+              {
+                "code": "profile.validation.textMissing",
+                "message": "Selected tableCell text must contain \"READY\".",
+                "ruleId": "task-control.contract-state.allowed",
+                "severity": "error",
+                "sourceRange": {
+                  "end": {
+                    "column": 9,
+                    "line": 16,
+                    "offset": 434
+                  },
+                  "start": {
+                    "column": 1,
+                    "line": 16,
+                    "offset": 426
+                  }
+                }
+              }
+            ],
+            "label": "ready",
+            "status": "failed"
+          },
+          {
+            "branchIndex": 3,
+            "diagnostics": [
+              {
+                "code": "profile.validation.textMissing",
+                "message": "Selected tableCell text must contain \"SUPERSEDED\".",
+                "ruleId": "task-control.contract-state.allowed",
+                "severity": "error",
+                "sourceRange": {
+                  "end": {
+                    "column": 9,
+                    "line": 16,
+                    "offset": 434
+                  },
+                  "start": {
+                    "column": 1,
+                    "line": 16,
+                    "offset": 426
+                  }
+                }
+              },
+              {
+                "code": "profile.validation.assertionFailed",
+                "message": "Selected tableCell text length must be between 10 and 10; found 5.",
+                "ruleId": "task-control.contract-state.allowed",
+                "severity": "error",
+                "sourceRange": {
+                  "end": {
+                    "column": 9,
+                    "line": 16,
+                    "offset": 434
+                  },
+                  "start": {
+                    "column": 1,
+                    "line": 16,
+                    "offset": 426
+                  }
+                }
+              }
+            ],
+            "label": "superseded",
+            "status": "failed"
+          }
+        ],
+        "kind": "anyOf",
+        "selectedBranch": {
+          "branchIndex": 0,
+          "label": "draft"
+        }
+      },
+      "passed": true,
+      "ruleId": "task-control.contract-state.allowed",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "branches": [
+          {
+            "branchIndex": 0,
+            "diagnostics": [
+              {
+                "code": "profile.validation.textMissing",
+                "message": "Selected tableCell text must contain \"DIRECT\".",
+                "ruleId": "task-control.execution-route.allowed",
+                "severity": "error",
+                "sourceRange": {
+                  "end": {
+                    "column": 19,
+                    "line": 16,
+                    "offset": 444
+                  },
+                  "start": {
+                    "column": 9,
+                    "line": 16,
+                    "offset": 434
+                  }
+                }
+              },
+              {
+                "code": "profile.validation.assertionFailed",
+                "message": "Selected tableCell text length must be between 6 and 6; found 7.",
+                "ruleId": "task-control.execution-route.allowed",
+                "severity": "error",
+                "sourceRange": {
+                  "end": {
+                    "column": 19,
+                    "line": 16,
+                    "offset": 444
+                  },
+                  "start": {
+                    "column": 9,
+                    "line": 16,
+                    "offset": 434
+                  }
+                }
+              }
+            ],
+            "label": "direct",
+            "status": "failed"
+          },
+          {
+            "branchIndex": 1,
+            "diagnostics": [
+              {
+                "code": "profile.validation.textMissing",
+                "message": "Selected tableCell text must contain \"PLAN_REQUIRED\".",
+                "ruleId": "task-control.execution-route.allowed",
+                "severity": "error",
+                "sourceRange": {
+                  "end": {
+                    "column": 19,
+                    "line": 16,
+                    "offset": 444
+                  },
+                  "start": {
+                    "column": 9,
+                    "line": 16,
+                    "offset": 434
+                  }
+                }
+              },
+              {
+                "code": "profile.validation.assertionFailed",
+                "message": "Selected tableCell text length must be between 13 and 13; found 7.",
+                "ruleId": "task-control.execution-route.allowed",
+                "severity": "error",
+                "sourceRange": {
+                  "end": {
+                    "column": 19,
+                    "line": 16,
+                    "offset": 444
+                  },
+                  "start": {
+                    "column": 9,
+                    "line": 16,
+                    "offset": 434
+                  }
+                }
+              }
+            ],
+            "label": "plan-required",
+            "status": "failed"
+          },
+          {
+            "branchIndex": 2,
+            "diagnostics": [
+              {
+                "code": "profile.validation.textMissing",
+                "message": "Selected tableCell text must contain \"SPEC_REQUIRED\".",
+                "ruleId": "task-control.execution-route.allowed",
+                "severity": "error",
+                "sourceRange": {
+                  "end": {
+                    "column": 19,
+                    "line": 16,
+                    "offset": 444
+                  },
+                  "start": {
+                    "column": 9,
+                    "line": 16,
+                    "offset": 434
+                  }
+                }
+              },
+              {
+                "code": "profile.validation.assertionFailed",
+                "message": "Selected tableCell text length must be between 13 and 13; found 7.",
+                "ruleId": "task-control.execution-route.allowed",
+                "severity": "error",
+                "sourceRange": {
+                  "end": {
+                    "column": 19,
+                    "line": 16,
+                    "offset": 444
+                  },
+                  "start": {
+                    "column": 9,
+                    "line": 16,
+                    "offset": 434
+                  }
+                }
+              }
+            ],
+            "label": "spec-required",
+            "status": "failed"
+          },
+          {
+            "branchIndex": 3,
+            "diagnostics": [],
+            "label": "blocked",
+            "status": "passed"
+          }
+        ],
+        "kind": "anyOf",
+        "selectedBranch": {
+          "branchIndex": 3,
+          "label": "blocked"
+        }
+      },
+      "passed": true,
+      "ruleId": "task-control.execution-route.allowed",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "task-control.heading.count",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "task-control.heading.depth",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "kind": "skipped",
+        "reason": "whenNotMatched"
+      },
+      "passed": true,
+      "ruleId": "task-control.route.when-blocked",
+      "status": "skipped",
+      "when": {
+        "diagnostics": [
+          {
+            "code": "profile.validation.textMissing",
+            "message": "Selected tableCell text must contain \"BLOCKED\".",
+            "ruleId": "task-control.route.when-blocked",
+            "severity": "error",
+            "sourceRange": {
+              "end": {
+                "column": 9,
+                "line": 16,
+                "offset": 434
+              },
+              "start": {
+                "column": 1,
+                "line": 16,
+                "offset": 426
+              }
+            }
+          },
+          {
+            "code": "profile.validation.assertionFailed",
+            "message": "Selected tableCell text length must be between 7 and 7; found 5.",
+            "ruleId": "task-control.route.when-blocked",
+            "severity": "error",
+            "sourceRange": {
+              "end": {
+                "column": 9,
+                "line": 16,
+                "offset": 434
+              },
+              "start": {
+                "column": 1,
+                "line": 16,
+                "offset": 426
+              }
+            }
+          }
+        ],
+        "status": "notMatched"
+      }
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "task-control.route.when-draft",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "kind": "skipped",
+        "reason": "whenNotMatched"
+      },
+      "passed": true,
+      "ruleId": "task-control.route.when-ready",
+      "status": "skipped",
+      "when": {
+        "diagnostics": [
+          {
+            "code": "profile.validation.textMissing",
+            "message": "Selected tableCell text must contain \"READY\".",
+            "ruleId": "task-control.route.when-ready",
+            "severity": "error",
+            "sourceRange": {
+              "end": {
+                "column": 9,
+                "line": 16,
+                "offset": 434
+              },
+              "start": {
+                "column": 1,
+                "line": 16,
+                "offset": 426
+              }
+            }
+          }
+        ],
+        "status": "notMatched"
+      }
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "kind": "skipped",
+        "reason": "whenNotMatched"
+      },
+      "passed": true,
+      "ruleId": "task-control.route.when-superseded",
+      "status": "skipped",
+      "when": {
+        "diagnostics": [
+          {
+            "code": "profile.validation.textMissing",
+            "message": "Selected tableCell text must contain \"SUPERSEDED\".",
+            "ruleId": "task-control.route.when-superseded",
+            "severity": "error",
+            "sourceRange": {
+              "end": {
+                "column": 9,
+                "line": 16,
+                "offset": 434
+              },
+              "start": {
+                "column": 1,
+                "line": 16,
+                "offset": 426
+              }
+            }
+          },
+          {
+            "code": "profile.validation.assertionFailed",
+            "message": "Selected tableCell text length must be between 10 and 10; found 5.",
+            "ruleId": "task-control.route.when-superseded",
+            "severity": "error",
+            "sourceRange": {
+              "end": {
+                "column": 9,
+                "line": 16,
+                "offset": 434
+              },
+              "start": {
+                "column": 1,
+                "line": 16,
+                "offset": 426
+              }
+            }
+          }
+        ],
+        "status": "notMatched"
+      }
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "task-control.row.count",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "task-control.state-rationale.nonempty",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "branches": [
+          {
+            "branchIndex": 0,
+            "diagnostics": [],
+            "label": "order-021",
+            "status": "passed"
+          },
+          {
+            "branchIndex": 1,
+            "diagnostics": [],
+            "label": "order-102",
+            "status": "passed"
+          },
+          {
+            "branchIndex": 2,
+            "diagnostics": [],
+            "label": "order-120",
+            "status": "passed"
+          },
+          {
+            "branchIndex": 3,
+            "diagnostics": [],
+            "label": "order-201",
+            "status": "passed"
+          },
+          {
+            "branchIndex": 4,
+            "diagnostics": [],
+            "label": "order-210",
+            "status": "passed"
+          }
+        ],
+        "kind": "allOf"
+      },
+      "passed": true,
+      "ruleId": "task-control.table.authority-order",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "task-control.table.columns",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "task-control.table.count",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "task-scope.table.columns",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "validation-evidence.criteria.coverage",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "validation-evidence.ids.present",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "validation-evidence.ids.shape",
+      "status": "passed"
+    },
+    {
+      "diagnostics": [],
+      "evaluation": {
+        "diagnostics": [],
+        "kind": "assertions"
+      },
+      "passed": true,
+      "ruleId": "validation-evidence.table.columns",
+      "status": "passed"
+    }
+  ],
+  "valid": true
+}

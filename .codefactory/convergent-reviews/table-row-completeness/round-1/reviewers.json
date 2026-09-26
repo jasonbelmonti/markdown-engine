@@ -1,0 +1,29 @@
+[
+  {
+    "slot": 1,
+    "agent": "/root/reviewer_1",
+    "recommendation": "COMPLETE",
+    "report": "/Users/jasonbelmonti/Documents/Development/markdown-engine/.worktrees/table-row-validation-task/.codefactory/convergent-reviews/table-row-completeness/round-1/reviewer-1.md",
+    "reportSha256": "4add65e951ce04a9359e740ef61e14d8f513dcba9963c374a0130c06c43232ba",
+    "dispatchSha256": "a0689fc039f515ab360f6114814bdd77e3c453de19402457a702916d45cdf48e",
+    "packetSha256": "b7524fa3d002fc7891661e7f3ac2b4b1c05440301ec2619ca471f0bb5fba67c3"
+  },
+  {
+    "slot": 2,
+    "agent": "/root/reviewer_2",
+    "recommendation": "COMPLETE",
+    "report": "/Users/jasonbelmonti/Documents/Development/markdown-engine/.worktrees/table-row-validation-task/.codefactory/convergent-reviews/table-row-completeness/round-1/reviewer-2.md",
+    "reportSha256": "8d79e8bd33450f7b2b25cab0c2ccf3b65d63046453f7739621502bfc8457b0c8",
+    "dispatchSha256": "a0689fc039f515ab360f6114814bdd77e3c453de19402457a702916d45cdf48e",
+    "packetSha256": "b7524fa3d002fc7891661e7f3ac2b4b1c05440301ec2619ca471f0bb5fba67c3"
+  },
+  {
+    "slot": 3,
+    "agent": "/root/reviewer_3",
+    "recommendation": "COMPLETE",
+    "report": "/Users/jasonbelmonti/Documents/Development/markdown-engine/.worktrees/table-row-validation-task/.codefactory/convergent-reviews/table-row-completeness/round-1/reviewer-3.md",
+    "reportSha256": "8e9509da84ff89172be01ff39b8608543aba81b5ab4a339df14d413feed19af8",
+    "dispatchSha256": "a0689fc039f515ab360f6114814bdd77e3c453de19402457a702916d45cdf48e",
+    "packetSha256": "b7524fa3d002fc7891661e7f3ac2b4b1c05440301ec2619ca471f0bb5fba67c3"
+  }
+]

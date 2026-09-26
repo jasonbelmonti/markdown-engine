@@ -1,0 +1,21 @@
+ M docs/contracts/declarative-validation.md
+ M package.json
+ M scripts/check-declarative-validation-contract-docs.mjs
+ M src/declarative-validation/assertions/evaluator.ts
+ M src/declarative-validation/compiler/assertion-builders.ts
+ M src/declarative-validation/compiler/assertions.ts
+ M src/declarative-validation/compiler/compatibility.ts
+ M src/declarative-validation/compiler/plan.ts
+ M src/declarative-validation/profile/assertion-schema.ts
+ M src/declarative-validation/profile/index.ts
+ M tests/declarative-validation-contract.test.ts
+?? .codefactory/execution-plans/table-row-completeness/
+?? docs/handoffs/
+?? docs/tasks/
+?? docs/validation/
+?? fixtures/declarative-validation/examples/table-rows-complete/
+?? src/declarative-validation/assertions/table-rows-complete.ts
+?? src/declarative-validation/compiler/table-rows-complete.ts
+?? tests/declarative-validation-table-rows-complete-cli.test.ts
+?? tests/declarative-validation-table-rows-complete-config.test.ts
+?? tests/declarative-validation-table-rows-complete.test.ts

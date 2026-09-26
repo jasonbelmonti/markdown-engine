@@ -115,6 +115,7 @@ export interface DeclarativeAssertion {
   tableColumnsRequired?: {
     columns: readonly string[];
   };
+  tableRowsComplete?: true;
   tableColumnsExact?: {
     columns: readonly string[];
   };

@@ -1,0 +1,11 @@
+syntaxVersion: markdown-engine.validation@v2
+documentVersion: 1.0.0
+rules:
+  - id: sources.columns
+    select:
+      target: table
+      section: Sources and baseline
+    assert:
+      tableColumnsExact:
+        columns: [Role, Full read path / reference, Revision, SHA-256 / immutable identity]
+      tableRowsComplete: true
