@@ -57,6 +57,7 @@ const SUPPORTED_ASSERTION_KEYS_V2 = [
   "selectionCount",
   "sourceLength",
   "tableColumnsExact",
+  "tableRowsComplete",
   "tableColumnCoverage",
   "frontmatterShape",
   "textFormat",
@@ -96,6 +97,9 @@ export function assertionFromValue(
       : {}),
     ...(supportsV2AssertionSurface(syntaxVersion)
       ? tableColumnsExactFromValue(value.tableColumnsExact, diagnostics)
+      : {}),
+    ...(supportsV2AssertionSurface(syntaxVersion)
+      ? tableRowsCompleteFromValue(value.tableRowsComplete, diagnostics)
       : {}),
     ...frontmatterRequiredFromValue(value.frontmatterRequired, diagnostics),
     ...(supportsV2AssertionSurface(syntaxVersion)
@@ -188,6 +192,20 @@ function existsFromValue(
   }
 
   return { exists: true };
+}
+
+function tableRowsCompleteFromValue(
+  value: unknown,
+  diagnostics: MarkdownDiagnostic[],
+): Pick<DeclarativeAssertion, "tableRowsComplete"> {
+  if (value === undefined) {
+    return {};
+  }
+  if (value !== true) {
+    diagnostics.push(invalidShape("tableRowsComplete must be true."));
+    return {};
+  }
+  return { tableRowsComplete: true };
 }
 
 function sectionsRequiredFromValue(

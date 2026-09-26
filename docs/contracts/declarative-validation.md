@@ -1,10 +1,11 @@
 # Declarative Validation Contract
 
 Status: package 3.0.0, v1 profile syntax with v2 Conditional V2, document contract 1.0.0
-Last updated: 2026-08-15
+Last updated: 2026-09-25
 Current v2 surface: flat-rule result/evidence shell, generic selector
 `selectionCount` bounds, document `sourceLength` schema and runtime
-measurement, exact normalized table-header `tableColumnsExact` assertions, ID count-bound schema and
+measurement, opt-in body-row `tableRowsComplete` assertions, exact normalized
+table-header `tableColumnsExact` assertions, ID count-bound schema and
 runtime evaluator contract, plus `tableColumnCoverage` schema, compiled-plan,
 and runtime evaluator contract, `frontmatterShape` schema, compiled-plan, and
 runtime evaluator contract, `textFormat` schema, compiled-plan, and runtime
@@ -237,7 +238,7 @@ emit `profile.config.invalidShape`.
 Rule-level `when` is allowed only on v2 rules. Branch-level `when` remains
 unsupported. V1 profiles preserve the original flat rule authoring contract;
 grouped `anyOf` / `allOf`, ID count bounds, `tableColumnCoverage`,
-`tableColumnsExact`, `frontmatterShape`, `textFormat`, and rule-level `when` are v2 additions.
+`tableColumnsExact`, `tableRowsComplete`, `frontmatterShape`, `textFormat`, and rule-level `when` are v2 additions.
 
 Profile values must be JSON-safe data properties after YAML materialization.
 Functions, accessors, proxies, cyclic structures, sparse arrays, `undefined`
@@ -308,6 +309,7 @@ interface DeclarativeAssertion {
   tableColumnsRequired?: {
     columns: readonly string[];
   };
+  tableRowsComplete?: true; // v2 only
   tableColumnsExact?: {
     columns: readonly string[];
   };
@@ -392,6 +394,7 @@ Selector/assertion compatibility is part of the public contract:
 | `sectionsRequired` | `document` |
 | `tableColumnsRequired` | `table` |
 | `tableColumnsExact` | `table` |
+| `tableRowsComplete` | `table` |
 | `ids` | all supported selector targets |
 | `references` | `document` |
 | `tableColumnCoverage` | `document` |
@@ -432,6 +435,32 @@ is excess, its header-cell source range is attached when available; otherwise
 the normal selected-table source evidence is retained. This assertion does not
 change the ordered-subsequence behavior of `tableColumnsRequired` or table
 selector `header` / `tableHeader` matching.
+
+For v2 profiles, `tableRowsComplete: true` requires every body row of each
+selected table to have exactly that table's normalized header column positions.
+Only `true` is admitted; `false`, objects, strings and other payloads emit
+`profile.config.invalidShape`. Only `table` selectors are compatible. V1 rejects
+the assertion through the existing unsupported-assertion/key behavior.
+
+The assertion compares normalized cell coordinates, not text or Markdown pipe
+characters. Missing and excess cells both fail. An explicitly present empty cell
+passes shape; compose `text.nonBlank` on required `tableCell` columns to reject
+blank content. A header-only table passes shape; compose a `tableRow`
+`selectionCount` minimum to require body rows. No matched tables fails with
+`profile.validation.emptySelection`. Existing table section/header selectors
+scope the check, including tables in descendant sections; unselected malformed
+tables do not fail it. Header matching and normalization are unchanged.
+
+Each malformed row emits one `profile.validation.assertionFailed` at the rule's
+severity. Its deterministic message names the table target ID, body row index
+(header is row 0; first body row is 1), and expected/actual zero-based column
+positions. For example: `Selected table "node:0:table" body row 1 must have column
+positions [0,1]; found [0].` Source evidence is the first available body-cell
+range in column order, not a fabricated missing-cell or full-row range. When no
+body-cell range is available, the diagnostic omits `sourceRange`, even if a table
+range is known. Normal diagnostic ordering applies; without ranges, selected-table
+order and numeric row order are retained. This check needs no original source
+text and does not alter GFM parsing or strengthen existing profiles.
 
 `sectionsRequired.order` defaults to `none`. `strict` checks that configured
 headings appear as an ordered subsequence in the normalized section tree
@@ -568,7 +597,7 @@ parsing, or implement date ordering.
 
 Empty selector results produce `profile.validation.emptySelection` for exists,
 table, ID, reference, text, occurrence, text-length, text-format, and
-tableColumnsExact assertions.
+tableColumnsExact and tableRowsComplete assertions.
 `selectionCount` instead evaluates the empty selection as zero. Document-scoped
 required-section, required-frontmatter, and frontmatter-shape assertions
 evaluate against the document.
@@ -926,6 +955,36 @@ Migration notes:
   explicitly expands the engine boundary.
 
 ## Examples
+
+### Opt-in table body completeness
+
+```yaml
+syntaxVersion: markdown-engine.validation@v2
+documentVersion: 1.0.0
+rules:
+  - id: sources.rows.complete
+    select:
+      target: table
+      section: Sources and baseline
+    assert:
+      tableRowsComplete: true
+  - id: sources.identity.nonblank
+    select:
+      target: tableCell
+      section: Sources and baseline
+      column: SHA-256 / immutable identity
+    assert:
+      text:
+        nonBlank: true
+```
+
+The [runnable table-row example](../../fixtures/declarative-validation/examples/table-rows-complete/README.md)
+adapts delegation-planner's missing-dynamic-row-cell reproducer. It demonstrates
+legacy header-only validation passing the truncated row, opt-in shape validation
+failing at that row, and a repaired document passing directly through Engine.
+Consumer-owned section selection remains profile policy; no supplemental shape
+parser is needed. Older installed runtimes do not admit this new assertion;
+adoption requires a separately released compatible runtime.
 
 Minimal profile:
 

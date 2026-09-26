@@ -18,6 +18,7 @@ import {
   buildSourceLengthAssertion,
   buildTextLengthAssertion,
 } from "./length-assertion-builders.js";
+import { buildTableRowsCompleteAssertion } from "./table-rows-complete.js";
 import type { CompiledDeclarativeAssertion } from "./plan.js";
 import {
   closedFrontmatterShape,
@@ -52,6 +53,7 @@ export const ASSERTION_BUILDERS: readonly AssertionBuilder[] = [
   buildSectionsRequiredAssertion,
   buildTableColumnsRequiredAssertion,
   buildTableColumnsExactAssertion,
+  buildTableRowsCompleteAssertion,
   buildIdsAssertion,
   buildReferencesAssertion,
   buildTableColumnCoverageAssertion,

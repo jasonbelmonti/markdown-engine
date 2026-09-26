@@ -1,0 +1,8 @@
+syntaxVersion: markdown-engine.validation@v2
+documentVersion: 1.0.0
+rules:
+  - id: rows.complete
+    select:
+      target: table
+    assert:
+      tableRowsComplete: true
