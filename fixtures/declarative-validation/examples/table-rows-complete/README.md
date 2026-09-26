@@ -18,9 +18,10 @@ body row 2 at source line 20, expected `[0,1,2,3]`, actual `[0,1,2]`. Its range
 locates the first available cell of the failing row. Table and row identities
 remain in the message when cell ranges are unavailable; no location is invented.
 
-`consumer-missing.md` is copied unchanged from delegation-planner commit
+`consumer-missing.md` is adapted from delegation-planner commit
 `bc11ace3e50315313d428f3b681424fee910aef3`,
-`skills/delegation-planner/validation/fixtures/missing-dynamic-row-cell.md`.
+`skills/delegation-planner/validation/fixtures/missing-dynamic-row-cell.md`,
+with an unrelated metadata row omitted.
 `consumer-repaired.md` adds the missing execution-plan identity cell.
 `legacy.yaml` checks the exact source-table header; `profile.yaml` adds only the
 row-completeness assertion. This focused adaptation proves Engine's shape decision

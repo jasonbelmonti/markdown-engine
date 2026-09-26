@@ -42,7 +42,6 @@ delegation_id: fixture
 | Dispatch prerequisites | Obtain real sources, authorization and model availability |
 | Blockers | None |
 | Resume condition | Not applicable |
-| Capsule | Not used |
 
 ## Revision note
 
