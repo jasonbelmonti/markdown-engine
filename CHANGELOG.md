@@ -4,6 +4,15 @@
 
 No unreleased changes.
 
+## 3.7.0 - 2026-09-26
+
+### Added
+
+- Added the opt-in V2 `tableRowsComplete` assertion to require each selected
+  table body row to match the header cell count, with located diagnostics for
+  missing and excess cells. Explicit empty cells remain a separate nonblank
+  content concern, and existing profiles retain their behavior by default.
+
 ## 3.6.0 - 2026-09-13
 
 ### Added
