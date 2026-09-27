@@ -35,6 +35,8 @@ export async function runCli(input: RunCliInput): Promise<number> {
       filePath: argsResult.filePath,
       format: argsResult.format,
       profilePath: argsResult.profilePath,
+      output: argsResult.output,
+      ...(argsResult.reportFile !== undefined ? { reportFile: argsResult.reportFile } : {}),
     });
 
     if (validationResult.kind === "fileError") {

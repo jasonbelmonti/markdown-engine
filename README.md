@@ -29,7 +29,9 @@ Package release state:
 
 Out of scope for this package: profile compiler behavior, runtime lenses, MCP
 transport, agent adapters, semantic or LLM evaluation, arbitrary rule plugins,
-network services, persistence, and raw parser AST as a public contract.
+network services, persistent workflow state, and raw parser AST as a public contract.
+The CLI can write an explicitly requested validation report; the engine API remains
+free of filesystem writes.
 
 ## Public API
 
@@ -156,6 +158,34 @@ and no `evidence`. Markdown read errors and usage errors exit with code `2`.
 Successful validation exits with code `0`; validation or normalization error
 diagnostics exit with code `1`. Validation JSON includes `profile`,
 `ruleResults`, `diagnostics`, and `evidence`.
+
+For a compact machine-readable response, retain the complete result separately:
+
+```sh
+mkdir -p reports
+markdown-engine validate \
+  --file node_modules/@jasonbelmonti/markdown-engine/fixtures/declarative-validation/examples/operational-spec/pass.md \
+  --profile node_modules/@jasonbelmonti/markdown-engine/fixtures/declarative-validation/examples/operational-spec/profile.yaml \
+  --output summary --report-file reports/validation-001.json
+```
+
+`--output full` is the default and preserves the existing JSON byte layout.
+`--output summary` requires `--report-file` and returns the verdict, stage,
+exit code, runtime/profile identities, diagnostic counts, and at most ten
+located diagnostics (errors first). Omitted diagnostics and shortened fields
+are explicitly counted. The report contains the complete default JSON,
+including evidence; stdout identifies its absolute path, byte count and
+SHA-256 digest. Profile-stage failures retain their own JSON shape in the
+report and do not invent document/profile evidence identities.
+
+Choose a new report filename per invocation; its parent directory must exist.
+Reports are published without overwriting existing files, including either
+input. A report-write failure exits `2`, prints an error to stderr and emits
+no validation JSON to stdout. `--report-file` can also accompany full output.
+Usage and input-read failures keep their existing stderr behavior and do not
+create a report. Summary output is presentation only; it does not change any
+validation result or establish semantic acceptance. See the
+[compact output contract](docs/contracts/declarative-validation.md#compact-validation-output).
 
 Declarative validation compatibility is syntax-versioned. Existing v1 profiles
 remain on the v1 result and evidence shape by keeping:

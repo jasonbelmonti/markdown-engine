@@ -798,7 +798,7 @@ that use `sourceLength`.
 The declarative validation CLI command is:
 
 ```sh
-markdown-engine validate --file <markdown-file> --profile <profile-file> [--format json]
+markdown-engine validate --file <markdown-file> --profile <profile-file> [--format json] [--output full|summary] [--report-file <new-file>]
 ```
 
 `--format json` is the default and only supported validation output format.
@@ -817,7 +817,7 @@ union; there is no extra CLI discriminator beyond
 
 ## CLI JSON Union
 
-The CLI JSON output is:
+The default (`--output full`) CLI JSON output is:
 
 ```ts
 type DeclarativeValidationCliJsonResult =
@@ -845,13 +845,70 @@ profiles, that same validation-result JSON can include `evaluatedRuleCount`,
 `skippedRuleCount`, `status: "skipped"`, nested `when` diagnostics, and
 `evaluation.kind: "skipped"`.
 
+## Compact Validation Output
+
+`--output full` (the default) preserves the existing full JSON contract and
+serialization. `--output summary --report-file <new-file>` selects a separate
+CLI-only `schemaVersion: "markdown-engine.validation-summary.v1"` representation.
+Both modes still use `--format json`. Each new selector accepts spaced or
+assignment syntax and may occur only once. Missing/blank paths, unsupported
+output modes and summary mode without a report path are usage errors (exit 2).
+These options do not apply to the normalization command.
+
+Summary fields:
+
+| Field | Meaning |
+| --- | --- |
+| `schemaVersion` | Exact `markdown-engine.validation-summary.v1` discriminator. |
+| `valid`, `exitCode` | Original validation verdict and its 0/1 CLI status. |
+| `stage` | `profile` for rejected profiles; otherwise `validation`, including normalization failures. |
+| `engineVersion`, `runtimeVersion` | Producing package and Node versions, including profile-stage failures. |
+| `profile` | Existing admitted-profile metadata, when available, including V2 evaluated/skipped counts. |
+| `evidence` | Existing input/profile hashes, engine/runtime versions and optional sourceLength; no duplicated rule results or diagnostics. Omitted when full-result evidence is absent. |
+| `diagnosticCounts` | Total and error/warning/info counts over all top-level diagnostics. |
+| `diagnostics` | Up to ten top-level diagnostics, ordered error, warning, info; existing order is preserved within a severity. |
+| `diagnosticsOmitted` | Number of top-level diagnostics not shown. |
+| `diagnosticsTruncated` | Number of shown diagnostics with at least one shortened field. |
+| `report` | Absolute `path`, UTF-8 `bytes`, and raw-file `sha256` of the complete retained result, including its final newline. |
+
+Shown diagnostics preserve severity and available sourceRange. Messages are
+limited to 512 UTF-16 code units; code and ruleId to 128 each, including a final
+ellipsis when shortened. Each diagnostic has `truncatedFields`, naming exactly
+which fields were shortened (empty when none). Full unmodified fields remain
+in the report. Counts exclude nested skipped-applicability and branch details,
+which remain in the complete result. A passing verdict can contain warnings;
+summary presentation neither discards those warnings nor changes the exit code.
+
+The full report is byte-identical to default stdout for the same invocation's
+validation result: stable pretty JSON followed by one newline. Its raw-file
+SHA-256 is distinct from normalized `evidence.inputHash` and `profileHash`.
+Summary stdout is stable compact JSON followed by one newline, with no rule
+result arrays. These presentation fields are not additions to the engine's
+public API result types or evidence hashes.
+
+`--report-file` is also permitted with full output. Relative destinations resolve
+against the invocation's current working directory. The parent directory must
+exist; the destination must not exist. Report publication stages a complete file
+in that directory, then publishes it with an exclusive hard link and removes
+the temporary file. Existing files, directories, symlinks and hard links are
+never replaced. Filesystems that do not support this operation report an I/O
+error. Report bytes are written before any validation JSON is emitted to stdout.
+
+A report-publication failure overrides a 0/1 validation status with exit 2,
+emits a stderr error, and emits no validation JSON to stdout. Usage or input-read
+failures continue to use the existing stderr contract and do not create a report.
+Profile-stage validation failures do create a full report when requested, retain
+exit 1, and omit unavailable evidence identities from the summary. The report
+writer is a narrow CLI filesystem-output boundary; the validator/API do not gain
+persistence or filesystem-write behavior.
+
 ## Exit Codes
 
 | Exit code | Meaning |
 | --- | --- |
 | `0` | Validation completed with no top-level error-severity diagnostics. |
 | `1` | Profile/config/compile, Markdown normalization, document-version mismatch, or top-level validation diagnostics include at least one error. |
-| `2` | CLI usage, unsupported format, unknown argument, missing argument value, repeated singleton flag, unsupported `--document-version`, or local file read error. |
+| `2` | CLI usage, unsupported format, unknown argument, missing argument value, repeated singleton flag, unsupported `--document-version`, or local file read/report-publication error. |
 
 ## Compatibility And Migration
 
