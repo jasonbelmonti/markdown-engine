@@ -22,12 +22,16 @@ Options:
   --file <markdown-file>         Markdown file to validate.
   --profile <profile-file>       Declarative validation profile to apply.
   --format json                  Output JSON. This is the default and only supported format.
-  --output full|summary          Full JSON (default) or a compact validation summary.
-  --report-file <new-file>       Save full JSON; required for summary. Never overwrites.
+  --output full|summary          Compact summary (default) or full JSON.
+  --report-file <new-file>       Save full JSON at a caller-managed new path. Never overwrites.
   -h, --help                     Show this help message.
 
 Summary includes at most 10 top-level diagnostics, errors first, with explicit
-omission/truncation counts. The report's parent directory must already exist.
+omission/truncation counts. Without --report-file, summary saves a unique report
+in $XDG_CACHE_HOME/markdown-engine/validation-reports (default ~/.cache). Reports
+older than seven days are pruned on later automatic writes. Explicit report
+parents must exist. Keep durable reports outside the automatic cache. Full output
+needs no cache.
 
 Exit status:
   0                              Validation completed with no error diagnostics.
@@ -75,13 +79,10 @@ export function parseValidateCliArgs(args: string[]): ValidateCliArgsResult {
   const profilePath = profiles[0]!;
   if (filePath.trim() === "") return validateError("File path cannot be empty.");
   if (profilePath.trim() === "") return validateError("Profile path cannot be empty.");
-  const output = (values["--output"]![0] ?? "full") as "full" | "summary";
+  const output = (values["--output"]![0] ?? "summary") as "full" | "summary";
   const reportFile = values["--report-file"]![0];
   if (reportFile !== undefined && reportFile.trim() === "") {
     return validateError("Report file path cannot be empty.");
-  }
-  if (output === "summary" && reportFile === undefined) {
-    return validateError("--output summary requires --report-file to retain the full result.");
   }
   return {
     kind: "validate", filePath, profilePath, format: "json", output,

@@ -15,7 +15,7 @@ describe("compact validation output", () => {
     const cwd = await fixture(directories, markdown, {
       ...profile, syntaxVersion: `markdown-engine.validation@${version}`,
     });
-    const full = await run(cwd);
+    const full = await run(cwd, ["--output=full"]);
     const compact = await run(cwd, ["--output", "summary", "--report-file", "full report.json"]);
     const result = JSON.parse(full.stdout), summary = JSON.parse(compact.stdout);
     const report = await readFile(join(cwd, "full report.json"));
@@ -44,7 +44,7 @@ describe("compact validation output", () => {
     { name: "profile", content: markdown, input: { syntaxVersion: "unsupported" }, stage: "profile" },
   ])("preserves $name failures and their diagnostics", async ({ content, input, stage }) => {
     const cwd = await fixture(directories, content, input);
-    const full = await run(cwd);
+    const full = await run(cwd, ["--output=full"]);
     const compact = await run(cwd, ["--output=summary", "--report-file=full.json"]);
     const result = JSON.parse(full.stdout), summary = JSON.parse(compact.stdout);
     expect(full.exitCode).toBe(1);
@@ -88,7 +88,7 @@ describe("compact validation output", () => {
         select: { target: "document" }, assert: { text: { contains: "never evaluated" } },
       })),
     });
-    const full = await run(cwd);
+    const full = await run(cwd, ["--output=full"]);
     const compact = await run(cwd, ["--output", "summary", "--report-file", "full.json"]);
     expect(compact.exitCode).toBe(0);
     expect(JSON.parse(compact.stdout)).toMatchObject({
@@ -125,9 +125,9 @@ describe("compact validation output", () => {
     expect(Buffer.byteLength(result.stdout)).toBeLessThan(14_000);
   });
 
-  it("keeps default and explicit full stdout byte-identical, including report mode", async () => {
+  it("keeps explicit full stdout byte-identical with report mode", async () => {
     const cwd = await fixture(directories);
-    const normal = await run(cwd);
+    const normal = await run(cwd, ["--output=full"]);
     expect(await run(cwd, ["--output=full"])).toEqual(normal);
     expect(await run(cwd, ["--output", "full", "--report-file", "full.json"])).toEqual(normal);
     expect(await readFile(join(cwd, "full.json"), "utf8")).toBe(normal.stdout);

@@ -11,7 +11,7 @@ const oracle = JSON.parse(readFileSync(`${root}/oracle.json`, "utf8")) as {
 
 function run(file: string, profile: string) {
   const result = spawnSync(process.execPath, [
-    "dist/cli/index.js", "validate", "--file", file, "--profile", profile, "--format", "json",
+    "dist/cli/index.js", "validate", "--output", "full", "--file", file, "--profile", profile, "--format", "json",
   ], { encoding: "utf8" });
   expect(result.error).toBeUndefined();
   expect(result.stderr).toBe("");

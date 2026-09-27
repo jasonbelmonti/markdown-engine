@@ -2,7 +2,13 @@
 
 ## Unreleased
 
-No unreleased changes.
+### Changed
+
+- **Breaking CLI default:** validation now emits compact summaries and saves full
+  reports automatically in a private cache. Use `--output full` for complete,
+  repeatable stdout or `--report-file <new-file>` for caller-managed evidence.
+  Automatic reports older than seven days are pruned on later automatic writes.
+  Validation verdicts, exit semantics and engine API result types are unchanged.
 
 ## 3.8.0 - 2026-09-27
 

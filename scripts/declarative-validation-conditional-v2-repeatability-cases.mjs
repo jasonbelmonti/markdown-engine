@@ -172,6 +172,7 @@ function cliValidationJsonCase(repoRoot) {
     [
       "dist/cli/index.js",
       "validate",
+      "--output", "full",
       "--file",
       conditionalRepeatabilityFixturePath,
       "--profile",

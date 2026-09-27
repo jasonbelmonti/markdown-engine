@@ -12,7 +12,8 @@ Package release state:
 - npm release target: `3.8.0` on `latest`
 - website: <https://jasonbelmonti.github.io/markdown-engine/>
 - release focus: opt-in compact validation output with complete retained reports,
-  preserving default full output and the `documentVersion: "1.0.0"` rich IR contract
+  preserving the `documentVersion: "1.0.0"` rich IR contract
+- unreleased CLI change: compact validation is now the default; see migration below
 - maintainer documentation map: [docs/README.md](docs/README.md)
 - design reference:
   [Markdown Engine 1.0 Rich IR design](docs/design/markdown-engine-1.0-rich-ir-operational-design-spec.md)
@@ -30,7 +31,7 @@ Package release state:
 Out of scope for this package: profile compiler behavior, runtime lenses, MCP
 transport, agent adapters, semantic or LLM evaluation, arbitrary rule plugins,
 network services, persistent workflow state, and raw parser AST as a public contract.
-The CLI can write an explicitly requested validation report; the engine API remains
+The validation CLI caches complete reports by default; the engine API remains
 free of filesystem writes.
 
 ## Public API
@@ -153,38 +154,46 @@ markdown-engine validate --file node_modules/@jasonbelmonti/markdown-engine/fixt
 `--format json` is accepted for validation, is the default, and is the only
 supported format. The validation command reads and checks the profile before
 reading the Markdown file. Profile parse/config/compile failures exit with code
-`1` and emit JSON with `stage: "profile"`, empty `ruleResults`, no `profile`,
-and no `evidence`. Markdown read errors and usage errors exit with code `2`.
+`1` and emit JSON with `stage: "profile"`. Their full reports contain empty
+`ruleResults`, no `profile`, and no `evidence`. Markdown read errors and usage errors exit with code `2`.
 Successful validation exits with code `0`; validation or normalization error
-diagnostics exit with code `1`. Validation JSON includes `profile`,
+diagnostics exit with code `1`. Full validation JSON includes `profile`,
 `ruleResults`, `diagnostics`, and `evidence`.
 
-For a compact machine-readable response, retain the complete result separately:
+Validation now returns compact JSON by default and automatically retains the
+complete result in a unique local report. No extra output flags are needed.
+The summary includes the verdict, stage, exit code, runtime/profile identities,
+diagnostic counts, at most ten located diagnostics (errors first), and a report
+reference with its absolute path, byte count and SHA-256. Omitted diagnostics and
+shortened fields are explicitly counted. Full details remain in the report.
+
+Automatic reports live under `$XDG_CACHE_HOME/markdown-engine/validation-reports`
+when `XDG_CACHE_HOME` is absolute; otherwise `~/.cache/markdown-engine/validation-reports`.
+The CLI creates this private cache. Reports older than seven days are pruned on
+later automatic writes; cleanup is best-effort and external cache cleanup may
+remove reports sooner. Reserve this directory for disposable automatic reports.
+
+For durable evidence, choose a new filename outside the automatic cache:
 
 ```sh
 mkdir -p reports
 markdown-engine validate \
   --file node_modules/@jasonbelmonti/markdown-engine/fixtures/declarative-validation/examples/operational-spec/pass.md \
   --profile node_modules/@jasonbelmonti/markdown-engine/fixtures/declarative-validation/examples/operational-spec/profile.yaml \
-  --output summary --report-file reports/validation-001.json
+  --report-file reports/validation-001.json
 ```
 
-`--output full` is the default and preserves the existing JSON byte layout.
-`--output summary` requires `--report-file` and returns the verdict, stage,
-exit code, runtime/profile identities, diagnostic counts, and at most ten
-located diagnostics (errors first). Omitted diagnostics and shortened fields
-are explicitly counted. The report contains the complete default JSON,
-including evidence; stdout identifies its absolute path, byte count and
-SHA-256 digest. Profile-stage failures retain their own JSON shape in the
-report and do not invent document/profile evidence identities.
+The parent of an explicit report must exist. Existing destinations, including
+inputs, are never overwritten. A report-write failure exits `2`, writes stderr,
+and emits no validation JSON. Usage and input-read errors create no report.
 
-Choose a new report filename per invocation; its parent directory must exist.
-Reports are published without overwriting existing files, including either
-input. A report-write failure exits `2`, prints an error to stderr and emits
-no validation JSON to stdout. `--report-file` can also accompany full output.
-Usage and input-read failures keep their existing stderr behavior and do not
-create a report. Summary output is presentation only; it does not change any
-validation result or establish semantic acceptance. See the
+For complete JSON on stdout, use `--output full`. It preserves the earlier full
+JSON layout and needs no writable cache unless `--report-file` is also supplied.
+Scripts inspecting `ruleResults`, complete diagnostics or evidence arrays, or
+comparing result bytes across invocations, must request full output. Automatic
+summary paths are unique, so summaries are not byte-identical across invocations.
+`--output summary` explicitly selects the default. This is a breaking CLI default
+change; engine API results and validation semantics are unchanged. See the
 [compact output contract](docs/contracts/declarative-validation.md#compact-validation-output).
 
 Declarative validation compatibility is syntax-versioned. Existing v1 profiles
