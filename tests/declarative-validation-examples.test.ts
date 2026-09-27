@@ -343,6 +343,7 @@ async function runValidationCli(markdownPath: string, profilePath: string) {
   const exitCode = await runCli({
     args: [
       "validate",
+      "--output", "full",
       "--file",
       markdownPath,
       "--profile",

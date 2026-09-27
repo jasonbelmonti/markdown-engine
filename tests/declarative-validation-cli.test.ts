@@ -1458,7 +1458,8 @@ async function runCliWithOutput(input: {
   const stdout = createTextOutput();
   const stderr = createTextOutput();
   const exitCode = await runCli({
-    args: input.args,
+    // These contracts exercise complete rule/evidence JSON, not summary presentation.
+    args: [...input.args, "--output", "full"],
     cwd: input.cwd,
     stderr,
     stdout,

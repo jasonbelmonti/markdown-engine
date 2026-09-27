@@ -1,5 +1,6 @@
 import type { DeclarativeValidationCliJsonResult } from "../declarative-validation/results/index.js";
 import { normalizeStableJsonValue } from "../internal/stable-json.js";
+import { saveAutomaticValidationReport } from "./validation-report-cache.js";
 import { saveValidationReport } from "./validation-report.js";
 import { createValidationSummary } from "./validation-summary.js";
 
@@ -19,11 +20,12 @@ export async function outputValidationResult(
   options: ValidationOutputOptions,
 ): Promise<ValidationOutputResult> {
   const output = JSON.stringify(normalizeStableJsonValue(result), null, 2) ?? "null";
+  const summary = (options.output ?? "summary") === "summary";
   try {
-    const report = options.reportFile === undefined ? undefined
-      : await saveValidationReport(options.cwd, options.reportFile, `${output}\n`);
-    if (options.output === "summary") {
-      if (report === undefined) throw new Error("--output summary requires --report-file.");
+    const report = options.reportFile !== undefined
+      ? await saveValidationReport(options.cwd, options.reportFile, `${output}\n`)
+      : summary ? await saveAutomaticValidationReport(`${output}\n`) : undefined;
+    if (summary && report !== undefined) {
       return {
         kind: "output", exitCode,
         output: JSON.stringify(normalizeStableJsonValue(createValidationSummary(result, exitCode, report))),
@@ -33,7 +35,7 @@ export async function outputValidationResult(
   } catch (error) {
     return {
       kind: "fileError",
-      message: `Unable to save validation report "${options.reportFile ?? ""}": ${error instanceof Error ? error.message : String(error)}`,
+      message: `Unable to save validation report "${options.reportFile ?? "automatic cache"}": ${error instanceof Error ? error.message : String(error)}`,
     };
   }
 }

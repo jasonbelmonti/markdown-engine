@@ -18,7 +18,9 @@ node scripts/validate-profile-backed-markdown.mjs --file /path/to/file.md
 ```
 
 2. Treat stdout as the validator JSON source of truth. Do not infer pass/fail
-   from prose or repair notes.
+   from prose or repair notes. Compact output includes total diagnostic counts
+   and a full-report path; inspect that report only when omitted details matter.
+   Automatic reports are cached for seven days and may be removed by later runs.
 3. If validation fails, rerun with `--repair-brief` to emit compact repair
    guidance on stderr while preserving validator JSON on stdout.
 4. Edit the Markdown file only when the user asked for repair. Do not edit

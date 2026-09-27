@@ -809,7 +809,7 @@ The CLI reads and checks the profile before reading the Markdown file. Profile
 parse, config, and compile failures emit profile-stage JSON and do not parse or
 validate the Markdown file.
 
-After profile compilation succeeds, the CLI emits a validation-result JSON
+With `--output full`, after profile compilation succeeds the CLI emits a validation-result JSON
 shape whether the document passes or fails. Validation CLI results include
 evidence. V2 CLI results use the same validation-result arm of the CLI JSON
 union; there is no extra CLI discriminator beyond
@@ -817,7 +817,7 @@ union; there is no extra CLI discriminator beyond
 
 ## CLI JSON Union
 
-The default (`--output full`) CLI JSON output is:
+The explicit `--output full` CLI JSON output is:
 
 ```ts
 type DeclarativeValidationCliJsonResult =
@@ -847,12 +847,13 @@ profiles, that same validation-result JSON can include `evaluatedRuleCount`,
 
 ## Compact Validation Output
 
-`--output full` (the default) preserves the existing full JSON contract and
-serialization. `--output summary --report-file <new-file>` selects a separate
-CLI-only `schemaVersion: "markdown-engine.validation-summary.v1"` representation.
+The default `--output summary` emits the CLI-only
+`schemaVersion: "markdown-engine.validation-summary.v1"` representation and saves
+a complete report automatically. `--output full` preserves the earlier full JSON
+contract and serialization without creating an automatic report.
 Both modes still use `--format json`. Each new selector accepts spaced or
 assignment syntax and may occur only once. Missing/blank paths, unsupported
-output modes and summary mode without a report path are usage errors (exit 2).
+output modes are usage errors (exit 2). Summary mode does not require a report path.
 These options do not apply to the normalization command.
 
 Summary fields:
@@ -879,27 +880,43 @@ in the report. Counts exclude nested skipped-applicability and branch details,
 which remain in the complete result. A passing verdict can contain warnings;
 summary presentation neither discards those warnings nor changes the exit code.
 
-The full report is byte-identical to default stdout for the same invocation's
+The full report is byte-identical to `--output full` stdout for the same invocation's
 validation result: stable pretty JSON followed by one newline. Its raw-file
 SHA-256 is distinct from normalized `evidence.inputHash` and `profileHash`.
-Summary stdout is stable compact JSON followed by one newline, with no rule
-result arrays. These presentation fields are not additions to the engine's
+Summary stdout has stable JSON key ordering and one final newline, with no rule
+result arrays. Automatic report paths are unique, so summary bytes vary between
+invocations; full results and evidence remain deterministic. These presentation fields are not additions to the engine's
 public API result types or evidence hashes.
 
-`--report-file` is also permitted with full output. Relative destinations resolve
+Automatic reports use unique `report-<UUID>.json` filenames under
+`$XDG_CACHE_HOME/markdown-engine/validation-reports` when that environment value
+is absolute, otherwise `~/.cache/markdown-engine/validation-reports`. Missing
+cache directories are created with mode 0700, and report files with mode 0600
+(subject to platform support and the process umask). Automatic writes best-effort
+prune regular generated-name reports whose modification time is older than seven
+days; recent files, unrelated names, directories and symlinks are left alone.
+Pruning errors do not change the verdict after successful report publication.
+Cleanup runs only on automatic writes and is not a disk quota or retention
+guarantee; external cache cleanup may remove files sooner. Reserve this cache for
+disposable reports and use an explicit path outside it for durable evidence.
+
+`--report-file` overrides automatic storage and is also permitted with full output.
+Explicit writes do not run cache cleanup. Relative destinations resolve
 against the invocation's current working directory. The parent directory must
 exist; the destination must not exist. Report publication stages a complete file
 in that directory, then publishes it with an exclusive hard link and removes
 the temporary file. Existing files, directories, symlinks and hard links are
 never replaced. Filesystems that do not support this operation report an I/O
 error. Report bytes are written before any validation JSON is emitted to stdout.
+`--output full` without `--report-file` performs no report/cache filesystem work.
 
 A report-publication failure overrides a 0/1 validation status with exit 2,
 emits a stderr error, and emits no validation JSON to stdout. Usage or input-read
 failures continue to use the existing stderr contract and do not create a report.
-Profile-stage validation failures do create a full report when requested, retain
+Profile-stage validation failures create an automatic report in summary mode or
+an explicit report when requested, retain
 exit 1, and omit unavailable evidence identities from the summary. The report
-writer is a narrow CLI filesystem-output boundary; the validator/API do not gain
+writer and automatic cache are narrow CLI filesystem-output boundaries; the validator/API do not gain
 persistence or filesystem-write behavior.
 
 ## Exit Codes
@@ -1261,7 +1278,8 @@ recursive grouped rules, branch-level `when`, profile-defined predicates,
 assertion-specific evidence payloads, a separate skipped-rule evidence channel,
 and a new CLI JSON discriminator.
 
-The CLI reads only the caller-specified local Markdown and profile files. The
+The CLI reads caller-specified local Markdown and profile files and manages its
+documented automatic-report cache. The
 API owns no file traversal, daemon, database, browser runtime, network service,
 agent adapter, MCP transport, runtime lens, or persistent cache.
 

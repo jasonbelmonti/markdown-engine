@@ -70,7 +70,7 @@ describe("validation report publication", () => {
 
   it.each([
     ["--output"], ["--output="], ["--output=brief"],
-    ["--output=full", "--output", "summary"], ["--output=summary"],
+    ["--output=full", "--output", "summary"],
     ["--report-file"], ["--report-file="], ["--report-file=   "],
     ["--report-file=a.json", "--report-file", "b.json"],
   ])("rejects invalid output arguments %j before report creation", async (...flags) => {

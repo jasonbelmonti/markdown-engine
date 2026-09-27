@@ -116,7 +116,7 @@ if (dependencyAudit.dependencyMatches.length > 0) {
 
 for (const source of declarativeValidationSources()) {
   for (const { label, pattern } of forbiddenRuntimePatterns) {
-    // Caller-requested CLI report output is the sole filesystem-write exception.
+    // CLI validation report output is the sole filesystem-write exception.
     // Keep every other persistence pattern forbidden, including in this module.
     const checkedContent = label === "persistence write" && source.file === "src/cli/validation-report.ts"
       ? source.content.replace(/\bwriteFile\s*\(/g, "")
