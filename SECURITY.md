@@ -3,9 +3,9 @@
 ## Supported Versions
 
 Security fixes target the latest published major version of
-`@jasonbelmonti/markdown-engine`. As of the 3.0 release line, fixes are expected
-to land on the latest `3.x` package unless a release note states otherwise.
-Older `0.x`, `1.x`, and `2.x` lines are not maintained unless an explicit
+`@jasonbelmonti/markdown-engine`. As of the 4.0 release line, fixes are expected
+to land on the latest `4.x` package unless a release note states otherwise.
+Older `0.x`, `1.x`, `2.x`, and `3.x` lines are not maintained unless an explicit
 backport is announced.
 
 ## Reporting A Vulnerability
@@ -27,4 +27,6 @@ This package parses Markdown and YAML frontmatter, normalizes engine-owned IR,
 evaluates deterministic validation rules, and serializes public result objects.
 
 It does not execute raw HTML, fetch network resources, call LLM providers,
-run plugins, start services, persist data, or evaluate semantic rules.
+run plugins, start services, or evaluate semantic rules. The CLI writes full
+validation reports to its private local cache by default, or to an explicit
+`--report-file` destination; `--output full` avoids automatic report writes.
