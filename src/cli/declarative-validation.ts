@@ -9,33 +9,23 @@ import type {
 } from "../declarative-validation/profile/index.js";
 import { createDeclarativeValidationResult } from "../declarative-validation/results/index.js";
 import type {
-  DeclarativeValidationCliJsonResult,
   DeclarativeValidationConfigErrorResult,
   DeclarativeValidationResult,
 } from "../declarative-validation/results/index.js";
 import { cloneDiagnostics, hasErrorDiagnostic } from "../diagnostics/index.js";
-import { normalizeStableJsonValue } from "../internal/stable-json.js";
 import { readCliFile } from "./files.js";
 import { normalizeMarkdown } from "./normalize-markdown.js";
+import { outputValidationResult, type ValidationOutputOptions, type ValidationOutputResult } from "./validation-output.js";
 
 /** @internal Declarative validation CLI behavior is not part of the package API. */
-export interface DeclarativeValidationCliAdapterOptions {
+export interface DeclarativeValidationCliAdapterOptions extends ValidationOutputOptions {
   cwd: string;
   filePath: string;
   profilePath: string;
   format: DeclarativeOutputFormat;
 }
 
-export type DeclarativeValidationCliAdapterResult =
-  | {
-      kind: "output";
-      exitCode: 0 | 1;
-      output: string;
-    }
-  | {
-      kind: "fileError";
-      message: string;
-    };
+export type DeclarativeValidationCliAdapterResult = ValidationOutputResult;
 
 export async function runDeclarativeValidationCli(
   input: DeclarativeValidationCliAdapterOptions,
@@ -54,15 +44,16 @@ export async function runDeclarativeValidationCli(
     profileResult.profile === undefined ||
     hasErrorDiagnostic(profileResult.diagnostics)
   ) {
-    return outputResult(profileStageResult(profileResult.diagnostics), 1);
+    return outputValidationResult(profileStageResult(profileResult.diagnostics), 1, input);
   }
 
   const compileDiagnostics = compileProfileForCli(profileResult.profile);
 
   if (hasErrorDiagnostic(compileDiagnostics)) {
-    return outputResult(
+    return outputValidationResult(
       profileStageResult([...profileResult.diagnostics, ...compileDiagnostics]),
       1,
+      input,
     );
   }
 
@@ -83,7 +74,7 @@ export async function runDeclarativeValidationCli(
   ];
 
   if (hasErrorDiagnostic(normalizeResult.diagnostics)) {
-    return outputResult(
+    return outputValidationResult(
       documentDiagnosticsResult(
         normalizeResult.document,
         profileResult.profile,
@@ -97,6 +88,7 @@ export async function runDeclarativeValidationCli(
         ],
       ),
       1,
+      input,
     );
   }
 
@@ -110,9 +102,10 @@ export async function runDeclarativeValidationCli(
     documentDiagnostics,
   );
 
-  return outputResult(
+  return outputValidationResult(
     result,
     hasErrorDiagnostic(result.diagnostics) ? 1 : 0,
+    input,
   );
 }
 
@@ -191,23 +184,6 @@ function mergeDocumentDiagnostics<T extends DeclarativeValidationResult>(
         }
       : {}),
   } as T;
-}
-
-function outputResult(
-  result: DeclarativeValidationCliJsonResult,
-  exitCode: 0 | 1,
-): DeclarativeValidationCliAdapterResult {
-  return {
-    kind: "output",
-    exitCode,
-    output: serializeDeclarativeValidationCliJsonResult(result),
-  };
-}
-
-function serializeDeclarativeValidationCliJsonResult(
-  result: DeclarativeValidationCliJsonResult,
-): string {
-  return JSON.stringify(normalizeStableJsonValue(result), null, 2) ?? "null";
 }
 
 async function readValidationFile(

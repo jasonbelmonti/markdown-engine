@@ -2,7 +2,13 @@
 
 ## Unreleased
 
-No unreleased changes.
+### Added
+
+- Added opt-in validation CLI `--output summary --report-file <new-file>`:
+  bounded JSON diagnostics and verdict/identity metadata on stdout, with the
+  complete existing JSON result retained in an exclusive report file and
+  identified by its byte digest. Default full output is unchanged; report
+  publication errors exit 2 without printing a successful validation result.
 
 ## 3.7.0 - 2026-09-26
 

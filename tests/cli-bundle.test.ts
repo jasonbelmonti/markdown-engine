@@ -1,6 +1,8 @@
 import { execFile } from "node:child_process";
+import { createHash } from "node:crypto";
 import {
   access,
+  copyFile,
   mkdir,
   mkdtemp,
   readFile,
@@ -109,7 +111,20 @@ describe("bundled CLI artifact", () => {
     );
 
     try {
-      await execFileAsync("sh", [installerPath], {
+      // Ordinary source tests exercise this build, not the last published pin.
+      // Production version/hash agreement remains the release gate's job.
+      const fixtureRoot = join(installRoot, "package");
+      const fixtureInstaller = join(fixtureRoot, "scripts", "install-markdown-engine-cli.sh");
+      const artifactHash = createHash("sha256").update(await readFile(artifactPath)).digest("hex");
+      const installerText = await readFile(installerPath, "utf8");
+      expect(installerText.match(/^EXPECTED_SHA256="[a-f0-9]{64}"$/gm)).toHaveLength(1);
+      await mkdir(join(fixtureRoot, "scripts"), { recursive: true });
+      await mkdir(join(fixtureRoot, "dist-bundled"));
+      await copyFile(artifactPath, join(fixtureRoot, "dist-bundled", "markdown-engine-cli.mjs"));
+      await writeFile(fixtureInstaller, installerText.replace(
+        /^EXPECTED_SHA256="[a-f0-9]{64}"$/m, `EXPECTED_SHA256="${artifactHash}"`,
+      ));
+      await execFileAsync("sh", [fixtureInstaller], {
         cwd: repoRoot,
         env: {
           ...process.env,
@@ -126,6 +141,20 @@ describe("bundled CLI artifact", () => {
         `DEFAULT_MARKDOWN_ENGINE_CLI='${expectedInstallCli}'`,
       );
       expect(wrapperText).not.toContain("/3.0.0/");
+      expect(await readFile(expectedInstallCli)).toEqual(await readFile(artifactPath));
+      const reportPath = join(installRoot, "validation.json");
+      const compact = await runCliArtifact(expectedInstallCli, [
+        "validate",
+        "--file", "fixtures/declarative-validation/examples/operational-spec/pass.md",
+        "--profile", "fixtures/declarative-validation/examples/operational-spec/profile.yaml",
+        "--output", "summary", "--report-file", reportPath,
+      ]);
+      expect(compact.exitCode).toBe(0);
+      const report = await readFile(reportPath);
+      expect(JSON.parse(compact.stdout)).toMatchObject({
+        schemaVersion: "markdown-engine.validation-summary.v1", valid: true,
+        report: { sha256: createHash("sha256").update(report).digest("hex") },
+      });
     } finally {
       await rm(installRoot, { force: true, recursive: true });
     }
