@@ -1,9 +1,9 @@
 #!/usr/bin/env sh
 set -eu
 
-VERSION="3.8.0"
+VERSION="4.0.0"
 PACKAGE="@jasonbelmonti/markdown-engine"
-EXPECTED_SHA256="cecfb88ab9cb9a3030c13e41b5e56ac30b44436fb1da7bb890bea5f9bd215fce"
+EXPECTED_SHA256="afc4dfe3846f30f1e8ad70d77e818bd3bcfc9d62ef844a857c523ebaf758c97f"
 DEFAULT_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 MARKDOWN_ENGINE_HOME="${MARKDOWN_ENGINE_HOME:-$DEFAULT_DATA_HOME/markdown-engine}"
 MARKDOWN_ENGINE_BIN_DIR="${MARKDOWN_ENGINE_BIN_DIR:-$HOME/.local/bin}"

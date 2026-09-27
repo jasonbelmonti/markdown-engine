@@ -50,7 +50,7 @@ const checks = [
     phrases: [
       "documentQueries",
       "validateAnnotations",
-      "version: `3.8.0`",
+      "version: `4.0.0`",
       "Package 3.8 retains the serialized document contract",
       'documentVersion: "1.0.0"',
       "--document-version 0.0.0",
