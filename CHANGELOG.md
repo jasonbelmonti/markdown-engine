@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+No unreleased changes.
+
+## 3.8.0 - 2026-09-27
+
 ### Added
 
 - Added opt-in validation CLI `--output summary --report-file <new-file>`:
