@@ -1,5 +1,23 @@
 # Changelog
 
+## 5.0.0 - 2026-09-28
+
+### Changed
+
+- **Breaking CLI report-reference contract:** validation keeps compact summaries
+  by default but saves a complete report only when `--report-file <new-file>`
+  is supplied. Summaries omit `report` otherwise; consumers requiring
+  `report.path` must request a report or handle its absence. The summary schema
+  remains `markdown-engine.validation-summary.v1`.
+- Removed automatic report-cache creation and pruning. An absent or unwritable
+  cache no longer prevents validation, and existing cached files stay untouched.
+- Updated bundled consumer-skill instructions for complete-result retrieval
+  with `--output full` and explicit report persistence.
+
+Validation verdicts, diagnostic limits and ordering, full-output bytes, explicit
+report publication guarantees, and engine API behavior remain unchanged apart
+from package-version metadata.
+
 ## 4.0.0 - 2026-09-27
 
 ### Changed
