@@ -19,14 +19,31 @@ node scripts/validate-profile-backed-markdown.mjs --file /path/to/file.md
 
 2. Treat stdout as the validator JSON source of truth. Do not infer pass/fail
    from prose or repair notes. Compact output includes total diagnostic counts
-   and a full-report path; inspect that report only when omitted details matter.
-   Automatic reports are cached for seven days and may be removed by later runs.
+   and omission/truncation counts. The wrapper does not save a report, so its
+   summary has no `report` field. No automatic report cache is created or pruned.
+   When omitted details matter, retrieve complete results as described below.
 3. If validation fails, rerun with `--repair-brief` to emit compact repair
    guidance on stderr while preserving validator JSON on stdout.
 4. Edit the Markdown file only when the user asked for repair. Do not edit
    validation profiles unless explicitly requested.
 5. Rerun the wrapper after edits and require exit code `0` before reporting the
    document clean.
+
+## Complete Results
+
+Invoke the same CLI selected under Bundled CLI directly, using the profile file
+resolved under Frontmatter Contract (including any custom `--profile-root`):
+
+```bash
+node /path/to/markdown-engine-cli.mjs validate \
+  --file /path/to/file.md --profile /path/to/resolved-profile.yaml --output full
+```
+
+This returns all diagnostics and evidence on stdout. To also retain the complete
+report, add `--report-file /path/to/new-report.json`; its parent must exist and
+the destination must not already exist. An explicit report-write failure exits
+`2` with stderr and no validation JSON. These options belong to the CLI; the
+wrapper does not accept `--output` or `--report-file`.
 
 ## Frontmatter Contract
 
