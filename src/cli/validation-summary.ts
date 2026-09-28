@@ -10,7 +10,7 @@ const severityOrder = { error: 0, warning: 1, info: 2 };
 export function createValidationSummary(
   result: DeclarativeValidationCliJsonResult,
   exitCode: 0 | 1,
-  report: ValidationReportReference,
+  report?: ValidationReportReference,
 ) {
   const diagnostics = [...result.diagnostics]
     .sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity])
@@ -40,7 +40,7 @@ export function createValidationSummary(
     diagnostics,
     diagnosticsOmitted: counts.total - diagnostics.length,
     diagnosticsTruncated: diagnostics.filter(d => d.truncatedFields.length > 0).length,
-    report,
+    ...(report !== undefined ? { report } : {}),
   };
 }
 
