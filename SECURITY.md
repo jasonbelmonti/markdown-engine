@@ -28,5 +28,5 @@ evaluates deterministic validation rules, and serializes public result objects.
 
 It does not execute raw HTML, fetch network resources, call LLM providers,
 run plugins, start services, or evaluate semantic rules. The CLI writes full
-validation reports to its private local cache by default, or to an explicit
-`--report-file` destination; `--output full` avoids automatic report writes.
+validation reports only to an explicit `--report-file` destination. Without that
+option, both output modes perform no report/cache writes or cleanup.

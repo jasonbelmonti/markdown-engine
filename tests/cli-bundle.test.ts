@@ -6,6 +6,7 @@ import {
   mkdir,
   mkdtemp,
   readFile,
+  readdir,
   rm,
   stat,
   writeFile,
@@ -245,6 +246,41 @@ describe("bundled CLI artifact", () => {
     expect(output.diagnostics).toEqual([]);
   });
 
+  it.each([
+    { name: "passing", content: "# Mission\n", syntax: "markdown-engine.validation@v2", exit: 0, stage: "validation" },
+    { name: "validation failure", content: "# Wrong\n", syntax: "markdown-engine.validation@v2", exit: 1, stage: "validation" },
+    { name: "profile failure", content: "# Mission\n", syntax: "unsupported", exit: 1, stage: "profile" },
+  ])("keeps $name summaries write-free with an unusable cache", async ({ content, syntax, exit, stage }) => {
+    const cwd = await mkdtemp(join(tmpdir(), "markdown-engine-bundle-summary-"));
+    const sentinel = join(cwd, "cache-sentinel");
+    try {
+      await writeFile(join(cwd, "mission.md"), content);
+      await writeFile(join(cwd, "profile.json"), JSON.stringify({
+        syntaxVersion: syntax,
+        rules: [{ id: "mission", select: { target: "document" }, assert: { sectionsRequired: { headings: ["Mission"] } } }],
+      }));
+      await writeFile(sentinel, "not a directory");
+      for (const flags of [[], ["--output=summary"]]) {
+        const result = await runCliArtifact(artifactPath, [
+          "validate", "--file", join(cwd, "mission.md"), "--profile", join(cwd, "profile.json"), ...flags,
+        ], { ...process.env, XDG_CACHE_HOME: sentinel });
+        expect(result.exitCode).toBe(exit);
+        expect(result.stderr).toBe("");
+        const summary = JSON.parse(result.stdout);
+        expect(summary).toMatchObject({
+          schemaVersion: "markdown-engine.validation-summary.v1", valid: exit === 0, exitCode: exit, stage,
+        });
+        expect(summary).not.toHaveProperty("report");
+        expect(summary).not.toHaveProperty("ruleResults");
+        expect(summary.evidence?.ruleResults).toBeUndefined();
+        expect(await readFile(sentinel, "utf8")).toBe("not a directory");
+        expect((await readdir(cwd)).sort()).toEqual(["cache-sentinel", "mission.md", "profile.json"]);
+      }
+    } finally {
+      await rm(cwd, { recursive: true, force: true });
+    }
+  });
+
   it("emits JSON diagnostics and exits 1 for the failing validation fixture", async () => {
     const result = await runBundledCli([
       "validate",
@@ -275,10 +311,11 @@ async function runBundledCli(args: string[]): Promise<CommandResult> {
   return runCliArtifact(artifactPath, args);
 }
 
-async function runCliArtifact(path: string, args: string[]): Promise<CommandResult> {
+async function runCliArtifact(path: string, args: string[], env = process.env): Promise<CommandResult> {
   try {
     const result = await execFileAsync(process.execPath, [path, ...args], {
       cwd: repoRoot,
+      env,
       maxBuffer,
       timeout: commandTimeoutMs,
     });

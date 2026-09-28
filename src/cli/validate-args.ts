@@ -27,11 +27,10 @@ Options:
   -h, --help                     Show this help message.
 
 Summary includes at most 10 top-level diagnostics, errors first, with explicit
-omission/truncation counts. Without --report-file, summary saves a unique report
-in $XDG_CACHE_HOME/markdown-engine/validation-reports (default ~/.cache). Reports
-older than seven days are pruned on later automatic writes. Explicit report
-parents must exist. Keep durable reports outside the automatic cache. Full output
-needs no cache.
+omission/truncation counts. Without --report-file, neither output mode writes a
+report or accesses the report cache, and summary omits the report reference.
+Use --output full for complete stdout or --report-file to retain all details.
+Explicit report parents must exist. Existing cached reports are left untouched.
 
 Exit status:
   0                              Validation completed with no error diagnostics.

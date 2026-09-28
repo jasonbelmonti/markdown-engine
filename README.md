@@ -11,9 +11,9 @@ Package release state:
   `3.0.0`, `3.1.0`, `3.1.1`, `3.2.0`, `3.3.0`, `3.4.0`, `3.5.0`, `3.6.0`
 - npm release target: `4.0.0` on `latest`
 - website: <https://jasonbelmonti.github.io/markdown-engine/>
-- release focus: compact validation output by default with automatic full reports,
+- release focus: compact validation output by default with explicit report persistence,
   preserving the `documentVersion: "1.0.0"` rich IR contract
-- CLI migration: use `--output full` for the previous complete stdout format
+- CLI migration: use `--output full` for complete stdout and `--report-file` to retain a report
 - maintainer documentation map: [docs/README.md](docs/README.md)
 - design reference:
   [Markdown Engine 1.0 Rich IR design](docs/design/markdown-engine-1.0-rich-ir-operational-design-spec.md)
@@ -31,8 +31,8 @@ Package release state:
 Out of scope for this package: profile compiler behavior, runtime lenses, MCP
 transport, agent adapters, semantic or LLM evaluation, arbitrary rule plugins,
 network services, persistent workflow state, and raw parser AST as a public contract.
-The validation CLI caches complete reports by default; the engine API remains
-free of filesystem writes.
+The validation CLI writes a complete report only when given `--report-file`;
+the engine API remains free of filesystem writes.
 
 ## Public API
 
@@ -160,20 +160,19 @@ Successful validation exits with code `0`; validation or normalization error
 diagnostics exit with code `1`. Full validation JSON includes `profile`,
 `ruleResults`, `diagnostics`, and `evidence`.
 
-Validation now returns compact JSON by default and automatically retains the
-complete result in a unique local report. No extra output flags are needed.
-The summary includes the verdict, stage, exit code, runtime/profile identities,
-diagnostic counts, at most ten located diagnostics (errors first), and a report
-reference with its absolute path, byte count and SHA-256. Omitted diagnostics and
-shortened fields are explicitly counted. Full details remain in the report.
+Validation returns compact JSON by default without writing a report. The summary
+includes the verdict, stage, exit code, runtime/profile identities, diagnostic
+counts and at most ten located diagnostics (errors first). Omitted diagnostics
+and shortened fields are explicitly counted. Rerun with `--output full` or an
+explicit `--report-file` destination to retrieve all details.
 
-Automatic reports live under `$XDG_CACHE_HOME/markdown-engine/validation-reports`
-when `XDG_CACHE_HOME` is absolute; otherwise `~/.cache/markdown-engine/validation-reports`.
-The CLI creates this private cache. Reports older than seven days are pruned on
-later automatic writes; cleanup is best-effort and external cache cleanup may
-remove reports sooner. Reserve this directory for disposable automatic reports.
+The `report` field is optional: it is omitted entirely unless `--report-file`
+is supplied. When present, it contains the complete report's absolute path,
+byte count and SHA-256. Neither output mode creates, writes or prunes a report
+cache. Existing cached files are left untouched, and an unusable default cache
+cannot prevent validation.
 
-For durable evidence, choose a new filename outside the automatic cache:
+For durable evidence, choose a new filename:
 
 ```sh
 mkdir -p reports
@@ -188,12 +187,13 @@ inputs, are never overwritten. A report-write failure exits `2`, writes stderr,
 and emits no validation JSON. Usage and input-read errors create no report.
 
 For complete JSON on stdout, use `--output full`. It preserves the earlier full
-JSON layout and needs no writable cache unless `--report-file` is also supplied.
+JSON layout and performs no report writes unless `--report-file` is also supplied.
 Scripts inspecting `ruleResults`, complete diagnostics or evidence arrays, or
-comparing result bytes across invocations, must request full output. Automatic
-summary paths are unique, so summaries are not byte-identical across invocations.
-`--output summary` explicitly selects the default. This is a breaking CLI default
-change; engine API results and validation semantics are unchanged. See the
+comparing complete result bytes across invocations, must request full output.
+`--output summary` explicitly selects the default. Consumers that previously
+assumed every summary contained `report.path` must supply `--report-file` or
+handle its absence. The summary schema remains `markdown-engine.validation-summary.v1`;
+engine API results and validation semantics are unchanged. See the
 [compact output contract](docs/contracts/declarative-validation.md#compact-validation-output).
 
 Declarative validation compatibility is syntax-versioned. Existing v1 profiles
